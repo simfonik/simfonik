@@ -1,0 +1,130 @@
+[
+    {
+      "id": "green-blue-session-1996",
+      "title": "Green / Blue Session",
+      "released": "1996-08-17",
+      "djs": [{ "name": "DJ Example", "slug": "dj-example" }],
+      "images": { "cover": "/images/green-blue-cover.jpg" },
+      "sides": [
+        {
+          "position": "Green",
+          "audio_links": [
+            { "label": "Dropbox", "url": "https://example.com/green-side.mp3" }
+          ],
+          "image": "/images/green-side.jpg",
+          "tracks": [
+            { "artist": "Artist A", "title": "Track One" },
+            { "artist": "Artist B", "title": "Track Two", "duration": "5:12" }
+          ]
+        },
+        {
+          "position": "Blue",
+          "audio_links": [
+            { "label": "Dropbox", "url": "https://example.com/blue-side.mp3" }
+          ],
+          "image": "/images/blue-side.jpg",
+          "tracks": [
+            { "artist": "Artist C", "title": "Track Three" },
+            { "artist": "Artist D", "title": "Track Four" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "warehouse-tape-a",
+      "title": "Warehouse Tape",
+      "released": "1998-02-01",
+      "djs": [{ "name": "DJ Example", "slug": "dj-example" }],
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [{ "label": "Dropbox", "url": "https://example.com/wh-a.mp3" }],
+          "tracks": [
+            { "artist": "Artist E", "title": "Intro" },
+            { "artist": "Artist F", "title": "Main Theme" }
+          ]
+        },
+        {
+          "position": "B",
+          "audio_links": [{ "label": "Dropbox", "url": "https://example.com/wh-b.mp3" }]
+        }
+      ]
+    },
+    {
+      "id": "sunrise-single-side",
+      "title": "Sunrise (Single Side)",
+      "released": "2001-06-10",
+      "djs": [{ "name": "DJ Sample", "slug": "dj-sample" }],
+      "sides": [
+        {
+          "position": "Full",
+          "title": "Continuous Mix",
+          "audio_links": [{ "label": "Dropbox", "url": "https://example.com/sunrise.mp3" }],
+          "tracks": [
+            { "artist": "Artist G", "title": "Dawn" },
+            { "artist": "Artist H", "title": "Morning Lights" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "two-djs-night-drive",
+      "title": "Night Drive",
+      "released": "2003-11-22",
+      "djs": [
+        { "name": "DJ Sample", "slug": "dj-sample" },
+        { "name": "DJ Partner", "slug": "dj-partner" }
+      ],
+      "sides": [
+        {
+          "position": "1",
+          "audio_links": [{ "label": "Dropbox", "url": "https://example.com/night-1.mp3" }],
+          "tracks": [
+            { "artist": "Artist I", "title": "First Gear" },
+            { "artist": "Artist J", "title": "Highway" }
+          ]
+        },
+        {
+          "position": "2",
+          "audio_links": [{ "label": "Dropbox", "url": "https://example.com/night-2.mp3" }],
+          "tracks": [
+            { "artist": "Artist K", "title": "City Signs" },
+            { "artist": "Artist L", "title": "Exit Ramp" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "late-night-radio-2005",
+      "title": "Late Night Radio",
+      "released": "2005-03-05",
+      "djs": [{ "name": "DJ Partner", "slug": "dj-partner" }],
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [{ "label": "Dropbox", "url": "https://example.com/lnr-a.mp3" }]
+        },
+        {
+          "position": "B",
+          "audio_links": [{ "label": "Dropbox", "url": "https://example.com/lnr-b.mp3" }]
+        }
+      ]
+    },
+    {
+      "id": "rooftop-set-2007",
+      "title": "Rooftop Set",
+      "released": "2007-09-14",
+      "djs": [{ "name": "DJ Rooftop", "slug": "dj-rooftop" }],
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [{ "label": "Dropbox", "url": "https://example.com/roof-a.mp3" }],
+          "tracks": [
+            { "artist": "Artist M", "title": "Upstairs" },
+            { "artist": "Artist N", "title": "Neon" }
+          ]
+        }
+      ]
+    }
+  ]
+  
