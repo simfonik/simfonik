@@ -25,7 +25,7 @@ export default async function Page({ params }: Props) {
       {/* Header */}
       <header className="mb-8">
         <h1 className="text-4xl font-bold mb-2">{tape.title}</h1>
-        <p className="text-gray-600 mb-4">Released: {tape.released}</p>
+        <p className="mb-4 text-zinc-600 dark:text-zinc-400">Released: {tape.released}</p>
         <div className="flex gap-2 flex-wrap">
           {tape.djs.map((dj) => (
             <Link
@@ -114,10 +114,10 @@ export default async function Page({ params }: Props) {
                 <h3 className="text-lg font-medium mb-3">Tracklist:</h3>
                 <ol className="list-decimal list-inside space-y-1">
                   {side.tracks.map((track, trackIdx) => (
-                    <li key={trackIdx} className="text-gray-800">
+                    <li key={trackIdx} className="text-zinc-900 dark:text-zinc-100">
                       {track.artist} – {track.title}
                       {track.duration && (
-                        <span className="text-gray-500 ml-2">
+                        <span className="ml-2 text-zinc-600 dark:text-zinc-400">
                           ({track.duration})
                         </span>
                       )}
