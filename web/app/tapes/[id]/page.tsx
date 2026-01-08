@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import { Fragment } from "react";
 import Link from "next/link";
 import { getTapeById, getAllTapes } from "../../../lib/data";
 
@@ -71,9 +72,21 @@ export default async function Page({ params }: Props) {
         {tape.sides.map((side, idx) => (
           <section key={idx} className="border-t pt-8">
             <h2 className="text-2xl font-semibold mb-4">
-              Side {side.position}
-              {side.title && `: ${side.title}`}
+              {side.title ?? `Side ${side.position}`}
             </h2>
+
+            {/* Side DJs */}
+            {side.djs && side.djs.length > 0 && (
+              <p className="mb-4 text-zinc-600 dark:text-zinc-400">
+                By{" "}
+                {side.djs.map((dj, djIdx) => (
+                  <Fragment key={dj.slug}>
+                    <Link href={`/djs/${dj.slug}`} className="hover:underline">{dj.name}</Link>
+                    {djIdx < side.djs!.length - 1 && ", "}
+                  </Fragment>
+                ))}
+              </p>
+            )}
 
             {/* Side Image */}
             {side.image && (

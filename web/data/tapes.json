@@ -11,22 +11,22 @@
       "sides": [
         {
           "position": "A",
-          "title": "R.A.W. — What The Fuck Is This?!",
+          "title": "What The Fuck Is This?!",
+          "djs": [{ "name": "R.A.W.", "slug": "raw" }],
           "audio_links": [
             {
-              "label": "Dropbox (Side A)",
-              "url": "https://www.dropbox.com/scl/fi/jvjus9gfuzblz4q4yr143/4-turntable-madness-101-dj-trance-raw-insomniac-1-year.mp3?rlkey=f6cuadyv4ik4zmd2b6xgp8jbl&st=q5j8gtfp&raw=1"
+              "url": "https://www.dropbox.com/scl/fi/vbh3ihvctjpgaro2wap6x/raw-wake-up-la.mp3?rlkey=j0px8d9eadsdwu0tha8ljlcck&raw=1"
             }
           ],
           "image": "/media/tapes/dj-trance-raw-wake-up-la/sides/a.jpg"
         },
         {
           "position": "B",
-          "title": "DJ Trance — Increase The Voltage",
+          "title": "Increase The Voltage",
+          "djs": [{ "name": "DJ Trance", "slug": "dj-trance" }],
           "audio_links": [
             {
-              "label": "Dropbox (Side B)",
-              "url": "https://www.dropbox.com/scl/fi/jvjus9gfuzblz4q4yr143/4-turntable-madness-101-dj-trance-raw-insomniac-1-year.mp3?rlkey=f6cuadyv4ik4zmd2b6xgp8jbl&st=q5j8gtfp&raw=1"
+              "url": "https://www.dropbox.com/scl/fi/24knspec22g0xsac4kvb0/dj-trance-wake-up-la.mp3?rlkey=tv3qmyzulcw136j2zvikd1anl&raw=1"
             }
           ],
           "image": "/media/tapes/dj-trance-raw-wake-up-la/sides/b.jpg"
@@ -36,7 +36,7 @@
     {
       "id": "aldo-bender-happy-wednesdays",
       "title": "Happy Wednesdays",
-      "released": "1991",
+      "released": "1992",
       "djs": [{ "name": "Aldo Bender", "slug": "aldo-bender" }],
       "images": { "cover": "/media/tapes/aldo-bender-happy-wednesdays/cover.jpg" },
       "sides": [
@@ -56,82 +56,6 @@
               "label": "Side B",
               "url": "https://www.dropbox.com/scl/fi/au9wyk2vbm9dwcgxe385k/aldo-bender-happy-wednesdays-b.mp3?rlkey=9aiirqa1gkfc34ol91gi4y98p&raw=1"
             }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "sunrise-single-side",
-      "title": "Sunrise (Single Side)",
-      "released": "2001-06-10",
-      "djs": [{ "name": "DJ Sample", "slug": "dj-sample" }],
-      "sides": [
-        {
-          "position": "Full",
-          "title": "Continuous Mix",
-          "audio_links": [{ "label": "Dropbox", "url": "https://example.com/sunrise.mp3" }],
-          "tracks": [
-            { "artist": "Artist G", "title": "Dawn" },
-            { "artist": "Artist H", "title": "Morning Lights" }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "two-djs-night-drive",
-      "title": "Night Drive",
-      "released": "2003-11-22",
-      "djs": [
-        { "name": "DJ Sample", "slug": "dj-sample" },
-        { "name": "DJ Partner", "slug": "dj-partner" }
-      ],
-      "sides": [
-        {
-          "position": "1",
-          "audio_links": [{ "label": "Dropbox", "url": "https://example.com/night-1.mp3" }],
-          "tracks": [
-            { "artist": "Artist I", "title": "First Gear" },
-            { "artist": "Artist J", "title": "Highway" }
-          ]
-        },
-        {
-          "position": "2",
-          "audio_links": [{ "label": "Dropbox", "url": "https://example.com/night-2.mp3" }],
-          "tracks": [
-            { "artist": "Artist K", "title": "City Signs" },
-            { "artist": "Artist L", "title": "Exit Ramp" }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "late-night-radio-2005",
-      "title": "Late Night Radio",
-      "released": "2005-03-05",
-      "djs": [{ "name": "DJ Partner", "slug": "dj-partner" }],
-      "sides": [
-        {
-          "position": "A",
-          "audio_links": [{ "label": "Dropbox", "url": "https://example.com/lnr-a.mp3" }]
-        },
-        {
-          "position": "B",
-          "audio_links": [{ "label": "Dropbox", "url": "https://example.com/lnr-b.mp3" }]
-        }
-      ]
-    },
-    {
-      "id": "rooftop-set-2007",
-      "title": "Rooftop Set",
-      "released": "2007-09-14",
-      "djs": [{ "name": "DJ Rooftop", "slug": "dj-rooftop" }],
-      "sides": [
-        {
-          "position": "A",
-          "audio_links": [{ "label": "Dropbox", "url": "https://example.com/roof-a.mp3" }],
-          "tracks": [
-            { "artist": "Artist M", "title": "Upstairs" },
-            { "artist": "Artist N", "title": "Neon" }
           ]
         }
       ]

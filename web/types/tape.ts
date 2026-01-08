@@ -18,13 +18,14 @@ export type DJ = {
     duration?: string;
   };
   
-  export type Side = {
-    position: string;
-    title?: string;
-    audio_links: AudioLink[];
-    image?: string;
-    tracks?: Track[];
-  };
+export type Side = {
+  position: string;
+  title?: string;
+  djs?: DJ[];
+  audio_links: AudioLink[];
+  image?: string;
+  tracks?: Track[];
+};
   
   export type Tape = {
     id: string;
