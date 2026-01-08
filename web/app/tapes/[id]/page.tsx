@@ -12,6 +12,12 @@ export function generateStaticParams() {
   return tapes.map((tape) => ({ id: tape.id }));
 }
 
+function isStreamable(url: string): boolean {
+  const lower = url.toLowerCase();
+  return lower.includes('raw=1') || 
+         /\.(mp3|m4a|ogg|wav)(\?|#|$)/.test(lower);
+}
+
 export default async function Page({ params }: Props) {
   const { id } = await params;
   const tape = getTapeById(id);
@@ -91,22 +97,18 @@ export default async function Page({ params }: Props) {
             )}
 
             {/* Audio Links */}
-            <div className="mb-6">
-              <h3 className="text-lg font-medium mb-2">Listen:</h3>
-              <div className="flex gap-3 flex-wrap">
-                {side.audio_links.map((link, linkIdx) => (
-                  <a
-                    key={linkIdx}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded font-medium transition"
-                  >
-                    {link.label}
-                  </a>
-                ))}
+            {side.audio_links[0] && isStreamable(side.audio_links[0].url) && (
+              <div className="mb-6">
+                <audio
+                  controls
+                  preload="none"
+                  className="w-full max-w-xl"
+                >
+                  <source src={side.audio_links[0].url} />
+                  Your browser does not support the audio element.
+                </audio>
               </div>
-            </div>
+            )}
 
             {/* Tracklist */}
             {side.tracks && side.tracks.length > 0 && (
