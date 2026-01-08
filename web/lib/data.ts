@@ -41,3 +41,22 @@ export function getDJDisplayName(slug: string): string {
   }
   return slug;
 }
+
+export interface DJIndexItem {
+  name: string;
+  slug: string;
+  tapeCount: number;
+}
+
+export function getAllDJs(): DJIndexItem[] {
+  const djMap = new Map<string, { name: string; count: number }>();
+  for (const tape of readTapesFile()) {
+    for (const dj of tape.djs) {
+      const existing = djMap.get(dj.slug);
+      djMap.set(dj.slug, { name: dj.name, count: (existing?.count ?? 0) + 1 });
+    }
+  }
+  return Array.from(djMap.entries())
+    .map(([slug, { name, count }]) => ({ name, slug, tapeCount: count }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
