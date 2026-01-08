@@ -1,52 +1,62 @@
 [
     {
-      "id": "green-blue-session-1996",
-      "title": "Green / Blue Session",
-      "released": "1996-08-17",
-      "djs": [{ "name": "DJ Example", "slug": "dj-example" }],
-      "images": { "cover": "/images/green-blue-cover.jpg" },
+      "id": "dj-trance-raw-wake-up-la",
+      "title": "Wake Up L.A.!!!",
+      "released": "1993",
+      "djs": [
+        { "name": "DJ Trance", "slug": "dj-trance" },
+        { "name": "R.A.W.", "slug": "raw" }
+      ],
+      "images": { "cover": "/media/tapes/dj-trance-raw-wake-up-la/cover.jpg" },
       "sides": [
         {
-          "position": "Green",
+          "position": "A",
+          "title": "R.A.W. — What The Fuck Is This?!",
           "audio_links": [
-            { "label": "Dropbox", "url": "https://example.com/green-side.mp3" }
+            {
+              "label": "Dropbox (Side A)",
+              "url": "https://www.dropbox.com/scl/fi/jvjus9gfuzblz4q4yr143/4-turntable-madness-101-dj-trance-raw-insomniac-1-year.mp3?rlkey=f6cuadyv4ik4zmd2b6xgp8jbl&st=q5j8gtfp&raw=1"
+            }
           ],
-          "image": "/images/green-side.jpg",
-          "tracks": [
-            { "artist": "Artist A", "title": "Track One" },
-            { "artist": "Artist B", "title": "Track Two", "duration": "5:12" }
-          ]
+          "image": "/media/tapes/dj-trance-raw-wake-up-la/sides/a.jpg"
         },
         {
-          "position": "Blue",
+          "position": "B",
+          "title": "DJ Trance — Increase The Voltage",
           "audio_links": [
-            { "label": "Dropbox", "url": "https://example.com/blue-side.mp3" }
+            {
+              "label": "Dropbox (Side B)",
+              "url": "https://www.dropbox.com/scl/fi/jvjus9gfuzblz4q4yr143/4-turntable-madness-101-dj-trance-raw-insomniac-1-year.mp3?rlkey=f6cuadyv4ik4zmd2b6xgp8jbl&st=q5j8gtfp&raw=1"
+            }
           ],
-          "image": "/images/blue-side.jpg",
-          "tracks": [
-            { "artist": "Artist C", "title": "Track Three" },
-            { "artist": "Artist D", "title": "Track Four" }
-          ]
+          "image": "/media/tapes/dj-trance-raw-wake-up-la/sides/b.jpg"
         }
       ]
     },
     {
-      "id": "warehouse-tape-a",
-      "title": "Warehouse Tape",
-      "released": "1998-02-01",
-      "djs": [{ "name": "DJ Example", "slug": "dj-example" }],
+      "id": "aldo-bender-happy-wednesdays",
+      "title": "Happy Wednesdays",
+      "released": "1991",
+      "djs": [{ "name": "Aldo Bender", "slug": "aldo-bender" }],
+      "images": { "cover": "/media/tapes/aldo-bender-happy-wednesdays/cover.jpg" },
       "sides": [
         {
           "position": "A",
-          "audio_links": [{ "label": "Dropbox", "url": "https://example.com/wh-a.mp3" }],
-          "tracks": [
-            { "artist": "Artist E", "title": "Intro" },
-            { "artist": "Artist F", "title": "Main Theme" }
+          "audio_links": [
+            {
+              "label": "Side A",
+              "url": "https://www.dropbox.com/scl/fi/8fa4nlpi6lu4wsveirmjb/aldo-bender-happy-wednesdays-a.mp3?rlkey=p4zuvnzn02jrl10xi7r3a4tw4&raw=1"
+            }
           ]
         },
         {
           "position": "B",
-          "audio_links": [{ "label": "Dropbox", "url": "https://example.com/wh-b.mp3" }]
+          "audio_links": [
+            {
+              "label": "Side B",
+              "url": "https://www.dropbox.com/scl/fi/au9wyk2vbm9dwcgxe385k/aldo-bender-happy-wednesdays-b.mp3?rlkey=9aiirqa1gkfc34ol91gi4y98p&raw=1"
+            }
+          ]
         }
       ]
     },
@@ -127,4 +137,3 @@
       ]
     }
   ]
-  
