@@ -1,6 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getTapesByDJSlug, getDJDisplayName } from "../../../lib/data";
+import { getAllTapes, getTapesByDJSlug, getDJDisplayName } from "../../../lib/data";
+
+export async function generateStaticParams() {
+  const tapes = getAllTapes();
+  const slugs = new Set<string>();
+  for (const tape of tapes) {
+    for (const dj of tape.djs) {
+      slugs.add(dj.slug);
+    }
+  }
+  return Array.from(slugs).map((slug) => ({ slug }));
+}
 
 export default async function DJPage({
   params,

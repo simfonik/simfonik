@@ -1,11 +1,16 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { getTapeById } from "../../../lib/data";
+import { getTapeById, getAllTapes } from "../../../lib/data";
 
 type Props = {
   params: Promise<{ id: string }>;
 };
+
+export function generateStaticParams() {
+  const tapes = getAllTapes();
+  return tapes.map((tape) => ({ id: tape.id }));
+}
 
 export default async function Page({ params }: Props) {
   const { id } = await params;
