@@ -7,7 +7,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
-        <h1 className="mb-8 text-3xl font-bold text-zinc-900 dark:text-zinc-50">
+        <h1 className="mb-8 text-3xl font-bold text-zinc-900 dark:text-zinc-100">
           Mixtapes
         </h1>
 
@@ -19,7 +19,7 @@ export default function Home() {
             >
               <Link
                 href={`/tapes/${tape.id}`}
-                className="block text-xl font-semibold text-zinc-900 hover:text-zinc-600 dark:text-zinc-50 dark:hover:text-zinc-300"
+                className="block text-xl font-semibold text-zinc-900 hover:text-zinc-600 dark:text-zinc-100 dark:hover:text-zinc-400"
               >
                 {tape.title}
               </Link>
@@ -31,7 +31,7 @@ export default function Home() {
                   <Link
                     key={dj.slug}
                     href={`/djs/${dj.slug}`}
-                    className="rounded-full bg-zinc-100 px-3 py-1 text-sm text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                    className="rounded-full bg-zinc-100 px-3 py-1 text-sm text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
                   >
                     {dj.name}
                   </Link>
