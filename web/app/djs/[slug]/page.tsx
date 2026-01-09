@@ -37,27 +37,32 @@ export default async function DJPage({
           {tapes.map((tape) => (
             <article
               key={tape.id}
-              className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-6 transition-all hover:border-[var(--accent)]"
+              className="relative rounded-lg border border-[var(--border)] bg-[var(--surface)] p-6 transition-all hover:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent)]"
             >
               <Link
                 href={`/tapes/${tape.id}`}
-                className="block text-xl font-semibold text-[var(--text)] hover:text-[var(--accent)] dark:hover:text-[var(--accent-hover)] transition-colors"
-              >
-                {tape.title}
-              </Link>
-              <p className="mt-2 text-sm text-[var(--muted)]">
-                {tape.released}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {tape.djs.map((dj) => (
-                  <Link
-                    key={dj.slug}
-                    href={`/djs/${dj.slug}`}
-                    className="rounded-md bg-[#5e6ad2]/10 px-2.5 py-1 text-sm font-medium text-[#5e6ad2] hover:bg-[#5e6ad2]/20 dark:bg-[#5e6ad2]/25 dark:text-[#a8aef5] dark:hover:bg-[#5e6ad2]/40 transition-colors"
-                  >
-                    {dj.name}
-                  </Link>
-                ))}
+                className="absolute inset-0 rounded-lg"
+                aria-label={`View ${tape.title}`}
+              />
+              
+              <div className="relative pointer-events-none">
+                <h2 className="text-xl font-semibold text-[var(--text)]">
+                  {tape.title}
+                </h2>
+                <p className="mt-2 text-sm text-[var(--muted)]">
+                  {tape.released}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {tape.djs.map((dj) => (
+                    <Link
+                      key={dj.slug}
+                      href={`/djs/${dj.slug}`}
+                      className="relative pointer-events-auto rounded-md bg-[#5e6ad2]/10 px-2.5 py-1 text-sm font-medium text-[#5e6ad2] hover:bg-[#5e6ad2]/20 dark:bg-[#5e6ad2]/25 dark:text-[#a8aef5] dark:hover:bg-[#5e6ad2]/40 transition-colors"
+                    >
+                      {dj.name}
+                    </Link>
+                  ))}
+                </div>
               </div>
             </article>
           ))}
