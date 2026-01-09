@@ -28,17 +28,18 @@ export default async function Page({ params }: Props) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-[var(--bg)]">
+      <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Header */}
       <header className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">{tape.title}</h1>
-        <p className="mb-4 text-zinc-600 dark:text-zinc-400">Released: {tape.released}</p>
+        <h1 className="text-4xl font-bold mb-2 text-[var(--text)]">{tape.title}</h1>
+        <p className="mb-4 text-[var(--muted)]">Released: {tape.released}</p>
         <div className="flex gap-2 flex-wrap">
           {tape.djs.map((dj) => (
             <Link
               key={dj.slug}
               href={`/djs/${dj.slug}`}
-              className="px-3 py-1 bg-blue-100 hover:bg-blue-200 rounded text-blue-900 transition"
+              className="px-2.5 py-1 bg-[#5e6ad2]/10 hover:bg-[#5e6ad2]/20 rounded-md text-[#5e6ad2] dark:bg-[#5e6ad2]/25 dark:hover:bg-[#5e6ad2]/40 dark:text-[#a8aef5] transition-colors font-medium text-sm"
             >
               {dj.name}
             </Link>
@@ -70,18 +71,18 @@ export default async function Page({ params }: Props) {
       {/* Sides */}
       <div className="space-y-12">
         {tape.sides.map((side, idx) => (
-          <section key={idx} className="border-t pt-8">
-            <h2 className="text-2xl font-semibold mb-4">
+          <section key={idx} className="border-t border-[var(--border)] pt-8">
+            <h2 className="text-2xl font-semibold mb-4 text-[var(--text)]">
               {side.title ?? `Side ${side.position}`}
             </h2>
 
             {/* Side DJs */}
             {side.djs && side.djs.length > 0 && (
-              <p className="mb-4 text-zinc-600 dark:text-zinc-400">
+              <p className="mb-4 text-[var(--muted)]">
                 By{" "}
                 {side.djs.map((dj, djIdx) => (
                   <Fragment key={dj.slug}>
-                    <Link href={`/djs/${dj.slug}`} className="hover:underline">{dj.name}</Link>
+                    <Link href={`/djs/${dj.slug}`} className="hover:underline hover:text-[var(--accent)] dark:hover:text-[var(--accent-hover)] transition-colors">{dj.name}</Link>
                     {djIdx < side.djs!.length - 1 && ", "}
                   </Fragment>
                 ))}
@@ -126,13 +127,13 @@ export default async function Page({ params }: Props) {
             {/* Tracklist */}
             {side.tracks && side.tracks.length > 0 && (
               <div>
-                <h3 className="text-lg font-medium mb-3">Tracklist:</h3>
+                <h3 className="text-lg font-medium mb-3 text-[var(--text)]">Tracklist:</h3>
                 <ol className="list-decimal list-inside space-y-1">
                   {side.tracks.map((track, trackIdx) => (
-                    <li key={trackIdx} className="text-zinc-900 dark:text-zinc-100">
+                    <li key={trackIdx} className="text-[var(--text)]">
                       {track.artist} – {track.title}
                       {track.duration && (
-                        <span className="ml-2 text-zinc-600 dark:text-zinc-400">
+                        <span className="ml-2 text-[var(--muted)]">
                           ({track.duration})
                         </span>
                       )}
@@ -143,6 +144,7 @@ export default async function Page({ params }: Props) {
             )}
           </section>
         ))}
+      </div>
       </div>
     </div>
   );

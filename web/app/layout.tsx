@@ -26,22 +26,22 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[var(--bg)] text-[var(--text)] min-h-screen`}
       >
-        <header className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
+        <header className="border-b border-[var(--border)] bg-[var(--surface)]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
               <Link href="/" className="inline-block">
                 <h1 className="text-2xl font-bold">Simfonik</h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-[var(--muted)]">
                   DJ mixtape archive
                 </p>
               </Link>
               <nav className="flex gap-6">
-                <Link href="/" className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100">
+                <Link href="/" className="text-[var(--muted)] hover:text-[var(--accent)] dark:hover:text-[var(--accent-hover)] transition-colors font-medium">
                   Tapes
                 </Link>
-                <Link href="/djs" className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100">
+                <Link href="/djs" className="text-[var(--muted)] hover:text-[var(--accent)] dark:hover:text-[var(--accent-hover)] transition-colors font-medium">
                   DJs
                 </Link>
               </nav>
