@@ -185,7 +185,8 @@
       "images": { "cover": "/media/tapes/barry-weaver-live-at-bassrush-2002/cover.jpg" },
       "sides": [
         {
-          "position": "",
+          "position": "Full",
+          "title": "Live At Bassrush",
           "audio_links": [
             {
               "url": "https://www.dropbox.com/scl/fi/jx3p1mf0yzm4dm7akiwov/barry-weaver-live-at-bassrush.mp3?rlkey=u07xplcdg7acckd4d71zp89xj&raw=1"
