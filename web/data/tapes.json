@@ -59,5 +59,216 @@
           ]
         }
       ]
+    },
+    {
+      "id": "oscar-da-grouch-marc-anthony-in-three-dee",
+      "title": "In Three Dee",
+      "released": "1993",
+      "djs": [
+        { "name": "Oscar Da Grouch", "slug": "oscar-da-grouch" },
+        { "name": "Marc Anthony", "slug": "marc-anthony" }
+      ],
+      "images": {
+        "cover": "/media/tapes/oscar-da-grouch-marc-anthony-in-three-dee/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Blue Side",
+          "djs": [{ "name": "Oscar Da Grouch", "slug": "oscar-da-grouch" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/igrir7f1aabb5bqic3c0f/oscar-da-grouch-in-three-dee.mp3?rlkey=japn3plj9p1368b46sd38wpo8&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "title": "Red Side",
+          "djs": [{ "name": "Marc Anthony", "slug": "marc-anthony" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/3irxuhc51u56ashnngrxf/marc-anthony-in-three-dee.mp3?rlkey=mlp9pu8cgi8evr0xb7gtnjnz8&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dj-trance-the-real-oldskool",
+      "title": "The Real Oldskool",
+      "released": "1992",
+      "djs": [{ "name": "DJ Trance", "slug": "dj-trance" }],
+      "sides": [
+        {
+          "position": "Side A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/43fxv64wnxp8iuk7lozbf/dj-trance-the-real-oldskool-a.mp3?rlkey=gf8g6oyeppksrfrd4on8pxgt2&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "Side B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/4ccc75je1asibv6vx7iwt/dj-trance-the-real-oldskool-b.mp3?rlkey=tfutpw48mya0kn3amx7n0dri4&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dj-trance-raw-live-at-what",
+      "title": "Live At What?",
+      "released": "1993",
+      "djs": [
+        { "name": "DJ Trance", "slug": "dj-trance" },
+        { "name": "R.A.W.", "slug": "raw" }
+      ],
+      "images": { "cover": "/media/tapes/dj-trance-raw-live-at-what/cover.jpg" },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Live At What?",
+          "djs": [{ "name": "DJ Trance", "slug": "dj-trance" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/t4ely026ur3ylnufzok31/dj-trance-live-at-what.mp3?rlkey=swlmonll7pnbxp8fay8qombpt&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "title": "Live At What?",
+          "djs": [{ "name": "R.A.W.", "slug": "raw" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/d8fy692r1i38oa1t75g0z/raw-live-at-what.mp3?rlkey=o9h9o0554olzl8kg35tz136wf&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "steve-loria-chrome",
+      "title": "Let The Street Speak: Chrome",
+      "released": "1992",
+      "djs": [{ "name": "Steve Loria", "slug": "steve-loria" }],
+      "images": { "cover": "/media/tapes/steve-loria-chrome/cover.jpg" },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Side A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/9rrbzoaeex1a6zhtij0ha/steve-loria-chrome-sidea.mp3?rlkey=ww13zes16vfg7iwrrnyqqnncs&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "title": "Side B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/poj0qwzzht58p8ql8rf24/steve-loria-chrome-sideb.mp3?rlkey=n2fgh6zwm47rft6alkcskx36m&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "barry-weaver-live-at-bassrush",
+      "title": "Live At Bassrush",
+      "released": "2002",
+      "djs": [{ "name": "Barry Weaver", "slug": "barry-weaver" }],
+      "images": { "cover": "/media/tapes/barry-weaver-live-at-bassrush-2002/cover.jpg" },
+      "sides": [
+        {
+          "position": "",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/jx3p1mf0yzm4dm7akiwov/barry-weaver-live-at-bassrush.mp3?rlkey=u07xplcdg7acckd4d71zp89xj&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chris-flores-liquid",
+      "title": "Let The Street Speak: Liquid",
+      "released": "1992",
+      "djs": [{ "name": "Chris Flores", "slug": "chris-flores" }],
+      "images": { "cover": "/media/tapes/chris-flores-liquid/cover.jpg" },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Side A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/lt5h3djam8xqwi24h5n6m/chris-flores-liquid-a.mp3?rlkey=0kq3vtiowa20gmkdm0zv1ldnp&st=mvlnqct3&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "title": "Side B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/0ymlydbmdv7k63hnnow7w/chris-flores-liquid-b.mp3?rlkey=dfpdc04ivj2occvgq99maqvtg&st=24kdonze&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "aldo-bender-too-stoned-to-mix",
+      "title": "Too Stoned To Mix",
+      "released": "1994",
+      "djs": [{ "name": "Aldo Bender", "slug": "aldo-bender" }],
+      "images": { "cover": "/media/tapes/aldo-bender-too-stoned-to-mix/cover.jpg" },
+      "sides": [
+        {
+          "position": "Side A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/zb9xs5aggo62ony1oxy4x/aldo-bender-too-stoned-to-mix-a.mp3?rlkey=jqubu4mtddx7prkvohdt6pek5&st=l0dif8sv&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "Side B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/rf8xh3uplcc6hho0ghswg/aldo-bender-too-stoned-to-mix-b.mp3?rlkey=h9j0l7px3tfi4j5v6ky3s5m5d&st=g4r57xi1&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "aldo-bender-conscious-trip",
+      "title": "Conscious Trip",
+      "released": "1995",
+      "djs": [{ "name": "Aldo Bender", "slug": "aldo-bender" }],
+      "images": { "cover": "/media/tapes/aldo-bender-conscious-trip/cover.jpg" },
+      "sides": [
+        {
+          "position": "Side A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/dp0fk59mu0emuabmst5y1/aldo-bender-conscious-trip-a.mp3?rlkey=uvk8sr2fheaxv9jj3jz33526t&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "Side B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/7byl37ieexchpvcdtmklh/aldo-bender-conscious-trip-b.mp3?rlkey=o09r7wrmgnta8z5ljdiuallgv&raw=1"
+            }
+          ]
+        }
+      ]
     }
   ]
