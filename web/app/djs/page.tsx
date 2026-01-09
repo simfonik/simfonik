@@ -6,7 +6,7 @@ export default function DJsIndexPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
-      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
         <h1 className="mb-8 text-3xl font-bold text-zinc-900 dark:text-zinc-100">
           DJs
         </h1>
@@ -14,7 +14,7 @@ export default function DJsIndexPage() {
         {djs.length === 0 ? (
           <p className="text-zinc-600 dark:text-zinc-400">No DJs found.</p>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {djs.map((dj) => (
               <article
                 key={dj.slug}
