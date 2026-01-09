@@ -6,12 +6,12 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
-      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
         <h1 className="mb-8 text-3xl font-bold text-zinc-900 dark:text-zinc-100">
           Mixtapes
         </h1>
 
-        <div className="grid gap-6 sm:grid-cols-2">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {tapes.map((tape) => (
             <article
               key={tape.id}
