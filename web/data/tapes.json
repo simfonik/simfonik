@@ -271,5 +271,30 @@
           ]
         }
       ]
+    },
+    {
+      "id": "aldo-bender-so-real",
+      "title": "So Real",
+      "released": "1995",
+      "djs": [{ "name": "Aldo Bender", "slug": "aldo-bender" }],
+      "images": { "cover": "/media/tapes/aldo-bender-so-real/cover.jpg" },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/ggn48364wtoi7aka5fvwi/aldo-bender-so-real-a.mp3?rlkey=l3b5lm1gmb04x0ge8mshpd3ds&st=h8s6f4lo&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/actk3g41cpd9cfebnmu3q/aldo-bender-so-real-b.mp3?rlkey=c001ko9l157i1mnbpc9ghzzww&st=ehn6ersz&raw=1"
+            }
+          ]
+        }
+      ]
     }
   ]
