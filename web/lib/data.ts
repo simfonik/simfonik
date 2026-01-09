@@ -46,17 +46,33 @@ export interface DJIndexItem {
   name: string;
   slug: string;
   tapeCount: number;
+  tapes: Array<{ id: string; title: string }>;
 }
 
 export function getAllDJs(): DJIndexItem[] {
-  const djMap = new Map<string, { name: string; count: number }>();
-  for (const tape of readTapesFile()) {
+  const allTapes = getAllTapes();
+  const djMap = new Map<string, { name: string; tapeIds: string[] }>();
+  
+  for (const tape of allTapes) {
     for (const dj of tape.djs) {
       const existing = djMap.get(dj.slug);
-      djMap.set(dj.slug, { name: dj.name, count: (existing?.count ?? 0) + 1 });
+      if (existing) {
+        existing.tapeIds.push(tape.id);
+      } else {
+        djMap.set(dj.slug, { name: dj.name, tapeIds: [tape.id] });
+      }
     }
   }
+  
   return Array.from(djMap.entries())
-    .map(([slug, { name, count }]) => ({ name, slug, tapeCount: count }))
+    .map(([slug, { name, tapeIds }]) => ({
+      name,
+      slug,
+      tapeCount: tapeIds.length,
+      tapes: tapeIds.slice(0, 5).map((id) => {
+        const tape = allTapes.find((t) => t.id === id);
+        return { id, title: tape?.title ?? '' };
+      }),
+    }))
     .sort((a, b) => a.name.localeCompare(b.name));
 }

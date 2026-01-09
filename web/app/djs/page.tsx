@@ -18,7 +18,7 @@ export default function DJsIndexPage() {
             {djs.map((dj) => (
               <article
                 key={dj.slug}
-                className="group rounded-lg border border-[var(--border)] bg-[var(--surface)] transition-all group-hover:border-[var(--accent)]"
+                className="rounded-lg border border-[var(--border)] bg-[var(--surface)] transition-all hover:border-[var(--accent)]"
               >
                 <Link
                   href={`/djs/${dj.slug}`}
@@ -30,6 +30,18 @@ export default function DJsIndexPage() {
                   <p className="mt-2 text-sm text-[var(--muted)]">
                     {dj.tapeCount} {dj.tapeCount === 1 ? "tape" : "tapes"}
                   </p>
+                  {dj.tapes.length > 0 && (
+                    <ul className="mt-3 space-y-1">
+                      {dj.tapes.map((tape) => (
+                        <li
+                          key={tape.id}
+                          className="text-sm text-[var(--muted)] truncate"
+                        >
+                          {tape.title}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </Link>
               </article>
             ))}

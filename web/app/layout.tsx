@@ -37,12 +37,9 @@ export default function RootLayout({
                   DJ mixtape archive
                 </p>
               </Link>
-              <nav className="flex gap-6">
-                <Link href="/" className="text-[var(--muted)] hover:text-[var(--accent)] dark:hover:text-[var(--accent-hover)] transition-colors font-medium">
-                  Tapes
-                </Link>
-                <Link href="/djs" className="text-[var(--muted)] hover:text-[var(--accent)] dark:hover:text-[var(--accent-hover)] transition-colors font-medium">
-                  DJs
+              <nav>
+                <Link href="/djs" className="text-[var(--text)] hover:text-[var(--accent)] transition-colors font-medium">
+                  Browse DJs
                 </Link>
               </nav>
             </div>
