@@ -18,17 +18,19 @@ export default function DJsIndexPage() {
             {djs.map((dj) => (
               <article
                 key={dj.slug}
-                className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-6 transition-all hover:border-[var(--accent)]"
+                className="group rounded-lg border border-[var(--border)] bg-[var(--surface)] transition-all group-hover:border-[var(--accent)]"
               >
                 <Link
                   href={`/djs/${dj.slug}`}
-                  className="block text-xl font-semibold text-[var(--text)] hover:text-[var(--accent)] dark:hover:text-[var(--accent-hover)] transition-colors"
+                  className="block h-full p-6 rounded-lg focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:outline-none"
                 >
-                  {dj.name}
+                  <h2 className="text-xl font-semibold text-[var(--text)]">
+                    {dj.name}
+                  </h2>
+                  <p className="mt-2 text-sm text-[var(--muted)]">
+                    {dj.tapeCount} {dj.tapeCount === 1 ? "tape" : "tapes"}
+                  </p>
                 </Link>
-                <p className="mt-2 text-sm text-[var(--muted)]">
-                  {dj.tapeCount} {dj.tapeCount === 1 ? "tape" : "tapes"}
-                </p>
               </article>
             ))}
           </div>
