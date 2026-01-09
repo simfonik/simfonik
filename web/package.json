@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "validate": "node scripts/validate-tapes.mjs",
+    "validate:fix": "node scripts/validate-tapes.mjs --fix"
   },
   "dependencies": {
     "next": "16.1.1",
