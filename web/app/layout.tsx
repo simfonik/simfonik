@@ -32,14 +32,17 @@ export default function RootLayout({
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
               <Link href="/" className="inline-block">
-                <h1 className="text-2xl font-bold">Simfonik</h1>
+                <h1 className="text-2xl font-bold">simfonik</h1>
                 <p className="text-sm text-[var(--muted)]">
                   DJ mixtape archive
                 </p>
               </Link>
-              <nav>
+              <nav className="flex items-center gap-6">
                 <Link href="/djs" className="text-[var(--text)] hover:text-[var(--accent)] transition-colors font-medium">
                   Browse DJs
+                </Link>
+                <Link href="/about" className="text-[var(--text)] hover:text-[var(--accent)] transition-colors font-medium">
+                  About
                 </Link>
               </nav>
             </div>
