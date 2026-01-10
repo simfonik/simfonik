@@ -416,5 +416,262 @@
           "image": "/media/tapes/dj-trance-fester-vol-1/sides/b.jpg"
         }
       ]
+    },
+    {
+      "id": "barry-weaver-trip-train",
+      "title": "Trip Train",
+      "released": "1992",
+      "djs": [{ "name": "Barry Weaver", "slug": "barry-weaver" }],
+      "images": {
+        "cover": "/media/tapes/barry-weaver-trip-train/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/u9ezzqebue30c3f1amkt3/barry-weaver-trip-train-a.mp3?rlkey=h4bv6euknk1l24zl6i1vphqtw&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/omtgprq3sk0q3q1gqd7st/barry-weaver-trip-train-b.mp3?rlkey=67xxet80pmikiijzwqa5lcvsz&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jon-williams-fruit-salad",
+      "title": "Let The Street Speak: Fruit Salad",
+      "released": "1992",
+      "djs": [{ "name": "Jon Williams", "slug": "jon-williams" }],
+      "images": {
+        "cover": "/media/tapes/jon-williams-fruit-salad/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/yk248k9hibab26tab88t5/jon-williams-fruit-salad-a.mp3?rlkey=l6025jkuuj5qrwt7fatkr2kh1&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/1dng4ke71d4r0s9ukuik4/jon-williams-fruit-salad-b.mp3?rlkey=bdxlbd1j0zntsvv764yrbz2hi&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dj-trance-live-at-bassrush-3",
+      "title": "Live at Bassrush 3",
+      "released": "2002",
+      "djs": [{ "name": "DJ Trance", "slug": "dj-trance" }],
+      "images": {
+        "cover": "/media/tapes/dj-trance-live-at-bassrush-3/cover.png"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/4jdwrlolfuxd5366fh9xr/dj-trance-live-at-bassrush-3.mp3?rlkey=k5e9k2uyd7je737vfk81bmoh9&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jughead-basskick-bassrush-5",
+      "title": "Live at Bassrush 5",
+      "released": "2003",
+      "djs": [
+        { "name": "Jughead", "slug": "jughead" },
+        { "name": "Basskick", "slug": "basskick" }
+      ],
+      "images": {
+        "cover": "/media/tapes/jughead-basskick-bassrush-5/cover.png"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/p2g87kon3pya498r9ontr/jughead-and-basskick-bassrush-5.mp3?rlkey=qlpyi8fm1nxn6so0fg365e1h6&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dj-dan-ron-d-core-dx2",
+      "title": "DX2",
+      "released": "1992",
+      "djs": [
+        { "name": "DJ Dan", "slug": "dj-dan" },
+        { "name": "Ron D Core", "slug": "ron-d-core" }
+      ],
+      "images": {
+        "cover": "/media/tapes/dj-dan-ron-d-core-dx2/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Funky In The Place",
+          "djs": [{ "name": "DJ Dan", "slug": "dj-dan" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/i0fjiy40jbxn0y0q6k9rk/dj-dan-dx2.mp3?rlkey=w9d3yjpij6evpsuhe71kscco4&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "title": "Only For The Hardcore",
+          "djs": [{ "name": "Ron D Core", "slug": "ron-d-core" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/881unjyrhvp2kw2tcimnj/ron-d-core-dx2.mp3?rlkey=4ipopcw1rs7lkbggll7y8mbf6&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dj-trance-raw-4-turntable-madness",
+      "title": "4 Turntable Madness 101 (Insomniac 1 Year)",
+      "released": "1994",
+      "djs": [
+        { "name": "DJ Trance", "slug": "dj-trance" },
+        { "name": "R.A.W.", "slug": "raw" }
+      ],
+      "images": {
+        "cover": "/media/tapes/dj-trance-raw-4-turntable-madness/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/jvjus9gfuzblz4q4yr143/4-turntable-madness-101-dj-trance-raw-insomniac-1-year.mp3?rlkey=f6cuadyv4ik4zmd2b6xgp8jbl&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-trance-raw-4-turntable-madness/sides/a.png"
+        }
+      ]
+    },
+    {
+      "id": "raw-live-at-bassrush-3",
+      "title": "Live at Bassrush 3",
+      "released": "2002",
+      "djs": [{ "name": "R.A.W.", "slug": "raw" }],
+      "images": {
+        "cover": "/media/tapes/raw-live-at-bassrush-3/cover.png"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/3698x1c2oyj7pnb9d3wh9/raw-live-at-bassrush-3.mp3?rlkey=3049c0x6ohfvpn4nt124al385&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dj-mellinfunk-oscar-da-grouch-live-at-what",
+      "title": "Live at What",
+      "released": "1993",
+      "djs": [
+        { "name": "DJ Mellinfunk", "slug": "dj-mellinfunk" },
+        { "name": "Oscar Da Grouch", "slug": "oscar-da-grouch" }
+      ],
+      "images": {
+        "cover": "/media/tapes/dj-mellinfunk-oscar-da-grouch-live-at-what/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/wso6sv20324k9e5b7ha9k/live-at-what-3-5-93-side-a.mp3?rlkey=b42m7l8gjo9xm1iw34ro4lyc9&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/iwm0nx4wnotjwdjkwzbbb/live-at-what-3-5-93-side-b.mp3?rlkey=607gxubcay7058edalqsasxep&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "aldo-bender-smile93-vol2-far-cry",
+      "title": "Smile ’93 Vol. 2: Far Cry",
+      "released": "1993",
+      "djs": [{ "name": "Aldo Bender", "slug": "aldo-bender" }],
+      "images": {
+        "cover": "/media/tapes/aldo-bender-smile93-vol2-far-cry/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/fwazkfxhsyjdapwdb19wf/aldo-bender-smile-93-vol2-far-cry-a.mp3?rlkey=2n04t9i56l0rc8ht1yjjzgdu4&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/q9k5tfmd9v5y1vwtmr2un/aldo-bender-smile-93-vol2-far-cry-b.mp3?rlkey=6fpe3rudtcyc472fuk56paqme&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "doc-martin-goa-aum-with-yourself",
+      "title": "Goa Aum With Yourself",
+      "released": "1992",
+      "djs": [{ "name": "Doc Martin", "slug": "doc-martin" }],
+      "images": {
+        "cover": "/media/tapes/doc-martin-goa-aum-with-yourself/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/u32eh23c0tiwkntd1d98v/doc-martin-flammable-groove-side-a.mp3?rlkey=wxtpc1s9rkqoo715cn2qz5z88&raw=1"
+            }
+          ],
+          "image": "/media/tapes/doc-martin-goa-aum-with-yourself/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/0kukctlvqd4skjmafzvsy/doc-martin-flammable-groove-side-b.mp3?rlkey=qx9fk220884013khg92syxwww&raw=1"
+            }
+          ],
+          "image": "/media/tapes/doc-martin-goa-aum-with-yourself/sides/b.jpg"
+        }
+      ]
     }
   ]
