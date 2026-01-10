@@ -76,3 +76,27 @@ export function getAllDJs(): DJIndexItem[] {
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
 }
+
+/**
+ * Get the best available cover image for a tape.
+ * Falls back through: cover -> side A image -> side B image -> blank tape SVG
+ */
+export function getCoverImageWithFallback(tape: Tape): string {
+  // First try the primary cover image
+  if (tape.images?.cover) {
+    return tape.images.cover;
+  }
+  
+  // Fall back to side A image
+  if (tape.sides[0]?.image) {
+    return tape.sides[0].image;
+  }
+  
+  // Fall back to side B image
+  if (tape.sides[1]?.image) {
+    return tape.sides[1].image;
+  }
+  
+  // Final fallback to blank tape
+  return "/media/site/blank-tape.svg";
+}

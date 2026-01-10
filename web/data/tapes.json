@@ -673,5 +673,59 @@
           "image": "/media/tapes/doc-martin-goa-aum-with-yourself/sides/b.jpg"
         }
       ]
+    },
+    {
+      "id": "aldo-bender-smile93-vol3-lift-off",
+      "title": "Smile '93 Vol. 3: Lift Off",
+      "released": "1993",
+      "djs": [{ "name": "Aldo Bender", "slug": "aldo-bender" }],
+      "images": {
+        "cover": "/media/tapes/aldo-bender-smile93-vol3-lift-off/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/dvle67iasl0jd3q2dq3w4/aldo-bender-smile-93-vol3-lift-off-a.mp3?rlkey=4tlf1pel5ylyt76e9fn6wc43u&raw=1"
+            }
+          ],
+          "image": "/media/tapes/aldo-bender-smile93-vol3-lift-off/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/qa0gua38ex3lqug16ehay/aldo-bender-smile-93-vol3-lift-off-b.mp3?rlkey=s4b9qkpkwfgn7jjb9mokpervf&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jon-bishop-techno-mix-92",
+      "title": "Techno Mix (July ’92)",
+      "released": "1992",
+      "djs": [{ "name": "Jon Bishop", "slug": "jon-bishop" }],
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/cd36cxcz2voc51laol41s/jon-bishop-techno-mix-july-92-sidea.mp3?rlkey=nwudvverzh7k18wltdnr8dvw5&raw=1"
+            }
+          ],
+          "image": "/media/tapes/jon-bishop-techno-mix-92/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/dpewcwyr6kxr5x4xeoixk/jon-bishop-techno-mix-july-92-sideb.mp3?rlkey=tg2ztsiplfear03vojmtd9tpg&raw=1"
+            }
+          ],
+          "image": "/media/tapes/jon-bishop-techno-mix-92/sides/b.jpg"
+        }
+      ]
     }
   ]

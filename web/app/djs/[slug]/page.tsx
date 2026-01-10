@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { getAllTapes, getTapesByDJSlug, getDJDisplayName } from "../../../lib/data";
+import { getAllTapes, getTapesByDJSlug, getDJDisplayName, getCoverImageWithFallback } from "../../../lib/data";
 
 export async function generateStaticParams() {
   const tapes = getAllTapes();
@@ -49,7 +49,7 @@ export default async function DJPage({
               {/* Cover Image */}
               <div className="relative w-full aspect-[3/2] bg-[var(--muted)]/10 pointer-events-none">
                 <Image
-                  src={tape.images?.cover || "/media/site/blank-tape.svg"}
+                  src={getCoverImageWithFallback(tape)}
                   alt={`${tape.title} cover`}
                   fill
                   className="object-contain"

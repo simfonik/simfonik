@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { getAllTapes } from "../lib/data";
+import { getAllTapes, getCoverImageWithFallback } from "../lib/data";
 
 // Hero configuration
 const HERO_TITLE = "";
@@ -63,7 +63,7 @@ export default function Home() {
               {/* Cover Image */}
               <div className="relative w-full aspect-[3/2] bg-[var(--muted)]/10 pointer-events-none">
                 <Image
-                  src={tape.images?.cover || "/media/site/blank-tape.svg"}
+                  src={getCoverImageWithFallback(tape)}
                   alt={`${tape.title} cover`}
                   fill
                   className="object-contain"
