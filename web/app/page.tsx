@@ -52,7 +52,7 @@ export default function Home() {
           {tapes.map((tape) => (
             <article
               key={tape.id}
-              className="relative rounded-lg border border-[var(--border)] bg-[var(--surface)] p-6 transition-all hover:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent)]"
+              className="relative rounded-lg border border-[var(--border)] bg-[var(--surface)] overflow-hidden transition-all hover:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent)]"
             >
               <Link
                 href={`/tapes/${tape.id}`}
@@ -60,7 +60,18 @@ export default function Home() {
                 aria-label={`View ${tape.title}`}
               />
               
-              <div className="relative pointer-events-none">
+              {/* Cover Image */}
+              <div className="relative w-full aspect-[3/2] bg-[var(--muted)]/10 pointer-events-none">
+                <Image
+                  src={tape.images?.cover || "/media/site/blank-tape.svg"}
+                  alt={`${tape.title} cover`}
+                  fill
+                  className="object-contain"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                />
+              </div>
+              
+              <div className="relative pointer-events-none p-6">
                 <h2 className="text-xl font-semibold text-[var(--text)]">
                   {tape.title}
                 </h2>

@@ -14,8 +14,8 @@ function readTapesFile(): Tape[] {
 export function getAllTapes(): Tape[] {
   const tapes = readTapesFile();
 
-  // Newest first. Works well if you store released as YYYY-MM-DD consistently.
-  return tapes.slice().sort((a, b) => b.released.localeCompare(a.released));
+  // Reverse order: last in JSON appears first on site
+  return tapes.slice().reverse();
 }
 
 export function getTapeById(id: string): Tape | undefined {
