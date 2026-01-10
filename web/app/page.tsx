@@ -64,7 +64,7 @@ export default function Home() {
                 <h2 className="text-xl font-semibold text-[var(--text)]">
                   {tape.title}
                 </h2>
-                <p className="mt-2 text-sm text-[var(--muted)]">
+                <p className="mt-2 text-sm text-[var(--muted)] min-h-[1.25rem]">
                   {tape.released}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">

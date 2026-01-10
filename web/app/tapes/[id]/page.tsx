@@ -62,7 +62,7 @@ export default async function Page({ params }: Props) {
             <img
               src={tape.images.cover}
               alt={`${tape.title} cover`}
-              className="rounded-lg shadow-lg max-w-full"
+              className="rounded-lg shadow-lg max-w-[600px]"
             />
           )}
         </div>
@@ -96,15 +96,15 @@ export default async function Page({ params }: Props) {
                   <Image
                     src={side.image}
                     alt={`Side ${side.position}`}
-                    width={400}
-                    height={400}
+                    width={600}
+                    height={600}
                     className="rounded shadow"
                   />
                 ) : (
                   <img
                     src={side.image}
                     alt={`Side ${side.position}`}
-                    className="rounded shadow max-w-md"
+                    className="rounded shadow max-w-[600px]"
                   />
                 )}
               </div>

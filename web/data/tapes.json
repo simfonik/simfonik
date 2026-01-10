@@ -296,5 +296,125 @@
           ]
         }
       ]
+    },
+    {
+      "id": "raw-turntable-psycho-1992",
+      "title": "Turntable Psycho",
+      "released": "1992",
+      "djs": [
+        { "name": "R.A.W.", "slug": "raw" }
+      ],
+      "images": {
+        "cover": "/media/tapes/raw-turntable-psycho-1992/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/mrnsk18eovh00bnvj0mmv/raw-turntable-psycho-1992-a.mp3?rlkey=4echu36ckpf1rwi2cckybcxce&st=65zr39fh&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/k423evqdyyw6r18j85p14/raw-turntable-psycho-1992-b.mp3?rlkey=cjpfm78823vtjrp9v99pi357i&st=65xdwuc4&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "raw-live-on-powertools-1994",
+      "title": "Live On Powertools",
+      "released": "1994",
+      "djs": [
+        { "name": "R.A.W.", "slug": "raw" }
+      ],
+      "images": {
+        "cover": "/media/tapes/raw-live-on-powertools-1994/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/w2r1wmwacvly35ezfr1xz/raw-live-on-powertools-1994.mp3?rlkey=gvmcg7o7msduisxdmavgmnplb&st=x3ns78z6&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dj-mojo-an-epic-oldskool-journey",
+      "title": "An Epic Oldskool Journey",
+      "released": "2009",
+      "djs": [{ "name": "DJ Mojo", "slug": "dj-mojo" }],
+      "images": {
+        "cover": "/media/tapes/dj-mojo-an-epic-oldskool-journey/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/4yajmrokzf9yjcanjh3pk/mojo-an-epic-oldskool-journey.mp3?rlkey=6d4zyarrgf60fuargdpqa9o58&st=614pc4ze&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "oscar-da-grouch-live-at-blast",
+      "title": "Live at Blast",
+      "released": "2001",
+      "djs": [{ "name": "Oscar Da Grouch", "slug": "oscar-da-grouch" }],
+      "images": {
+        "cover": "/media/tapes/oscar-da-grouch-live-at-blast/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/kejsgdzdmgxrk55j1wx5a/oscar-da-grouch-live-at-blast.mp3?rlkey=18oekay66ckjsk0q2omu27365&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dj-trance-fester-vol-1",
+      "title": "Trance Fester Vol. 1",
+      "released": "1992",
+      "djs": [
+        { "name": "DJ Trance", "slug": "dj-trance" },
+        { "name": "Fester", "slug": "fester" }
+      ],
+      "images": {
+        "cover": "/media/tapes/dj-trance-fester-vol-1/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/24iuhy1qya4zgbnnfnndr/dj-trance-trance-fester-1.mp3?rlkey=6mwui99i3376r2aevba5bmblm&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-trance-fester-vol-1/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/9uhhhyepgomumgdr73f5e/fester-trance-fester-1.mp3?rlkey=aygbhzwat5vac0dcp0iknvoa0&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-trance-fester-vol-1/sides/b.jpg"
+        }
+      ]
     }
   ]
