@@ -44,7 +44,6 @@
           "position": "A",
           "audio_links": [
             {
-              "label": "Side A",
               "url": "https://www.dropbox.com/scl/fi/8fa4nlpi6lu4wsveirmjb/aldo-bender-happy-wednesdays-a.mp3?rlkey=p4zuvnzn02jrl10xi7r3a4tw4&raw=1"
             }
           ]
@@ -53,7 +52,6 @@
           "position": "B",
           "audio_links": [
             {
-              "label": "Side B",
               "url": "https://www.dropbox.com/scl/fi/au9wyk2vbm9dwcgxe385k/aldo-bender-happy-wednesdays-b.mp3?rlkey=9aiirqa1gkfc34ol91gi4y98p&raw=1"
             }
           ]
@@ -101,7 +99,7 @@
       "djs": [{ "name": "DJ Trance", "slug": "dj-trance" }],
       "sides": [
         {
-          "position": "Side A",
+          "position": "A",
           "audio_links": [
             {
               "url": "https://www.dropbox.com/scl/fi/43fxv64wnxp8iuk7lozbf/dj-trance-the-real-oldskool-a.mp3?rlkey=gf8g6oyeppksrfrd4on8pxgt2&raw=1"
@@ -109,7 +107,7 @@
           ]
         },
         {
-          "position": "Side B",
+          "position": "B",
           "audio_links": [
             {
               "url": "https://www.dropbox.com/scl/fi/4ccc75je1asibv6vx7iwt/dj-trance-the-real-oldskool-b.mp3?rlkey=tfutpw48mya0kn3amx7n0dri4&raw=1"
@@ -159,7 +157,6 @@
       "sides": [
         {
           "position": "A",
-          "title": "Side A",
           "audio_links": [
             {
               "url": "https://www.dropbox.com/scl/fi/9rrbzoaeex1a6zhtij0ha/steve-loria-chrome-sidea.mp3?rlkey=ww13zes16vfg7iwrrnyqqnncs&raw=1"
@@ -168,7 +165,6 @@
         },
         {
           "position": "B",
-          "title": "Side B",
           "audio_links": [
             {
               "url": "https://www.dropbox.com/scl/fi/poj0qwzzht58p8ql8rf24/steve-loria-chrome-sideb.mp3?rlkey=n2fgh6zwm47rft6alkcskx36m&raw=1"
@@ -178,14 +174,14 @@
       ]
     },
     {
-      "id": "barry-weaver-live-at-bassrush",
+      "id": "barry-weaver-live-at-bassrush-2002",
       "title": "Live At Bassrush",
       "released": "2002",
       "djs": [{ "name": "Barry Weaver", "slug": "barry-weaver" }],
       "images": { "cover": "/media/tapes/barry-weaver-live-at-bassrush-2002/cover.jpg" },
       "sides": [
         {
-          "position": "Full",
+          "position": "A",
           "title": "Live At Bassrush",
           "audio_links": [
             {
@@ -204,7 +200,6 @@
       "sides": [
         {
           "position": "A",
-          "title": "Side A",
           "audio_links": [
             {
               "url": "https://www.dropbox.com/scl/fi/lt5h3djam8xqwi24h5n6m/chris-flores-liquid-a.mp3?rlkey=0kq3vtiowa20gmkdm0zv1ldnp&st=mvlnqct3&raw=1"
@@ -213,7 +208,6 @@
         },
         {
           "position": "B",
-          "title": "Side B",
           "audio_links": [
             {
               "url": "https://www.dropbox.com/scl/fi/0ymlydbmdv7k63hnnow7w/chris-flores-liquid-b.mp3?rlkey=dfpdc04ivj2occvgq99maqvtg&st=24kdonze&raw=1"
@@ -230,7 +224,7 @@
       "images": { "cover": "/media/tapes/aldo-bender-too-stoned-to-mix/cover.jpg" },
       "sides": [
         {
-          "position": "Side A",
+          "position": "A",
           "audio_links": [
             {
               "url": "https://www.dropbox.com/scl/fi/zb9xs5aggo62ony1oxy4x/aldo-bender-too-stoned-to-mix-a.mp3?rlkey=jqubu4mtddx7prkvohdt6pek5&st=l0dif8sv&raw=1"
@@ -238,7 +232,7 @@
           ]
         },
         {
-          "position": "Side B",
+          "position": "B",
           "audio_links": [
             {
               "url": "https://www.dropbox.com/scl/fi/rf8xh3uplcc6hho0ghswg/aldo-bender-too-stoned-to-mix-b.mp3?rlkey=h9j0l7px3tfi4j5v6ky3s5m5d&st=g4r57xi1&raw=1"
@@ -255,7 +249,7 @@
       "images": { "cover": "/media/tapes/aldo-bender-conscious-trip/cover.jpg" },
       "sides": [
         {
-          "position": "Side A",
+          "position": "A",
           "audio_links": [
             {
               "url": "https://www.dropbox.com/scl/fi/dp0fk59mu0emuabmst5y1/aldo-bender-conscious-trip-a.mp3?rlkey=uvk8sr2fheaxv9jj3jz33526t&raw=1"
@@ -263,7 +257,7 @@
           ]
         },
         {
-          "position": "Side B",
+          "position": "B",
           "audio_links": [
             {
               "url": "https://www.dropbox.com/scl/fi/7byl37ieexchpvcdtmklh/aldo-bender-conscious-trip-b.mp3?rlkey=o09r7wrmgnta8z5ljdiuallgv&raw=1"
@@ -399,6 +393,7 @@
       "sides": [
         {
           "position": "A",
+          "djs": [{ "name": "DJ Trance", "slug": "dj-trance" }],
           "audio_links": [
             {
               "url": "https://www.dropbox.com/scl/fi/24iuhy1qya4zgbnnfnndr/dj-trance-trance-fester-1.mp3?rlkey=6mwui99i3376r2aevba5bmblm&raw=1"
@@ -408,6 +403,7 @@
         },
         {
           "position": "B",
+          "djs": [{ "name": "Fester", "slug": "fester" }],
           "audio_links": [
             {
               "url": "https://www.dropbox.com/scl/fi/9uhhhyepgomumgdr73f5e/fester-trance-fester-1.mp3?rlkey=aygbhzwat5vac0dcp0iknvoa0&raw=1"
@@ -560,6 +556,10 @@
       "sides": [
         {
           "position": "A",
+          "djs": [
+            { "name": "DJ Trance", "slug": "dj-trance" },
+            { "name": "R.A.W.", "slug": "raw" }
+          ],
           "audio_links": [
             {
               "url": "https://www.dropbox.com/scl/fi/jvjus9gfuzblz4q4yr143/4-turntable-madness-101-dj-trance-raw-insomniac-1-year.mp3?rlkey=f6cuadyv4ik4zmd2b6xgp8jbl&raw=1"
@@ -602,6 +602,7 @@
       "sides": [
         {
           "position": "A",
+          "djs": [{ "name": "DJ Mellinfunk", "slug": "dj-mellinfunk" }],
           "audio_links": [
             {
               "url": "https://www.dropbox.com/scl/fi/wso6sv20324k9e5b7ha9k/live-at-what-3-5-93-side-a.mp3?rlkey=b42m7l8gjo9xm1iw34ro4lyc9&raw=1"
@@ -610,6 +611,7 @@
         },
         {
           "position": "B",
+          "djs": [{ "name": "Oscar Da Grouch", "slug": "oscar-da-grouch" }],
           "audio_links": [
             {
               "url": "https://www.dropbox.com/scl/fi/iwm0nx4wnotjwdjkwzbbb/live-at-what-3-5-93-side-b.mp3?rlkey=607gxubcay7058edalqsasxep&raw=1"
@@ -620,7 +622,7 @@
     },
     {
       "id": "aldo-bender-smile93-vol2-far-cry",
-      "title": "Smile ’93 Vol. 2: Far Cry",
+      "title": "Smile '93 Vol. 2: Far Cry",
       "released": "1993",
       "djs": [{ "name": "Aldo Bender", "slug": "aldo-bender" }],
       "images": {
@@ -725,6 +727,338 @@
             }
           ],
           "image": "/media/tapes/jon-bishop-techno-mix-92/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "steve-loria-deep-from-within",
+      "title": "Deep From Within",
+      "released": "1992",
+      "djs": [{ "name": "Steve Loria", "slug": "steve-loria" }],
+      "images": {
+        "cover": "/media/tapes/steve-loria-deep-from-within/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/oifl25zlp1h8z198bspzo/steve-loria-deep-from-within-uno.mp3?rlkey=2sp9tbvl7ukyy43ssmivv7pfz&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/yoh7xnaavx036v5rn4vkw/steve-loria-deep-from-within-dos.mp3?rlkey=28y037y1exy919yau746hd0rg&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dj-thee-o-kandyman-us-them",
+      "title": "Us & Them",
+      "released": "1992",
+      "djs": [
+        { "name": "DJ Thee-O", "slug": "dj-thee-o" },
+        { "name": "Kandyman", "slug": "kandyman" }
+      ],
+      "images": {
+        "cover": "/media/tapes/dj-thee-o-kandyman-us-them/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "djs": [{ "name": "DJ Thee-O", "slug": "dj-thee-o" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/g6pyg7nq1za9u58wjsc93/dj-thee-o-us-and-them.mp3?rlkey=s43101tg9ra95lcujmuh02byi&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-kandyman-us-them/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "djs": [{ "name": "Kandyman", "slug": "kandyman" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/crival618moy84denntdh/kandyman-us-and-them.mp3?rlkey=mnsv9929qrkv28eu7uf1dwfw0&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-kandyman-us-them/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "jesse-brooks-dj-jesse-92",
+      "title": "DJ Jesse ’92",
+      "released": "1992",
+      "djs": [
+        { "name": "Jesse Brooks", "slug": "jesse-brooks" }
+      ],
+      "images": {
+        "cover": "/media/tapes/jesse-brooks-dj-jesse-92/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/504n3w7hcnuksrnruil9j/dj-jesse-92-side-a.mp3?rlkey=3hn5p1jledeqxgeb4whhxmhrg&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/zuo826evj20fg1owshf2p/dj-jesse-92-side-b.mp3?rlkey=9yn2qecwrp3j5l2ew0mxl5qsf&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "steve-loria-love-saved-the-day",
+      "title": "Love Saved the Day",
+      "released": "1991",
+      "djs": [
+        { "name": "Steve Loria", "slug": "steve-loria" }
+      ],
+      "images": {
+        "cover": "/media/tapes/steve-loria-love-saved-the-day/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/0793m8jw98uq486qygsfg/steve-loria-house-love-saved-the-day-sidea.mp3?rlkey=o7ycy79re4apu1uldkfglmt0b&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/m0hzzwmmgyvp90zdrhfjm/steve-loria-house-love-saved-the-day-sideb.mp3?rlkey=mxfnlwhxhxfff63k3yse1a2yi&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "barry-weaver-lone-wolf-marques-wyatt-return-to-paradise",
+      "title": "Lone Wolf / Return To Paradise",
+      "released": "1991",
+      "djs": [
+        { "name": "Barry Weaver", "slug": "barry-weaver" },
+        { "name": "Marques Wyatt", "slug": "marques-wyatt" }
+      ],
+      "sides": [
+        {
+          "position": "A",
+          "title": "Lone Wolf",
+          "djs": [{ "name": "Barry Weaver", "slug": "barry-weaver" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/tjmt6isqmrbqm0gvih6l4/barry-weaver-lone-wolf-milky-way-rave-tape.mp3?rlkey=6zxxsl0pumcjn1mw8ryps8bd0&raw=1"
+            }
+          ],
+          "image": "/media/tapes/barry-weaver-lone-wolf-marques-wyatt-return-to-paradise/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Return To Paradise",
+          "djs": [{ "name": "Marques Wyatt", "slug": "marques-wyatt" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/t3jqrjtef6476htmd1peo/marques-wyatt-return-to-paradise-milky-way-rave-tape.mp3?rlkey=jsov7tg3xcm9llva0mkrkdvqm&raw=1"
+            }
+          ],
+          "image": "/media/tapes/barry-weaver-lone-wolf-marques-wyatt-return-to-paradise/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "ron-d-core-louis-love-love-core",
+      "title": "Love Core",
+      "released": "1994",
+      "djs": [
+        { "name": "Ron D Core", "slug": "ron-d-core" },
+        { "name": "Louis Love", "slug": "louis-love" }
+      ],
+      "images": {
+        "cover": "/media/tapes/ron-d-core-louis-love-love-core/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "djs": [{ "name": "Ron D Core", "slug": "ron-d-core" }],
+          "title": "Core Side",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/8zapdqzaw780fnldqx5mc/ron-d-core-love-core-1.mp3?rlkey=gs4xnd7xda72ya4ry25rk99gb&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "djs": [{ "name": "Louis Love", "slug": "louis-love" }],
+          "title": "Love Side",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/gmhg9oa8hum5utludcdem/louis-love-love-core-1.mp3?rlkey=np67kcdtx76b7p3wl8t8sgdlt&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mark-farina-waka-share-basic-foods",
+      "title": "Waka Share / Basic Foods",
+      "released": "1993",
+      "djs": [{ "name": "DJ Mark Farina", "slug": "dj-mark-farina" }],
+      "images": {
+        "cover": "/media/tapes/mark-farina-waka-share-basic-foods/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Waka Share (Part 1)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/hm09rarwt3700ic989nr1/dj-mark-farina-waka-share-part-1.mp3?rlkey=9lyq3mrjtjlfvyd8suoq09nbc&raw=1"
+            }
+          ],
+          "image": "/media/tapes/mark-farina-waka-share-basic-foods/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Basic Foods",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/6miktia0lyrjg1ixc72yw/dj-mark-farina-basic-foods.mp3?rlkey=g5c7ljmbzd9yzt8k1bt75zy1q&raw=1"
+            }
+          ],
+          "image": "/media/tapes/mark-farina-waka-share-basic-foods/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "ron-d-core-acid-test",
+      "title": "Acid Test",
+      "released": "1994",
+      "djs": [{ "name": "Ron D Core", "slug": "ron-d-core" }],
+      "images": {
+        "cover": "/media/tapes/ron-d-core-acid-test/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Acid Side",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/8l5blodwuor9p28myywmg/ron-d-core-acid-test-acid-side.mp3?rlkey=jfbsir1xhu57v410tcl9iog88&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ron-d-core-acid-test/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Trip Side",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/fk162sf75ywkyp8ptssfl/ron-d-core-acid-test-trip-side.mp3?rlkey=ghx8hv58a41l7zsc1u6pzsoaa&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ron-d-core-acid-test/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "ernie-munson-pair-a-dime-shift",
+      "title": "Pair-A-Dime Shift",
+      "released": "1993",
+      "djs": [{ "name": "Ernie Munson", "slug": "ernie-munson" }],
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/pm8awnhwns4wmz9arhozs/ernie-munson-pair-a-dime-shift-side-a.mp3?rlkey=o5m6o9bponb7mclmbrdhy79v3&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ernie-munson-pair-a-dime-shift/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/hsqa9uyopycri7rfack48/ernie-munson-pair-a-dime-shift-side-b.mp3?rlkey=l1qljfd91lnacj5paor87iqzl&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ernie-munson-pair-a-dime-shift/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "steve-loria-deep-space",
+      "title": "Deep Space",
+      "released": "1993",
+      "djs": [{ "name": "Steve Loria", "slug": "steve-loria" }],
+      "images": { "cover": "/media/tapes/steve-loria-deep-space/cover.jpg" },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Deep Space Uno",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/4hfukcz7r9u6114uer9rn/steve-loria-deep-space-uno.mp3?rlkey=27rb37talerm1l30gbqeopsvv&raw=1"
+            }
+          ],
+          "image": "/media/tapes/steve-loria-deep-space/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Deep Space Dos",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/rtmjdm5qq0t0haqfu3th5/steve-loria-deep-space-dos.mp3?rlkey=ig345i5ocltvnsauhv1s2wlzu&raw=1"
+            }
+          ],
+          "image": "/media/tapes/steve-loria-deep-space/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "chris-hyde-milk-cookies",
+      "title": "Milk & Cookies",
+      "released": "1993",
+      "djs": [{ "name": "Chris Hyde", "slug": "chris-hyde" }],
+      "images": { "cover": "/media/tapes/chris-hyde-milk-cookies/cover.jpg" },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Milk Side",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/th0dni31jkk81tpa9nzjb/chris-hyde-milk-and-cookies-milk-side.mp3?rlkey=jtypp8m0nrsfjsl7h65n1g05p&raw=1"
+            }
+          ],
+          "image": "/media/tapes/chris-hyde-milk-cookies/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Cookie Side",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/x68emglgquupcdzbp40qk/chris-hyde-milk-and-cookies-cookie-side.mp3?rlkey=aas8ax2oklliufbhxzy38hdhw&raw=1"
+            }
+          ],
+          "image": "/media/tapes/chris-hyde-milk-cookies/sides/b.jpg"
         }
       ]
     }
