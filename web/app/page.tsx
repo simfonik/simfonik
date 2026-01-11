@@ -52,7 +52,7 @@ export default function Home() {
           {tapes.map((tape) => (
             <article
               key={tape.id}
-              className="relative rounded-lg border border-[var(--border)] bg-[var(--surface)] overflow-hidden transition-[border-color,box-shadow] duration-500 hover:border-[var(--accent)]/40 hover:shadow-[0_0_20px_rgba(94,106,210,0.15)] dark:hover:shadow-[0_0_20px_rgba(168,174,245,0.1)] focus-within:ring-2 focus-within:ring-[var(--accent)]"
+              className="relative rounded-lg border border-[var(--border)] bg-[var(--surface)] overflow-hidden transition-[border-color,box-shadow] duration-500 hover:border-[var(--accent)]/40 hover:shadow-[0_0_20px_rgba(94,106,210,0.15)] dark:hover:shadow-[0_0_20px_rgba(168,174,245,0.1)] focus-within:ring-2 focus-within:ring-[var(--accent)] flex flex-col"
             >
               <Link
                 href={`/tapes/${tape.id}`}
@@ -71,13 +71,15 @@ export default function Home() {
                 />
               </div>
               
-              <div className="relative pointer-events-none p-6">
-                <h2 className="text-xl font-semibold text-[var(--text)]">
-                  {tape.title}
-                </h2>
-                <p className="mt-2 text-sm text-[var(--muted)] min-h-[1.25rem]">
-                  {tape.released}
-                </p>
+              <div className="relative pointer-events-none p-6 flex flex-col flex-grow">
+                <div className="flex-grow">
+                  <h2 className="text-xl font-semibold text-[var(--text)]">
+                    {tape.title}
+                  </h2>
+                  <p className="mt-2 text-sm text-[var(--muted)] min-h-[1.25rem]">
+                    {tape.released}
+                  </p>
+                </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {tape.djs.map((dj) => {
                     const shouldLink = dj.link !== false && dj.slug !== "unknown";

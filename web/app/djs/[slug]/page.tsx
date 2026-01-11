@@ -41,7 +41,7 @@ export default async function DJPage({
           {tapes.map((tape) => (
             <article
               key={tape.id}
-              className="relative rounded-lg border border-[var(--border)] bg-[var(--surface)] overflow-hidden transition-all hover:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent)]"
+              className="relative rounded-lg border border-[var(--border)] bg-[var(--surface)] overflow-hidden transition-all hover:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent)] flex flex-col"
             >
               <Link
                 href={`/tapes/${tape.id}`}
@@ -60,13 +60,15 @@ export default async function DJPage({
                 />
               </div>
               
-              <div className="relative pointer-events-none p-6">
-                <h2 className="text-xl font-semibold text-[var(--text)]">
-                  {tape.title}
-                </h2>
-                <p className="mt-2 text-sm text-[var(--muted)]">
-                  {tape.released}
-                </p>
+              <div className="relative pointer-events-none p-6 flex flex-col flex-grow">
+                <div className="flex-grow">
+                  <h2 className="text-xl font-semibold text-[var(--text)]">
+                    {tape.title}
+                  </h2>
+                  <p className="mt-2 text-sm text-[var(--muted)]">
+                    {tape.released}
+                  </p>
+                </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {tape.djs.map((dj) => {
                     const shouldLink = dj.link !== false && dj.slug !== "unknown";
