@@ -1174,5 +1174,34 @@
           "image": "/media/tapes/ernie-munson-holographic-universe/sides/b.jpg"
         }
       ]
+    },
+    {
+      "id": "destructo-hard-medium",
+      "title": "Hard / Medium",
+      "released": "1992",
+      "djs": [{ "name": "Destructo", "slug": "destructo" }],
+      "images": { "cover": "/media/tapes/destructo-hard-medium/cover.jpg" },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Hard",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/un72vc0ag7s2d2wvlxseu/dj-destructo-hard.mp3?rlkey=ktk79pq33duiglmkj79o9en3u&raw=1"
+            }
+          ],
+          "image": "/media/tapes/destructo-hard-medium/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Medium",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/rt5knork7yj85gp8uqwpi/dj-destructo-medium.mp3?rlkey=qr7inoz82e3x8grmk2tgv2og6&raw=1"
+            }
+          ],
+          "image": "/media/tapes/destructo-hard-medium/sides/b.jpg"
+        }
+      ]
     }
   ]
