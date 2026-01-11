@@ -1716,5 +1716,417 @@
           "image": "/media/tapes/doc-martin-vibratory-energy/sides/b.jpg"
         }
       ]
+    },
+    {
+      "id": "jon-bishop-the-california-project",
+      "title": "The California Project",
+      "released": "1994",
+      "djs": [{ "name": "Jon Bishop", "slug": "jon-bishop" }],
+      "images": { "cover": "/media/tapes/jon-bishop-the-california-project/cover.jpg" },
+      "sides": [
+        {
+          "position": "1A",
+          "title": "Cosmic Evolution (Part One) A",
+          "djs": [{ "name": "Jon Bishop", "slug": "jon-bishop" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/jqnthmnycejv1cblwgqns/jon-bishop-cosmic-evolution-part-one-a.mp3?rlkey=qsqa02v21zemxzghksijqt7xl&raw=1"
+            }
+          ],
+          "image": "/media/tapes/jon-bishop-the-california-project/sides/1a.jpg"
+        },
+        {
+          "position": "1B",
+          "title": "Cosmic Evolution (Part One) B",
+          "djs": [{ "name": "Jon Bishop", "slug": "jon-bishop" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/p100ff94o3bmrclfkc0yk/jon-bishop-cosmic-evolution-part-one-b.mp3?rlkey=e0d6lyspvrcthzrf4nae9xiz7&raw=1"
+            }
+          ],
+          "image": "/media/tapes/jon-bishop-the-california-project/sides/1b.jpg"
+        },
+        {
+          "position": "2A",
+          "title": "Cosmic Evolution (Part Two) A",
+          "djs": [{ "name": "Jon Bishop", "slug": "jon-bishop" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/sspp3l016yoqy1ijct56s/jon-bishop-cosmic-evolution-part-two-a.mp3?rlkey=rcrye0qqjdy37bgz0m3p8bkog&raw=1"
+            }
+          ],
+          "image": "/media/tapes/jon-bishop-the-california-project/sides/2a.jpg"
+        },
+        {
+          "position": "2B",
+          "title": "Cosmic Evolution (Part Two) B",
+          "djs": [{ "name": "Jon Bishop", "slug": "jon-bishop" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/tuguk5ho0anybd0dhtwrc/jon-bishop-cosmic-evolution-part-two-b.mp3?rlkey=g948s4ck0wfkj5jhvndqc71vp&raw=1"
+            }
+          ],
+          "image": "/media/tapes/jon-bishop-the-california-project/sides/2b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "simply-jeff-dj-spinn-the-california-project",
+      "title": "The California Project",
+      "released": "1994",
+      "djs": [
+        { "name": "Simply Jeff", "slug": "simply-jeff" },
+        { "name": "DJ Spinn", "slug": "dj-spinn" }
+      ],
+      "images": {
+        "cover": "/media/tapes/simply-jeff-dj-spinn-the-california-project/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "1A",
+          "title": "California Project Exclusive Mix (Side A)",
+          "djs": [{ "name": "Simply Jeff", "slug": "simply-jeff" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/5ofu0wsz0h6uyen9gwtal/simply-jeff-california-project-exclusive-mix-side-a.mp3?rlkey=rj6pr3v18g6v65rhnyk6zg7tl&raw=1"
+            }
+          ],
+          "image": "/media/tapes/simply-jeff-dj-spinn-the-california-project/sides/1a.jpg"
+        },
+        {
+          "position": "1B",
+          "title": "California Project Exclusive Mix (Side B)",
+          "djs": [{ "name": "Simply Jeff", "slug": "simply-jeff" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/a9smiz9ht87erqnpo7ouq/simply-jeff-california-project-exclusive-mix-side-b.mp3?rlkey=k1xguq6oewsruce8lnzbx44z6&raw=1"
+            }
+          ],
+          "image": "/media/tapes/simply-jeff-dj-spinn-the-california-project/sides/1b.jpg"
+        },
+        {
+          "position": "2A",
+          "title": "California Project Exclusive Root Mix (Side A)",
+          "djs": [{ "name": "DJ Spinn", "slug": "dj-spinn" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/e6xh1rpa6104wbr54kbyg/dj-spinn-california-project-exclusive-root-mix-side-a.mp3?rlkey=55de4jlafkw1ynpy5lfttnt43&raw=1"
+            }
+          ],
+          "image": "/media/tapes/simply-jeff-dj-spinn-the-california-project/sides/2a.jpg"
+        },
+        {
+          "position": "2B",
+          "title": "California Project Exclusive Root Mix (Side B)",
+          "djs": [{ "name": "DJ Spinn", "slug": "dj-spinn" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/vb0m9ghu59yns7nf68og3/dj-spinn-california-project-exclusive-root-mix-side-b.mp3?rlkey=8cgdr8sj3z4uu36gi8aqo5aar&raw=1"
+            }
+          ],
+          "image": "/media/tapes/simply-jeff-dj-spinn-the-california-project/sides/2b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-thee-o-sunset-on-venus",
+      "title": "Sunset on Venus",
+      "released": "1994",
+      "djs": [{ "name": "DJ Thee-O", "slug": "dj-thee-o" }],
+      "sides": [
+        {
+          "position": "A",
+          "title": "Don't Stare at the Sun",
+          "djs": [{ "name": "DJ Thee-O", "slug": "dj-thee-o" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/smbbqrs2toxw6vjqcwtmh/dj-thee-o-sunset-on-venus-dont-stare-at-the-sun.mp3?rlkey=zfdqzv0e8gy59zljt4rodl672&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-sunset-on-venus/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Inside the Outside",
+          "djs": [{ "name": "DJ Thee-O", "slug": "dj-thee-o" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/ljthj2qq7o1ihn8kiax4a/dj-thee-o-sunset-on-venus-inside-the-outside.mp3?rlkey=ccwx68ql7oue397hsa1nxjcwu&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-sunset-on-venus/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-curious-the-darkside-part-2",
+      "title": "The Darkside (Part 2)",
+      "released": "1994",
+      "djs": [{ "name": "DJ Curious", "slug": "dj-curious" }],
+      "images": {
+        "cover": "/media/tapes/dj-curious-the-darkside-part-2/cover.png"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/ilusfgc9l1fp69d1vytyy/dj-curious-the-darkside-ii-a.mp3?rlkey=hxf6m12antbowybizlz1gwvq0&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/az5f1tvf4v1kpzhfsywww/dj-curious-the-darkside-ii-b.mp3?rlkey=nc91tgbz3953k5dxfju4vsdoa&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dj-mark-farina-planet-earth-technology-has-its-subliminal-side",
+      "title": "Planet Earth / Technology Has Its Subliminal Side",
+      "released": "1993",
+      "djs": [{ "name": "DJ Mark Farina", "slug": "dj-mark-farina" }],
+      "images": {
+        "cover": "/media/tapes/mark-farina-planet-earth-technology-has-its-subliminal-side/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Planet Earth",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/tfticd4w2jqbw722t6ym6/dj-mark-farina-planet-earth.mp3?rlkey=hx47upqd24gezfmmtllsng7kd&raw=1"
+            }
+          ],
+          "image": "/media/tapes/mark-farina-planet-earth-technology-has-its-subliminal-side/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Technology Has Its Subliminal Side",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/89l315qgnns93bk9pm4rs/dj-mark-farina-technology-has-its-subliminal-side.mp3?rlkey=muqoebto01af4wrmqebvx1h0n&raw=1"
+            }
+          ],
+          "image": "/media/tapes/mark-farina-planet-earth-technology-has-its-subliminal-side/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-thee-o-omar-mindwaves",
+      "title": "Mindwaves",
+      "released": "1995",
+      "djs": [
+        { "name": "DJ Thee-O", "slug": "dj-thee-o" },
+        { "name": "Omar", "slug": "omar" }
+      ],
+      "images": {
+        "cover": "/media/tapes/dj-thee-o-omar-mindwaves/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "djs": [{ "name": "DJ Thee-O", "slug": "dj-thee-o" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/9skul0bgs74erzd056x76/dj-thee-o-mind-waves.mp3?rlkey=z2hlqxtvbjqhg2p9p5m51rxzr&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-omar-mindwaves/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "djs": [{ "name": "Omar", "slug": "omar" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/lfp2hxl1gjpu1npxzga59/omar-mind-waves.mp3?rlkey=7dsjtj9u80mvyk7i7bugoou7q&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-omar-mindwaves/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-thee-o-cybersex",
+      "title": "Cybersex",
+      "released": "1993",
+      "djs": [{ "name": "DJ Thee-O", "slug": "dj-thee-o" }],
+      "images": {
+        "cover": "/media/tapes/dj-thee-o-cybersex/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Foreplay",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/tyomqb0wn1z3tr4g6t94n/thee-o-cybersex-foreplay.mp3?rlkey=gb2zsc2mfa3ganb08a5kh6xp4&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-cybersex/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Intercourse",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/qc6pkld8hd84luw7lhb2v/thee-o-cybersex-intercourse.mp3?rlkey=vb18pjylwb7e6ipuju96trg8h&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-cybersex/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "mark-farina-the-children-are-playing",
+      "title": "The Children Are Playing",
+      "released": "1993",
+      "djs": [{ "name": "DJ Mark Farina", "slug": "dj-mark-farina" }],
+      "images": {
+        "cover": "/media/tapes/mark-farina-the-children-are-playing/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/60ph633a9pzj2oigxn9xj/dj-mark-farina-the-children-are-playing-side-a.mp3?rlkey=xn0iluajqs6q396s9duks2bb0&raw=1"
+            }
+          ],
+          "image": "/media/tapes/mark-farina-the-children-are-playing/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/sb8p93j9cdhubpcvytx92/dj-mark-farina-the-children-are-playing-side-b.mp3?rlkey=iwcvo9wuivb2qtkkkbo3mhhum&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ernie-munson-friends-of-distinction",
+      "title": "Friends of Distinction",
+      "released": "1993",
+      "djs": [{ "name": "Ernie Munson", "slug": "ernie-munson" }],
+      "images": {
+        "cover": "/media/tapes/ernie-munson-friends-of-distinction/cover.png"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/wqt1g1s2nrnr1ot2vxsub/ernie-munson-friends-of-distinction-side-a.mp3?rlkey=khz2istljonfr6yh4tatnjrlf&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ernie-munson-friends-of-distinction/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/gmlqabd8cuzj6g6y1kdf0/ernie-munson-friends-of-distinction-side-b.mp3?rlkey=vikg7568707htkstykkhxh9bc&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ernie-munson-friends-of-distinction/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-thee-o-live-from-the-desert",
+      "title": "Live From The Desert",
+      "released": "1993",
+      "djs": [{ "name": "DJ Thee-O", "slug": "dj-thee-o" }],
+      "images": {
+        "cover": "/media/tapes/dj-thee-o-live-from-the-desert/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Live at the Drum Beats of Love (Side 1)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/dc89pun4lz7s17cdydlrt/dj-thee-o-live-at-the-drum-beats-of-love-side-1.mp3?rlkey=qby0ylqcp06jdhlhxhi2ze02u&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-live-from-the-desert/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Live at the Drum Beats of Love (Side 2)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/57uj63nlw8tp14aafvf19/dj-thee-o-live-at-the-drum-beats-of-love-side-2.mp3?rlkey=z2kq35ry3z9abiiezxn5vflvv&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-live-from-the-desert/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-dan-housing-project",
+      "title": "Housing Project",
+      "released": "1994",
+      "djs": [{ "name": "DJ Dan", "slug": "dj-dan" }],
+      "images": {
+        "cover": "/media/tapes/dj-dan-housing-project/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Disco Damn Nation",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/b8vj4dc7s14caudr20ba8/dj-dan-disco-damn-nation.mp3?rlkey=wvvmzm8i2u5kvceyqmtyoda5f&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-dan-housing-project/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Dance, Be Happy",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/xqc93ygpespglo6t9auhj/dj-dan-dance-be-happy.mp3?rlkey=uw795i778p6jbuo5eypikmuvu&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-dan-housing-project/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-dan-warehouse-flashbacks-vol-1",
+      "title": "Warehouse Flashbacks Vol. 1",
+      "released": "1992",
+      "djs": [{ "name": "DJ Dan", "slug": "dj-dan" }],
+      "images": {
+        "cover": "/media/tapes/dj-dan-warehouse-flashbacks-vol-1/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/7v734xhnzruo0c70ea0az/dj-dan-warehouse-flashback-a.mp3?rlkey=eaj7uo2659zmllgw3pu1pdkk6&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-dan-warehouse-flashbacks-vol-1/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/o4trfmfezzo93d6z7fzmn/dj-dan-warehouse-flashback-b.mp3?rlkey=ns3i3b937fa8l5rg1nqk80e6i&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-dan-warehouse-flashbacks-vol-1/sides/b.jpg"
+        }
+      ]
     }
   ]
