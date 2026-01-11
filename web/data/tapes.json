@@ -1061,5 +1061,118 @@
           "image": "/media/tapes/chris-hyde-milk-cookies/sides/b.jpg"
         }
       ]
+    },
+    {
+      "id": "jason-bently-oct-92",
+      "title": "Oct '92",
+      "released": "1992",
+      "djs": [{ "name": "Jason Bently", "slug": "jason-bently" }],
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/85p326llm9a5bmsq1p5b4/jason-bentley-oct-1992-a.mp3?rlkey=xxzxh4iwdk1gw535e4d3htgq6&raw=1"
+            }
+          ],
+          "image": "/media/tapes/jason-bently-oct-92/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/xa9ttxdswbezf43z8nkgm/jason-bentley-oct-1992-b.mp3?rlkey=ce1itctyadm971an839qq34td&raw=1"
+            }
+          ],
+          "image": "/media/tapes/jason-bently-oct-92/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "ernie-munson-ooga-booga",
+      "title": "Ooga Booga",
+      "released": "1993",
+      "djs": [{ "name": "Ernie Munson", "slug": "ernie-munson" }],
+      "images": {
+        "cover": "/media/tapes/ernie-munson-ooga-booga/cover.png"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Ooga Booga Part 1",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/4cmnotjgbb34htnmnxnkh/ernie-munson-ooga-booga-part-1.mp3?rlkey=7o7b7jo7dc0ek26ma72poswi4&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ernie-munson-ooga-booga/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Ooga Booga Part 2",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/w7hybhcutl57211l1mv3d/ernie-munson-ooga-booga-part-2.mp3?rlkey=1njgfgedeo0a3jf2to00mi50p&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ernie-munson-ooga-booga/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "doc-martin-live-at-citrusonic",
+      "title": "Live at Citrusonic",
+      "released": "1992",
+      "djs": [{ "name": "Doc Martin", "slug": "doc-martin" }],
+      "images": {
+        "cover": "/media/tapes/doc-martin-live-at-citrusonic/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/lph7wwdsv09mw604o0ckt/doc-martin-at-citrusonic-5-27-92-side-a.mp3?rlkey=hwveqjxy8mwudhaxix2phq5fn&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/y371vfjrc74qsls45w72x/doc-martin-at-citrusonic-5-27-92-side-b.mp3?rlkey=1v7p61mkmdy99md2v9g2d3bxt&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ernie-munson-holographic-universe",
+      "title": "Holographic Universe",
+      "released": "1993",
+      "djs": [{ "name": "Ernie Munson", "slug": "ernie-munson" }],
+      "images": {
+        "cover": "/media/tapes/ernie-munson-holographic-universe/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/mv5hsx71u7dg33x2xgl49/ernie-munson-holographic-universe-side-a.mp3?rlkey=ssioyytksxb38a80kwg8sddda&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ernie-munson-holographic-universe/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/8oucf5svhc087zqdfktm7/ernie-munson-holographic-universe-side-b.mp3?rlkey=i8aewg3mmx3tqpg4qnd6j5e7c&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ernie-munson-holographic-universe/sides/b.jpg"
+        }
+      ]
     }
   ]
