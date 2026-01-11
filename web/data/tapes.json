@@ -1236,5 +1236,97 @@
           ]
         }
       ]
+    },
+    {
+      "id": "eli-star-sown-loose-alone-some-lose-as-one",
+      "title": "Sown Loose Alone / Some Lose As One",
+      "released": "1993",
+      "djs": [{ "name": "Eli Star", "slug": "eli-star" }],
+      "images": {
+        "cover": "/media/tapes/eli-star-sown-loose-alone-some-lose-as-one/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Some Lose As One",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/94l4i2q8slyss2ii33mex/eli-star-some-lose-as-one.mp3?rlkey=1fqa5bb00on4051utyobc5b95&raw=1"
+            }
+          ],
+          "image": "/media/tapes/eli-star-sown-loose-alone-some-lose-as-one/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Sown Loose Alone",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/bop4w021zsf8mach2dect/eli-star-sown-loose-alone.mp3?rlkey=updbhg37xch5b84fhd7ivsqvs&raw=1"
+            }
+          ],
+          "image": "/media/tapes/eli-star-sown-loose-alone-some-lose-as-one/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "doc-martin-deep-urban-breakdown",
+      "title": "Deep Urban Breakdown",
+      "released": "1992",
+      "djs": [{ "name": "Doc Martin", "slug": "doc-martin" }],
+      "images": {
+        "cover": "/media/tapes/doc-martin-deep-urban-breakdown/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Side 1",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/vyq86ie7t92ebdxycuo1s/doc-martin-deep-urban-breakdown-side-1.mp3?rlkey=2i171dfatyzw9jml8huvou4n6&raw=1"
+            }
+          ],
+          "image": "/media/tapes/doc-martin-deep-urban-breakdown/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Side 2",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/jv91kff7brpa0vl2c5quv/doc-martin-deep-urban-breakdown-side-2.mp3?rlkey=iqx2urv6bbq0i10zm80yahg0g&raw=1"
+            }
+          ],
+          "image": "/media/tapes/doc-martin-deep-urban-breakdown/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "raymond-roker-santa-kruz-7-of-9",
+      "title": "Santa Kruz (7 of 9)",
+      "released": "1993",
+      "djs": [{ "name": "Raymond Roker", "slug": "raymond-roker" }],
+      "images": {
+        "cover": "/media/tapes/raymond-roker-santa-kruz-7-of-9/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Santa Kruzin",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/hmjpn6qq8v6spptzftqct/raymond-roker-santa-kruzin-side-a.mp3?rlkey=uo2gjg14eiqktobzi5s2p2n1z&raw=1"
+            }
+          ],
+          "image": "/media/tapes/raymond-roker-santa-kruz-7-of-9/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Santa Kruzin",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/uo9o56yjpvhbeacfrznno/raymond-roker-santa-kruzin-side-b.mp3?rlkey=71o5w223lnh8akz3pihw2pr69&raw=1"
+            }
+          ]
+        }
+      ]
     }
   ]
