@@ -49,6 +49,16 @@ export default function RootLayout({
           </div>
         </header>
         {children}
+        <footer className="mt-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <p className="text-xs text-[var(--muted)]">
+              © respective artists and rights holders. Non-commercial archive.{" "}
+              <Link href="/rights" className="text-[var(--muted)] hover:text-[var(--accent)] transition-colors underline">
+                Rights &amp; Takedown
+              </Link>
+            </p>
+          </div>
+        </footer>
       </body>
     </html>
   );
