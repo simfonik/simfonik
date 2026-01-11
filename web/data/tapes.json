@@ -1203,5 +1203,38 @@
           "image": "/media/tapes/destructo-hard-medium/sides/b.jpg"
         }
       ]
+    },
+    {
+      "id": "live-at-what-1993-mojo-unknown",
+      "title": "Live At What?",
+      "released": "1993",
+      "djs": [
+        { "name": "DJ Mojo", "slug": "dj-mojo" },
+        { "name": "Unknown", "slug": "unknown", "link": false }
+      ],
+      "images": { "cover": "/media/tapes/live-at-what-1993-mojo-unknown/cover.jpg" },
+      "sides": [
+        {
+          "position": "A",
+          "djs": [
+            { "name": "DJ Mojo", "slug": "dj-mojo" },
+            { "name": "Unknown", "slug": "unknown", "link": false }
+          ],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/k5o9875fp0599b5cypgq4/live-at-what-side-a.mp3?rlkey=u7e36j577f50uqxh0xquc0jv9&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "djs": [{ "name": "Unknown", "slug": "unknown", "link": false }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/qz8hzt683794mr2f7pzjd/live-at-what-side-b.mp3?rlkey=p86xwsob9c2zs7yet5xxr8w6k&raw=1"
+            }
+          ]
+        }
+      ]
     }
   ]
