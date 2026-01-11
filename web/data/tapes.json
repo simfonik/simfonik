@@ -1328,5 +1328,393 @@
           ]
         }
       ]
+    },
+    {
+      "id": "frank-c-we-must-progress",
+      "title": "We Must Progress",
+      "released": "1993",
+      "djs": [{ "name": "Frank C", "slug": "frank-c" }],
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/l5b2vedhod0dw1aviagb9/frank-c-we-must-progress-april-93-a.mp3?rlkey=l0qsqnbcppgunklixs2nyw490&raw=1"
+            }
+          ],
+          "image": "/media/tapes/frank-c-we-must-progress/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/52nml3f0r35h7y0hxnr2n/frank-c-we-must-progress-april-93-b.mp3?rlkey=xeiuio01jx4shozxw8z1cfyw0&raw=1"
+            }
+          ],
+          "image": "/media/tapes/frank-c-we-must-progress/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "mark-lewis-global-lust-vol-5",
+      "title": "Global Lust Vol. 5",
+      "released": "1992",
+      "djs": [{ "name": "Mark Lewis", "slug": "mark-lewis" }],
+      "images": { "cover": "/media/tapes/mark-lewis-global-lust-vol-5/cover.jpg" },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/y9xk9o3w5e1gt6dp9mbls/dj-mark-lewis-global-lust-vol-5-side-a.mp3?rlkey=ocvtp8mfjl4lptyi5qw90l4on&raw=1"
+            }
+          ],
+          "image": "/media/tapes/mark-lewis-global-lust-vol-5/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/bs0unepjizyeiwo7h27yi/dj-mark-lewis-global-lust-vol-5-side-b.mp3?rlkey=a143usss9gq8quq2otx3zmetm&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jon-williams-91",
+      "title": "Jon Williams '91",
+      "released": "1991",
+      "djs": [{ "name": "Jon Williams", "slug": "jon-williams" }],
+      "images": { "cover": "/media/tapes/jon-williams-91/cover.jpg" },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/53uubjt2z5p7lxvu49xcs/jon-williams-1991-side-a.mp3?rlkey=ai38blul7cnipdpqnuduq8r09&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/0edldba6kv38ytqp6b8an/jon-williams-1991-side-b.mp3?rlkey=lv2ac3onkx925e1ci6jfrhji2&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dj-trance-too-much-going-on-upstairs",
+      "title": "Too Much Going On Upstairs",
+      "released": "1995",
+      "djs": [{ "name": "DJ Trance", "slug": "dj-trance" }],
+      "images": { "cover": "/media/tapes/dj-trance-too-much-going-on-upstairs/cover.jpg" },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Side A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/wbaf5jhadme5tsinifxxd/dj-trance-too-much-going-on-up-stairs-side-a.mp3?rlkey=c82c1cpguuj4f1try4rvztpyw&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-trance-too-much-going-on-upstairs/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Side B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/55497xj648zjjp37ddj8j/dj-trance-too-much-going-on-upstairs-side-b.mp3?rlkey=1i9gtd6ioaukzwondtxmks3th&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-trance-too-much-going-on-upstairs/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-thee-o-the-california-project",
+      "title": "The California Project",
+      "released": "1994",
+      "djs": [{ "name": "DJ Thee-O", "slug": "dj-thee-o" }],
+      "images": {
+        "cover": "/media/tapes/dj-thee-o-the-california-project/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "1A",
+          "title": "Anologue Mindtrip (Mind Side)",
+          "djs": [{ "name": "DJ Thee-O", "slug": "dj-thee-o" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/kgr3x533d9fyudwcehoha/dj-thee-o-anologue-mindtrip-mind-side-bio-25.mp3?rlkey=9ipgj6z6wg389s266i8k1t3ki&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-the-california-project/sides/1a.jpg"
+        },
+        {
+          "position": "1B",
+          "title": "Dream Themes (Trip Side)",
+          "djs": [{ "name": "DJ Thee-O", "slug": "dj-thee-o" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/79lt9mjfu1yoil1d47pui/dj-thee-o-dream-themes-trip-side-bio-25.mp3?rlkey=4d598a9j2ciif5qipcu45xahv&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-the-california-project/sides/1b.jpg"
+        },
+        {
+          "position": "2A",
+          "title": "Evening on Earth",
+          "djs": [{ "name": "DJ Thee-O", "slug": "dj-thee-o" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/vxf685qmlf6vvnarjlrk1/dj-thee-o-evening-on-earth-bio-25.mp3?rlkey=i6xrz454eko4et4s9qg034z99&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-the-california-project/sides/2a.jpg"
+        },
+        {
+          "position": "2B",
+          "title": "Live at Dosage Afterhours",
+          "djs": [{ "name": "DJ Thee-O", "slug": "dj-thee-o" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/8yylgjfq2k98n4t5w11by/dj-thee-o-live-at-dosage-afterhours-bio-25.mp3?rlkey=v9sf64sqqe99m3vspxw96p361&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-the-california-project/sides/2b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "ron-d-core-the-california-project",
+      "title": "The California Project",
+      "released": "1994",
+      "djs": [{ "name": "Ron D Core", "slug": "ron-d-core" }],
+      "images": {
+        "cover": "/media/tapes/ron-d-core-the-california-project/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "1A",
+          "title": "The Witchdoctors Prescription (Side A)",
+          "djs": [{ "name": "Ron D Core", "slug": "ron-d-core" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/uebkt0152apl42iuxv0u4/ron-d-core-the-witchdoctors-prescription-side-a.mp3?rlkey=45k3gcic6nrvtu2iuiaa3uo8l&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ron-d-core-the-california-project/sides/1a.jpg"
+        },
+        {
+          "position": "1B",
+          "title": "The Witchdoctors Prescription (Side B)",
+          "djs": [{ "name": "Ron D Core", "slug": "ron-d-core" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/94vkkn3o3zvbisevaw6ks/ron-d-core-the-witchdoctors-prescription-side-b.mp3?rlkey=u9sdap51q259nudupl1lkprzy&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ron-d-core-the-california-project/sides/1b.jpg"
+        },
+        {
+          "position": "2A",
+          "title": "Alive In Hell (Side A)",
+          "djs": [{ "name": "Ron D Core", "slug": "ron-d-core" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/cpfy9sae6qr58lfuf9gug/ron-d-core-alive-in-hell-side-a.mp3?rlkey=ycseyo1xek1340z6hokvoa6vg&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ron-d-core-the-california-project/sides/2a.jpg"
+        },
+        {
+          "position": "2B",
+          "title": "Alive In Hell (Side B)",
+          "djs": [{ "name": "Ron D Core", "slug": "ron-d-core" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/9clq7hvo6rp1getj6zhbu/ron-d-core-alive-in-hell-side-b.mp3?rlkey=vcmm9b6otb7x814r6x430bb2w&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ron-d-core-the-california-project/sides/2b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "drc-the-california-project",
+      "title": "The California Project",
+      "released": "1994",
+      "djs": [{ "name": "DRC", "slug": "drc" }],
+      "images": {
+        "cover": "/media/tapes/drc-the-california-project/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "1A",
+          "title": "Rare Form Pt. 1 (Side A)",
+          "djs": [{ "name": "DRC", "slug": "drc" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/5f255tdrk5o8dw38enj0m/drc-rare-form-pt1-side-a.mp3?rlkey=s3s0ymnmv3nb4awfd4ew01en6&raw=1"
+            }
+          ],
+          "image": "/media/tapes/drc-the-california-project/sides/1a.jpg"
+        },
+        {
+          "position": "1B",
+          "title": "Rare Form Pt. 1 (Side B)",
+          "djs": [{ "name": "DRC", "slug": "drc" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/q243gmjmbtspya8nmh0tk/drc-rare-form-pt1-side-b.mp3?rlkey=lumwzhu76lgz9s67wrroobhi2&raw=1"
+            }
+          ],
+          "image": "/media/tapes/drc-the-california-project/sides/1b.jpg"
+        },
+        {
+          "position": "2A",
+          "title": "Rare Form Pt. 2 (Side A)",
+          "djs": [{ "name": "DRC", "slug": "drc" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/ud2mufz5s8vcso04kz0p6/drc-rare-form-pt2-side-a.mp3?rlkey=11984fb8h9hzpm32kbr23vp1m&raw=1"
+            }
+          ],
+          "image": "/media/tapes/drc-the-california-project/sides/2a.jpg"
+        },
+        {
+          "position": "2B",
+          "title": "Rare Form Pt. 2 (Side B)",
+          "djs": [{ "name": "DRC", "slug": "drc" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/fuxu1aqmz8i033euywr47/drc-rare-form-pt2-side-b.mp3?rlkey=hs5gfcttim4j93fa58syj7lpn&raw=1"
+            }
+          ],
+          "image": "/media/tapes/drc-the-california-project/sides/2b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-curious-the-darkside-part-1",
+      "title": "The Darkside (Part 1)",
+      "released": "1993",
+      "djs": [{ "name": "DJ Curious", "slug": "dj-curious" }],
+      "images": {
+        "cover": "/media/tapes/dj-curious-the-darkside-part-1/cover.png"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "The Darkside (Side A)",
+          "djs": [{ "name": "DJ Curious", "slug": "dj-curious" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/vwtusygkbrnrmqzx7lp2x/dj-curious-the-dark-side-1-side-a.mp3?rlkey=lpvikqzeb9m46h3j1juiqp5rh&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "title": "The Darkside (Side B)",
+          "djs": [{ "name": "DJ Curious", "slug": "dj-curious" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/sbq9ppycx1j8bvm2q24oz/dj-curious-the-dark-side-1-side-b.mp3?rlkey=ciqnw87ienfhcovm5vkqjxzyj&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dj-dan-the-california-project",
+      "title": "The California Project",
+      "released": "1994",
+      "djs": [{ "name": "DJ Dan", "slug": "dj-dan" }],
+      "images": {
+        "cover": "/media/tapes/dj-dan-the-california-project/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "1A",
+          "title": "Live at Organic (Side A)",
+          "djs": [{ "name": "DJ Dan", "slug": "dj-dan" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/7r1ofv1ic2is05awu3c5o/dj-dan-live-at-organic-side-a.mp3?rlkey=dundri36zpz1ta593qrzi721v&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-dan-the-california-project/sides/1a.jpg"
+        },
+        {
+          "position": "1B",
+          "title": "Live at Organic (Side B)",
+          "djs": [{ "name": "DJ Dan", "slug": "dj-dan" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/0s970n92iiopbsn4b4qal/dj-dan-live-at-organic-side-b.mp3?rlkey=ss36us2lo52v08un5oov1d20i&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-dan-the-california-project/sides/1b.jpg"
+        },
+        {
+          "position": "2A",
+          "title": "Live (Side A)",
+          "djs": [{ "name": "DJ Dan", "slug": "dj-dan" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/vdukzxoj51jgnhzv1lv3u/dj-dan-live-side-a.mp3?rlkey=art8wosrpqf6es6xp0ko415dr&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-dan-the-california-project/sides/2a.jpg"
+        },
+        {
+          "position": "2B",
+          "title": "Live (Side B)",
+          "djs": [{ "name": "DJ Dan", "slug": "dj-dan" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/wziwt1z33msacqo2ox8m2/dj-dan-live-side-b.mp3?rlkey=37lkwc9gpac0pwoi14h0e2pzo&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-dan-the-california-project/sides/2b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "doc-martin-vibratory-energy",
+      "title": "Vibratory Energy",
+      "released": "1992",
+      "djs": [{ "name": "Doc Martin", "slug": "doc-martin" }],
+      "images": { "cover": "/media/tapes/doc-martin-vibratory-energy/cover.jpg" },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Unlock Your Mind",
+          "djs": [{ "name": "Doc Martin", "slug": "doc-martin" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/lqv718hajtukdebakmmpa/doc-martin-vibratory-energy-unlock-your-mind.mp3?rlkey=dxhkjmfuycez03probwqpp385&raw=1"
+            }
+          ],
+          "image": "/media/tapes/doc-martin-vibratory-energy/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Unlock Your Soul",
+          "djs": [{ "name": "Doc Martin", "slug": "doc-martin" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/qtwalh68qws5brv96cgzy/doc-martin-vibratory-energy-unlock-your-soul.mp3?rlkey=6lxrn5r5ad19xf2onjs6kaxzv&raw=1"
+            }
+          ],
+          "image": "/media/tapes/doc-martin-vibratory-energy/sides/b.jpg"
+        }
+      ]
     }
   ]
