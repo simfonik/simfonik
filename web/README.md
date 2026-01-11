@@ -20,6 +20,32 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Basic Authentication
+
+The site uses Basic Auth to protect all routes, including the home page. Only Next.js internals, media files, and common static files (favicon, robots.txt, sitemap.xml) are exempt.
+
+### Local Development
+
+To test Basic Auth locally, create a `.env.local` file in the `web/` directory:
+
+```bash
+BASIC_AUTH_USER=your_username
+BASIC_AUTH_PASS=your_password
+```
+
+If these variables are not set, Basic Auth is disabled (useful for local development without auth).
+
+### Vercel Deployment
+
+Add environment variables in your Vercel project settings:
+
+1. Go to your project → Settings → Environment Variables
+2. Add `BASIC_AUTH_USER` with your desired username
+3. Add `BASIC_AUTH_PASS` with your desired password
+4. Redeploy your application
+
+The middleware runs on Vercel's Edge Runtime automatically.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
