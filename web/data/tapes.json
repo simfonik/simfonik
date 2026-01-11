@@ -2128,5 +2128,216 @@
           "image": "/media/tapes/dj-dan-warehouse-flashbacks-vol-1/sides/b.jpg"
         }
       ]
+    },
+    {
+      "id": "eli-star-omega",
+      "title": "Omega",
+      "released": "1994",
+      "djs": [{ "name": "Eli Star", "slug": "eli-star" }],
+      "images": { "cover": "/media/tapes/eli-star-omega/cover.jpg" },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/ekdywch5sylyrr47xs08r/eli-star-omega-side-a.mp3?rlkey=4d2lquw2r2k76y54oq9kx06k4&raw=1"
+            }
+          ],
+          "image": "/media/tapes/eli-star-omega/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/rn3w3n055aq7ka1gccz67/eli-star-omega-side-b.mp3?rlkey=xnyqp458zxgf9wh3kj9hm2eje&raw=1"
+            }
+          ],
+          "image": "/media/tapes/eli-star-omega/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-trance-live-at-family-joy",
+      "title": "Live at Family Joy",
+      "released": "1995",
+      "djs": [{ "name": "DJ Trance", "slug": "dj-trance" }],
+      "images": { "cover": "/media/tapes/dj-trance-live-at-family-joy/cover.jpg" },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/x3gurt1zjcfp3t9ftfh5a/dj-trance-family-joy-12-95-a.mp3?rlkey=a6me6chc8v3gh7aofibxzuvee&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-trance-live-at-family-joy/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/50thkpswrlufrfhsdcv2e/dj-trance-family-joy-12-95-b.mp3?rlkey=uyt3z7ne60jojonuqvulec4fk&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-trance-live-at-family-joy/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-dan-ron-d-core-dx2-vol-2",
+      "title": "DX2 Vol. 2",
+      "released": "1992",
+      "djs": [
+        { "name": "DJ Dan", "slug": "dj-dan" },
+        { "name": "Ron D Core", "slug": "ron-d-core" }
+      ],
+      "images": { "cover": "/media/tapes/dj-dan-ron-d-core-dx2-vol-2/cover.jpg" },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Back In Your Face",
+          "djs": [{ "name": "DJ Dan", "slug": "dj-dan" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/2r9iy66u87rjgeyi9a2nk/dx2-part-2-dj-dan.mp3?rlkey=hlxeuah1zjwyaan9r7a7cwkgd&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-dan-ron-d-core-dx2-vol-2/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Dr. Freecloud Returns",
+          "djs": [{ "name": "Ron D Core", "slug": "ron-d-core" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/sramvpnkn2vahbn5hs5mm/dx2-part-2-ron-d-core.mp3?rlkey=8amje3jvzuo44gdtigyc07ixm&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-dan-ron-d-core-dx2-vol-2/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-dan-ron-d-core-dx2-vol-3",
+      "title": "DX2 Vol. 3",
+      "released": "1992",
+      "djs": [
+        { "name": "DJ Dan", "slug": "dj-dan" },
+        { "name": "Ron D Core", "slug": "ron-d-core" }
+      ],
+      "images": {
+        "cover": "/media/tapes/dj-dan-ron-d-core-dx2-vol-3/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Live At Funny Farm",
+          "djs": [{ "name": "Ron D Core", "slug": "ron-d-core" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/40rkhdjd6z6ne6u1ykydr/dx2-part-3-ron-d-core.mp3?rlkey=6k2bnou1ok2jyetyvpw4h3ucw&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-dan-ron-d-core-dx2-vol-3/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Live At Funny Farm",
+          "djs": [{ "name": "DJ Dan", "slug": "dj-dan" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/d7uej8lem7s9km5f0y1gv/dx2-part-3-dj-dan.mp3?rlkey=vk5psci3x5sotcsoob2gewm2l&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-dan-ron-d-core-dx2-vol-3/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "mark-lewis-flammable-liquid",
+      "title": "Flammable Liquid",
+      "released": "1992",
+      "djs": [
+        { "name": "Mark Lewis", "slug": "mark-lewis" }
+      ],
+      "images": {
+        "cover": "/media/tapes/mark-lewis-flammable-liquid/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Flammable Liquid (Side A)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/b8gehsgxw9h6ss7eceln7/mark-lewis-flammable-a.mp3?rlkey=obd8octna1l53nxidi3sdwlu9&raw=1"
+            }
+          ],
+          "image": "/media/tapes/mark-lewis-flammable-liquid/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Flammable Liquid (Side B)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/eveqp497ud2krg7x4zax5/mark-lewis-flammable-b.mp3?rlkey=nalqxm63om8wp8i0ta9z06h4y&raw=1"
+            }
+          ],
+          "image": "/media/tapes/mark-lewis-flammable-liquid/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "ron-d-core-no-doz",
+      "title": "No Doz",
+      "released": "1992",
+      "djs": [
+        { "name": "Ron D Core", "slug": "ron-d-core" }
+      ],
+      "images": {
+        "cover": "/media/tapes/ron-d-core-no-doz/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "No Doz (Side A)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/xe0zco6uyx5rtax4posk1/ron-d-core-no-doz-a.mp3?rlkey=stsrrp08mm8yv702belej40ui&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ron-d-core-no-doz/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "No Doz (Side B)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/4gsu8mhul3d1wiaeop4i5/ron-d-core-no-doz-b.mp3?rlkey=2puzivhf99cvvy15xcojwfc0x&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ron-d-core-no-doz/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-mojo-an-epic-oldskool-journey-part-2",
+      "title": "An Epic Oldskool Journey (Part II)",
+      "released": "2010",
+      "djs": [
+        { "name": "DJ Mojo", "slug": "dj-mojo" }
+      ],
+      "images": {
+        "cover": "/media/tapes/dj-mojo-an-epic-oldskool-journey-part-2/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/zu293oqzi6jcs0xrpfvdm/mojo-an-epic-oldskool-journey-part-ii.mp3?rlkey=z7sicda5jyr9f6dyp5su732j5&raw=1"
+            }
+          ]
+        }
+      ]
     }
   ]
