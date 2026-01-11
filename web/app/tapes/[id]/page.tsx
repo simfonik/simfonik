@@ -59,6 +59,7 @@ export default async function Page({ params }: Props) {
               className="rounded-lg shadow-lg"
             />
           ) : (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={tape.images.cover}
               alt={`${tape.title} cover`}
@@ -101,6 +102,7 @@ export default async function Page({ params }: Props) {
                     className="rounded shadow"
                   />
                 ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={side.image}
                     alt={`Side ${side.position}`}
