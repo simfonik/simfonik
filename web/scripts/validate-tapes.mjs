@@ -140,8 +140,8 @@ function validateTapes() {
           addError(tape.id, `${djPath}.name`, 'DJ name is missing or empty', 'Add a name for this DJ');
         }
         
-        // Track DJ slug -> name mapping for consistency check
-        if (dj.slug && dj.name) {
+        // Track DJ slug -> name mapping for consistency check (skip "unknown")
+        if (dj.slug && dj.name && dj.slug !== 'unknown') {
           if (!djSlugToNames.has(dj.slug)) {
             djSlugToNames.set(dj.slug, new Set());
           }
@@ -204,7 +204,7 @@ function validateTapes() {
               
               if (!dj.slug) {
                 addError(tape.id, `${djPath}.slug`, 'Side DJ slug is missing', 'Add a slug for this DJ');
-              } else if (!tapeDjSlugs.has(dj.slug)) {
+              } else if (dj.slug !== 'unknown' && !tapeDjSlugs.has(dj.slug)) {
                 addError(
                   tape.id, 
                   `${djPath}.slug`, 

@@ -29,7 +29,11 @@ export function getTapesByDJSlug(slug: string): Tape[] {
 export function getAllDJSlugs(): string[] {
   const slugs = new Set<string>();
   for (const tape of readTapesFile()) {
-    for (const dj of tape.djs) slugs.add(dj.slug);
+    for (const dj of tape.djs) {
+      if (dj.slug !== 'unknown') {
+        slugs.add(dj.slug);
+      }
+    }
   }
   return Array.from(slugs).sort();
 }
@@ -55,6 +59,9 @@ export function getAllDJs(): DJIndexItem[] {
   
   for (const tape of allTapes) {
     for (const dj of tape.djs) {
+      // Skip "unknown" DJs - they should not appear in the DJ index
+      if (dj.slug === 'unknown') continue;
+      
       const existing = djMap.get(dj.slug);
       if (existing) {
         existing.tapeIds.push(tape.id);

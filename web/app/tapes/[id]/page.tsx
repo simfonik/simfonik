@@ -51,15 +51,30 @@ export default async function Page({ params }: Props) {
         <h1 className="text-3xl font-bold mb-2 text-[var(--text)]">{tape.title}</h1>
         <p className="mb-4 text-[var(--muted)]">Released: {tape.released}</p>
         <div className="flex gap-2 flex-wrap">
-          {tape.djs.map((dj) => (
-            <Link
-              key={dj.slug}
-              href={`/djs/${dj.slug}`}
-              className="px-2.5 py-1 bg-[#5e6ad2]/10 hover:bg-[#5e6ad2]/20 rounded-md text-[#5e6ad2] dark:bg-[#5e6ad2]/25 dark:hover:bg-[#5e6ad2]/40 dark:text-[#a8aef5] transition-colors font-medium text-sm"
-            >
-              {dj.name}
-            </Link>
-          ))}
+          {tape.djs.map((dj) => {
+            const shouldLink = dj.link !== false && dj.slug !== "unknown";
+            
+            if (shouldLink) {
+              return (
+                <Link
+                  key={dj.slug}
+                  href={`/djs/${dj.slug}`}
+                  className="px-2.5 py-1 bg-[#5e6ad2]/10 hover:bg-[#5e6ad2]/20 rounded-md text-[#5e6ad2] dark:bg-[#5e6ad2]/25 dark:hover:bg-[#5e6ad2]/40 dark:text-[#a8aef5] transition-colors font-medium text-sm"
+                >
+                  {dj.name}
+                </Link>
+              );
+            }
+            
+            return (
+              <span
+                key={dj.slug}
+                className="px-2.5 py-1 bg-[var(--muted)]/20 border border-[var(--border)] rounded-md text-[var(--muted)] font-medium text-sm cursor-default"
+              >
+                {dj.name}
+              </span>
+            );
+          })}
         </div>
       </header>
 
@@ -78,15 +93,30 @@ export default async function Page({ params }: Props) {
               <h1 className="text-3xl font-bold mb-2 text-[var(--text)]">{tape.title}</h1>
               <p className="mb-4 text-[var(--muted)]">Released: {tape.released}</p>
               <div className="flex gap-2 flex-wrap">
-                {tape.djs.map((dj) => (
-                  <Link
-                    key={dj.slug}
-                    href={`/djs/${dj.slug}`}
-                    className="px-2.5 py-1 bg-[#5e6ad2]/10 hover:bg-[#5e6ad2]/20 rounded-md text-[#5e6ad2] dark:bg-[#5e6ad2]/25 dark:hover:bg-[#5e6ad2]/40 dark:text-[#a8aef5] transition-colors font-medium text-sm"
-                  >
-                    {dj.name}
-                  </Link>
-                ))}
+                {tape.djs.map((dj) => {
+                  const shouldLink = dj.link !== false && dj.slug !== "unknown";
+                  
+                  if (shouldLink) {
+                    return (
+                      <Link
+                        key={dj.slug}
+                        href={`/djs/${dj.slug}`}
+                        className="px-2.5 py-1 bg-[#5e6ad2]/10 hover:bg-[#5e6ad2]/20 rounded-md text-[#5e6ad2] dark:bg-[#5e6ad2]/25 dark:hover:bg-[#5e6ad2]/40 dark:text-[#a8aef5] transition-colors font-medium text-sm"
+                      >
+                        {dj.name}
+                      </Link>
+                    );
+                  }
+                  
+                  return (
+                    <span
+                      key={dj.slug}
+                      className="px-2.5 py-1 bg-[var(--muted)]/20 border border-[var(--border)] rounded-md text-[var(--muted)] font-medium text-sm cursor-default"
+                    >
+                      {dj.name}
+                    </span>
+                  );
+                })}
               </div>
             </header>
 
@@ -105,12 +135,20 @@ export default async function Page({ params }: Props) {
                     {side.djs && side.djs.length > 0 && (
                       <p className="text-sm text-[var(--muted)] mt-1">
                         By{" "}
-                        {side.djs.map((dj, djIdx) => (
-                          <Fragment key={dj.slug}>
-                            <Link href={`/djs/${dj.slug}`} className="hover:underline hover:text-[var(--accent)] transition-colors">{dj.name}</Link>
-                            {djIdx < side.djs!.length - 1 && ", "}
-                          </Fragment>
-                        ))}
+                        {side.djs.map((dj, djIdx) => {
+                          const shouldLink = dj.link !== false && dj.slug !== "unknown";
+                          
+                          return (
+                            <Fragment key={dj.slug}>
+                              {shouldLink ? (
+                                <Link href={`/djs/${dj.slug}`} className="hover:underline hover:text-[var(--accent)] transition-colors">{dj.name}</Link>
+                              ) : (
+                                <span className="cursor-default">{dj.name}</span>
+                              )}
+                              {djIdx < side.djs!.length - 1 && ", "}
+                            </Fragment>
+                          );
+                        })}
                       </p>
                     )}
                   </div>

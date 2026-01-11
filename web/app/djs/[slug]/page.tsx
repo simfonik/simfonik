@@ -8,7 +8,10 @@ export async function generateStaticParams() {
   const slugs = new Set<string>();
   for (const tape of tapes) {
     for (const dj of tape.djs) {
-      slugs.add(dj.slug);
+      // Skip "unknown" - no page should be generated for it
+      if (dj.slug !== 'unknown') {
+        slugs.add(dj.slug);
+      }
     }
   }
   return Array.from(slugs).map((slug) => ({ slug }));
@@ -65,15 +68,30 @@ export default async function DJPage({
                   {tape.released}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {tape.djs.map((dj) => (
-                    <Link
-                      key={dj.slug}
-                      href={`/djs/${dj.slug}`}
-                      className="relative pointer-events-auto rounded-md bg-[#5e6ad2]/10 px-2.5 py-1 text-sm font-medium text-[#5e6ad2] hover:bg-[#5e6ad2]/20 dark:bg-[#5e6ad2]/25 dark:text-[#a8aef5] dark:hover:bg-[#5e6ad2]/40 transition-colors"
-                    >
-                      {dj.name}
-                    </Link>
-                  ))}
+                  {tape.djs.map((dj) => {
+                    const shouldLink = dj.link !== false && dj.slug !== "unknown";
+                    
+                    if (shouldLink) {
+                      return (
+                        <Link
+                          key={dj.slug}
+                          href={`/djs/${dj.slug}`}
+                          className="relative pointer-events-auto rounded-md bg-[#5e6ad2]/10 px-2.5 py-1 text-sm font-medium text-[#5e6ad2] hover:bg-[#5e6ad2]/20 dark:bg-[#5e6ad2]/25 dark:text-[#a8aef5] dark:hover:bg-[#5e6ad2]/40 transition-colors"
+                        >
+                          {dj.name}
+                        </Link>
+                      );
+                    }
+                    
+                    return (
+                      <span
+                        key={dj.slug}
+                        className="relative pointer-events-auto rounded-md bg-[var(--muted)]/20 border border-[var(--border)] px-2.5 py-1 text-sm font-medium text-[var(--muted)] cursor-default"
+                      >
+                        {dj.name}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             </article>
