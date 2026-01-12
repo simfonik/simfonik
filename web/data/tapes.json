@@ -590,7 +590,7 @@
     },
     {
       "id": "dj-mellinfunk-oscar-da-grouch-live-at-what",
-      "title": "Live at What",
+      "title": "Live at What?",
       "released": "1993",
       "djs": [
         { "name": "DJ Mellinfunk", "slug": "dj-mellinfunk" },
@@ -2337,6 +2337,836 @@
               "url": "https://www.dropbox.com/scl/fi/zu293oqzi6jcs0xrpfvdm/mojo-an-epic-oldskool-journey-part-ii.mp3?rlkey=z7sicda5jyr9f6dyp5su732j5&raw=1"
             }
           ]
+        }
+      ]
+    },
+    {
+      "id": "spun-josh-come-unity-1",
+      "title": "Come Unity 1",
+      "released": "1993",
+      "djs": [
+        { "name": "Spun", "slug": "spun" },
+        { "name": "Josh", "slug": "josh" }
+      ],
+      "images": { "cover": "/media/tapes/spun-josh-come-unity-1/cover.jpg" },
+      "sides": [
+        {
+          "position": "A",
+          "djs": [{ "name": "Spun", "slug": "spun" }],
+          "image": "/media/tapes/spun-josh-come-unity-1/sides/a.jpg",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/eh67chwncaxj5hdohquvi/come-unity-i-spun-1.mp3?rlkey=pxy9vbk2tzrgbrj6mxaswxtkx&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "djs": [
+            { "name": "Spun", "slug": "spun" },
+            { "name": "Josh", "slug": "josh" }
+          ],
+          "image": "/media/tapes/spun-josh-come-unity-1/sides/b.jpg",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/b4vmsg7wu5ocqwray6ev7/come-unity-i-spun-josh-2.mp3?rlkey=dkbcznte3clkfqppqk0esnzuu&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ron-d-core-dj-robin-possessed",
+      "title": "Possessed",
+      "released": "1993",
+      "djs": [
+        { "name": "Ron D Core", "slug": "ron-d-core" },
+        { "name": "DJ Robin", "slug": "dj-robin" }
+      ],
+      "images": { "cover": "/media/tapes/ron-d-core-dj-robin-possessed/cover.jpg" },
+      "sides": [
+        {
+          "position": "A",
+          "djs": [{ "name": "Ron D Core", "slug": "ron-d-core" }],
+          "image": "/media/tapes/ron-d-core-dj-robin-possessed/sides/a.jpg",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/0uiy3w38va9o70o2dbyg3/ron-d-core-possessed.mp3?rlkey=afg6e8ws10o8k1llskywim090&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "djs": [{ "name": "DJ Robin", "slug": "dj-robin" }],
+          "image": "/media/tapes/ron-d-core-dj-robin-possessed/sides/b.jpg",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/vb1m250b6uefs6dcrre49/dj-robin-possessed.mp3?rlkey=aam537d7ot4i10wtkknq3d8fw&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "josh-simon-come-unity-ii",
+      "title": "Come Unity II",
+      "released": "1993",
+      "djs": [{ "name": "Josh Simon", "slug": "josh-simon" }],
+      "images": { "cover": "/media/tapes/josh-simon-come-unity-ii/cover.jpg" },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/l8jhrk2ne9oh707kq341m/come-unity-ii-josh.mp3?rlkey=lrfcr0ji3w6y8fduo8fwrhtdx&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/3z42kjrtnthpsdwjfkyun/come-unity-ii-josh-simon.mp3?rlkey=5dtoamlk287fkgyrlmpv83nlx&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mercury-come-unity-june-92",
+      "title": "Come Unity (June '92)",
+      "released": "1992",
+      "djs": [{ "name": "Mercury", "slug": "mercury" }],
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/vq20foteqz12k8lx1cxta/mercury-live-at-comeunity-1992-06-02-side-a.mp3?rlkey=vv10i95gxxs2dbaufw8p8gd9h&raw=1"
+            }
+          ],
+          "image": "/media/tapes/mercury-come-unity-june-92/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/ghebezyo942zmhahgn964/mercury-live-at-comeunity-1992-06-02-side-b.mp3?rlkey=1onqbaqguzb7mu0t7wmiwj1q1&raw=1"
+            }
+          ],
+          "image": "/media/tapes/mercury-come-unity-june-92/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-mojo-return-of-the-funky-warrior",
+      "title": "Return of the Funky Warrior",
+      "released": "1995",
+      "djs": [{ "name": "DJ Mojo", "slug": "dj-mojo" }],
+      "images": { "cover": "/media/tapes/dj-mojo-return-of-the-funky-warrior/cover.jpg" },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/e476xv4arxejhovglz02i/mojo-return-of-the-funky-warrior-a.mp3?rlkey=74nsrx8or2z3dx2bwyglfl2kq&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/r8snzcjjzwey9ks5gv2zv/mojo-return-of-the-funky-warrior-b.mp3?rlkey=qrj6r6d28fmiikdk97n5d4231&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "keoki-jeno-project-x-unlocks-the-house",
+      "title": "Project X Unlocks the House",
+      "released": "1993",
+      "djs": [
+        { "name": "Keoki", "slug": "keoki" },
+        { "name": "Jeno", "slug": "jeno" }
+      ],
+      "images": {
+        "cover": "/media/tapes/keoki-jeno-project-x-unlocks-the-house/cover.png"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Keoki",
+          "djs": [{ "name": "Keoki", "slug": "keoki" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/04a7uybxo6d7727hev5aj/project-x-unlocks-the-house-keoki.mp3?rlkey=ynl6wq2iur3jyarorhcd5ecea&raw=1"
+            }
+          ],
+          "image": "/media/tapes/keoki-jeno-project-x-unlocks-the-house/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Jeno",
+          "djs": [{ "name": "Jeno", "slug": "jeno" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/ppwnsassxc11ktbt5o9c9/project-x-unlocks-the-house-jeno.mp3?rlkey=s0uktirlab73h2yjnbq5uuo3d&raw=1"
+            }
+          ],
+          "image": "/media/tapes/keoki-jeno-project-x-unlocks-the-house/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "ron-d-core-mkultra-acid-test-2",
+      "title": "MKUltra Acid Test 2",
+      "released": "1995",
+      "djs": [
+        { "name": "Ron D Core", "slug": "ron-d-core" }
+      ],
+      "images": {
+        "cover": "/media/tapes/ron-d-core-mkultra-acid-test-2/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "1A",
+          "title": "In The Beginning (Side A)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/145we9eodx49td9wm4xqo/ron-d-core-mkultra-acid-test-2-1a.mp3?rlkey=gbqmfg0kxtrff4cxg13rudu11&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ron-d-core-mkultra-acid-test-2/sides/1a.jpg"
+        },
+        {
+          "position": "1B",
+          "title": "In The Beginning (Side B)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/lp2yj4n3yb1sdvri598gu/ron-d-core-mkultra-acid-test-2-1b.mp3?rlkey=29k09uhc1r8yazd18jj31ok4h&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ron-d-core-mkultra-acid-test-2/sides/1b.jpg"
+        },
+        {
+          "position": "2A",
+          "title": "The Next Generation (Side A)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/kg23q2ewh491fyv6rxk5l/ron-d-core-mkultra-acid-test-2-2a.mp3?rlkey=n6nqs7chtj1e5c69d4oyui8zu&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ron-d-core-mkultra-acid-test-2/sides/2a.jpg"
+        },
+        {
+          "position": "2B",
+          "title": "The Next Generation (Side B)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/tslb2sjgfo9k0718erb0s/ron-d-core-mkultra-acid-test-2-2b.mp3?rlkey=zzodz0dud1tfqcmvqj7s6tsj7&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ron-d-core-mkultra-acid-test-2/sides/2b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "unknown-live-at-what",
+      "title": "Live At What?",
+      "released": "1993",
+      "djs": [
+        { "name": "Unknown", "slug": "unknown", "link": false }
+      ],
+      "images": {
+        "cover": "/media/tapes/unknown-live-at-what/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Live At What? (Side E)",
+          "djs": [{ "name": "Unknown", "slug": "unknown", "link": false }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/csd29jd9jdrx6fji7z9lq/live-at-what-side-e.mp3?rlkey=6lubopa7u2azijux1zp86jjot&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "title": "Live At What? (Side X)",
+          "djs": [{ "name": "Unknown", "slug": "unknown", "link": false }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/moblasg06en4t32qjjjyg/live-at-what-side-x.mp3?rlkey=t83gpufph7obveb18uoqpuxa9&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dj-vitamin-d-the-california-project",
+      "title": "The California Project",
+      "released": "1994",
+      "djs": [
+        { "name": "DJ Vitamin D", "slug": "dj-vitamin-d" }
+      ],
+      "images": {
+        "cover": "/media/tapes/dj-vitamin-d-the-california-project/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "1A",
+          "title": "A to Zinc (Side A)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/1dzpvx4f9akfe5b54th1j/dj-vitamin-d-a-to-zinc-side-a.mp3?rlkey=8iuoazfrnczgkl1pgzf4apcg7&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-vitamin-d-the-california-project/sides/1a.jpg"
+        },
+        {
+          "position": "1B",
+          "title": "A to Zinc (Side B)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/xrl4hbou31yud0hhg3inn/dj-vitamin-d-a-to-zinc-side-b.mp3?rlkey=3ftw184mnoj40vqhyw2n3s0er&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-vitamin-d-the-california-project/sides/1b.jpg"
+        },
+        {
+          "position": "2A",
+          "title": "FB4 (Side A)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/0bendi3msubr30jxxmo2y/dj-vitamin-d-fb4-side-a.mp3?rlkey=5l2chzjkivtw2xf7o0tu96omm&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-vitamin-d-the-california-project/sides/2a.jpg"
+        },
+        {
+          "position": "2B",
+          "title": "FB4 (Side B)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/ovkx19atlj8tgranp8wgf/dj-vitamin-d-fb4-side-b.mp3?rlkey=wambhgrebahfyaj0jcm4h4boo&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-vitamin-d-the-california-project/sides/2b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "derrick-carter-genre",
+      "title": "Genre",
+      "released": "1992",
+      "djs": [
+        { "name": "Derrick Carter", "slug": "derrick-carter" }
+      ],
+      "images": {
+        "cover": "/media/tapes/derrick-carter-genre/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Peace",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/lgtl0tf8duxcagktk96n4/derrick-carter-genre-peace-side.mp3?rlkey=h3pd2oqj0lh595g7azobtvsm6&raw=1"
+            }
+          ],
+          "image": "/media/tapes/derrick-carter-genre/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Love",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/eva050fg13cniavlxli61/derrick-carter-genre-love-side.mp3?rlkey=gb23wmk4xrldnzyq1js5xun4q&raw=1"
+            }
+          ],
+          "image": "/media/tapes/derrick-carter-genre/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "mark-farina-chris-hyde-melodic",
+      "title": "Melodic",
+      "released": "1996",
+      "djs": [
+        { "name": "Mark Farina", "slug": "mark-farina" },
+        { "name": "Chris Hyde", "slug": "chris-hyde" }
+      ],
+      "sides": [
+        {
+          "position": "A",
+          "djs": [
+            { "name": "Mark Farina", "slug": "mark-farina" }
+          ],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/jaamx6sgd411vnzu1v1ru/mark-farina-melodic-5-18-96.mp3?rlkey=tssazglrk4qjgnm4z9jm21feu&raw=1"
+            }
+          ],
+          "image": "/media/tapes/mark-farina-chris-hyde-melodic/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "djs": [
+            { "name": "Chris Hyde", "slug": "chris-hyde" }
+          ],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/lnw0an2kvdnqdk09qrjza/chris-hyde-melodic-7-31-96.mp3?rlkey=dqjdzid22siafb0xgo98jpu2y&raw=1"
+            }
+          ],
+          "image": "/media/tapes/mark-farina-chris-hyde-melodic/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "raw-dj-mellinfunk-vol-1",
+      "title": "R.A.W. & DJ Mellinfunk Vol. 1",
+      "released": "1992",
+      "djs": [
+        { "name": "R.A.W.", "slug": "raw" },
+        { "name": "DJ Mellinfunk", "slug": "dj-mellinfunk" }
+      ],
+      "images": {
+        "cover": "/media/tapes/raw-dj-mellinfunk-vol-1/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "I Wish I Was Dead",
+          "djs": [{ "name": "R.A.W.", "slug": "raw" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/8n7n27etm82ojzzualyjd/raw-i-wish-i-was-dead.mp3?rlkey=v3yt0vy7og23929hzmerarg2f&raw=1"
+            }
+          ],
+          "image": "/media/tapes/raw-dj-mellinfunk-vol-1/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Junglism",
+          "djs": [{ "name": "DJ Mellinfunk", "slug": "dj-mellinfunk" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/z86dwb9xdbeugkqxkwrwu/mellinfunk-junglism.mp3?rlkey=synmak7rp4vaaig4gjd47rry9&raw=1"
+            }
+          ],
+          "image": "/media/tapes/raw-dj-mellinfunk-vol-1/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-dan-funky-dope-green-project",
+      "title": "Funky Dope Green Project",
+      "released": "1992",
+      "djs": [
+        { "name": "DJ Dan", "slug": "dj-dan" }
+      ],
+      "images": {
+        "cover": "/media/tapes/dj-dan-funky-dope-green-project/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/nzitm95iq5cyou8yapgfl/dj-dan-funky-dope-green-project-a.mp3?rlkey=e7b89r90884tyckoo1jbm7xlg&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-dan-funky-dope-green-project/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/fzs1d01pkpcni97ar6cxq/dj-dan-funky-dope-green-project-b.mp3?rlkey=r0tokrfcguz0gs6lhjmzu3anu&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-dan-funky-dope-green-project/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-dan-jolly-house-jams",
+      "title": "Jolly House Jams",
+      "released": "1992",
+      "djs": [
+        { "name": "DJ Dan", "slug": "dj-dan" }
+      ],
+      "images": {
+        "cover": "/media/tapes/dj-dan-jolly-house-jams/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Toast And Jelly Side",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/fodbak5iwgsyib8xob1nj/dj-dan-jolly-house-jams-side-a.mp3?rlkey=zzpki662d2ozw4ehoitv70k2h&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-dan-jolly-house-jams/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Peanut Butter And Jam Side",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/u078m4ieefsd5djfd09of/dj-dan-jolly-house-jams-side-b.mp3?rlkey=yan9t656viu5z8n5f7j06nwxz&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-dan-jolly-house-jams/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dubtribe-dubchant",
+      "title": "Dubchant",
+      "released": "1993",
+      "djs": [
+        { "name": "Dubtribe", "slug": "dubtribe" }
+      ],
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/1h2yzef9k4cunaih9goe3/dubtribe-dubchant-side-a.mp3?rlkey=3tw46wyz94kf5vmqreb3t0un7&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dubtribe-dubchant/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/emmi8d1kjsgubztfq0mnu/dubtribe-dubchant-side-b.mp3?rlkey=qqnbqupncno943narzd2751lr&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dubtribe-dubchant/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "jon-williams-live-at-dream",
+      "title": "Live at Dream",
+      "released": "1993",
+      "djs": [
+        { "name": "Jon Williams", "slug": "jon-williams" }
+      ],
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/tngegl9h0etgvygj9c8y8/jon-williams-at-dream-a.mp3?rlkey=rmwbwqtadf8h0576l57lz960k&raw=1"
+            }
+          ],
+          "image": "/media/tapes/jon-williams-live-at-dream/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/7fjc98hf199up066h32y7/jon-williams-at-dream-b.mp3?rlkey=swe4gmj57xlfoug9lnh7nfjoo&raw=1"
+            }
+          ],
+          "image": "/media/tapes/jon-williams-live-at-dream/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "raw-untitled-limited-edition",
+      "title": "Untitled (Limited Edition)",
+      "released": "1992",
+      "djs": [
+        { "name": "RAW", "slug": "raw" }
+      ],
+      "images": {
+        "cover": "/media/tapes/raw-untitled-limited-edition/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/24g3aibhhkam5hip5lgih/raw-untitled-limited-edition-a.mp3?rlkey=fsa00uaoglulvvny6k9qtymei&raw=1"
+            }
+          ],
+          "image": "/media/tapes/raw-untitled-limited-edition/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/yb7k117yll1on85ztenmo/raw-untitled-limited-edition-b.mp3?rlkey=hkuqqh7hzl9yrn6v8cpo96pp2&raw=1"
+            }
+          ],
+          "image": "/media/tapes/raw-untitled-limited-edition/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "raymond-roker-fuck-mix-jerk-off-mix",
+      "title": "Fuck Mix / Jerk Off Mix",
+      "released": "1993",
+      "djs": [
+        { "name": "Raymond Roker", "slug": "raymond-roker" }
+      ],
+      "images": {
+        "cover": "/media/tapes/raymond-roker-fuck-mix-jerk-off-mix/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Fuck Mix",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/tg692bgxcq294b9enw3mp/raymond-roker-fuck-mix.mp3?rlkey=6p18v6c1d8izk7e5ng9eblap2&raw=1"
+            }
+          ],
+          "image": "/media/tapes/raymond-roker-fuck-mix-jerk-off-mix/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Jerk Off Mix",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/p7a7icu269ubkhq5un10l/raymond-roker-jerk-off-mix.mp3?rlkey=uv301kstqn74yoxbqtar5i23u&raw=1"
+            }
+          ],
+          "image": "/media/tapes/raymond-roker-fuck-mix-jerk-off-mix/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "scott-hardkiss-first-tape-om-labs",
+      "title": "My First Tape (OM Labs)",
+      "released": "1992",
+      "djs": [
+        { "name": "Scott Hardkiss", "slug": "scott-hardkiss" }
+      ],
+      "images": {
+        "cover": "/media/tapes/scott-hardkiss-first-tape-om-labs/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/p2ja11iiijmgpaw6dgbus/scott-hardkiss-7-19-om-labs-a.mp3?rlkey=akht5buq0nw9t6qlo6jvpb4dv&raw=1"
+            }
+          ],
+          "image": "/media/tapes/scott-hardkiss-first-tape-om-labs/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/4qgibpshak6j50s16byos/scott-hardkiss-7-19-om-labs-b.mp3?rlkey=kfjuarr1hwz2idphktp6ds50j&raw=1"
+            }
+          ],
+          "image": "/media/tapes/scott-hardkiss-first-tape-om-labs/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "steve-loria-spiral-trance-lions-dance",
+      "title": "Live At Citrusonic",
+      "released": "1992",
+      "djs": [
+        { "name": "Steve Loria", "slug": "steve-loria" }
+      ],
+      "images": {
+        "cover": "/media/tapes/steve-loria-spiral-trance-lions-dance/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Spiral Trance, The Lion's Dance (Side 1)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/2mffqfaxeyextfu3d1t2x/steve-loria-spiral-trance-the-lions-dance-1.mp3?rlkey=a56f8bqc2hndnwj1sj7wxyk7q&raw=1"
+            }
+          ],
+          "image": "/media/tapes/steve-loria-spiral-trance-lions-dance/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Spiral Trance, The Lion's Dance (Side 2)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/0asjgpd6f6yceq0aeyota/steve-loria-spiral-trance-the-lions-dance-2.mp3?rlkey=v6juf2cwwmoiyx01tynenkmvv&raw=1"
+            }
+          ],
+          "image": "/media/tapes/steve-loria-spiral-trance-lions-dance/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-thee-o-planetary-rave-series",
+      "title": "Planetary Rave Series",
+      "released": "1995",
+      "djs": [
+        { "name": "DJ Thee-O", "slug": "dj-thee-o" }
+      ],
+      "images": {
+        "cover": "/media/tapes/dj-thee-o-planetary-rave-series/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "1A",
+          "title": "Evening on Earth (Full Moon Madness)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/7gqtez4gpl1w8kebuxnbe/thee-o-evening-on-earth-full-moon-maddness.mp3?rlkey=0bfzkq9523zd2p63hkvd4rf1e&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-planetary-rave-series/sides/1a.jpg"
+        },
+        {
+          "position": "1B",
+          "title": "Evening on Earth (Inside the Clear Blue)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/pj1u16iz54u96obvp25j2/thee-o-evening-on-earth-inside-the-clear-blue.mp3?rlkey=piumv3eictmctstkh8f4dow0l&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-planetary-rave-series/sides/1b.jpg"
+        },
+        {
+          "position": "2A",
+          "title": "Midnight on Mars (Raving on the Red Planet)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/96fsx6r1edk9avn6rt0w4/thee-o-midnight-on-mars-raving-on-the-red-planet.mp3?rlkey=4dwsa93zkgj5oqyb4hmf8bnr7&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-planetary-rave-series/sides/2a.jpg"
+        },
+        {
+          "position": "2B",
+          "title": "Midnight on Mars (Will This Madness Ever End)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/fkp0uxvt9edmyzww8dlq8/thee-o-midnight-on-mars-will-this-madness-ever-end.mp3?rlkey=6envy9oha46boeyd0ev8q43xk&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-planetary-rave-series/sides/2b.jpg"
+        },
+        {
+          "position": "3A",
+          "title": "Sunrise on Saturn (The Sun Can Burn)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/26mbmevljqfvzd058fwg6/thee-o-sunrise-on-saturn-the-sun-can-burn.mp3?rlkey=zds119cfp1l8ellgsxegz5h6a&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-planetary-rave-series/sides/3a.jpg"
+        },
+        {
+          "position": "3B",
+          "title": "Sunrise on Saturn (The Sun Can Heal)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/mwve8z5eujl3vwn0kqcw8/thee-o-sunrise-on-saturn-the-sun-can-heal.mp3?rlkey=1htvhr0erkhz2ktwu4z41ydsz&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-planetary-rave-series/sides/3b.jpg"
+        },
+        {
+          "position": "4A",
+          "title": "Sunset on Venus (Inside the Outside)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/ljthj2qq7o1ihn8kiax4a/dj-thee-o-sunset-on-venus-inside-the-outside.mp3?rlkey=ccwx68ql7oue397hsa1nxjcwu&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-planetary-rave-series/sides/4a.jpg"
+        },
+        {
+          "position": "4A",
+          "title": "Sunset on Venus (Inside the Outside)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/ljthj2qq7o1ihn8kiax4a/dj-thee-o-sunset-on-venus-inside-the-outside.mp3?rlkey=ccwx68ql7oue397hsa1nxjcwu&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-planetary-rave-series/sides/4a.jpg"
+        },
+        {
+          "position": "4B",
+          "title": "Sunset on Venus (Don't Stare at the Sun)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/smbbqrs2toxw6vjqcwtmh/dj-thee-o-sunset-on-venus-dont-stare-at-the-sun.mp3?rlkey=zfdqzv0e8gy59zljt4rodl672&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-planetary-rave-series/sides/4b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-dan-wicked-burning-frenzy",
+      "title": "Wicked Burning Frenzy",
+      "released": "1992",
+      "djs": [{ "name": "DJ Dan", "slug": "dj-dan" }],
+      "images": {
+        "cover": "/media/tapes/dj-dan-wicked-burning-frenzy/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/mw4jf6qm4k2dv66gbijne/dj-dan-wicked-burning-frenzy-a.mp3?rlkey=u2sgtvoy5le1mpeozgd4xpxp3&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-dan-wicked-burning-frenzy/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/vz68po4rfk7uhw8dms6f6/dj-dan-wicked-burning-frenzy-b.mp3?rlkey=lsml3iipf82rwlw7jbrhstzxm&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-dan-wicked-burning-frenzy/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "doc-martin-teknotronic-dance-mixes",
+      "title": "Teknotronic Dance Mixes",
+      "released": "1991",
+      "djs": [{ "name": "Doc Martin", "slug": "doc-martin" }],
+      "sides": [
+        {
+          "position": "A",
+          "title": "Love Vibration",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/r0lamhys47iq5xl4ui3ec/doc-martin-teknotronic-dance-mixes-love-vibration.mp3?rlkey=7w5zh84m8z7s09qzc2gxmvqzl&raw=1"
+            }
+          ],
+          "image": "/media/tapes/doc-martin-teknotronic-dance-mixes/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Rave Sensation",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/jvp2ktn37ybi5lvn21rc8/doc-martin-teknotronic-dance-mixes-rave-sensation.mp3?rlkey=w2gcpirnz0r0huvztrndruyij&raw=1"
+            }
+          ],
+          "image": "/media/tapes/doc-martin-teknotronic-dance-mixes/sides/b.jpg"
         }
       ]
     }
