@@ -4,6 +4,7 @@ import { Fragment } from "react";
 import Link from "next/link";
 import { getTapeById, getAllTapes } from "../../../lib/data";
 import { TapeGallery } from "../../../components/TapeGallery";
+import { AudioCoordinator } from "../../../components/AudioCoordinator";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -44,6 +45,7 @@ export default async function Page({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
+      <AudioCoordinator />
       <div className="max-w-6xl mx-auto px-4 py-8">
       
       {/* Mobile-only Header */}
