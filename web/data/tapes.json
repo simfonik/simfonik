@@ -381,7 +381,7 @@
     },
     {
       "id": "dj-trance-fester-vol-1",
-      "title": "Trance Fester Vol. 1",
+      "title": "Trance Fester 1",
       "released": "1992",
       "djs": [
         { "name": "DJ Trance", "slug": "dj-trance" },
@@ -3498,6 +3498,598 @@
             }
           ],
           "image": "/media/tapes/jason-blakemore-give/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "raw-jonny-5-natural-born-junglists",
+      "title": "Natural Born Junglists",
+      "released": "1995",
+      "djs": [
+        { "name": "R.A.W.", "slug": "raw" },
+        { "name": "Jonny 5", "slug": "jonny-5" }
+      ],
+      "images": {
+        "cover": "/media/tapes/raw-jonny-5-natural-born-junglists/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "djs": [
+            { "name": "R.A.W.", "slug": "raw" }
+          ],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/hfjfb4gitlpxjgcuhs3xa/raw-natural-born-junglists.mp3?rlkey=8316o16epjctnzodit6jdcrvh&raw=1"
+            }
+          ],
+          "image": "/media/tapes/raw-jonny-5-natural-born-junglists/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "djs": [
+            { "name": "Jonny 5", "slug": "jonny-5" }
+          ],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/4y5tcjw7wx5ahk79l6yxn/jonny-5-natural-born-junglists.mp3?rlkey=fp0cp25eh117mtg5tmd77xe5v&raw=1"
+            }
+          ],
+          "image": "/media/tapes/raw-jonny-5-natural-born-junglists/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "keoki-let-the-street-speak-trance-dreamtime-kicking",
+      "title": "Let The Street Speak: Trance Dreamtime Kicking",
+      "released": "1993",
+      "djs": [{ "name": "Keoki", "slug": "keoki" }],
+      "images": {
+        "cover": "/media/tapes/keoki-let-the-street-speak-trance-dreamtime-kicking/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/gpsp1kc4n4v37572f4cc5/keoki-trance-dreamtime-kicking-1a.mp3?rlkey=3azm8rjmguyqyjpk4i2r1rtt4&raw=1"
+            }
+          ],
+          "image": "/media/tapes/keoki-let-the-street-speak-trance-dreamtime-kicking/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/6zback5xl2its60pntza4/keoki-trance-dreamtime-kicking-1b.mp3?rlkey=x02jvs85x5hn4k416w4bn9gew&raw=1"
+            }
+          ],
+          "image": "/media/tapes/keoki-let-the-street-speak-trance-dreamtime-kicking/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "markem-x-live-at-dub-6-9-94",
+      "title": "Live at Dub (6.9.94)",
+      "released": "1994",
+      "djs": [{ "name": "Markem X", "slug": "markem-x" }],
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/ch0do4vdaco6gfdgofcch/markem-x-live-at-dub-6-9-94-a.mp3?rlkey=bot1g3ilpqeofqvdgzwkxtuty&raw=1"
+            }
+          ],
+          "image": "/media/tapes/markem-x-live-at-dub-6-9-94/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/e9jxn35i9xyou5nes80ft/markem-x-live-at-dub-6-9-94-b.mp3?rlkey=d7ndhbjhoh63jtg68dnxg1enl&raw=1"
+            }
+          ],
+          "image": "/media/tapes/markem-x-live-at-dub-6-9-94/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "moonpup-property-of-tef",
+      "title": "Property of Tef",
+      "released": "1992",
+      "djs": [
+        { "name": "Moonpup", "slug": "moonpup" }
+      ],
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/aklb93vtvd66xhgxzqcg1/moonpup-tef-tape-side-a.mp3?rlkey=fks2eug0ntohnkzacxjjkm8k9&raw=1"
+            }
+          ],
+          "image": "/media/tapes/moonpup-property-of-tef/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/mjquue2bqxxbqk14cnlzz/moonpup-tef-tape-side-b.mp3?rlkey=ohjk5bern1besbp6sf9b1olfj&raw=1"
+            }
+          ],
+          "image": "/media/tapes/moonpup-property-of-tef/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "raw-lost-in-the-jungle",
+      "title": "Lost In The Jungle",
+      "released": "1993",
+      "djs": [
+        { "name": "R.A.W.", "slug": "raw" }
+      ],
+      "images": {
+        "cover": "/media/tapes/raw-lost-in-the-jungle/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Lost In The Jungle",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/82b1dh1tgzx18jjc48zln/raw-lost-in-the-jungle.mp3?rlkey=66q57qftvrix7lb3nok6v0a2e&raw=1"
+            }
+          ],
+          "image": "/media/tapes/raw-lost-in-the-jungle/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Hardcore Is Back",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/l0w01fo314hawnxfxj303/raw-hardcore-is-back.mp3?rlkey=dp2kddvaeo6l4zh5meg4kaj24&raw=1"
+            }
+          ],
+          "image": "/media/tapes/raw-lost-in-the-jungle/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "raw-hellborn",
+      "title": "Hellborn",
+      "released": "1994",
+      "djs": [
+        { "name": "R.A.W.", "slug": "raw" }
+      ],
+      "images": {
+        "cover": "/media/tapes/raw-hellborn/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/1u7ydv3nkx1747a0p8d5a/raw-hellborn-side-a.mp3?rlkey=gc1lhx2sv7l7qw6h2tg1t3rao&raw=1"
+            }
+          ],
+          "image": "/media/tapes/raw-hellborn/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/9qlntcc5cphmahdxadiuw/raw-hellborn-side-b.mp3?rlkey=1plvfkpey7ods0g1czte7y6io&raw=1"
+            }
+          ],
+          "image": "/media/tapes/raw-hellborn/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "raw-no-darkness",
+      "title": "No Darkness",
+      "released": "1996",
+      "djs": [
+        { "name": "R.A.W.", "slug": "raw" }
+      ],
+      "images": {
+        "cover": "/media/tapes/raw-no-darkness/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/jr9p73wmownlbwwm7wexz/raw-no-darkness-side-a.mp3?rlkey=28mkpa9iftc1t1cs01op6zbao&raw=1"
+            }
+          ],
+          "image": "/media/tapes/raw-no-darkness/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/6hikkfmd3g9t9qk7ytcm0/raw-no-darkness-side-b.mp3?rlkey=lxki1rtr787cft819jurj1csi&raw=1"
+            }
+          ],
+          "image": "/media/tapes/raw-no-darkness/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "raymond-roker-stoned-mental-pilot",
+      "title": "Stoned Mental Pilot",
+      "released": "1994",
+      "djs": [
+        { "name": "Raymond Roker", "slug": "raymond-roker" }
+      ],
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/h8hglqpz7csxq2owgoy9c/raymond-roker-stoned-mental-pilot-a.mp3?rlkey=qsjdwas8f2j1xj3xm7t08w4d8&raw=1"
+            }
+          ],
+          "image": "/media/tapes/raymond-roker-stoned-mental-pilot/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/z5e0hx8xppy8iibek502t/raymond-roker-stoned-mental-pilot-b.mp3?rlkey=urevqrpxp4ohesbssflr6yzlq&raw=1"
+            }
+          ],
+          "image": "/media/tapes/raymond-roker-stoned-mental-pilot/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "robbie-hardkiss-om-labs-7-19-92",
+      "title": "OM Labs 7.19.92",
+      "released": "1992",
+      "djs": [
+        { "name": "Robbie Hardkiss", "slug": "robbie-hardkiss" }
+      ],
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/wrnzlxlnoi191o0jnzvew/robbie-hardkiss-7-19-92-om-labs-a.mp3?rlkey=ujcm83s4zhr6qgf041pcdggwx&raw=1"
+            }
+          ],
+          "image": "/media/tapes/robbie-hardkiss-om-labs-7-19-92/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/conxt9yfv9tkmy7i6qldy/robbie-hardkiss-7-19-92-om-labs-b.mp3?rlkey=hcuymqdcozlymteg0ujnb1ytn&raw=1"
+            }
+          ],
+          "image": "/media/tapes/robbie-hardkiss-om-labs-7-19-92/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "steve-loria-universal-love",
+      "title": "Universal Love",
+      "released": "1993",
+      "djs": [
+        { "name": "Steve Loria", "slug": "steve-loria" }
+      ],
+      "sides": [
+        {
+          "position": "A",
+          "title": "Uno",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/hhy4h43a8uvqvaosk3fh1/steve-loria-universal-love-uno.mp3?rlkey=x15p19f6u9owg45v0t3v6q559&raw=1"
+            }
+          ],
+          "image": "/media/tapes/steve-loria-universal-love/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Dos",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/rz9c3zilxk7ji3a2g24x2/steve-loria-universal-love-dos.mp3?rlkey=wjwgh33ejfmjrzx5p64qk0eax&raw=1"
+            }
+          ],
+          "image": "/media/tapes/steve-loria-universal-love/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-thee-o-rave-rewind",
+      "title": "Rave Rewind",
+      "released": "1994",
+      "djs": [
+        { "name": "DJ Thee-O", "slug": "dj-thee-o" }
+      ],
+      "images": {
+        "cover": "/media/tapes/dj-thee-o-rave-rewind/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "This Side",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/v804izgnoz8swtrqaz7j3/thee-o-rave-rewind-this-side.mp3?rlkey=9fxipwfg9rg3zyklzpei3r3lc&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-rave-rewind/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "That Side",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/sc0dg8nvu2a1n1gxjnnir/thee-o-rave-rewind-that-side.mp3?rlkey=eu6vlp20k0k4de3dtogaa9w43&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-rave-rewind/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "steve-leclair-live-at-808-state",
+      "title": "Live at 808 State",
+      "released": "1991",
+      "djs": [
+        { "name": "Steve Leclair", "slug": "steve-leclair" }
+      ],
+      "sides": [
+        {
+          "position": "A",
+          "title": "Heart Side",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/w8hinxhs692cs2xjjdcgr/steve-leclair-live-at-808-state-1991-heart-side.mp3?rlkey=fj0035evj5xsqckx7n9hgtqqv&raw=1"
+            }
+          ],
+          "image": "/media/tapes/steve-leclair-live-at-808-state/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Smile Side",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/5dhbtp4ybik0kbadcuxkb/steve-leclair-live-at-808-state-1991-smile-side.mp3?rlkey=ii0h92cgfpdb69zuh7cjebiwt&raw=1"
+            }
+          ],
+          "image": "/media/tapes/steve-leclair-live-at-808-state/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-heretic-119-junglist",
+      "title": "119 Junglist",
+      "released": "1994",
+      "djs": [{ "name": "DJ Heretic", "slug": "dj-heretic" }],
+      "images": {
+        "cover": "/media/tapes/dj-heretic-119-junglist/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/au9x41nskniyxojrpsp2l/dj-heretic-untitled-side-a.mp3?rlkey=ul5jq0r4hsdol0yzx7ch2gxwm&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-heretic-119-junglist/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/c1dcdf15rm2jndv9zruqa/dj-heretic-untitled-side-b.mp3?rlkey=wgz6jx347jph38byhk97rsgsc&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-heretic-119-junglist/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-josh-swissman-ruff",
+      "title": "Ruff",
+      "released": "1994",
+      "djs": [{ "name": "DJ Josh Swissman", "slug": "dj-josh-swissman" }],
+      "images": {
+        "cover": "/media/tapes/dj-josh-swissman-ruff/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Fe All De Junglist",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/375li0ojvmpoexajazphx/dj-josh-swissman-ruff-side-1.mp3?rlkey=8y3u1xd620nz5g5yhmlihn7b3&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-josh-swissman-ruff/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Intellegence Quotient",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/yfskh32ouve33fli1yq83/dj-josh-swissman-ruff-side-2.mp3?rlkey=cj6bgy8h9m7wvf0e4zpd0cll9&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-josh-swissman-ruff/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-trance-fester-vol-2",
+      "title": "Trance Fester 2 (Splat Mission)",
+      "released": "1992",
+      "djs": [
+        { "name": "DJ Trance", "slug": "dj-trance" },
+        { "name": "Fester", "slug": "fester" }
+      ],
+      "images": {
+        "cover": "/media/tapes/dj-trance-fester-vol-2/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Strictly Hardcore",
+          "djs": [{ "name": "DJ Trance", "slug": "dj-trance" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/a0l8iwkb7d1ocourpzkp7/dj-trance-strictly-hardcore-trance-fester-2.mp3?rlkey=m00pi3s26bsiwwqw9d40t274z&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-trance-fester-vol-2/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Hap-e-ness",
+          "djs": [{ "name": "Fester", "slug": "fester" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/lu0kugk1hy5gn8qh6zwen/fester-hap-e-ness-trance-fester-2.mp3?rlkey=yf6a57n48sq7rwysgadp0e8wa&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-trance-fester-vol-2/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "fester-dj-trance-vol-3",
+      "title": "Fester Trance 3",
+      "released": "1994",
+      "djs": [
+        { "name": "Fester", "slug": "fester" },
+        { "name": "DJ Trance", "slug": "dj-trance" }
+      ],
+      "images": {
+        "cover": "/media/tapes/fester-dj-trance-vol-3/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Brainfart",
+          "djs": [{ "name": "Fester", "slug": "fester" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/8lsjb8pqpj3zwilr7s5og/fester-brainfart-trance-fester-3.mp3?rlkey=tigirz89qucva33k7w439ajew&raw=1"
+            }
+          ],
+          "image": "/media/tapes/fester-dj-trance-vol-3/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Frozen Toothpaste",
+          "djs": [{ "name": "DJ Trance", "slug": "dj-trance" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/fdcnmnfvpjzh0cc3km6yx/dj-trance-frozen-toothpaste-trance-fester-3.mp3?rlkey=329ky7jip77b6mst5yu3l0vwp&raw=1"
+            }
+          ],
+          "image": "/media/tapes/fester-dj-trance-vol-3/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "fester-dj-trance-vol-4",
+      "title": "Fester Trance 4",
+      "released": "1996",
+      "djs": [
+        { "name": "Fester", "slug": "fester" },
+        { "name": "DJ Trance", "slug": "dj-trance" }
+      ],
+      "images": {
+        "cover": "/media/tapes/fester-dj-trance-vol-4/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "djs": [{ "name": "DJ Trance", "slug": "dj-trance" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/0lkz79lzqxz6jrh7a7qq0/dj-trance-fester-trance-4.mp3?rlkey=3hx8s0919u2zehv48c3xuhtx0&raw=1"
+            }
+          ],
+          "image": "/media/tapes/fester-dj-trance-vol-4/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "djs": [{ "name": "Fester", "slug": "fester" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/03u29s3278pgfemkpc6vm/fester-fester-trance-4.mp3?rlkey=ate0zilr0h572indzchzoct9i&raw=1"
+            }
+          ],
+          "image": "/media/tapes/fester-dj-trance-vol-4/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-trance-lost",
+      "title": "Lost",
+      "released": "1993",
+      "djs": [
+        { "name": "DJ Trance", "slug": "dj-trance" }
+      ],
+      "images": {
+        "cover": "/media/tapes/dj-trance-lost/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Tweek Side",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/10git5u9il16ig8sdynjc/dj-trance-lost-tweek-side-a.mp3?rlkey=y7x1jp537emlc25262wr9ypct&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-trance-lost/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Sketch Side",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/9rbnqprluvqvewoqfwhdo/dj-trance-lost-sketch-side-b.mp3?rlkey=qev4x1rcospyfzw3vy0xsavak&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-trance-lost/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "doc-martin-flammable-liquid-11-91",
+      "title": "Flammable Liquid 11.91",
+      "released": "1991",
+      "djs": [
+        { "name": "Doc Martin", "slug": "doc-martin" }
+      ],
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/is9d65n1hef2el954fwkw/doc-martin-flammable-liquid-11-91-a.mp3?rlkey=ca1ahwsejzlewxb79dspocj4v&raw=1"
+            }
+          ],
+          "image": "/media/tapes/doc-martin-flammable-liquid-11-91/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/e5ega7nljr10adyjp25ch/doc-martin-flammable-liquid-11-91-b.mp3?rlkey=d1eq3017m9pgifx7y9h1xp17r&raw=1"
+            }
+          ],
+          "image": "/media/tapes/doc-martin-flammable-liquid-11-91/sides/b.jpg"
         }
       ]
     }
