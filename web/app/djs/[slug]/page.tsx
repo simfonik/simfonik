@@ -1,7 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { getAllTapes, getTapesByDJSlug, getDJDisplayName, getCoverImageWithFallback } from "../../../lib/data";
+import { getAllTapes, getTapesByDJSlug, getDJ, getCoverImageWithFallback } from "../../../lib/data";
+
+// Shared DJ badge styling
+const DJ_BADGE_CLASS = "rounded-md bg-[#5e6ad2]/10 px-2.5 py-1 text-sm font-medium text-[#5e6ad2] hover:bg-[#5e6ad2]/20 dark:bg-[#5e6ad2]/25 dark:text-[#a8aef5] dark:hover:bg-[#5e6ad2]/40 transition-colors";
 
 export async function generateStaticParams() {
   const tapes = getAllTapes();
@@ -23,19 +26,36 @@ export default async function DJPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const djName = getDJDisplayName(slug);
+  const dj = getDJ(slug);
   const tapes = getTapesByDJSlug(slug);
 
-  if (tapes.length === 0) {
+  if (tapes.length === 0 || !dj) {
     notFound();
   }
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
-        <h1 className="mb-8 text-3xl font-bold text-[var(--text)]">
-          {djName}
+        <h1 className="mb-2 text-3xl font-bold text-[var(--text)]">
+          {dj.name}
         </h1>
+        
+        {dj.aka && dj.aka.length > 0 && (
+          <div className="mb-6 flex items-center gap-2 text-sm text-[var(--muted)]">
+            <span>AKA:</span>
+            <div className="flex flex-wrap gap-2">
+              {dj.aka.map((alias) => (
+                <Link
+                  key={alias.slug}
+                  href={`/djs/${alias.slug}`}
+                  className={DJ_BADGE_CLASS}
+                >
+                  {alias.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {tapes.map((tape) => (
@@ -78,7 +98,7 @@ export default async function DJPage({
                         <Link
                           key={dj.slug}
                           href={`/djs/${dj.slug}`}
-                          className="relative pointer-events-auto rounded-md bg-[#5e6ad2]/10 px-2.5 py-1 text-sm font-medium text-[#5e6ad2] hover:bg-[#5e6ad2]/20 dark:bg-[#5e6ad2]/25 dark:text-[#a8aef5] dark:hover:bg-[#5e6ad2]/40 transition-colors"
+                          className={`relative pointer-events-auto ${DJ_BADGE_CLASS}`}
                         >
                           {dj.name}
                         </Link>

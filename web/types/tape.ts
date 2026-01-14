@@ -2,6 +2,7 @@ export type DJ = {
     name: string;
     slug: string;
     link?: boolean;
+    aka?: { name: string; slug: string }[];
   };
   
   export type TapeImages = {

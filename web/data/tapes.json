@@ -2420,7 +2420,8 @@
             {
               "url": "https://www.dropbox.com/scl/fi/l8jhrk2ne9oh707kq341m/come-unity-ii-josh.mp3?rlkey=lrfcr0ji3w6y8fduo8fwrhtdx&raw=1"
             }
-          ]
+          ],
+          "image": "/media/tapes/josh-simon-come-unity-ii/sides/a.jpg"
         },
         {
           "position": "B",
@@ -2428,7 +2429,8 @@
             {
               "url": "https://www.dropbox.com/scl/fi/3z42kjrtnthpsdwjfkyun/come-unity-ii-josh-simon.mp3?rlkey=5dtoamlk287fkgyrlmpv83nlx&raw=1"
             }
-          ]
+          ],
+          "image": "/media/tapes/josh-simon-come-unity-ii/sides/b.jpg"
         }
       ]
     },
@@ -2887,7 +2889,7 @@
       "title": "Untitled (Limited Edition)",
       "released": "1992",
       "djs": [
-        { "name": "RAW", "slug": "raw" }
+        { "name": "R.A.W.", "slug": "raw" }
       ],
       "images": {
         "cover": "/media/tapes/raw-untitled-limited-edition/cover.jpg"
@@ -3167,6 +3169,335 @@
             }
           ],
           "image": "/media/tapes/doc-martin-teknotronic-dance-mixes/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-trance-the-california-project",
+      "title": "The California Project",
+      "released": "1994",
+      "djs": [{ "name": "DJ Trance", "slug": "dj-trance" }],
+      "images": { "cover": "/media/tapes/dj-trance-the-california-project/cover.jpg" },
+      "sides": [
+        {
+          "position": "1A",
+          "title": "Relish & Mayonaise (Mindscratch)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/hzu12i0f2nayaqz036uns/dj-trance-relish-and-mayonaise-mindscratch-side.mp3?rlkey=pha68503s0usw3uqclxdzo8wi&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-trance-the-california-project/sides/1a.jpg"
+        },
+        {
+          "position": "1B",
+          "title": "Relish & Mayonaise (Planet-E)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/u81k6iml6ii8d7i2nqddj/dj-trance-relish-and-mayonaise-planet-e-side.mp3?rlkey=x8n0imcr1yqq228qj026l0b8v&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-trance-the-california-project/sides/1b.jpg"
+        },
+        {
+          "position": "2A",
+          "title": "Root Canal (Funky Ass)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/nvau7llh9ae4p95y7ayy4/dj-trance-root-canal-funky-ass-side.mp3?rlkey=h3zomkjww7ib76or7ixun6rep&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-trance-the-california-project/sides/2a.jpg"
+        },
+        {
+          "position": "2B",
+          "title": "Root Canal (Libra)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/o27mpyutn9kguusn1lo8h/dj-trance-root-canal-libra-side.mp3?rlkey=rpyjuurfxiowt5f2rz8fz0zkq&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-trance-the-california-project/sides/2b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-curious-abstract-technics",
+      "title": "Abstract Technics Volume 1",
+      "released": "1996",
+      "djs": [{ "name": "DJ Curious", "slug": "dj-curious" }],
+      "images": { "cover": "/media/tapes/dj-curious-abstract-technics/cover.jpg" },
+      "sides": [
+        {
+          "position": "A",
+          "title": "1996 B-Boy Flavor",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/yhd0dbt7janpp5tgtrmh5/dj-curious-abstract-technics-a.mp3?rlkey=r2utnh2t21rv78sfca8uzq8sf&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-curious-abstract-technics/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "B-Boyizm",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/k11wk942ua9ssyqecm4mu/dj-curious-abstract-technics-b.mp3?rlkey=aw1pooj85i9189o5e50mcjqc8&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-curious-abstract-technics/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-mojo-transcendance",
+      "title": "Transcendance",
+      "released": "1994",
+      "djs": [{ "name": "DJ Mojo", "slug": "dj-mojo" }],
+      "sides": [
+        {
+          "position": "A",
+          "title": "Trance",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/yuxe3ew9nk7x4yfoo7kvc/dj-mojo-trancendance-a.mp3?rlkey=jg3sfdqiu4h3dt4br3kga1xp1&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-mojo-transcendance/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Dance",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/dyrwncze49y7a7oc13t8k/dj-mojo-trancendance-b.mp3?rlkey=rd26ulkmp9izpwigm4gbytmzy&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-mojo-transcendance/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "ron-d-core-robin-funny-farm-ii",
+      "title": "Funny Farm II",
+      "released": "1994",
+      "djs": [
+        { "name": "Ron D Core", "slug": "ron-d-core" },
+        { "name": "DJ Robin", "slug": "dj-robin" }
+      ],
+      "images": {
+        "cover": "/media/tapes/ron-d-core-robin-funny-farm-ii/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Medical Mayhem",
+          "djs": [{ "name": "Ron D Core", "slug": "ron-d-core" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/98yvtumhuuogvnfiom7vb/ron-d-core-funny-farm-ii-medical-mayhem.mp3?rlkey=20671bo5zuhmfp9jpzrulrvd9&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ron-d-core-robin-funny-farm-ii/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Pure Speed",
+          "djs": [{ "name": "DJ Robin", "slug": "dj-robin" }],
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/iseqjxzk2kfxkihfy9s4b/dj-robin-funny-farm-ii-pure-speed.mp3?rlkey=n9pegqqewn631vj57i3ox5c42&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ron-d-core-robin-funny-farm-ii/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-thee-o-cybersex-ii",
+      "title": "Cybersex II (Deeper, Harder, Faster)",
+      "released": "1994",
+      "djs": [
+        { "name": "DJ Thee-O", "slug": "dj-thee-o" }
+      ],
+      "images": {
+        "cover": "/media/tapes/dj-thee-o-cybersex-ii/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Orgasm",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/r5liv4481aou8mt9flmyp/thee-o-cybersex-ii-orgasm.mp3?rlkey=9z1l5wjxkm0env1xffeprftle&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-cybersex-ii/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Climax",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/sbedy7bwcjwfmq5vhd76v/thee-o-cybersex-ii-climax.mp3?rlkey=8bmdtzraq1cjx2tynp48dl2nr&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-thee-o-cybersex-ii/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dj-trance-los-angeles",
+      "title": "Los Angeles",
+      "released": "1992",
+      "djs": [
+        { "name": "DJ Trance", "slug": "dj-trance" }
+      ],
+      "images": {
+        "cover": "/media/tapes/dj-trance-los-angeles/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "title": "Side E",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/7bdz385nqpgcqka7aaj1c/dj-trance-los-angeles-sid-e.mp3?rlkey=3e9h312hty8le87a5ubtfijzc&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-trance-los-angeles/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Side L",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/ck9v2tc7wvkf34gpb7jq6/dj-trance-los-angeles-side-l.mp3?rlkey=p2ybz9be5279stzszgtchs0b8&raw=1"
+            }
+          ],
+          "image": "/media/tapes/dj-trance-los-angeles/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "eli-star-see-without-eyes",
+      "title": "See Without Eyes",
+      "released": "1993",
+      "djs": [
+        { "name": "Eli Star", "slug": "eli-star" }
+      ],
+      "images": {
+        "cover": "/media/tapes/eli-star-see-without-eyes/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/t6y9cgxr8poarpptbwhso/eli-star-see-without-eyes-a.mp3?rlkey=l0yabhj7g9yqiykcxwv8fp3w9&raw=1"
+            }
+          ],
+          "image": "/media/tapes/eli-star-see-without-eyes/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/i6477opv5m3ezknox3rrj/eli-star-see-without-eyes-b.mp3?rlkey=s5ebk0xfzi5ia6ldqk7k17ww5&raw=1"
+            }
+          ],
+          "image": "/media/tapes/eli-star-see-without-eyes/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "ernie-munson-skyscraper-i-love-you",
+      "title": "Skyscraper I Love You",
+      "released": "1993",
+      "djs": [
+        { "name": "Ernie Munson", "slug": "ernie-munson" }
+      ],
+      "images": {
+        "cover": "/media/tapes/ernie-munson-skyscraper-i-love-you/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/k2ztmkjvz33f5qpaps5fw/ernie-munson-skyscraper-i-love-you-a.mp3?rlkey=0refif3z2rf9jvod6i2jjuqgt&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ernie-munson-skyscraper-i-love-you/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/xm4vz6jzzz0d3322wi4k9/ernie-munson-skyscraper-i-love-you-b.mp3?rlkey=qu5cpg1ngwqmv953yiu56y12e&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ernie-munson-skyscraper-i-love-you/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "ernie-munson-wonder-child",
+      "title": "Wonder Child",
+      "released": "1993",
+      "djs": [
+        { "name": "Ernie Munson", "slug": "ernie-munson" }
+      ],
+      "images": {
+        "cover": "/media/tapes/ernie-munson-wonder-child/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/5nwl9lq6zm2u0mq92jzu3/ernie-munson-wonder-child-a.mp3?rlkey=la1z3atbtir3ch1tp7ick63hj&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ernie-munson-wonder-child/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/k5ug8swi6uztm5y802bi8/ernie-munson-wonder-child-b.mp3?rlkey=blzgb9em5fsuwxevhadj37bxn&raw=1"
+            }
+          ],
+          "image": "/media/tapes/ernie-munson-wonder-child/sides/b.jpg"
+        }
+      ]
+    },
+    {
+      "id": "jason-blakemore-give",
+      "title": "Give",
+      "released": "1997",
+      "djs": [{ "name": "Jason Blakemore", "slug": "jason-blakemore" }],
+      "sides": [
+        {
+          "position": "A",
+          "title": "Give (Side A)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/kqry4ytkv18ivr2wner5z/jason-blakemore-give-a.mp3?rlkey=u99dzprmuvnv5yz0p5aluskst&raw=1"
+            }
+          ],
+          "image": "/media/tapes/jason-blakemore-give/sides/a.jpg"
+        },
+        {
+          "position": "B",
+          "title": "Give (Side B)",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/owvudu6q2yjjm1ba9e44t/jason-blakemore-give-b.mp3?rlkey=rpmh3bf85xy3zb6yum0uejsod&raw=1"
+            }
+          ],
+          "image": "/media/tapes/jason-blakemore-give/sides/b.jpg"
         }
       ]
     }

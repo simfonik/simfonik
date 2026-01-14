@@ -2,13 +2,25 @@ import "server-only";
 
 import fs from "node:fs";
 import path from "node:path";
-import type { Tape } from "../types/tape";
+import type { Tape, DJ } from "../types/tape";
 
 function readTapesFile(): Tape[] {
   const filePath = path.join(process.cwd(), "data", "tapes.json");
   const raw = fs.readFileSync(filePath, "utf8");
   const data = JSON.parse(raw) as Tape[];
   return data;
+}
+
+// Cache DJ aliases at module level
+let djAliasesCache: Record<string, Array<{ name: string; slug: string }>> | null = null;
+
+function readDJAliases(): Record<string, Array<{ name: string; slug: string }>> {
+  if (djAliasesCache === null) {
+    const filePath = path.join(process.cwd(), "data", "dj-aliases.json");
+    const raw = fs.readFileSync(filePath, "utf8");
+    djAliasesCache = JSON.parse(raw);
+  }
+  return djAliasesCache!;
 }
 
 export function getAllTapes(): Tape[] {
@@ -38,12 +50,25 @@ export function getAllDJSlugs(): string[] {
   return Array.from(slugs).sort();
 }
 
-export function getDJDisplayName(slug: string): string {
+export function getDJ(slug: string): DJ | null {
+  const aliases = readDJAliases();
+  
   for (const tape of readTapesFile()) {
     const match = tape.djs.find((dj) => dj.slug === slug);
-    if (match) return match.name;
+    if (match) {
+      return {
+        name: match.name,
+        slug,
+        aka: aliases[slug],
+      };
+    }
   }
-  return slug;
+  return null;
+}
+
+export function getDJDisplayName(slug: string): string {
+  const dj = getDJ(slug);
+  return dj?.name ?? slug;
 }
 
 export interface DJIndexItem {
