@@ -33,7 +33,7 @@ simfonik began in 2007 as an effort to preserve and share DJ mixtapes from the e
 
 ## Contributing Mixtapes
 
-Have tapes from the early 90s rave scene you'd like to contribute? Please open an issue with details about the recording (DJ, date, venue, etc.) and we can work on adding it to the archive.
+Have tapes from the early 90s rave scene you'd like to contribute? Let me know!
 
 ## License
 
