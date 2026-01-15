@@ -20,7 +20,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       {/* Full-bleed hero section */}
-      <div className="relative h-[220px] sm:h-[260px] lg:h-[320px] w-full overflow-hidden">
+      <div className="relative h-[140px] sm:h-[200px] lg:h-[280px] w-full overflow-hidden">
         <Image
           src="/media/site/home-hero.jpg"
           alt="Mixtape Archive Hero"
@@ -50,7 +50,7 @@ export default function Home() {
       </div>
 
       {/* Existing constrained content */}
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
         <TapeGalleryWithSearch tapes={tapesWithCovers} />
       </main>
     </div>

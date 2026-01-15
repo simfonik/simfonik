@@ -43,10 +43,15 @@ export default async function Page({ params }: Props) {
     }
   });
 
+  // If no images found, add the placeholder
+  if (allImages.length === 0) {
+    allImages.push({ src: "/media/site/blank-tape.svg", label: "Cover" });
+  }
+
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       <AudioCoordinator />
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8">
       
       {/* Mobile-only Header */}
       <header className="mb-6 lg:hidden">
