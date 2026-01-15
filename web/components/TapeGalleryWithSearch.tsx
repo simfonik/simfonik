@@ -40,7 +40,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
           Mixtapes
         </h1>
         
-        <div className="w-full sm:w-auto lg:w-[calc(33.333%-1rem)] relative">
+        <div className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.67rem)] relative">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-[var(--muted)]">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
