@@ -4,5 +4,11 @@
   ],
   "jason-blakemore": [
     { "name": "DJ Trance", "slug": "dj-trance" }
+  ],
+  "dj-e-zone": [
+    { "name": "Eric Davenport", "slug": "eric-davenport" }
+  ],
+  "eric-davenport": [
+    { "name": "DJ E-Zone", "slug": "dj-e-zone" }
   ]
 }

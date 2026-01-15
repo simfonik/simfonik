@@ -3,7 +3,7 @@ import Image from "next/image";
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
 
         <div className="flex flex-col md:flex-row gap-8 md:gap-10 items-start">
           {/* Image column */}
@@ -35,7 +35,7 @@ export default function AboutPage() {
             </p>
 
             <p className="text-base leading-relaxed">
-              What started as a small archive of my own collection gradually found an audience. Word spread, and DJs, promoters, and ravers began contributing their own mixes so they could live alongside the others. simfonik became a modest but meaningful record of a specific moment in time, capturing not just music, but the sound of a scene before algorithms, streaming platforms, and social media shaped how it circulated.
+              What started as a small archive of my own collection gradually found an audience. Word spread, and DJs, promoters, and ravers began sharing recordings from their own collections. As the collection grew, it naturally expanded beyond LA-based DJs to include visiting artists who helped shape the city's sound. Over time, DJs from the early 90s scene also began contributing new recordings, revisiting the sounds and spirit of that era. simfonik became a modest but meaningful record of a specific moment in time, capturing not just music, but the sound of a scene before algorithms, streaming platforms, and social media shaped how it circulated.
             </p>
 
             <p className="text-base leading-relaxed">
