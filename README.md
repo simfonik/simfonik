@@ -20,7 +20,7 @@ simfonik began in 2007 as an effort to preserve and share DJ mixtapes from the e
 
 - **Framework**: Next.js 16 (App Router)
 - **Hosting**: Vercel
-- **Audio**: Dropbox CDN (for now)
+- **Audio**: Dropbox (for now)
 - **Styling**: Tailwind CSS
 - **Data**: JSON-based content management
 
