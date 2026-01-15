@@ -15,8 +15,31 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Simfonik",
-  description: "A curated archive of DJ mixtapes and sets",
+  title: "simfonik",
+  description: "A curated archive of 90's rave DJ mixes.",
+  metadataBase: new URL('https://simfonik.com'),
+  openGraph: {
+    title: "simfonik - DJ mixtape archive",
+    description: "A curated archive of 90's rave DJ mixes.",
+    url: "https://simfonik.com",
+    siteName: "simfonik",
+    images: [
+      {
+        url: "/media/site/og.jpg",
+        width: 1200,
+        height: 630,
+        alt: "simfonik DJ mixtape archive",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "simfonik - DJ mixtape archive",
+    description: "A curated archive of 90's rave DJ mixes.",
+    images: ["/media/site/og.jpg"],
+  },
 };
 
 export default function RootLayout({
