@@ -4258,6 +4258,64 @@
       ]
     },
     {
+      "id": "ron-d-core-hot-lemonade-2",
+      "title": "Hot Lemonade 2",
+      "released": "1991",
+      "djs": [
+        { "name": "Ron D Core", "slug": "ron-d-core" }
+      ],
+      "images": {
+        "cover": "/media/tapes/ron-d-core-hot-lemonade-2/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/857l5gbfectc5ulcyrdui/ron-d-core-hot-lemonade-2-a.mp3?rlkey=1f5pggp26vg3m83lbwq8h90d3&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/6uxsitcil1c1crituehki/ron-d-core-hot-lemonade-2-b.mp3?rlkey=bu83fyealzolbjv2zhy136u0c&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ron-d-core-hot-lemonade-3",
+      "title": "Hot Lemonade 3",
+      "released": "1991",
+      "djs": [
+        { "name": "Ron D Core", "slug": "ron-d-core" }
+      ],
+      "images": {
+        "cover": "/media/tapes/ron-d-core-hot-lemonade-3/cover.jpg"
+      },
+      "sides": [
+        {
+          "position": "A",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/2975jyirzd49zdj9pbqwn/ron-d-core-hot-lemonade-3-a.mp3?rlkey=8cg12nfibfxc8ox4erlrembtn&raw=1"
+            }
+          ]
+        },
+        {
+          "position": "B",
+          "audio_links": [
+            {
+              "url": "https://www.dropbox.com/scl/fi/cuejtxre1xupwed9u6qpl/ron-d-core-hot-lemonade-3-b.mp3?rlkey=6q1beeploqt7h3ygqps9gh6z1&raw=1"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "ron-d-core-psychotic-episodes",
       "title": "Psychotic Episodes",
       "released": "1992",
