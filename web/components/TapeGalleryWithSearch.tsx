@@ -98,7 +98,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
                       <Link
                         key={dj.slug}
                         href={`/djs/${dj.slug}`}
-                        className="relative pointer-events-auto rounded-md bg-[#5e6ad2]/10 px-2.5 py-1 text-sm font-medium text-[#5e6ad2] hover:bg-[#5e6ad2]/20 dark:bg-[#5e6ad2]/25 dark:text-[#a8aef5] dark:hover:bg-[#5e6ad2]/40 transition-colors"
+                        className="relative pointer-events-auto rounded-md bg-[#5e6ad2]/10 px-2.5 py-1.5 text-sm font-medium text-[#5e6ad2] hover:bg-[#5e6ad2]/20 dark:bg-[#5e6ad2]/25 dark:text-[#a8aef5] dark:hover:bg-[#5e6ad2]/40 transition-colors"
                       >
                         {dj.name}
                       </Link>
@@ -108,7 +108,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
                   return (
                     <span
                       key={dj.slug}
-                      className="relative pointer-events-auto rounded-md bg-[var(--muted)]/20 border border-[var(--border)] px-2.5 py-1 text-sm font-medium text-[var(--muted)] cursor-default"
+                      className="relative pointer-events-auto rounded-md bg-[var(--muted)]/20 border border-[var(--border)] px-2.5 py-1.5 text-sm font-medium text-[var(--muted)] cursor-default"
                     >
                       {dj.name}
                     </span>
