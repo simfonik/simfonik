@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# migration artifacts and backups
+data/*.backup*
+data/*backup-pre-r2*
+scripts/r2-migration-manifest.json
+scripts/file-mapping.csv
+**/*.backup*

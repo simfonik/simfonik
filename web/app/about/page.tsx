@@ -35,7 +35,7 @@ export default function AboutPage() {
             </p>
 
             <p className="text-base leading-relaxed">
-              What started as a small archive of my own collection gradually found an audience. Word spread, and DJs, promoters, and ravers began sharing recordings from their own collections. As the collection grew, it naturally expanded beyond LA-based DJs to include visiting artists who helped shape the city's sound. Over time, DJs from the early 90s scene also began contributing new recordings, revisiting the sounds and spirit of that era. simfonik became a modest but meaningful record of a specific moment in time, capturing not just music, but the sound of a scene before algorithms, streaming platforms, and social media shaped how it circulated.
+              What started as a small archive of my own collection gradually found an audience. Word spread, and DJs, promoters, and ravers began sharing recordings from their own collections. As the collection grew, it naturally expanded beyond LA-based DJs to include visiting artists who helped shape the city&apos;s sound. Over time, DJs from the early 90s scene also began contributing new recordings, revisiting the sounds and spirit of that era. simfonik became a modest but meaningful record of a specific moment in time, capturing not just music, but the sound of a scene before algorithms, streaming platforms, and social media shaped how it circulated.
             </p>
 
             <p className="text-base leading-relaxed">
