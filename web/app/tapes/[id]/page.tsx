@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Fragment } from "react";
 import Link from "next/link";
-import { getTapeById, getAllTapes } from "../../../lib/data";
+import { getTapeById, getAllTapes, getCommentsForTape } from "../../../lib/data";
 import { TapeGallery } from "../../../components/TapeGallery";
 import { AudioCoordinator } from "../../../components/AudioCoordinator";
 
@@ -21,6 +21,31 @@ function isStreamable(url: string): boolean {
          /\.(mp3|m4a|ogg|wav)(\?|#|$)/.test(lower);
 }
 
+// Process comment content to linkify Discogs URLs
+function processCommentForDisplay(content: string) {
+  const discogsPattern = /(https?:\/\/(?:www\.)?discogs\.com\/[^\s]+)/gi;
+  const parts: Array<{ type: 'text' | 'link'; content: string }> = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = discogsPattern.exec(content)) !== null) {
+    // Add text before the link
+    if (match.index > lastIndex) {
+      parts.push({ type: 'text', content: content.slice(lastIndex, match.index) });
+    }
+    // Add the link
+    parts.push({ type: 'link', content: match[1] });
+    lastIndex = match.index + match[1].length;
+  }
+
+  // Add remaining text
+  if (lastIndex < content.length) {
+    parts.push({ type: 'text', content: content.slice(lastIndex) });
+  }
+
+  return parts.length > 0 ? parts : [{ type: 'text', content }];
+}
+
 export default async function Page({ params }: Props) {
   const { id } = await params;
   const tape = getTapeById(id);
@@ -28,6 +53,9 @@ export default async function Page({ params }: Props) {
   if (!tape) {
     notFound();
   }
+
+  // Load archived comments from WordPress site
+  const archivedComments = getCommentsForTape(id);
 
   // Collect all images: cover + side images
   const allImages = [];
@@ -226,6 +254,117 @@ export default async function Page({ params }: Props) {
             );
           })}
         </div>
+      )}
+
+      {/* Archived Comments */}
+      {archivedComments.length > 0 && (
+        <section className="border-t border-[var(--border)] pt-8 mt-10">
+          <div className="max-w-3xl">
+            <h3 className="text-2xl font-semibold mb-2 text-[var(--text)]">
+              Archived Comments
+            </h3>
+            <p className="text-sm text-[var(--muted)] mb-6">
+              {archivedComments.length} comment{archivedComments.length !== 1 ? 's' : ''} from the original simfonik.com
+            </p>
+            
+            {(() => {
+              // Group comments by source for circa tapes
+              const isCircaTape = id === 'circa-92' || id === 'circa-94';
+              
+              if (!isCircaTape) {
+                // Normal tape: flat list
+                return (
+                  <div className="space-y-6">
+                    {archivedComments.map((comment, idx) => (
+                      <div key={idx} className="border-l-2 border-[var(--border)] pl-4 py-1">
+                        <div className="mb-2">
+                          <div className="font-medium text-[var(--text)]">
+                            {comment.author}
+                          </div>
+                          <div className="text-sm text-[var(--muted)]">
+                            {comment.date}
+                          </div>
+                        </div>
+                        <div className="text-[var(--text)] whitespace-pre-wrap leading-relaxed">
+                          {processCommentForDisplay(comment.content).map((part, partIdx) => {
+                            if (part.type === 'link') {
+                              return (
+                                <a
+                                  key={partIdx}
+                                  href={part.content}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-[var(--accent)] hover:underline break-all"
+                                >
+                                  {part.content}
+                                </a>
+                              );
+                            }
+                            return <span key={partIdx}>{part.content}</span>;
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              }
+              
+              // Circa tape: group by source_title
+              const grouped = new Map<string, typeof archivedComments>();
+              archivedComments.forEach(comment => {
+                const key = comment.source_title || 'Unknown';
+                if (!grouped.has(key)) {
+                  grouped.set(key, []);
+                }
+                grouped.get(key)!.push(comment);
+              });
+              
+              return (
+                <div className="space-y-10">
+                  {Array.from(grouped.entries()).map(([sourceTitle, comments]) => (
+                    <div key={sourceTitle}>
+                      <h4 className="text-lg font-semibold mb-4 text-[var(--text)] border-b border-[var(--border)] pb-2">
+                        {sourceTitle}
+                      </h4>
+                      <div className="space-y-6">
+                        {comments.map((comment, idx) => (
+                          <div key={idx} className="border-l-2 border-[var(--border)] pl-4 py-1">
+                            <div className="mb-2">
+                              <div className="font-medium text-[var(--text)]">
+                                {comment.author}
+                              </div>
+                              <div className="text-sm text-[var(--muted)]">
+                                {comment.date}
+                              </div>
+                            </div>
+                            <div className="text-[var(--text)] whitespace-pre-wrap leading-relaxed">
+                              {processCommentForDisplay(comment.content).map((part, partIdx) => {
+                                if (part.type === 'link') {
+                                  return (
+                                    <a
+                                      key={partIdx}
+                                      href={part.content}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[var(--accent)] hover:underline break-all"
+                                    >
+                                      {part.content}
+                                    </a>
+                                  );
+                                }
+                                return <span key={partIdx}>{part.content}</span>;
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+        </section>
       )}
       </div>
     </div>

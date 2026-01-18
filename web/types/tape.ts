@@ -37,4 +37,12 @@ export type Side = {
     images?: TapeImages;
     sides: Side[];
   };
+
+  export type ArchivedComment = {
+    author: string;
+    date: string; // YYYY-MM-DD
+    content: string;
+    source_post?: string; // For consolidated tapes (circa-92, circa-94)
+    source_title?: string; // Original WordPress post title
+  };
   

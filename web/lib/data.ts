@@ -2,7 +2,7 @@ import "server-only";
 
 import fs from "node:fs";
 import path from "node:path";
-import type { Tape, DJ } from "../types/tape";
+import type { Tape, DJ, ArchivedComment } from "../types/tape";
 
 function readTapesFile(): Tape[] {
   const filePath = path.join(process.cwd(), "data", "tapes.json");
@@ -131,4 +131,29 @@ export function getCoverImageWithFallback(tape: Tape): string {
   
   // Final fallback to blank tape
   return "/media/site/blank-tape.svg";
+}
+
+// Cache for archived comments
+let archivedCommentsCache: Record<string, ArchivedComment[]> | null = null;
+
+function readArchivedComments(): Record<string, ArchivedComment[]> {
+  if (archivedCommentsCache === null) {
+    const filePath = path.join(process.cwd(), "data", "tape-comments.json");
+    try {
+      const raw = fs.readFileSync(filePath, "utf8");
+      archivedCommentsCache = JSON.parse(raw);
+    } catch (error) {
+      // If file doesn't exist, return empty object
+      archivedCommentsCache = {};
+    }
+  }
+  return archivedCommentsCache!;
+}
+
+/**
+ * Get archived comments for a tape (from original WordPress site)
+ */
+export function getCommentsForTape(tapeId: string): ArchivedComment[] {
+  const allComments = readArchivedComments();
+  return allComments[tapeId] || [];
 }
