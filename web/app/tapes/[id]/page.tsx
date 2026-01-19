@@ -25,11 +25,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   // Priority: Cover > Side A > Side B > Default
-  const ogImage =
+  const ogImagePath =
     tape.images?.cover ||
     tape.sides[0]?.image ||
     tape.sides[1]?.image ||
     '/media/site/og.jpg';
+  
+  // Make absolute URL for social sharing
+  const ogImageUrl = `https://simfonik.com${ogImagePath}`;
 
   const djNames = tape.djs.map(dj => dj.name).join(', ');
   const description = `${djNames} - ${tape.title} (${tape.released})${tape.source ? ` • Tape Source: ${tape.source}` : ''}`;
@@ -42,9 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       images: [
         {
-          url: ogImage,
-          width: 1200,
-          height: 1200,
+          url: ogImageUrl,
           alt: `${tape.title} by ${djNames}`,
         },
       ],
@@ -53,7 +54,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: 'summary_large_image',
       title: `${tape.title} - ${djNames}`,
       description,
-      images: [ogImage],
+      images: [ogImageUrl],
     },
   };
 }
