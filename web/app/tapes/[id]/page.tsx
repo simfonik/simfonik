@@ -83,9 +83,8 @@ export default async function Page({ params }: Props) {
       
       {/* Mobile-only Header */}
       <header className="mb-6 lg:hidden">
-        <h1 className="text-3xl font-bold mb-2 text-[var(--text)]">{tape.title}</h1>
-        <p className="mb-4 text-[var(--muted)]">Released: {tape.released}</p>
-        <div className="flex gap-2 flex-wrap">
+        <h1 className="text-3xl font-bold mb-4 text-[var(--text)]">{tape.title}</h1>
+        <div className="flex gap-2 flex-wrap mb-4">
           {tape.djs.map((dj) => {
             const shouldLink = dj.link !== false && dj.slug !== "unknown";
             
@@ -111,6 +110,10 @@ export default async function Page({ params }: Props) {
             );
           })}
         </div>
+        <p className="mb-1 text-[var(--muted)]">Released: {tape.released}</p>
+        {tape.source && (
+          <p className="text-[var(--muted)]">Source: {tape.source}</p>
+        )}
       </header>
 
       {/* Hero: Image Gallery with Players */}
@@ -125,9 +128,8 @@ export default async function Page({ params }: Props) {
           <div>
             {/* Desktop-only Header */}
             <header className="mb-6 hidden lg:block">
-              <h1 className="text-3xl font-bold mb-2 text-[var(--text)]">{tape.title}</h1>
-              <p className="mb-4 text-[var(--muted)]">Released: {tape.released}</p>
-              <div className="flex gap-2 flex-wrap">
+              <h1 className="text-3xl font-bold mb-4 text-[var(--text)]">{tape.title}</h1>
+              <div className="flex gap-2 flex-wrap mb-4">
                 {tape.djs.map((dj) => {
                   const shouldLink = dj.link !== false && dj.slug !== "unknown";
                   
@@ -153,6 +155,10 @@ export default async function Page({ params }: Props) {
                   );
                 })}
               </div>
+              <p className="mb-1 text-[var(--muted)]">Released: {tape.released}</p>
+              {tape.source && (
+                <p className="text-[var(--muted)]">Source: {tape.source}</p>
+              )}
             </header>
 
             {/* Audio Players */}

@@ -36,6 +36,7 @@ export type Side = {
     djs: DJ[];
     images?: TapeImages;
     sides: Side[];
+    source?: string; // Name of person/entity who contributed the tape
   };
 
   export type ArchivedComment = {
