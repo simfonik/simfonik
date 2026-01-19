@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Fragment } from "react";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getTapeById, getAllTapes, getCommentsForTape } from "../../../lib/data";
 import { TapeGallery } from "../../../components/TapeGallery";
 import { AudioCoordinator } from "../../../components/AudioCoordinator";
@@ -13,6 +14,48 @@ type Props = {
 export function generateStaticParams() {
   const tapes = getAllTapes();
   return tapes.map((tape) => ({ id: tape.id }));
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const tape = getTapeById(id);
+
+  if (!tape) {
+    return {};
+  }
+
+  // Priority: Cover > Side A > Side B > Default
+  const ogImage =
+    tape.images?.cover ||
+    tape.sides[0]?.image ||
+    tape.sides[1]?.image ||
+    '/media/site/og.jpg';
+
+  const djNames = tape.djs.map(dj => dj.name).join(', ');
+  const description = `${djNames} - ${tape.title} (${tape.released})${tape.source ? ` • Tape Source: ${tape.source}` : ''}`;
+
+  return {
+    title: `${tape.title} - ${djNames}`,
+    description,
+    openGraph: {
+      title: `${tape.title} - ${djNames}`,
+      description,
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 1200,
+          alt: `${tape.title} by ${djNames}`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${tape.title} - ${djNames}`,
+      description,
+      images: [ogImage],
+    },
+  };
 }
 
 function isStreamable(url: string): boolean {
