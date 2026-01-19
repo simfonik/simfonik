@@ -80,6 +80,11 @@ const MANUAL_MAPPINGS = {
   // Dom T.
   'dom-t-music-to-dance-to': 'dom-t-music-to-dance-to',
   
+  // Ron D Core - Hot Lemonade series
+  'ron-d-core-hot-lemonade-tape-1': 'ron-d-core-hot-lemonade-1',
+  'ron-d-core-hot-lemonade-tape-2': 'ron-d-core-hot-lemonade-2',
+  'ron-d-core-hot-lemonade-tape-3': 'ron-d-core-hot-lemonade-3',
+  
   // Additional mappings from manual review
   'mr-kool-aid-808-state-rave-1991': 'mr-kool-aid-live-from-808-state-rave',
   'dj-e-zone-march-1992': 'dj-e-zone-3-92',
@@ -268,8 +273,15 @@ function processComments() {
   let totalComments = 0;
   let unmatchedPosts = [];
   
+  // Allow specific unpublished posts (Hot Lemonade series)
+  const ALLOWED_UNPUBLISHED = [
+    'ron-d-core-hot-lemonade-tape-1',
+    'ron-d-core-hot-lemonade-tape-2',
+    'ron-d-core-hot-lemonade-tape-3'
+  ];
+  
   wpData.posts
-    .filter(post => post.post_status === 'publish')
+    .filter(post => post.post_status === 'publish' || ALLOWED_UNPUBLISHED.includes(post.post_name))
     .forEach(post => {
       // Filter to approved comments only
       const approvedComments = post.comments.filter(c => c.approved === '1');

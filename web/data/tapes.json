@@ -7595,5 +7595,70 @@
         ]
       }
     ]
+  },
+  {
+    "id": "scott-hardkiss-untitled",
+    "title": "Untitled",
+    "released": "1992",
+    "source": "Tef Foo",
+    "djs": [
+      {
+        "name": "Scott Hardkiss",
+        "slug": "scott-hardkiss"
+      }
+    ],
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/scott-hardkiss-untitled/a.mp3"
+          }
+        ]
+      },
+      {
+        "position": "B",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/scott-hardkiss-untitled/b.mp3"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "jesse-my-tape-02-94",
+    "title": "My Tape Feb 94",
+    "released": "1994",
+    "source": "Ricky Bonilla",
+    "djs": [
+      {
+        "name": "DJ Jesse",
+        "slug": "dj-jesse"
+      }
+    ],
+    "images": {
+      "cover": "/media/tapes/jesse-my-tape-02-94/cover.jpg"
+    },
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/jesse-my-tape-02-94/a.mp3"
+          }
+        ],
+        "image": "/media/tapes/jesse-my-tape-02-94/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/jesse-my-tape-02-94/b.mp3"
+          }
+        ],
+        "image": "/media/tapes/jesse-my-tape-02-94/sides/b.jpg"
+      }
+    ]
   }
 ]
