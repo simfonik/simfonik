@@ -7660,5 +7660,40 @@
         "image": "/media/tapes/jesse-my-tape-02-94/sides/b.jpg"
       }
     ]
+  },
+  {
+    "id": "fresh-produce-made-in-heaven-1994",
+    "title": "Made In Heaven 1994",
+    "released": "1994",
+    "source": "Ricky Bonilla",
+    "djs": [
+      {
+        "name": "Unknown",
+        "slug": "unknown"
+      }
+    ],
+    "images": {
+      "cover": "/media/tapes/fresh-produce-made-in-heaven-1994/cover.jpg"
+    },
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/fresh-produce-made-in-heaven-1994/a.mp3"
+          }
+        ],
+        "image": "/media/tapes/fresh-produce-made-in-heaven-1994/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/fresh-produce-made-in-heaven-1994/b.mp3"
+          }
+        ],
+        "image": "/media/tapes/fresh-produce-made-in-heaven-1994/sides/b.jpg"
+      }
+    ]
   }
 ]
