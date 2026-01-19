@@ -4475,6 +4475,40 @@
     "source": "Tef Foo"
   },
   {
+    "id": "ernie-munson-naked",
+    "title": "Naked",
+    "released": "1993",
+    "djs": [
+      {
+        "name": "Ernie Munson",
+        "slug": "ernie-munson"
+      }
+    ],
+    "images": {
+      "cover": "/media/tapes/ernie-munson-naked/cover.jpg"
+    },
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/ernie-munson-naked/a.mp3"
+          }
+        ],
+        "image": "/media/tapes/ernie-munson-naked/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/ernie-munson-naked/b.mp3"
+          }
+        ],
+        "image": "/media/tapes/ernie-munson-naked/sides/b.jpg"
+      }
+    ]
+  },
+  {
     "id": "jason-blakemore-give",
     "title": "Give",
     "released": "1997",
@@ -5320,6 +5354,39 @@
     ]
   },
   {
+    "id": "dom-t-music-to-dance-to",
+    "title": "Music To Dance To...",
+    "released": "1991",
+    "djs": [
+      {
+        "name": "Dom T.",
+        "slug": "dom-t"
+      }
+    ],
+    "sides": [
+      {
+        "position": "A",
+        "title": "Music To Dance To In A Groovy Fashion",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/dom-t-music-to-dance-to/a.mp3"
+          }
+        ],
+        "image": "/media/tapes/dom-t-music-to-dance-to/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "title": "Music To Dance To In A Mental Fashion",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/dom-t-music-to-dance-to/b.mp3"
+          }
+        ],
+        "image": "/media/tapes/dom-t-music-to-dance-to/sides/b.jpg"
+      }
+    ]
+  },
+  {
     "id": "mr-kool-aid-live-from-808-state-rave",
     "title": "Live From The 808 State Rave 1991",
     "released": "1991",
@@ -5595,6 +5662,37 @@
       }
     ],
     "source": "Tef Foo"
+  },
+  {
+    "id": "barry-weaver-1991",
+    "title": "Truth",
+    "released": "1991",
+    "djs": [
+      {
+        "name": "Barry Weaver",
+        "slug": "barry-weaver"
+      }
+    ],
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/barry-weaver-1991/a.mp3"
+          }
+        ],
+        "image": "/media/tapes/barry-weaver-1991/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/barry-weaver-1991/b.mp3"
+          }
+        ],
+        "image": "/media/tapes/barry-weaver-1991/sides/b.jpg"
+      }
+    ]
   },
   {
     "id": "oscar-da-grouch-fester-equal",
@@ -6284,6 +6382,40 @@
           }
         ],
         "image": "/media/tapes/n2o-gods-of-nitrous/sides/b.jpg"
+      }
+    ]
+  },
+  {
+    "id": "n2o-lifes-a-gassssss",
+    "title": "Life's A Gassssss",
+    "released": "1995",
+    "djs": [
+      {
+        "name": "DJ N2O",
+        "slug": "dj-n2o"
+      }
+    ],
+    "images": {
+      "cover": "/media/tapes/n2o-lifes-a-gassssss/cover.jpg"
+    },
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/n2o-lifes-a-gassssss/a.mp3"
+          }
+        ],
+        "image": "/media/tapes/n2o-lifes-a-gassssss/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/n2o-lifes-a-gassssss/b.mp3"
+          }
+        ],
+        "image": "/media/tapes/n2o-lifes-a-gassssss/sides/b.jpg"
       }
     ]
   },

@@ -31,6 +31,7 @@ const MANUAL_MAPPINGS = {
   'dj-dan-warehouse-flashback': 'dj-dan-warehouse-flashbacks-vol-1',
   'barry-weaver-live-at-bassrush': 'barry-weaver-live-at-bassrush-2002',
   'barry-weaver-live-at-soundcheck': 'barry-weaver-live-at-soundcheck-1997',
+  'barry-weaver-untitled-1991': 'barry-weaver-1991',
   'dj-trance-family-live-at-joy-12-95': 'dj-trance-live-at-family-joy',
   'raw-and-dj-trance-wake-up-la': 'dj-trance-raw-wake-up-la',
   'powertools-mix-show-10-24-1992': 'powertools-10-24-92',
@@ -71,6 +72,13 @@ const MANUAL_MAPPINGS = {
   // Ernie Munson
   'ernie-munson-ooga-booga-part-1-2': 'ernie-munson-ooga-booga',
   'ernie-munson-friends-of-distinction-boogie-buffet': 'ernie-munson-friends-of-distinction',
+  'ernie-munson-naked': 'ernie-munson-naked',
+  
+  // DJ N2O
+  'n2o-lifes-a-gassssss': 'n2o-lifes-a-gassssss',
+  
+  // Dom T.
+  'dom-t-music-to-dance-to': 'dom-t-music-to-dance-to',
   
   // Additional mappings from manual review
   'mr-kool-aid-808-state-rave-1991': 'mr-kool-aid-live-from-808-state-rave',
