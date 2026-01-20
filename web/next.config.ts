@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import redirectsData from './data/redirects.json';
 
 const nextConfig: NextConfig = {
   async headers() {
@@ -25,6 +26,10 @@ const nextConfig: NextConfig = {
         ],
       },
     ];
+  },
+
+  async redirects() {
+    return redirectsData;
   },
 };
 
