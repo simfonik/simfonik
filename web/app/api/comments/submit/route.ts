@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     }
 
     // Update rate limit
-    const resetAt = new Date(Date.now() + 3600000); // 1 hour from now
+    const resetAt = new Date(Date.now() + 3600000).toISOString(); // 1 hour from now
     
     if (rateLimitRows.length === 0 || new Date(rateLimitRows[0].reset_at) < new Date()) {
       // Start new window
