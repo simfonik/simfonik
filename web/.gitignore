@@ -46,3 +46,4 @@ data/*backup-pre-r2*
 scripts/r2-migration-manifest.json
 scripts/file-mapping.csv
 **/*.backup*
+.env*.local

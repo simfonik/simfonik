@@ -6,6 +6,8 @@ import type { Metadata } from "next";
 import { getTapeById, getAllTapes, getCommentsForTape } from "../../../lib/data";
 import { TapeGallery } from "../../../components/TapeGallery";
 import { AudioCoordinator } from "../../../components/AudioCoordinator";
+import { CommentForm } from "../../../components/CommentForm";
+import { LiveComments } from "../../../components/LiveComments";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -305,6 +307,21 @@ export default async function Page({ params }: Props) {
           })}
         </div>
       )}
+
+      {/* Live Comments */}
+      <section className="border-t border-[var(--border)] pt-8 mt-10">
+        <div className="max-w-3xl">
+          <h3 className="text-2xl font-semibold mb-4 text-[var(--text)]">
+            Comments
+          </h3>
+          <LiveComments tapeId={id} />
+
+          <h3 className="text-2xl font-semibold mb-4 mt-10 text-[var(--text)]">
+            Leave a Comment
+          </h3>
+          <CommentForm tapeId={id} />
+        </div>
+      </section>
 
       {/* Archived Comments */}
       {archivedComments.length > 0 && (
