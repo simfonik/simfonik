@@ -67,6 +67,16 @@ function isStreamable(url: string): boolean {
          /\.(mp3|m4a|ogg|wav)(\?|#|$)/.test(lower);
 }
 
+// Format date consistently with live comments
+function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
 // Process comment content to linkify Discogs URLs
 function processCommentForDisplay(content: string) {
   const discogsPattern = /(https?:\/\/(?:www\.)?discogs\.com\/[^\s]+)/gi;
@@ -349,7 +359,7 @@ export default async function Page({ params }: Props) {
                             {comment.author}
                           </div>
                           <div className="text-sm text-[var(--muted)]">
-                            {comment.date}
+                            {formatDate(comment.date)}
                           </div>
                         </div>
                         <div className="text-[var(--text)] whitespace-pre-wrap leading-relaxed">
@@ -401,7 +411,7 @@ export default async function Page({ params }: Props) {
                                 {comment.author}
                               </div>
                               <div className="text-sm text-[var(--muted)]">
-                                {comment.date}
+                                {formatDate(comment.date)}
                               </div>
                             </div>
                             <div className="text-[var(--text)] whitespace-pre-wrap leading-relaxed">
