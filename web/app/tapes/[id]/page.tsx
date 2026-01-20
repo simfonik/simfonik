@@ -36,25 +36,35 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // Make absolute URL for social sharing
   const ogImageUrl = `https://simfonik.com${ogImagePath}`;
 
-  const djNames = tape.djs.map(dj => dj.name).join(', ');
-  const description = `${djNames} - ${tape.title} (${tape.released})${tape.source ? ` • Tape Source: ${tape.source}` : ''}`;
+  // Truncate DJ names for titles: show first 2 DJs + "..." if 3+
+  const djNames = tape.djs.length > 2 
+    ? `${tape.djs[0].name}, ${tape.djs[1].name}, ...`
+    : tape.djs.map(dj => dj.name).join(', ');
+  
+  // Full DJ list for description
+  const fullDjNames = tape.djs.map(dj => dj.name).join(', ');
+  const description = `${fullDjNames} - ${tape.title} (${tape.released})${tape.source ? ` • Tape Source: ${tape.source}` : ''}`;
+  
+  const pageTitle = `${djNames} - ${tape.title} (${tape.released})`;
 
   return {
-    title: `${tape.title} - ${djNames}`,
+    title: {
+      absolute: pageTitle
+    },
     description,
     openGraph: {
-      title: `${tape.title} - ${djNames}`,
+      title: pageTitle,
       description,
       images: [
         {
           url: ogImageUrl,
-          alt: `${tape.title} by ${djNames}`,
+          alt: `${tape.title} by ${fullDjNames}`,
         },
       ],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${tape.title} - ${djNames}`,
+      title: pageTitle,
       description,
       images: [ogImageUrl],
     },

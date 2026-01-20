@@ -1,4 +1,12 @@
 import Image from "next/image";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: {
+    absolute: "About the simfonik DJ Archive"
+  },
+  description: "simfonik began in 2007 as a labor of love. The goal was simple: to preserve and share DJ mixtapes from the early 1990s Los Angeles rave scene, a period that helped define a generation of underground dance music but was largely undocumented online at the time.",
+};
 
 export default function AboutPage() {
   return (

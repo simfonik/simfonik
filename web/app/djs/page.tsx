@@ -1,5 +1,13 @@
 import Link from "next/link";
 import { getAllDJs } from "../../lib/data";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: {
+    absolute: "DJ Mixes by Artist"
+  },
+  description: "Browse 90's rave DJ mixtapes organized by artist. Features mixes from DJ Trance, Doc Martin, Mark Farina, and more from the early Los Angeles underground.",
+};
 
 export default function DJsIndexPage() {
   const djs = getAllDJs();
