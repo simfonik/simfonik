@@ -1,3 +1,12 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: {
+    absolute: "Rights & Takedown Policy"
+  },
+  description: "Copyright policy and takedown request process for the simfonik DJ mixtape archive.",
+};
+
 export default function RightsPage() {
   return (
     <div className="min-h-screen bg-[var(--bg)]">

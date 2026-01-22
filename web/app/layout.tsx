@@ -57,7 +57,7 @@ export default function RootLayout({
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
               <Link href="/" className="inline-block">
-                <h1 className="text-2xl font-bold">simfonik</h1>
+                <div className="text-2xl font-bold">simfonik</div>
                 <p className="text-sm text-[var(--muted)]">
                   DJ mixtape archive
                 </p>

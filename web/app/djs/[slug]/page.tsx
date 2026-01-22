@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { getAllTapes, getTapesByDJSlug, getDJ, getCoverImageWithFallback } from "../../../lib/data";
 
 // Shared DJ badge styling
@@ -20,11 +21,27 @@ export async function generateStaticParams() {
   return Array.from(slugs).map((slug) => ({ slug }));
 }
 
-export default async function DJPage({
-  params,
-}: {
+type Props = {
   params: Promise<{ slug: string }>;
-}) {
+};
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const dj = getDJ(slug);
+
+  if (!dj) {
+    return {};
+  }
+
+  return {
+    title: {
+      absolute: `${dj.name} mixtape archive`
+    },
+    description: `DJ mixes and recordings by ${dj.name}`,
+  };
+}
+
+export default async function DJPage({ params }: Props) {
   const { slug } = await params;
   const dj = getDJ(slug);
   const tapes = getTapesByDJSlug(slug);
@@ -73,7 +90,7 @@ export default async function DJPage({
               <div className="relative w-full aspect-[3/2] bg-[var(--muted)]/10 pointer-events-none">
                 <Image
                   src={getCoverImageWithFallback(tape)}
-                  alt={`${tape.title} cover`}
+                  alt={`${tape.title} mixtape by ${dj.name}`}
                   fill
                   className="object-contain"
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

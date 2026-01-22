@@ -73,7 +73,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
             <div className="relative w-full aspect-[3/2] bg-[var(--muted)]/10 pointer-events-none">
               <Image
                 src={tape.coverImage}
-                alt={`${tape.title} cover`}
+                alt={`${tape.title} mixtape cover`}
                 fill
                 className="object-contain"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

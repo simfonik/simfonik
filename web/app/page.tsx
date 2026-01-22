@@ -1,6 +1,14 @@
 import Image from "next/image";
+import type { Metadata } from "next";
 import { getAllTapes, getCoverImageWithFallback } from "../lib/data";
 import { TapeGalleryWithSearch } from "../components/TapeGalleryWithSearch";
+
+export const metadata: Metadata = {
+  title: {
+    absolute: "90s Rave DJ Mixtapes - Los Angeles Underground Archive"
+  },
+  description: "Curated archive of 90s rave DJ mixes from the early Los Angeles underground scene.",
+};
 
 // Hero configuration
 const HERO_TITLE = "";
@@ -23,7 +31,7 @@ export default function Home() {
       <div className="relative h-[140px] sm:h-[200px] lg:h-[280px] w-full overflow-hidden">
         <Image
           src="/media/site/home-hero.jpg"
-          alt="Mixtape Archive Hero"
+          alt="Cassette tapes from 1990s Los Angeles rave scene"
           fill
           priority
           className="object-cover"

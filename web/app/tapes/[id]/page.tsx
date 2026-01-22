@@ -58,7 +58,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images: [
         {
           url: ogImageUrl,
-          alt: `${tape.title} by ${fullDjNames}`,
+          alt: `${tape.title} mixtape by ${fullDjNames}`,
         },
       ],
     },
@@ -126,20 +126,30 @@ export default async function Page({ params }: Props) {
   // Collect all images: cover + side images
   const allImages = [];
   if (tape.images?.cover) {
-    allImages.push({ src: tape.images.cover, label: "Cover" });
+    const djList = tape.djs.map(dj => dj.name).join(', ');
+    allImages.push({ 
+      src: tape.images.cover, 
+      label: `${tape.title} mixtape by ${djList}`,
+      isCover: true 
+    });
   }
   tape.sides.forEach((side) => {
     if (side.image) {
       allImages.push({ 
         src: side.image, 
-        label: side.title ?? `Side ${side.position}` 
+        label: `${tape.title} – ${side.title ?? `Side ${side.position}`} image`,
+        isCover: false
       });
     }
   });
 
   // If no images found, add the placeholder
   if (allImages.length === 0) {
-    allImages.push({ src: "/media/site/blank-tape.svg", label: "Cover" });
+    allImages.push({ 
+      src: "/media/site/blank-tape.svg", 
+      label: "Blank cassette tape placeholder",
+      isCover: true
+    });
   }
 
   return (
