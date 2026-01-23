@@ -39,8 +39,8 @@ Add instant client-side search to the home page that filters the tape grid by DJ
 - Empty search shows all tapes (default state)
 - Clearing search instantly restores full tape grid
 - Build still produces fully static HTML (no SSR routes added)
-- `npm run build` succeeds and shows home page as static (`○`)
-- `npm run lint` passes
+- `pnpm build` succeeds and shows home page as static (`○`)
+- `pnpm lint` passes
 
 ## Implementation plan
 1) Create `web/components/TapeGalleryWithSearch.tsx`:

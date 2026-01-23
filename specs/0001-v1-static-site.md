@@ -71,7 +71,7 @@ Constraints:
 - Use Next.js (App Router) + TypeScript
 - No database, no server API routes (static reading only)
 - Styling: simple (Tailwind OK)
-- Must run locally with: `npm install` then `npm run dev`
+- Must run locally with: `pnpm install` then `pnpm dev`
 
 ## Acceptance criteria
 - Visiting `/` shows a list of tapes populated from `data/tapes.json`

@@ -87,7 +87,7 @@ https://pub-<bucket-id>.r2.dev/tapes/<tape-id>/<side-position>.mp3
 - Local dev server plays audio from R2 without errors
 - Production deployment plays audio from R2 without errors
 - At least 5 tapes manually tested for playback
-- `npm run validate` passes with no errors
+- `pnpm validate` passes with no errors
 
 ## Implementation plan
 1) Create `web/scripts/generate-r2-manifest.mjs`:
@@ -119,8 +119,8 @@ https://pub-<bucket-id>.r2.dev/tapes/<tape-id>/<side-position>.mp3
    - Ensure validator recognizes R2 URLs as valid
 
 6) Test and deploy:
-   - Run `npm run validate`
-   - Test locally (`npm run dev`)
+   - Run `pnpm validate`
+   - Test locally (`pnpm dev`)
    - Verify audio playback on multiple tapes
    - Commit changes
    - Deploy to Vercel

@@ -12,8 +12,8 @@ This stays local-only (no admin UI, no database).
 
 ## Scope
 - Add a Node script (or small set of scripts) runnable from the repo root:
-  - `npm run validate` — validates `web/data/tapes.json` and exits non-zero on errors
-  - `npm run validate:fix` — optional: outputs a normalized JSON file (does NOT auto-overwrite unless explicitly requested)
+  - `pnpm validate` — validates `web/data/tapes.json` and exits non-zero on errors
+  - `pnpm validate:fix` — optional: outputs a normalized JSON file (does NOT auto-overwrite unless explicitly requested)
 - Add a canonical DJ registry file:
   - `web/data/djs.json` — source of truth for DJ display names keyed by `slug`
 - Validation rules cover:
@@ -93,11 +93,11 @@ This stays local-only (no admin UI, no database).
   - “replace `dl=0` with `raw=1`” (or add `raw=1`)
 
 ## Output behavior
-- `npm run validate` prints:
+- `pnpm validate` prints:
   - ✅ summary if clean
   - ❌ a list of errors with tape id + JSON path + message
   - ⚠️ a list of warnings with tape id + JSON path + message
-- Optional `npm run validate:fix`:
+- Optional `pnpm validate:fix`:
   - writes `web/data/tapes.normalized.json`
   - normalization rules:
     - sort tapes by released (descending) then title
@@ -109,7 +109,7 @@ This stays local-only (no admin UI, no database).
   - never edits original file unless a separate explicit command is used later
 
 ## Acceptance criteria
-- Running `npm run validate` succeeds on the current data
+- Running `pnpm validate` succeeds on the current data
 - Introduce one intentional error (duplicate tape id) and validator fails with a clear message
 - Validator checks local `/media/...` paths against `web/public/...` existence
 - Validator enforces Dropbox direct/streamable rule and gives a fix suggestion
@@ -119,7 +119,7 @@ This stays local-only (no admin UI, no database).
 ## Implementation plan (high level)
 1) Add `web/scripts/validate-tapes.mjs` (or `.ts` if preferred)
 2) Add `web/data/djs.json` (seed it from existing DJs in `web/data/tapes.json`)
-3) Add `npm` scripts in the correct `package.json` (the one inside `web/` if that’s where Next lives)
+3) Add pnpm scripts in the correct `package.json` (the one inside `web/` if that’s where Next lives)
 4) Implement validations + readable error/warn output
 5) (Optional) Add `validate:fix` that writes `tapes.normalized.json`
 6) Commit
