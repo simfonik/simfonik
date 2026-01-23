@@ -7695,5 +7695,40 @@
         "image": "/media/tapes/fresh-produce-made-in-heaven-1994/sides/b.jpg"
       }
     ]
+  },
+  {
+    "id": "doc-martin-san-francisco-1992",
+    "title": "San Francisco 1992",
+    "released": "1992",
+    "source": "Ricky Bonilla",
+    "djs": [
+      {
+        "name": "Doc Martin",
+        "slug": "doc-martin"
+      }
+    ],
+    "images": {
+      "cover": "/media/tapes/doc-martin-san-francisco-1992/cover.jpg"
+    },
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/doc-martin-san-francisco-1992/a.mp3"
+          }
+        ],
+        "image": "/media/tapes/doc-martin-san-francisco-1992/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/doc-martin-san-francisco-1992/b.mp3"
+          }
+        ],
+        "image": "/media/tapes/doc-martin-san-francisco-1992/sides/b.jpg"
+      }
+    ]
   }
 ]
