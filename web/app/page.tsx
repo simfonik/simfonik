@@ -1,7 +1,9 @@
 import Image from "next/image";
 import type { Metadata } from "next";
 import { getAllTapes, getCoverImageWithFallback } from "../lib/data";
+import { getRecentComments } from "../lib/comments";
 import { TapeGalleryWithSearch } from "../components/TapeGalleryWithSearch";
+import { RecentCommentsTicker } from "../components/RecentCommentsTicker";
 
 export const metadata: Metadata = {
   title: {
@@ -10,12 +12,16 @@ export const metadata: Metadata = {
   description: "Curated archive of 90s rave DJ mixes from the early Los Angeles underground scene.",
 };
 
+// ISR: Revalidate every 60 seconds
+export const revalidate = 60;
+
 // Hero configuration
 const HERO_TITLE = "";
 const HERO_SUBTITLE = "";
 
-export default function Home() {
+export default async function Home() {
   const tapes = getAllTapes();
+  const recentComments = await getRecentComments(10);
   
   // Prepare tape data with cover images for client component
   const tapesWithCovers = tapes.map(tape => ({
@@ -56,6 +62,9 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      {/* Recent Comments Ticker */}
+      <RecentCommentsTicker comments={recentComments} />
 
       {/* Existing constrained content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
