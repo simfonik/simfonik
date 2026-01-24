@@ -7792,5 +7792,37 @@
         "image": "/media/tapes/dj-curious-july-4-bbq-jp/sides/b.jpg"
       }
     ]
+  },
+  {
+    "id": "mr-buzz-acid-hits-m",
+    "title": "Acid Hits M",
+    "released": "1991",
+    "source": "Josh McClintock",
+    "djs": [
+      {
+        "name": "Mr. Buzz",
+        "slug": "mr-buzz"
+      }
+    ],
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/mr-buzz-acid-hits-m/a.mp3"
+          }
+        ],
+        "image": "/media/tapes/mr-buzz-acid-hits-m/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/mr-buzz-acid-hits-m/b.mp3"
+          }
+        ],
+        "image": "/media/tapes/mr-buzz-acid-hits-m/sides/b.jpg"
+      }
+    ]
   }
 ]
