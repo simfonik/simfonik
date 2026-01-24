@@ -10,11 +10,11 @@ const __dirname = dirname(__filename);
 
 const projectRoot = join(__dirname, '..');
 const svgPath = join(projectRoot, 'app/icon.svg');
-const outputPath = join(projectRoot, 'app/icon.png');
+const outputPath = join(projectRoot, 'app/apple-icon.png');
 
 async function generateIcon() {
   try {
-    console.log('📱 Generating icon.png from icon.svg...');
+    console.log('📱 Generating apple-icon.png from icon.svg...');
     
     const svgBuffer = readFileSync(svgPath);
     
@@ -26,7 +26,7 @@ async function generateIcon() {
       .png()
       .toFile(outputPath);
     
-    console.log('✅ Generated app/icon.png (180x180)');
+    console.log('✅ Generated app/apple-icon.png (180x180)');
   } catch (error) {
     console.error('❌ Error generating icon:', error);
     process.exit(1);
