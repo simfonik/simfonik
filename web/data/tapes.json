@@ -7730,5 +7730,36 @@
         "image": "/media/tapes/doc-martin-san-francisco-1992/sides/b.jpg"
       }
     ]
+  },
+  {
+    "id": "dj-curious-high-skies",
+    "title": "High Skies",
+    "released": "1995",
+    "djs": [
+      {
+        "name": "DJ Curious",
+        "slug": "dj-curious"
+      }
+    ],
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/dj-curious-high-skies/a.mp3"
+          }
+        ],
+        "image": "/media/tapes/dj-curious-high-skies/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/dj-curious-high-skies/b.mp3"
+          }
+        ],
+        "image": "/media/tapes/dj-curious-high-skies/sides/b.jpg"
+      }
+    ]
   }
 ]
