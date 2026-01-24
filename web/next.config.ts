@@ -2,6 +2,13 @@ import type { NextConfig } from "next";
 import redirectsData from './data/redirects.json';
 
 const nextConfig: NextConfig = {
+  experimental: {
+    turbo: {
+      // Disable Turbopack for production builds
+      enabled: false,
+    },
+  },
+  
   async headers() {
     return [
       {
