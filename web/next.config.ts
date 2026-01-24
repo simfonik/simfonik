@@ -2,9 +2,6 @@ import type { NextConfig } from "next";
 import redirectsData from './data/redirects.json';
 
 const nextConfig: NextConfig = {
-  // Disable Turbopack for builds (fixes Next.js 16.1.1 deployment issue)
-  turbo: false,
-  
   async headers() {
     return [
       {
