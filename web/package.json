@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "validate": "node scripts/validate-tapes.mjs",
-    "validate:fix": "node scripts/validate-tapes.mjs --fix"
+    "validate:fix": "node scripts/validate-tapes.mjs --fix",
+    "generate-icon": "node scripts/generate-icon.mjs"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -26,6 +27,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

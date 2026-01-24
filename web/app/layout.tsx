@@ -19,6 +19,13 @@ export const metadata: Metadata = {
   title: "simfonik",
   description: "A curated archive of 90's rave DJ mixes.",
   metadataBase: new URL('https://simfonik.com'),
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' }
+    ],
+    apple: '/icon.png',
+  },
   openGraph: {
     title: "simfonik - DJ mixtape archive",
     description: "A curated archive of 90's rave DJ mixes.",
