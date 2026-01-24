@@ -7761,5 +7761,36 @@
         "image": "/media/tapes/dj-curious-high-skies/sides/b.jpg"
       }
     ]
+  },
+  {
+    "id": "dj-curious-july-4-bbq-jp",
+    "title": "July 4 BBQ JP",
+    "released": "1996",
+    "djs": [
+      {
+        "name": "DJ Curious",
+        "slug": "dj-curious"
+      }
+    ],
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/dj-curious-july-4-bbq-jp/a.mp3"
+          }
+        ],
+        "image": "/media/tapes/dj-curious-july-4-bbq-jp/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/dj-curious-july-4-bbq-jp/b.mp3"
+          }
+        ],
+        "image": "/media/tapes/dj-curious-july-4-bbq-jp/sides/b.jpg"
+      }
+    ]
   }
 ]
