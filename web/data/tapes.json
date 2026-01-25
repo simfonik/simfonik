@@ -7947,5 +7947,76 @@
         ]
       }
     ]
+  },
+  {
+    "id": "om-labs-sessions-7-19-92",
+    "title": "OM Labs 07.19.92",
+    "released": "1992",
+    "source": "Tef Foo",
+    "djs": [
+      {
+        "name": "Jon Williams",
+        "slug": "jon-williams"
+      },
+      {
+        "name": "Wade Randolph Hampton",
+        "slug": "wade-randolph-hampton"
+      }
+    ],
+    "images": {
+      "cover": "/media/tapes/om-labs-sessions-7-19-92/cover.png"
+    },
+    "sides": [
+      {
+        "position": "A",
+        "djs": [
+          {
+            "name": "Jon Williams",
+            "slug": "jon-williams"
+          },
+          {
+            "name": "Wade Randolph Hampton",
+            "slug": "wade-randolph-hampton"
+          }
+        ],
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/om-labs-sessions-7-19-92/a.mp3"
+          }
+        ]
+      },
+      {
+        "position": "B",
+        "djs": [
+          {
+            "name": "Jon Williams",
+            "slug": "jon-williams"
+          },
+          {
+            "name": "Wade Randolph Hampton",
+            "slug": "wade-randolph-hampton"
+          }
+        ],
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/om-labs-sessions-7-19-92/b.mp3"
+          }
+        ]
+      },
+      {
+        "position": "C",
+        "djs": [
+          {
+            "name": "Jon Williams",
+            "slug": "jon-williams"
+          }
+        ],
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/om-labs-sessions-7-19-92/c.mp3"
+          }
+        ]
+      }
+    ]
   }
 ]
