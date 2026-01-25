@@ -7893,5 +7893,59 @@
         ]
       }
     ]
+  },
+  {
+    "id": "scott-hardkiss-ernie-munson-untitled-1993",
+    "title": "Untitled",
+    "released": "1993",
+    "source": "Tef Foo",
+    "djs": [
+      {
+        "name": "Scott Hardkiss",
+        "slug": "scott-hardkiss"
+      },
+      {
+        "name": "Ernie Munson",
+        "slug": "ernie-munson"
+      }
+    ],
+    "sides": [
+      {
+        "position": "A",
+        "djs": [
+          {
+            "name": "Scott Hardkiss",
+            "slug": "scott-hardkiss"
+          },
+          {
+            "name": "Ernie Munson",
+            "slug": "ernie-munson"
+          }
+        ],
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/scott-hardkiss-ernie-munson-untitled-1993/a.mp3"
+          }
+        ]
+      },
+      {
+        "position": "B",
+        "djs": [
+          {
+            "name": "Scott Hardkiss",
+            "slug": "scott-hardkiss"
+          },
+          {
+            "name": "Ernie Munson",
+            "slug": "ernie-munson"
+          }
+        ],
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/scott-hardkiss-ernie-munson-untitled-1993/b.mp3"
+          }
+        ]
+      }
+    ]
   }
 ]
