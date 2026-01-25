@@ -4,6 +4,7 @@ import "./globals.css";
 import Link from "next/link";
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
+import { Header } from '../components/Header';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -53,26 +54,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[var(--bg)] text-[var(--text)] min-h-screen`}
       >
-        <header className="border-b border-[var(--border)] bg-[var(--surface)]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center justify-between">
-              <Link href="/" className="inline-block">
-                <div className="text-2xl font-bold">simfonik</div>
-                <p className="text-sm text-[var(--muted)]">
-                  DJ mixtape archive
-                </p>
-              </Link>
-              <nav className="flex items-center gap-6">
-                <Link href="/djs" className="text-[var(--text)] hover:text-[var(--accent)] transition-colors font-medium">
-                  Browse DJs
-                </Link>
-                <Link href="/about" className="text-[var(--text)] hover:text-[var(--accent)] transition-colors font-medium">
-                  About
-                </Link>
-              </nav>
-            </div>
-          </div>
-        </header>
+        <Header />
         {children}
         <Analytics />
         <footer className="mt-auto">
