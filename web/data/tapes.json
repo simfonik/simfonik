@@ -5392,7 +5392,7 @@
     "released": "1991",
     "djs": [
       {
-        "name": "Mr. Kool-Aid",
+        "name": "Mr Kool-Aid",
         "slug": "mr-kool-aid"
       }
     ],
@@ -7822,6 +7822,75 @@
           }
         ],
         "image": "/media/tapes/mr-buzz-acid-hits-m/sides/b.jpg"
+      }
+    ]
+  },
+  {
+    "id": "om-labs-sessions-7-18-92",
+    "title": "OM Labs 7.18.92",
+    "released": "1992",
+    "source": "Tef Foo",
+    "djs": [
+      {
+        "name": "Jon Williams",
+        "slug": "jon-williams"
+      },
+      {
+        "name": "Wade Randolph Hampton",
+        "slug": "wade-randolph-hampton"
+      },
+      {
+        "name": "Ernie Munson",
+        "slug": "ernie-munson"
+      }
+    ],
+    "images": {
+      "cover": "/media/tapes/om-labs-sessions-7-18-92/cover.jpg"
+    },
+    "sides": [
+      {
+        "position": "A",
+        "djs": [
+          {
+            "name": "Jon Williams",
+            "slug": "jon-williams"
+          },
+          {
+            "name": "Wade Randolph Hampton",
+            "slug": "wade-randolph-hampton"
+          },
+          {
+            "name": "Ernie Munson",
+            "slug": "ernie-munson"
+          }
+        ],
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/om-labs-sessions-7-18-92/a.mp3"
+          }
+        ]
+      },
+      {
+        "position": "B",
+        "djs": [
+          {
+            "name": "Jon Williams",
+            "slug": "jon-williams"
+          },
+          {
+            "name": "Wade Randolph Hampton",
+            "slug": "wade-randolph-hampton"
+          },
+          {
+            "name": "Ernie Munson",
+            "slug": "ernie-munson"
+          }
+        ],
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/om-labs-sessions-7-18-92/b.mp3"
+          }
+        ]
       }
     ]
   }
