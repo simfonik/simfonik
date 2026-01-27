@@ -2,10 +2,21 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getAllTapes, getTapesByDJSlug, getDJ, getCoverImageWithFallback } from "../../../lib/data";
+import { ArrowTopRightOnSquareIcon } from '@heroicons/react/20/solid';
+import { getAllTapes, getTapesByDJSlug, getDJ, getDJLinks, getCoverImageWithFallback } from "../../../lib/data";
 
 // Shared DJ badge styling
 const DJ_BADGE_CLASS = "rounded-md bg-[#5e6ad2]/10 px-2.5 py-1 text-sm font-medium text-[#5e6ad2] hover:bg-[#5e6ad2]/20 dark:bg-[#5e6ad2]/25 dark:text-[#a8aef5] dark:hover:bg-[#5e6ad2]/40 transition-colors";
+
+// Helper to extract domain from URL
+function extractDomain(url: string): string {
+  try {
+    const hostname = new URL(url).hostname;
+    return hostname.replace('www.', '');
+  } catch {
+    return url;
+  }
+}
 
 export async function generateStaticParams() {
   const tapes = getAllTapes();
@@ -45,6 +56,7 @@ export default async function DJPage({ params }: Props) {
   const { slug } = await params;
   const dj = getDJ(slug);
   const tapes = getTapesByDJSlug(slug);
+  const links = getDJLinks(slug);
 
   if (tapes.length === 0 || !dj) {
     notFound();
@@ -58,7 +70,7 @@ export default async function DJPage({ params }: Props) {
         </h1>
         
         {dj.aka && dj.aka.length > 0 && (
-          <div className="mb-6 flex items-center gap-2 text-sm text-[var(--muted)]">
+          <div className="mb-4 flex items-center gap-2 text-sm text-[var(--muted)]">
             <span>AKA:</span>
             <div className="flex flex-wrap gap-2">
               {dj.aka.map((alias) => (
@@ -71,6 +83,23 @@ export default async function DJPage({ params }: Props) {
                 </Link>
               ))}
             </div>
+          </div>
+        )}
+
+        {links.length > 0 && (
+          <div className="mb-6 flex flex-wrap gap-3 text-sm">
+            {links.map((link, i) => (
+              <a
+                key={i}
+                href={link}
+                target="_blank"
+                rel="nofollow noopener noreferrer"
+                className="text-[var(--accent)] hover:text-[var(--accent-hover)] inline-flex items-center gap-1 transition-colors"
+              >
+                {extractDomain(link)}
+                <ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" />
+              </a>
+            ))}
           </div>
         )}
 

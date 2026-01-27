@@ -23,6 +23,18 @@ function readDJAliases(): Record<string, Array<{ name: string; slug: string }>> 
   return djAliasesCache!;
 }
 
+// Cache DJ links at module level
+let djLinksCache: Record<string, string[]> | null = null;
+
+function readDJLinks(): Record<string, string[]> {
+  if (djLinksCache === null) {
+    const filePath = path.join(process.cwd(), "data", "dj-links.json");
+    const raw = fs.readFileSync(filePath, "utf8");
+    djLinksCache = JSON.parse(raw);
+  }
+  return djLinksCache!;
+}
+
 export function getAllTapes(): Tape[] {
   const tapes = readTapesFile();
 
@@ -69,6 +81,14 @@ export function getDJ(slug: string): DJ | null {
 export function getDJDisplayName(slug: string): string {
   const dj = getDJ(slug);
   return dj?.name ?? slug;
+}
+
+/**
+ * Get external links for a DJ (e.g. Discogs, SoundCloud)
+ */
+export function getDJLinks(slug: string): string[] {
+  const links = readDJLinks();
+  return links[slug] || [];
 }
 
 export interface DJIndexItem {

@@ -3232,8 +3232,12 @@
     "released": "1993",
     "djs": [
       {
-        "name": "Josh Simon",
-        "slug": "josh-simon"
+        "name": "Josh",
+        "slug": "josh"
+      },
+      {
+        "name": "Simon",
+        "slug": "simon"
       }
     ],
     "images": {
@@ -3242,6 +3246,12 @@
     "sides": [
       {
         "position": "A",
+        "djs": [
+          {
+            "name": "Josh",
+            "slug": "josh"
+          }
+        ],
         "audio_links": [
           {
             "url": "https://audio.simfonik.com/tapes/josh-simon-come-unity-ii/a.mp3"
@@ -3251,6 +3261,16 @@
       },
       {
         "position": "B",
+        "djs": [
+          {
+            "name": "Josh",
+            "slug": "josh"
+          },
+          {
+            "name": "Simon",
+            "slug": "simon"
+          }
+        ],
         "audio_links": [
           {
             "url": "https://audio.simfonik.com/tapes/josh-simon-come-unity-ii/b.mp3"
