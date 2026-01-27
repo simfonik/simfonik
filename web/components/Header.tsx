@@ -26,7 +26,7 @@ export function Header() {
 
   return (
     <header className="border-b border-[var(--border)] bg-[var(--surface)]" ref={menuRef}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between gap-4">
           <Link href="/" className="inline-block" onClick={() => setMobileMenuOpen(false)}>
             <div className="text-2xl font-bold">simfonik</div>
