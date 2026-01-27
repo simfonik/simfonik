@@ -11,28 +11,27 @@ function readTapesFile(): Tape[] {
   return data;
 }
 
-// Cache DJ aliases at module level
-let djAliasesCache: Record<string, Array<{ name: string; slug: string }>> | null = null;
-
-function readDJAliases(): Record<string, Array<{ name: string; slug: string }>> {
-  if (djAliasesCache === null) {
-    const filePath = path.join(process.cwd(), "data", "dj-aliases.json");
-    const raw = fs.readFileSync(filePath, "utf8");
-    djAliasesCache = JSON.parse(raw);
-  }
-  return djAliasesCache!;
+// Interface for DJ data structure
+interface DJData {
+  aliases?: Array<{ name: string; slug: string }>;
+  links?: string[];
+  bio?: string;
 }
 
-// Cache DJ links at module level
-let djLinksCache: Record<string, string[]> | null = null;
+// Cache DJ data at module level
+let djDataCache: Record<string, DJData> | null = null;
 
-function readDJLinks(): Record<string, string[]> {
-  if (djLinksCache === null) {
-    const filePath = path.join(process.cwd(), "data", "dj-links.json");
-    const raw = fs.readFileSync(filePath, "utf8");
-    djLinksCache = JSON.parse(raw);
+function readDJData(): Record<string, DJData> {
+  if (djDataCache === null) {
+    const filePath = path.join(process.cwd(), "data", "dj-data.json");
+    try {
+      const raw = fs.readFileSync(filePath, "utf8");
+      djDataCache = JSON.parse(raw);
+    } catch {
+      djDataCache = {};
+    }
   }
-  return djLinksCache!;
+  return djDataCache!;
 }
 
 export function getAllTapes(): Tape[] {
@@ -63,7 +62,7 @@ export function getAllDJSlugs(): string[] {
 }
 
 export function getDJ(slug: string): DJ | null {
-  const aliases = readDJAliases();
+  const djData = readDJData();
   
   for (const tape of readTapesFile()) {
     const match = tape.djs.find((dj) => dj.slug === slug);
@@ -71,7 +70,7 @@ export function getDJ(slug: string): DJ | null {
       return {
         name: match.name,
         slug,
-        aka: aliases[slug],
+        aka: djData[slug]?.aliases,
       };
     }
   }
@@ -87,8 +86,16 @@ export function getDJDisplayName(slug: string): string {
  * Get external links for a DJ (e.g. Discogs, SoundCloud)
  */
 export function getDJLinks(slug: string): string[] {
-  const links = readDJLinks();
-  return links[slug] || [];
+  const djData = readDJData();
+  return djData[slug]?.links || [];
+}
+
+/**
+ * Get biography text for a DJ
+ */
+export function getDJBio(slug: string): string | null {
+  const djData = readDJData();
+  return djData[slug]?.bio || null;
 }
 
 export interface DJIndexItem {

@@ -3,7 +3,8 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/20/solid';
-import { getAllTapes, getTapesByDJSlug, getDJ, getDJLinks, getCoverImageWithFallback } from "../../../lib/data";
+import { getAllTapes, getTapesByDJSlug, getDJ, getDJLinks, getDJBio, getCoverImageWithFallback } from "../../../lib/data";
+import { DJBio } from "./DJBio";
 
 // Shared DJ badge styling
 const DJ_BADGE_CLASS = "rounded-md bg-[#5e6ad2]/10 px-2.5 py-1 text-sm font-medium text-[#5e6ad2] hover:bg-[#5e6ad2]/20 dark:bg-[#5e6ad2]/25 dark:text-[#a8aef5] dark:hover:bg-[#5e6ad2]/40 transition-colors";
@@ -57,6 +58,7 @@ export default async function DJPage({ params }: Props) {
   const dj = getDJ(slug);
   const tapes = getTapesByDJSlug(slug);
   const links = getDJLinks(slug);
+  const bio = getDJBio(slug);
 
   if (tapes.length === 0 || !dj) {
     notFound();
@@ -102,6 +104,8 @@ export default async function DJPage({ params }: Props) {
             ))}
           </div>
         )}
+
+        {bio && <DJBio bio={bio} />}
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {tapes.map((tape) => (
