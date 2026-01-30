@@ -111,7 +111,7 @@ export function generateTapeSchema(tape: Tape) {
   return schema;
 }
 
-export function generateDJSchema(dj: { name: string; slug: string }, bio?: string, links?: string[]) {
+export function generateDJSchema(dj: { name: string; slug: string }, bio?: string | null, links?: string[]) {
   const schema: any = {
     '@context': 'https://schema.org',
     '@type': 'Person',
