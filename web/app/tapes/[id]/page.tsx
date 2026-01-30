@@ -8,6 +8,8 @@ import { TapeGallery } from "../../../components/TapeGallery";
 import { AudioCoordinator } from "../../../components/AudioCoordinator";
 import { CommentForm } from "../../../components/CommentForm";
 import { LiveComments } from "../../../components/LiveComments";
+import { JsonLd } from "../../../components/JsonLd";
+import { generateTapeSchema } from "../../../lib/structured-data";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -154,6 +156,8 @@ export default async function Page({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
+      <JsonLd data={generateTapeSchema(tape)} />
+      
       <AudioCoordinator />
       <div className="max-w-7xl mx-auto px-4 py-8">
       

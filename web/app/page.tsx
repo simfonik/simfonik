@@ -4,6 +4,8 @@ import { getAllTapes, getCoverImageWithFallback } from "../lib/data";
 import { getRecentComments } from "../lib/comments";
 import { TapeGalleryWithSearch } from "../components/TapeGalleryWithSearch";
 import { RecentCommentsTicker } from "../components/RecentCommentsTicker";
+import { JsonLd } from "../components/JsonLd";
+import { generateWebsiteSchema } from "../lib/structured-data";
 
 export const metadata: Metadata = {
   title: {
@@ -27,6 +29,8 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
+      <JsonLd data={generateWebsiteSchema()} />
+      
       {/* Full-bleed hero section */}
       <div className="relative h-[140px] sm:h-[200px] lg:h-[280px] w-full overflow-hidden">
         <Image

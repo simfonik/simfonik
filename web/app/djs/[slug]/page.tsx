@@ -5,6 +5,8 @@ import type { Metadata } from "next";
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/20/solid';
 import { getAllTapes, getTapesByDJSlug, getDJ, getDJLinks, getDJBio, getCoverImageWithFallback } from "../../../lib/data";
 import { DJBio } from "./DJBio";
+import { JsonLd } from "../../../components/JsonLd";
+import { generateDJSchema } from "../../../lib/structured-data";
 
 // Shared DJ badge styling
 const DJ_BADGE_CLASS = "rounded-md bg-[#5e6ad2]/10 px-2.5 py-1 text-sm font-medium text-[#5e6ad2] hover:bg-[#5e6ad2]/20 dark:bg-[#5e6ad2]/25 dark:text-[#a8aef5] dark:hover:bg-[#5e6ad2]/40 transition-colors";
@@ -66,6 +68,8 @@ export default async function DJPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
+      <JsonLd data={generateDJSchema(dj, bio, links)} />
+      
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
         <h1 className="mb-2 text-3xl font-bold text-[var(--text)]">
           {dj.name}
