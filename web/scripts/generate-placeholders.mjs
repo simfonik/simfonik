@@ -9,8 +9,8 @@ import { generatePlaceholderSVG } from './lib/pattern-generator.mjs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const TAPES_JSON_PATH = join(__dirname, '../web/data/tapes.json');
-const OUTPUT_DIR = join(__dirname, '../web/public/generated/placeholders');
+const TAPES_JSON_PATH = join(__dirname, '../data/tapes.json');
+const OUTPUT_DIR = join(__dirname, '../public/generated/placeholders');
 
 // Ensure output directory exists
 if (!existsSync(OUTPUT_DIR)) {
