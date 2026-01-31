@@ -299,14 +299,14 @@ export default async function Page({ params }: Props) {
                 alt={img.label}
                 width={600}
                 height={600}
-                className="w-full h-auto rounded-lg shadow-lg"
+                className={`w-full h-auto rounded-lg shadow-lg ${img.src.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
               />
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={img.src}
                 alt={img.label}
-                className="w-full h-auto rounded-lg shadow-lg"
+                className={`w-full h-auto rounded-lg shadow-lg ${img.src.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
               />
             )}
           </div>

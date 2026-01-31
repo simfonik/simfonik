@@ -34,15 +34,33 @@ function readDJData(): Record<string, DJData> {
   return djDataCache!;
 }
 
+function enrichTapeWithPlaceholder(tape: Tape): Tape {
+  // Inject generated placeholder ONLY for tapes missing both cover and sides images
+  const hasCover = tape.images?.cover && tape.images.cover !== '/media/site/blank-tape.svg';
+  const hasSides = tape.sides?.some(side => side.image);
+  
+  if (!hasCover && !hasSides) {
+    return {
+      ...tape,
+      images: {
+        ...tape.images,
+        cover: `/generated/placeholders/${tape.id}.svg`,
+      },
+    };
+  }
+  return tape;
+}
+
 export function getAllTapes(): Tape[] {
   const tapes = readTapesFile();
 
   // Reverse order: last in JSON appears first on site
-  return tapes.slice().reverse();
+  return tapes.slice().reverse().map(enrichTapeWithPlaceholder);
 }
 
 export function getTapeById(id: string): Tape | undefined {
-  return readTapesFile().find((t) => t.id === id);
+  const tape = readTapesFile().find((t) => t.id === id);
+  return tape ? enrichTapeWithPlaceholder(tape) : undefined;
 }
 
 export function getTapesByDJSlug(slug: string): Tape[] {

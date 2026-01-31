@@ -47,3 +47,6 @@ scripts/r2-migration-manifest.json
 scripts/file-mapping.csv
 **/*.backup*
 .env*.local
+
+# Generated assets (run npm run generate-placeholders to regenerate)
+/public/generated/
