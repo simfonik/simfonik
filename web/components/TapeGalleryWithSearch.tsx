@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Tape } from '../types/tape';
+import { hasOptimizedImages, getOptimizedSrcSet, getOptimizedSrc } from '../lib/image-utils';
 
 type TapeWithCover = Tape & { coverImage: string };
 
@@ -71,13 +72,25 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
             
             {/* Cover Image */}
             <div className="relative w-full aspect-[3/2] bg-[var(--muted)]/10 pointer-events-none">
-              <Image
-                src={tape.coverImage}
-                alt={`${tape.title} mixtape cover`}
-                fill
-                className={`object-contain ${tape.coverImage.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              />
+              {hasOptimizedImages(tape) ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={getOptimizedSrc(tape) || ''}
+                  srcSet={getOptimizedSrcSet(tape) || undefined}
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  alt={`${tape.title} mixtape cover`}
+                  loading="lazy"
+                  className="absolute inset-0 w-full h-full object-contain"
+                />
+              ) : (
+                <Image
+                  src={tape.coverImage}
+                  alt={`${tape.title} mixtape cover`}
+                  fill
+                  className={`object-contain ${tape.coverImage.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                />
+              )}
             </div>
             
             <div className="relative pointer-events-none p-6 flex flex-col flex-grow">

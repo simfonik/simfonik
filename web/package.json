@@ -4,13 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run generate-placeholders && next build",
+    "build": "npm run generate-placeholders && npm run optimize-images && next build",
     "start": "next start",
     "lint": "eslint",
     "validate": "node scripts/validate-tapes.mjs",
     "validate:fix": "node scripts/validate-tapes.mjs --fix",
     "generate-icon": "node scripts/generate-icon.mjs",
-    "generate-placeholders": "node scripts/generate-placeholders.mjs"
+    "generate-placeholders": "node scripts/generate-placeholders.mjs",
+    "optimize-images": "node scripts/optimize-images.mjs"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

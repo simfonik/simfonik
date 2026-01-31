@@ -50,3 +50,6 @@ scripts/file-mapping.csv
 
 # Generated assets (run npm run generate-placeholders to regenerate)
 /public/generated/
+
+# Optimized images (run npm run optimize-images to regenerate)
+/public/optimized/

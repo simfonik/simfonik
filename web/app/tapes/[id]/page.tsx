@@ -4,6 +4,7 @@ import { Fragment } from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getTapeById, getAllTapes, getCommentsForTape } from "../../../lib/data";
+import { hasOptimizedImages } from "../../../lib/image-utils";
 import { TapeGallery } from "../../../components/TapeGallery";
 import { AudioCoordinator } from "../../../components/AudioCoordinator";
 import { CommentForm } from "../../../components/CommentForm";
@@ -132,7 +133,8 @@ export default async function Page({ params }: Props) {
     allImages.push({ 
       src: tape.images.cover, 
       label: `${tape.title} mixtape by ${djList}`,
-      isCover: true 
+      isCover: true,
+      tapeId: hasOptimizedImages(tape) ? tape.id : undefined
     });
   }
   tape.sides.forEach((side) => {
@@ -291,26 +293,40 @@ export default async function Page({ params }: Props) {
 
       {/* Mobile Images - Stacked */}
       <div className="mb-12 space-y-6 lg:hidden">
-        {allImages.map((img, idx) => (
-          <div key={idx}>
-            {img.src.startsWith("/") ? (
-              <Image
-                src={img.src}
-                alt={img.label}
-                width={600}
-                height={600}
-                className={`w-full h-auto rounded-lg shadow-lg ${img.src.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
-              />
-            ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={img.src}
-                alt={img.label}
-                className={`w-full h-auto rounded-lg shadow-lg ${img.src.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
-              />
-            )}
-          </div>
-        ))}
+        {allImages.map((img, idx) => {
+          const isOptimized = img.tapeId && img.src.startsWith("/");
+          
+          return (
+            <div key={idx}>
+              {isOptimized ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={`/optimized/${img.tapeId}/800.webp`}
+                  srcSet={`/optimized/${img.tapeId}/400.webp 400w, /optimized/${img.tapeId}/800.webp 800w, /optimized/${img.tapeId}/1200.webp 1200w`}
+                  sizes="100vw"
+                  alt={img.label}
+                  className="w-full h-auto max-h-[650px] object-contain rounded-lg shadow-lg"
+                  loading="lazy"
+                />
+              ) : img.src.startsWith("/") ? (
+                <Image
+                  src={img.src}
+                  alt={img.label}
+                  width={600}
+                  height={600}
+                  className={`w-full h-auto max-h-[650px] object-contain rounded-lg shadow-lg ${img.src.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
+                />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={img.src}
+                  alt={img.label}
+                  className={`w-full h-auto max-h-[650px] object-contain rounded-lg shadow-lg ${img.src.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
+                />
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Tracklists */}
