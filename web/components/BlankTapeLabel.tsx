@@ -1,6 +1,6 @@
 "use client";
 
-import { generateTapePattern, getPatternMeta } from "../lib/tape-patterns";
+import { generateTapePattern } from "../lib/tape-patterns";
 
 type BlankTapeLabelProps = {
   artistName: string;
@@ -24,10 +24,6 @@ export function BlankTapeLabel({
   className,
 }: BlankTapeLabelProps) {
   const pattern = generateTapePattern(artistName, tapeTitle, year);
-  
-  // Debug mode: show pattern info overlay
-  const debugMode = process.env.NEXT_PUBLIC_TAPE_PATTERN_DEBUG === '1';
-  const debugInfo = debugMode ? getPatternMeta(artistName, tapeTitle, year) : null;
   
   return (
     <svg
@@ -97,20 +93,6 @@ export function BlankTapeLabel({
           ))}
         </g>
       </g>
-      
-      {/* Debug overlay */}
-      {debugMode && debugInfo && (
-        <text
-          x="20"
-          y="185"
-          fontSize="10"
-          fill="#ffffff"
-          fillOpacity="0.8"
-          fontFamily="monospace"
-        >
-          {debugInfo.name} • {debugInfo.elementCount} elements
-        </text>
-      )}
     </svg>
   );
 }
