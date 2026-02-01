@@ -8029,5 +8029,34 @@
         ]
       }
     ]
+  },
+  {
+    "id": "juan-nunez-rhythms-melodic",
+    "title": "Rhythms Melodic",
+    "released": "1998",
+    "djs": [
+      {
+        "name": "Juan Nunez",
+        "slug": "juan-nunez"
+      }
+    ],
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/juan-nunez-rhythms-melodic/a.mp3"
+          }
+        ]
+      },
+      {
+        "position": "B",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/juan-nunez-rhythms-melodic/b.mp3"
+          }
+        ]
+      }
+    ]
   }
 ]
