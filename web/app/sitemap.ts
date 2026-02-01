@@ -10,26 +10,22 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
-      lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 1.0,
     },
     {
       url: `${baseUrl}/djs`,
-      lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.9,
     },
     {
       url: `${baseUrl}/about`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
+      changeFrequency: 'yearly',
       priority: 0.5,
     },
     {
       url: `${baseUrl}/rights`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
+      changeFrequency: 'yearly',
       priority: 0.3,
     },
   ];
@@ -37,7 +33,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Tape pages
   const tapePages: MetadataRoute.Sitemap = tapes.map((tape) => ({
     url: `${baseUrl}/tapes/${tape.id}`,
-    lastModified: new Date(),
     changeFrequency: 'monthly' as const,
     priority: 0.8,
   }));
@@ -45,7 +40,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // DJ pages
   const djPages: MetadataRoute.Sitemap = djs.map((dj) => ({
     url: `${baseUrl}/djs/${dj.slug}`,
-    lastModified: new Date(),
     changeFrequency: 'weekly' as const,
     priority: 0.7,
   }));
