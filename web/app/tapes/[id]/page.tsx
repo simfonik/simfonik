@@ -127,7 +127,13 @@ export default async function Page({ params }: Props) {
   const archivedComments = getCommentsForTape(id);
 
   // Collect all images: cover + side images
-  const allImages = [];
+  const allImages: Array<{
+    src: string;
+    label: string;
+    isCover: boolean;
+    tapeId?: string;
+    sidePosition?: string;
+  }> = [];
   if (tape.images?.cover) {
     const djList = tape.djs.map(dj => dj.name).join(', ');
     allImages.push({ 
@@ -139,10 +145,13 @@ export default async function Page({ params }: Props) {
   }
   tape.sides.forEach((side) => {
     if (side.image) {
+      const isSideJpg = side.image.includes('/media/') && side.image.endsWith('.jpg');
       allImages.push({ 
         src: side.image, 
         label: `${tape.title} – ${side.title ?? `Side ${side.position}`} image`,
-        isCover: false
+        isCover: false,
+        tapeId: isSideJpg ? tape.id : undefined,
+        sidePosition: isSideJpg ? side.position.toLowerCase() : undefined
       });
     }
   });
@@ -295,14 +304,26 @@ export default async function Page({ params }: Props) {
       <div className="mb-12 space-y-6 lg:hidden">
         {allImages.map((img, idx) => {
           const isOptimized = img.tapeId && img.src.startsWith("/");
+          let mobileSrc = img.src;
+          let mobileSrcSet = undefined;
+          
+          if (isOptimized) {
+            if (img.sidePosition) {
+              mobileSrc = `/optimized/${img.tapeId}/sides/${img.sidePosition}/800.webp`;
+              mobileSrcSet = `/optimized/${img.tapeId}/sides/${img.sidePosition}/400.webp 400w, /optimized/${img.tapeId}/sides/${img.sidePosition}/800.webp 800w, /optimized/${img.tapeId}/sides/${img.sidePosition}/1200.webp 1200w`;
+            } else {
+              mobileSrc = `/optimized/${img.tapeId}/800.webp`;
+              mobileSrcSet = `/optimized/${img.tapeId}/400.webp 400w, /optimized/${img.tapeId}/800.webp 800w, /optimized/${img.tapeId}/1200.webp 1200w`;
+            }
+          }
           
           return (
             <div key={idx}>
               {isOptimized ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={`/optimized/${img.tapeId}/800.webp`}
-                  srcSet={`/optimized/${img.tapeId}/400.webp 400w, /optimized/${img.tapeId}/800.webp 800w, /optimized/${img.tapeId}/1200.webp 1200w`}
+                  src={mobileSrc}
+                  srcSet={mobileSrcSet}
                   sizes="100vw"
                   alt={img.label}
                   className="w-full h-auto max-h-[650px] object-contain rounded-lg shadow-lg"

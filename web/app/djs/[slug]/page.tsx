@@ -112,66 +112,103 @@ export default async function DJPage({ params }: Props) {
         {bio && <DJBio bio={bio} />}
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {tapes.map((tape) => (
-            <article
-              key={tape.id}
-              className="relative rounded-lg border border-[var(--border)] bg-[var(--surface)] overflow-hidden transition-all hover:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent)] flex flex-col"
-            >
-              <Link
-                href={`/tapes/${tape.id}`}
-                className="absolute inset-0 rounded-lg"
-                aria-label={`View ${tape.title}`}
-              />
-              
-              {/* Cover Image */}
-              <div className="relative w-full aspect-[3/2] bg-[var(--muted)]/10 pointer-events-none">
-                <Image
-                  src={getCoverImageWithFallback(tape)}
-                  alt={`${tape.title} mixtape by ${dj.name}`}
-                  fill
-                  className="object-contain"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          {tapes.map((tape) => {
+            const coverImage = getCoverImageWithFallback(tape);
+            const isJpg = coverImage.includes('/media/') && coverImage.endsWith('.jpg');
+            
+            // Determine if this is a cover image or a side image
+            let optimizedSrc = null;
+            let optimizedSrcSet = null;
+            
+            if (isJpg) {
+              if (tape.images?.cover === coverImage) {
+                // It's the primary cover
+                optimizedSrc = `/optimized/${tape.id}/800.webp`;
+                optimizedSrcSet = `/optimized/${tape.id}/400.webp 400w, /optimized/${tape.id}/800.webp 800w, /optimized/${tape.id}/1200.webp 1200w`;
+              } else {
+                // It's a side image fallback - find which side
+                const side = tape.sides.find(s => s.image === coverImage);
+                if (side) {
+                  const pos = side.position.toLowerCase();
+                  optimizedSrc = `/optimized/${tape.id}/sides/${pos}/800.webp`;
+                  optimizedSrcSet = `/optimized/${tape.id}/sides/${pos}/400.webp 400w, /optimized/${tape.id}/sides/${pos}/800.webp 800w, /optimized/${tape.id}/sides/${pos}/1200.webp 1200w`;
+                }
+              }
+            }
+            
+            return (
+              <article
+                key={tape.id}
+                className="relative rounded-lg border border-[var(--border)] bg-[var(--surface)] overflow-hidden transition-all hover:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent)] flex flex-col"
+              >
+                <Link
+                  href={`/tapes/${tape.id}`}
+                  className="absolute inset-0 rounded-lg"
+                  aria-label={`View ${tape.title}`}
                 />
-              </div>
-              
-              <div className="relative pointer-events-none p-6 flex flex-col flex-grow">
-                <div className="flex-grow">
-                  <h2 className="text-xl font-semibold text-[var(--text)]">
-                    {tape.title}
-                  </h2>
-                  <p className="mt-2 text-sm text-[var(--muted)]">
-                    {tape.released}
-                  </p>
+                
+                {/* Cover Image */}
+                <div className="relative w-full aspect-[3/2] bg-[var(--muted)]/10 pointer-events-none">
+                  {optimizedSrc ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={optimizedSrc}
+                      srcSet={optimizedSrcSet || undefined}
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      alt={`${tape.title} mixtape by ${dj.name}`}
+                      loading="lazy"
+                      className="absolute inset-0 w-full h-full object-contain"
+                    />
+                  ) : (
+                    <Image
+                      src={coverImage}
+                      alt={`${tape.title} mixtape by ${dj.name}`}
+                      fill
+                      className={`object-contain ${coverImage.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    />
+                  )}
                 </div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {tape.djs.map((dj) => {
-                    const shouldLink = dj.link !== false && dj.slug !== "unknown";
-                    
-                    if (shouldLink) {
+                
+                <div className="relative pointer-events-none p-6 flex flex-col flex-grow">
+                  <div className="flex-grow">
+                    <h2 className="text-xl font-semibold text-[var(--text)]">
+                      {tape.title}
+                    </h2>
+                    <p className="mt-2 text-sm text-[var(--muted)]">
+                      {tape.released}
+                    </p>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {tape.djs.map((dj) => {
+                      const shouldLink = dj.link !== false && dj.slug !== "unknown";
+                      
+                      if (shouldLink) {
+                        return (
+                          <Link
+                            key={dj.slug}
+                            href={`/djs/${dj.slug}`}
+                            className={`relative pointer-events-auto ${DJ_BADGE_CLASS}`}
+                          >
+                            {dj.name}
+                          </Link>
+                        );
+                      }
+                      
                       return (
-                        <Link
+                        <span
                           key={dj.slug}
-                          href={`/djs/${dj.slug}`}
-                          className={`relative pointer-events-auto ${DJ_BADGE_CLASS}`}
+                          className="relative pointer-events-auto rounded-md bg-[var(--muted)]/20 border border-[var(--border)] px-2.5 py-1 text-sm font-medium text-[var(--muted)] cursor-default"
                         >
                           {dj.name}
-                        </Link>
+                        </span>
                       );
-                    }
-                    
-                    return (
-                      <span
-                        key={dj.slug}
-                        className="relative pointer-events-auto rounded-md bg-[var(--muted)]/20 border border-[var(--border)] px-2.5 py-1 text-sm font-medium text-[var(--muted)] cursor-default"
-                      >
-                        {dj.name}
-                      </span>
-                    );
-                  })}
+                    })}
+                  </div>
                 </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </div>
       </main>
     </div>

@@ -4,7 +4,12 @@ import { useState } from "react";
 import Image from "next/image";
 
 type TapeGalleryProps = {
-  allImages: Array<{ src: string; label: string; tapeId?: string }>;
+  allImages: Array<{ 
+    src: string; 
+    label: string; 
+    tapeId?: string;
+    sidePosition?: string; // 'a' or 'b' for side images
+  }>;
 };
 
 export function TapeGallery({ allImages }: TapeGalleryProps) {
@@ -19,6 +24,18 @@ export function TapeGallery({ allImages }: TapeGalleryProps) {
         <div className="flex flex-col gap-2">
           {allImages.map((img, idx) => {
             const isOptimized = img.tapeId && img.src.startsWith("/");
+            let thumbSrc = img.src;
+            let thumbSrcSet = undefined;
+            
+            if (isOptimized) {
+              if (img.sidePosition) {
+                thumbSrc = `/optimized/${img.tapeId}/sides/${img.sidePosition}/400.webp`;
+                thumbSrcSet = `/optimized/${img.tapeId}/sides/${img.sidePosition}/400.webp 400w, /optimized/${img.tapeId}/sides/${img.sidePosition}/800.webp 800w`;
+              } else {
+                thumbSrc = `/optimized/${img.tapeId}/400.webp`;
+                thumbSrcSet = `/optimized/${img.tapeId}/400.webp 400w, /optimized/${img.tapeId}/800.webp 800w`;
+              }
+            }
             
             return (
               <button
@@ -34,8 +51,8 @@ export function TapeGallery({ allImages }: TapeGalleryProps) {
                 {isOptimized ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={`/optimized/${img.tapeId}/400.webp`}
-                    srcSet={`/optimized/${img.tapeId}/400.webp 400w, /optimized/${img.tapeId}/800.webp 800w`}
+                    src={thumbSrc}
+                    srcSet={thumbSrcSet}
                     alt={img.label}
                     className="w-20 h-auto max-h-20 object-contain rounded"
                     loading="lazy"
@@ -69,12 +86,21 @@ export function TapeGallery({ allImages }: TapeGalleryProps) {
           const isOptimized = selectedImg?.tapeId && selectedImage.startsWith("/");
           
           if (isOptimized) {
+            let mainSrc, mainSrcSet;
+            if (selectedImg.sidePosition) {
+              mainSrc = `/optimized/${selectedImg.tapeId}/sides/${selectedImg.sidePosition}/800.webp`;
+              mainSrcSet = `/optimized/${selectedImg.tapeId}/sides/${selectedImg.sidePosition}/400.webp 400w, /optimized/${selectedImg.tapeId}/sides/${selectedImg.sidePosition}/800.webp 800w, /optimized/${selectedImg.tapeId}/sides/${selectedImg.sidePosition}/1200.webp 1200w`;
+            } else {
+              mainSrc = `/optimized/${selectedImg.tapeId}/800.webp`;
+              mainSrcSet = `/optimized/${selectedImg.tapeId}/400.webp 400w, /optimized/${selectedImg.tapeId}/800.webp 800w, /optimized/${selectedImg.tapeId}/1200.webp 1200w`;
+            }
+            
             return (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 key={selectedImage}
-                src={`/optimized/${selectedImg.tapeId}/800.webp`}
-                srcSet={`/optimized/${selectedImg.tapeId}/400.webp 400w, /optimized/${selectedImg.tapeId}/800.webp 800w, /optimized/${selectedImg.tapeId}/1200.webp 1200w`}
+                src={mainSrc}
+                srcSet={mainSrcSet}
                 sizes="(max-width: 768px) 100vw, 600px"
                 alt="Tape image"
                 className="w-full h-auto max-h-[650px] object-contain rounded-lg shadow-lg"

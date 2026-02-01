@@ -34,3 +34,32 @@ export function getOptimizedSrc(tape: Tape): string | null {
 
   return `/optimized/${tape.id}/800.webp`;
 }
+
+/**
+ * Check if a side image should use optimized images
+ */
+export function hasOptimizedSideImage(sideImage: string | undefined): boolean {
+  return !!(sideImage && sideImage.includes('/media/') && sideImage.endsWith('.jpg'));
+}
+
+/**
+ * Get optimized side image path
+ */
+export function getOptimizedSideImagePath(tapeId: string, position: string, originalPath: string): {
+  src: string;
+  srcSet: string;
+} | null {
+  if (!originalPath.includes('/media/') || !originalPath.endsWith('.jpg')) {
+    return null;
+  }
+
+  const pos = position.toLowerCase();
+  return {
+    src: `/optimized/${tapeId}/sides/${pos}/800.webp`,
+    srcSet: [
+      `/optimized/${tapeId}/sides/${pos}/400.webp 400w`,
+      `/optimized/${tapeId}/sides/${pos}/800.webp 800w`,
+      `/optimized/${tapeId}/sides/${pos}/1200.webp 1200w`,
+    ].join(', '),
+  };
+}

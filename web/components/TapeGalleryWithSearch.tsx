@@ -59,78 +59,85 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
 
       {/* Tape grid */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredTapes.map((tape) => (
-          <article
-            key={tape.id}
-            className="relative rounded-lg border border-[var(--border)] bg-[var(--surface)] overflow-hidden transition-[border-color,box-shadow] duration-500 hover:border-[var(--accent)]/40 hover:shadow-[0_0_20px_rgba(94,106,210,0.15)] dark:hover:shadow-[0_0_20px_rgba(168,174,245,0.1)] focus-within:ring-2 focus-within:ring-[var(--accent)] flex flex-col"
-          >
-            <Link
-              href={`/tapes/${tape.id}`}
-              className="absolute inset-0 rounded-lg"
-              aria-label={`View ${tape.title}`}
-            />
-            
-            {/* Cover Image */}
-            <div className="relative w-full aspect-[3/2] bg-[var(--muted)]/10 pointer-events-none">
-              {hasOptimizedImages(tape) ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={getOptimizedSrc(tape) || ''}
-                  srcSet={getOptimizedSrcSet(tape) || undefined}
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  alt={`${tape.title} mixtape cover`}
-                  loading="lazy"
-                  className="absolute inset-0 w-full h-full object-contain"
-                />
-              ) : (
-                <Image
-                  src={tape.coverImage}
-                  alt={`${tape.title} mixtape cover`}
-                  fill
-                  className={`object-contain ${tape.coverImage.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                />
-              )}
-            </div>
-            
-            <div className="relative pointer-events-none p-6 flex flex-col flex-grow">
-              <div className="flex-grow">
-                <h2 className="text-xl font-semibold text-[var(--text)]">
-                  {tape.title}
-                </h2>
-                <p className="mt-2 text-sm text-[var(--muted)] min-h-[1.25rem]">
-                  {tape.released}
-                </p>
+        {filteredTapes.map((tape, index) => {
+          // Prioritize first 6 images (first 2 rows on desktop)
+          const isAboveFold = index < 6;
+          
+          return (
+            <article
+              key={tape.id}
+              className="relative rounded-lg border border-[var(--border)] bg-[var(--surface)] overflow-hidden transition-[border-color,box-shadow] duration-500 hover:border-[var(--accent)]/40 hover:shadow-[0_0_20px_rgba(94,106,210,0.15)] dark:hover:shadow-[0_0_20px_rgba(168,174,245,0.1)] focus-within:ring-2 focus-within:ring-[var(--accent)] flex flex-col"
+            >
+              <Link
+                href={`/tapes/${tape.id}`}
+                className="absolute inset-0 rounded-lg"
+                aria-label={`View ${tape.title}`}
+              />
+              
+              {/* Cover Image */}
+              <div className="relative w-full aspect-[3/2] bg-[var(--muted)]/10 pointer-events-none">
+                {hasOptimizedImages(tape) ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={getOptimizedSrc(tape) || ''}
+                    srcSet={getOptimizedSrcSet(tape) || undefined}
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    alt={`${tape.title} mixtape cover`}
+                    loading={isAboveFold ? "eager" : "lazy"}
+                    fetchPriority={isAboveFold ? "high" : "auto"}
+                    className="absolute inset-0 w-full h-full object-contain"
+                  />
+                ) : (
+                  <Image
+                    src={tape.coverImage}
+                    alt={`${tape.title} mixtape cover`}
+                    fill
+                    priority={isAboveFold}
+                    className={`object-contain ${tape.coverImage.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
+                )}
               </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {tape.djs.map((dj) => {
-                  const shouldLink = dj.link !== false && dj.slug !== "unknown";
-                  
-                  if (shouldLink) {
+              
+              <div className="relative pointer-events-none p-6 flex flex-col flex-grow">
+                <div className="flex-grow">
+                  <h2 className="text-xl font-semibold text-[var(--text)]">
+                    {tape.title}
+                  </h2>
+                  <p className="mt-2 text-sm text-[var(--muted)] min-h-[1.25rem]">
+                    {tape.released}
+                  </p>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {tape.djs.map((dj) => {
+                    const shouldLink = dj.link !== false && dj.slug !== "unknown";
+                    
+                    if (shouldLink) {
+                      return (
+                        <Link
+                          key={dj.slug}
+                          href={`/djs/${dj.slug}`}
+                          className="relative pointer-events-auto rounded-md bg-[#5e6ad2]/10 px-2.5 py-1.5 text-sm font-medium text-[#5e6ad2] hover:bg-[#5e6ad2]/20 dark:bg-[#5e6ad2]/25 dark:text-[#a8aef5] dark:hover:bg-[#5e6ad2]/40 transition-colors"
+                        >
+                          {dj.name}
+                        </Link>
+                      );
+                    }
+                    
                     return (
-                      <Link
+                      <span
                         key={dj.slug}
-                        href={`/djs/${dj.slug}`}
-                        className="relative pointer-events-auto rounded-md bg-[#5e6ad2]/10 px-2.5 py-1.5 text-sm font-medium text-[#5e6ad2] hover:bg-[#5e6ad2]/20 dark:bg-[#5e6ad2]/25 dark:text-[#a8aef5] dark:hover:bg-[#5e6ad2]/40 transition-colors"
+                        className="relative pointer-events-auto rounded-md bg-[var(--muted)]/20 border border-[var(--border)] px-2.5 py-1.5 text-sm font-medium text-[var(--muted)] cursor-default"
                       >
                         {dj.name}
-                      </Link>
+                      </span>
                     );
-                  }
-                  
-                  return (
-                    <span
-                      key={dj.slug}
-                      className="relative pointer-events-auto rounded-md bg-[var(--muted)]/20 border border-[var(--border)] px-2.5 py-1.5 text-sm font-medium text-[var(--muted)] cursor-default"
-                    >
-                      {dj.name}
-                    </span>
-                  );
-                })}
+                  })}
+                </div>
               </div>
-            </div>
-          </article>
-        ))}
+            </article>
+          );
+        })}
       </div>
 
       {/* No results message */}

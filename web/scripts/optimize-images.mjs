@@ -27,11 +27,44 @@ const ROOT = path.resolve(__dirname, '..');
 
 // Configuration
 const WIDTHS = [400, 800, 1200];
+const HERO_WIDTHS = [640, 1024, 1920]; // Viewport-based widths for hero
 const QUALITY = 85;
 const TAPES_JSON = path.join(ROOT, 'data', 'tapes.json');
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const OUTPUT_DIR = path.join(PUBLIC_DIR, 'optimized');
 const CACHE_FILE = path.join(ROOT, '.next', 'cache', 'image-optimization.json');
+
+/**
+ * Optimize a single image (cover or side)
+ */
+async function optimizeImageVariants(sourcePath, outputDir, cacheKeyPrefix, cache, stats, widths = WIDTHS) {
+  const sourceSize = fs.statSync(sourcePath).size;
+
+  for (const width of widths) {
+    const outputPath = path.join(outputDir, `${width}.webp`);
+    const cacheKey = `${cacheKeyPrefix}:${width}`;
+
+    // Check if optimization is needed
+    if (!needsOptimization(sourcePath, outputPath, cache, cacheKey)) {
+      stats.cached++;
+      continue;
+    }
+
+    try {
+      // Optimize image
+      const { size } = await optimizeImage(sourcePath, outputPath, width, QUALITY);
+      
+      // Update cache with source file hash
+      cache[cacheKey] = getFileHash(sourcePath);
+      
+      stats.generated++;
+      stats.totalSavings += sourceSize - size;
+    } catch (error) {
+      console.error(`❌ Failed to optimize ${cacheKeyPrefix}/${width}.webp:`, error.message);
+      stats.failed++;
+    }
+  }
+}
 
 /**
  * Main optimization routine
@@ -46,58 +79,64 @@ async function main() {
   // Load optimization cache
   const cache = loadCache(CACHE_FILE);
 
-  // Filter tapes with real JPG covers
-  const tapesWithCovers = tapes.filter((tape) => {
-    const cover = tape.images?.cover;
-    return cover && cover.includes('/media/') && cover.endsWith('.jpg');
-  });
+  const stats = {
+    generated: 0,
+    cached: 0,
+    failed: 0,
+    totalSavings: 0,
+    coversProcessed: 0,
+    sidesProcessed: 0,
+    heroProcessed: false,
+  };
 
-  console.log(`✅ Found ${tapesWithCovers.length} tapes with JPG covers`);
-  console.log(`⏭️  Skipping ${tapes.length - tapesWithCovers.length} tapes (placeholders or no cover)\n`);
-
-  let generated = 0;
-  let cached = 0;
-  let failed = 0;
-  let totalSavings = 0;
+  // Process hero image first
+  const heroPath = 'media/site/home-hero.jpg';
+  const heroSource = path.join(PUBLIC_DIR, heroPath);
+  if (fs.existsSync(heroSource)) {
+    const heroOutputDir = path.join(OUTPUT_DIR, 'site');
+    await optimizeImageVariants(heroSource, heroOutputDir, 'site:home-hero', cache, stats, HERO_WIDTHS);
+    stats.heroProcessed = true;
+    console.log('✅ Optimized hero image\n');
+  }
 
   // Process each tape
-  for (const tape of tapesWithCovers) {
-    const coverPath = tape.images.cover.replace(/^\//, '');
-    const sourcePath = path.join(PUBLIC_DIR, coverPath);
+  for (const tape of tapes) {
+    // Process cover image if it's a JPG
+    if (tape.images?.cover) {
+      const cover = tape.images.cover;
+      if (cover.includes('/media/') && cover.endsWith('.jpg')) {
+        const coverPath = cover.replace(/^\//, '');
+        const sourcePath = path.join(PUBLIC_DIR, coverPath);
 
-    // Check if source file exists
-    if (!fs.existsSync(sourcePath)) {
-      console.warn(`⚠️  Source not found: ${coverPath}`);
-      failed++;
-      continue;
+        if (fs.existsSync(sourcePath)) {
+          const outputDir = path.join(OUTPUT_DIR, tape.id);
+          await optimizeImageVariants(sourcePath, outputDir, tape.id, cache, stats);
+          stats.coversProcessed++;
+        } else {
+          console.warn(`⚠️  Cover not found: ${coverPath}`);
+          stats.failed++;
+        }
+      }
     }
 
-    // Get source file size
-    const sourceSize = fs.statSync(sourcePath).size;
+    // Process side images if they're JPGs
+    if (tape.sides && Array.isArray(tape.sides)) {
+      for (const side of tape.sides) {
+        if (side.image && side.image.includes('/media/') && side.image.endsWith('.jpg')) {
+          const sidePath = side.image.replace(/^\//, '');
+          const sourcePath = path.join(PUBLIC_DIR, sidePath);
 
-    // Process each width variant
-    for (const width of WIDTHS) {
-      const outputPath = path.join(OUTPUT_DIR, tape.id, `${width}.webp`);
-      const cacheKey = `${tape.id}:${width}`;
-
-      // Check if optimization is needed
-      if (!needsOptimization(sourcePath, outputPath, cache, cacheKey)) {
-        cached++;
-        continue;
-      }
-
-      try {
-        // Optimize image
-        const { size } = await optimizeImage(sourcePath, outputPath, width, QUALITY);
-        
-        // Update cache with source file hash
-        cache[cacheKey] = getFileHash(sourcePath);
-        
-        generated++;
-        totalSavings += sourceSize - size;
-      } catch (error) {
-        console.error(`❌ Failed to optimize ${tape.id}/${width}.webp:`, error.message);
-        failed++;
+          if (fs.existsSync(sourcePath)) {
+            const sidePosition = side.position.toLowerCase();
+            const outputDir = path.join(OUTPUT_DIR, tape.id, 'sides', sidePosition);
+            const cacheKey = `${tape.id}:sides:${sidePosition}`;
+            await optimizeImageVariants(sourcePath, outputDir, cacheKey, cache, stats);
+            stats.sidesProcessed++;
+          } else {
+            console.warn(`⚠️  Side image not found: ${sidePath}`);
+            stats.failed++;
+          }
+        }
       }
     }
   }
@@ -107,23 +146,27 @@ async function main() {
 
   // Print summary
   console.log('\n📊 Summary:');
-  console.log(`   Generated: ${generated} images`);
-  console.log(`   Cached:    ${cached} images (unchanged)`);
+  console.log(`   Generated: ${stats.generated} images`);
+  console.log(`   Cached:    ${stats.cached} images (unchanged)`);
   
-  if (failed > 0) {
-    console.log(`   Failed:    ${failed} images`);
+  if (stats.failed > 0) {
+    console.log(`   Failed:    ${stats.failed} images`);
   }
 
-  if (generated > 0) {
-    console.log(`   Savings:   ${formatBytes(totalSavings)} vs original JPGs`);
+  if (stats.generated > 0) {
+    console.log(`   Savings:   ${formatBytes(stats.totalSavings)} vs original JPGs`);
   }
 
   console.log(`\n✨ Optimization complete!`);
   console.log(`   Output: ${OUTPUT_DIR}`);
-  console.log(`   Total tapes optimized: ${tapesWithCovers.length}`);
-  console.log(`   Variants per tape: ${WIDTHS.length} (${WIDTHS.join('w, ')}w)\n`);
+  if (stats.heroProcessed) {
+    console.log(`   Hero image: optimized (${HERO_WIDTHS.join('w, ')}w)`);
+  }
+  console.log(`   Covers optimized: ${stats.coversProcessed} tapes`);
+  console.log(`   Sides optimized: ${stats.sidesProcessed} images`);
+  console.log(`   Variants per tape image: ${WIDTHS.length} (${WIDTHS.join('w, ')}w)\n`);
 
-  if (failed > 0) {
+  if (stats.failed > 0) {
     process.exit(1);
   }
 }
