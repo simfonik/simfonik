@@ -8057,6 +8057,67 @@
           }
         ]
       }
-    ]
+    ],
+    "source": "Linda Kim"
+  },
+  {
+    "id": "chris-brownie-live-at-nectar",
+    "title": "Live at Nectar",
+    "released": "1994",
+    "djs": [
+      {
+        "name": "Chris Brownie",
+        "slug": "chris-brownie"
+      }
+    ],
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/chris-brownie-live-at-nectar/a.mp3"
+          }
+        ]
+      },
+      {
+        "position": "B",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/chris-brownie-live-at-nectar/b.mp3"
+          }
+        ]
+      }
+    ],
+    "source": "Tef Foo"
+  },
+  {
+    "id": "derrick-carter-moods-version-iv-second-take",
+    "title": "Moods Version IV: Second Take",
+    "released": "1993",
+    "djs": [
+      {
+        "name": "Derrick Carter",
+        "slug": "derrick-carter"
+      }
+    ],
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/derrick-carter-moods-version-iv-second-take/a.mp3"
+          }
+        ]
+      },
+      {
+        "position": "B",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/derrick-carter-moods-version-iv-second-take/b.mp3"
+          }
+        ]
+      }
+    ],
+    "source": "Tef Foo"
   }
 ]
