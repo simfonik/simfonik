@@ -53,8 +53,8 @@ public/optimized/
 ## Build Integration
 
 ```bash
-npm run optimize-images  # Standalone
-npm run build            # Auto-runs optimization before Next.js build
+pnpm run optimize-images  # Standalone
+pnpm run build            # Auto-runs optimization before Next.js build
 ```
 
 ### Generation Script (`scripts/optimize-images.mjs`)
@@ -197,7 +197,7 @@ public-hoist-pattern[]=sharp
 ```
 
 ## Acceptance Criteria
-- [x] Running `npm run optimize-images` generates WebP files for all tape covers
+- [x] Running `pnpm run optimize-images` generates WebP files for all tape covers
 - [x] 3 widths generated per cover: 400w, 800w, 1200w
 - [x] Output organized in `public/optimized/<tapeId>/<width>.webp`
 - [x] Incremental builds use caching (only regenerate changed images)

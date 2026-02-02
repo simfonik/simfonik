@@ -8154,5 +8154,69 @@
       }
     ],
     "source": "Jediah Eaton"
+  },
+  {
+    "id": "mr-buzz-acid-hits-29",
+    "title": "Acid Hits 29",
+    "released": "1991",
+    "djs": [
+      {
+        "name": "Mr. Buzz",
+        "slug": "mr-buzz"
+      }
+    ],
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/mr-buzz-acid-hits-29/a.mp3"
+          }
+        ],
+        "image": "/media/tapes/mr-buzz-acid-hits-29/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/mr-buzz-acid-hits-29/b.mp3"
+          }
+        ],
+        "image": "/media/tapes/mr-buzz-acid-hits-29/sides/b.jpg"
+      }
+    ],
+    "source": "Josh McClintock"
+  },
+  {
+    "id": "mr-buzz-acid-hits-19",
+    "title": "Acid Hits 19",
+    "released": "1991",
+    "djs": [
+      {
+        "name": "Mr. Buzz",
+        "slug": "mr-buzz"
+      }
+    ],
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/mr-buzz-acid-hits-19/a.mp3"
+          }
+        ],
+        "image": "/media/tapes/mr-buzz-acid-hits-19/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/mr-buzz-acid-hits-19/b.mp3"
+          }
+        ],
+        "image": "/media/tapes/mr-buzz-acid-hits-19/sides/b.jpg"
+      }
+    ],
+    "source": "Josh McClintock"
   }
 ]
