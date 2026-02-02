@@ -8119,5 +8119,40 @@
       }
     ],
     "source": "Tef Foo"
+  },
+  {
+    "id": "machete-cuttin",
+    "title": "Cuttin'",
+    "released": "1997",
+    "djs": [
+      {
+        "name": "Machete",
+        "slug": "machete"
+      }
+    ],
+    "images": {
+      "cover": "/media/tapes/machete-cuttin/cover.jpg"
+    },
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/machete-cuttin/a.mp3"
+          }
+        ],
+        "image": "/media/tapes/machete-cuttin/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/machete-cuttin/b.mp3"
+          }
+        ],
+        "image": "/media/tapes/machete-cuttin/sides/b.jpg"
+      }
+    ],
+    "source": "Jediah Eaton"
   }
 ]
