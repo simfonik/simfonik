@@ -8243,5 +8243,45 @@
         ]
       }
     ]
+  },
+  {
+    "id": "q-dj-josh-swissman-the-hard-and-happy",
+    "title": "The Hard and Happy",
+    "released": "1992",
+    "djs": [
+      {
+        "name": "Q",
+        "slug": "q"
+      },
+      {
+        "name": "DJ Josh Swissman",
+        "slug": "dj-josh-swissman"
+      }
+    ],
+    "images": {
+      "cover": "/media/tapes/q-dj-josh-swissman-the-hard-and-happy/cover.jpg"
+    },
+    "sides": [
+      {
+        "position": "A",
+        "title": "The Hard",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/q-dj-josh-swissman-the-hard-and-happy/a.mp3"
+          }
+        ],
+        "image": "/media/tapes/q-dj-josh-swissman-the-hard-and-happy/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "title": "The Happy",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/q-dj-josh-swissman-the-hard-and-happy/b.mp3"
+          }
+        ],
+        "image": "/media/tapes/q-dj-josh-swissman-the-hard-and-happy/sides/b.jpg"
+      }
+    ]
   }
 ]
