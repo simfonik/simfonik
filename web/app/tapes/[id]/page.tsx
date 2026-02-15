@@ -9,6 +9,8 @@ import { getTapeById, getAllTapes, getCommentsForTape } from "../../../lib/data"
 import { hasOptimizedImages } from "../../../lib/image-utils";
 import { TapeGallery } from "../../../components/TapeGallery";
 import { AudioCoordinator } from "../../../components/AudioCoordinator";
+import { AudioPlayer } from "../../../components/AudioPlayer";
+import { PlaylistPlayer } from "../../../components/PlaylistPlayer";
 import { CommentForm } from "../../../components/CommentForm";
 import { LiveComments } from "../../../components/LiveComments";
 import { JsonLd } from "../../../components/JsonLd";
@@ -260,49 +262,60 @@ export default async function Page({ params }: Props) {
             </header>
 
             {/* Audio Players */}
-            <div className="space-y-4">
-            {tape.sides.map((side, idx) => {
-              const hasAudio = side.audio_links[0] && isStreamable(side.audio_links[0].url);
-              if (!hasAudio) return null;
-              
+            {(() => {
+              // Build playlist from sides with audio
+              const playlist = tape.sides
+                .filter(side => side.audio_links[0] && isStreamable(side.audio_links[0].url))
+                .map(side => ({
+                  title: side.title ?? `Side ${side.position}`,
+                  url: side.audio_links[0].url,
+                  position: side.position,
+                  djs: side.djs
+                }));
+
+              // Use playlist player for 2+ tracks, individual player for single side
+              if (playlist.length >= 2) {
+                return <PlaylistPlayer tracks={playlist} />;
+              }
+
+              // Individual players for 1-2 sides
               return (
-                <div key={idx}>
-                  <div className="mb-2">
-                    <h2 className="text-xl font-semibold text-[var(--text)]">
-                      {side.title ?? `Side ${side.position}`}
-                    </h2>
-                    {side.djs && side.djs.length > 0 && (
-                      <p className="text-sm text-[var(--muted)] mt-1">
-                        By{" "}
-                        {side.djs.map((dj, djIdx) => {
-                          const shouldLink = dj.link !== false && dj.slug !== "unknown";
-                          
-                          return (
-                            <Fragment key={dj.slug}>
-                              {shouldLink ? (
-                                <Link href={`/djs/${dj.slug}`} className="hover:underline hover:text-[var(--accent)] transition-colors">{dj.name}</Link>
-                              ) : (
-                                <span className="cursor-default">{dj.name}</span>
-                              )}
-                              {djIdx < side.djs!.length - 1 && ", "}
-                            </Fragment>
-                          );
-                        })}
-                      </p>
-                    )}
-                  </div>
-                  <audio
-                    controls
-                    preload="metadata"
-                    className="w-full"
-                  >
-                    <source src={side.audio_links[0].url} />
-                    Your browser does not support the audio element.
-                  </audio>
+                <div className="space-y-4">
+                  {playlist.map((track, idx) => (
+                    <div key={track.position}>
+                      <div className="mb-2">
+                        <h2 className="text-xl font-semibold text-[var(--text)]">
+                          {track.title}
+                        </h2>
+                        {track.djs && track.djs.length > 0 && (
+                          <p className="text-sm text-[var(--muted)] mt-1">
+                            By{" "}
+                            {track.djs.map((dj, djIdx) => {
+                              const shouldLink = dj.link !== false && dj.slug !== "unknown";
+                              
+                              return (
+                                <Fragment key={dj.slug}>
+                                  {shouldLink ? (
+                                    <Link href={`/djs/${dj.slug}`} className="hover:underline hover:text-[var(--accent)] transition-colors">{dj.name}</Link>
+                                  ) : (
+                                    <span className="cursor-default">{dj.name}</span>
+                                  )}
+                                  {djIdx < track.djs!.length - 1 && ", "}
+                                </Fragment>
+                              );
+                            })}
+                          </p>
+                        )}
+                      </div>
+                      <AudioPlayer 
+                        src={track.url}
+                        title={track.title}
+                      />
+                    </div>
+                  ))}
                 </div>
               );
-            })}
-            </div>
+            })()}
           </div>
         </div>
       </div>
