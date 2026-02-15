@@ -18,7 +18,7 @@ export type PaginatedComment = {
   created_at: string;
   tape_title: string;
   dj_names: string;
-  tape_year?: string;
+  tape_year: string;
 };
 
 export async function getRecentComments(limit = 10): Promise<RecentComment[]> {

@@ -31,7 +31,7 @@ export default async function CommentsPage({ searchParams }: Props) {
   // Validate page number
   const validPage = isNaN(page) || page < 1 ? 1 : page;
   
-  const { comments, total, totalPages, currentPage } = await getPaginatedComments(validPage, 30);
+  const { comments, totalPages, currentPage } = await getPaginatedComments(validPage, 30);
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
@@ -84,9 +84,7 @@ export default async function CommentsPage({ searchParams }: Props) {
                       {/* Tape title */}
                       <div className="font-bold text-lg text-[var(--text)] group-hover:text-[var(--accent)] transition-colors mb-1 leading-tight">
                         {comment.dj_names} - {comment.tape_title}
-                        {comment.tape_year && (
-                          <span className="text-[var(--muted)] font-normal text-base"> ({comment.tape_year})</span>
-                        )}
+                        <span className="text-[var(--muted)] font-normal text-base"> ({comment.tape_year})</span>
                       </div>
 
                       {/* Author & time */}
@@ -108,115 +106,32 @@ export default async function CommentsPage({ searchParams }: Props) {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="mt-12 border-t border-[var(--border)] pt-8">
-            <div className="flex items-center justify-center gap-2 flex-wrap">
-              {/* Previous button */}
-              {currentPage > 1 ? (
-                <Link
-                  href={`/comments?page=${currentPage - 1}`}
-                  className="px-4 py-2 bg-[var(--accent)] text-white rounded hover:bg-[var(--accent)]/90 transition-colors font-medium"
-                >
-                  ← Previous
-                </Link>
-              ) : (
-                <div className="px-4 py-2 text-[var(--muted)]/50 cursor-not-allowed">
-                  ← Previous
-                </div>
-              )}
+          <div className="mt-12 border-t border-[var(--border)] pt-8 flex items-center justify-between">
+            {currentPage > 1 ? (
+              <Link
+                href={`/comments?page=${currentPage - 1}`}
+                className="text-sm font-medium text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors"
+              >
+                ← Newer
+              </Link>
+            ) : (
+              <span />
+            )}
 
-              {/* Page numbers */}
-              <div className="flex gap-1">
-                {(() => {
-                  const pages = [];
-                  const showPages = 7; // Show 7 page numbers max
-                  let startPage = Math.max(1, currentPage - 3);
-                  let endPage = Math.min(totalPages, startPage + showPages - 1);
-                  
-                  // Adjust start if we're near the end
-                  if (endPage - startPage < showPages - 1) {
-                    startPage = Math.max(1, endPage - showPages + 1);
-                  }
+            <span className="text-sm text-[var(--muted)]">
+              Page {currentPage} of {totalPages}
+            </span>
 
-                  // First page + ellipsis
-                  if (startPage > 1) {
-                    pages.push(
-                      <Link
-                        key={1}
-                        href="/comments?page=1"
-                        className="w-10 h-10 flex items-center justify-center rounded hover:bg-[var(--muted)]/10 transition-colors text-[var(--text)]"
-                      >
-                        1
-                      </Link>
-                    );
-                    if (startPage > 2) {
-                      pages.push(
-                        <span key="ellipsis-start" className="w-10 h-10 flex items-center justify-center text-[var(--muted)]">
-                          ...
-                        </span>
-                      );
-                    }
-                  }
-
-                  // Page numbers
-                  for (let i = startPage; i <= endPage; i++) {
-                    pages.push(
-                      i === currentPage ? (
-                        <div
-                          key={i}
-                          className="w-10 h-10 flex items-center justify-center rounded bg-[var(--accent)] text-white font-bold"
-                        >
-                          {i}
-                        </div>
-                      ) : (
-                        <Link
-                          key={i}
-                          href={`/comments?page=${i}`}
-                          className="w-10 h-10 flex items-center justify-center rounded hover:bg-[var(--muted)]/10 transition-colors text-[var(--text)]"
-                        >
-                          {i}
-                        </Link>
-                      )
-                    );
-                  }
-
-                  // Ellipsis + last page
-                  if (endPage < totalPages) {
-                    if (endPage < totalPages - 1) {
-                      pages.push(
-                        <span key="ellipsis-end" className="w-10 h-10 flex items-center justify-center text-[var(--muted)]">
-                          ...
-                        </span>
-                      );
-                    }
-                    pages.push(
-                      <Link
-                        key={totalPages}
-                        href={`/comments?page=${totalPages}`}
-                        className="w-10 h-10 flex items-center justify-center rounded hover:bg-[var(--muted)]/10 transition-colors text-[var(--text)]"
-                      >
-                        {totalPages}
-                      </Link>
-                    );
-                  }
-
-                  return pages;
-                })()}
-              </div>
-
-              {/* Next button */}
-              {currentPage < totalPages ? (
-                <Link
-                  href={`/comments?page=${currentPage + 1}`}
-                  className="px-4 py-2 bg-[var(--accent)] text-white rounded hover:bg-[var(--accent)]/90 transition-colors font-medium"
-                >
-                  Next →
-                </Link>
-              ) : (
-                <div className="px-4 py-2 text-[var(--muted)]/50 cursor-not-allowed">
-                  Next →
-                </div>
-              )}
-            </div>
+            {currentPage < totalPages ? (
+              <Link
+                href={`/comments?page=${currentPage + 1}`}
+                className="text-sm font-medium text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors"
+              >
+                Older →
+              </Link>
+            ) : (
+              <span />
+            )}
           </div>
         )}
       </main>

@@ -1,23 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRightCircleIcon } from '@heroicons/react/16/solid';
 import type { RecentComment } from '../lib/comments';
+import { formatTimeAgo } from '../lib/time-utils';
 
 interface RecentCommentsTickerProps {
   comments: RecentComment[];
-}
-
-function formatTimeAgo(dateString: string): string {
-  const now = new Date();
-  const date = new Date(dateString);
-  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
-  if (seconds < 60) return 'just now';
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-  if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 export function RecentCommentsTicker({ comments }: RecentCommentsTickerProps) {
@@ -54,7 +42,9 @@ export function RecentCommentsTicker({ comments }: RecentCommentsTickerProps) {
                     {comment.dj_names} - {comment.tape_title}{' '}
                     <span className="text-[var(--muted)]">({formatTimeAgo(comment.created_at)})</span>
                   </span>
-                  <ArrowRightCircleIcon className="w-4 h-4 flex-shrink-0" />
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
                 </Link>
               ))}
             </div>
