@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getAllTapes, getCoverImageWithFallback } from "../lib/data";
 import { getRecentComments } from "../lib/comments";
 import { TapeGalleryWithSearch } from "../components/TapeGalleryWithSearch";
@@ -52,6 +53,17 @@ export default async function Home() {
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
         <TapeGalleryWithSearch tapes={tapesWithCovers} />
       </main>
+
+      {/* Mobile-only floating comments button */}
+      <Link
+        href="/comments"
+        className="sm:hidden fixed bottom-6 right-6 w-12 h-12 rounded-full bg-[var(--accent)] text-white shadow-lg hover:shadow-xl active:scale-95 transition-all flex items-center justify-center z-50"
+        aria-label="View comments"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+      </Link>
     </div>
   );
 }
