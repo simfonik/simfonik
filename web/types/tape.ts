@@ -18,6 +18,7 @@ export type DJ = {
     artist: string;
     title: string;
     duration?: string;
+    discogs_url?: string;
   };
   
 export type Side = {
