@@ -8270,7 +8270,25 @@
             "url": "https://audio.simfonik.com/tapes/q-dj-josh-swissman-the-hard-and-happy/a.mp3"
           }
         ],
-        "image": "/media/tapes/q-dj-josh-swissman-the-hard-and-happy/sides/a.jpg"
+        "image": "/media/tapes/q-dj-josh-swissman-the-hard-and-happy/sides/a.jpg",
+        "tracks": [
+          { "artist": "Bach", "title": "Toccata & Fugue In D Minor", "discogs_url": "https://www.discogs.com/master/591808-Bach-Carl-Weinrich-Toccata-Fugue-In-D-Minor" },
+          { "artist": "Moby", "title": "Go", "discogs_url": "https://www.discogs.com/release/31277-Moby-Go" },
+          { "artist": "Overmind", "title": "Everybody Let's F**k", "discogs_url": "https://www.discogs.com/release/153375-Overmind-Everybody-Lets-Fk" },
+          { "artist": "Mescalinum United", "title": "The 2nd Coming", "discogs_url": "https://www.discogs.com/release/99479-Various-See-Ya-In-2017" },
+          { "artist": "Lenny Dee", "title": "Hammer Head", "discogs_url": "https://www.discogs.com/release/46576-Lenny-Dee-Untitled" },
+          { "artist": "Moby", "title": "Thousand", "discogs_url": "https://www.discogs.com/release/18587-Moby-Next-Is-The-E" },
+          { "artist": "Wishdokta", "title": "M.A.D.", "discogs_url": "https://www.discogs.com/master/7195-Wishdokta-MAD" },
+          { "artist": "Mind Of Kane", "title": "Kaned", "discogs_url": "https://www.discogs.com/release/91673-Mind-Of-Kane-Kaned-EP" },
+          { "artist": "Equinox", "title": "Surveyor 3", "discogs_url": "https://www.discogs.com/release/39073-Equinox-Pulzar" },
+          { "artist": "DJ Dick", "title": "Malefactor", "discogs_url": "https://www.discogs.com/master/66811-DJ-Dick-No-Chill-Out-Necessary" },
+          { "artist": "General Noise", "title": "Drugs", "discogs_url": "https://www.discogs.com/release/34037-General-Noise-Rotterdam-Subway" },
+          { "artist": "Lenny Dee", "title": "Bug Spray", "discogs_url": "https://www.discogs.com/release/46576-Lenny-Dee-Untitled" },
+          { "artist": "Rotterdam Termination Source", "title": "Rough Justice", "discogs_url": "https://www.discogs.com/release/37513-Rotterdam-Termination-Source-Rough-Justice-Feyenoord" },
+          { "artist": "Pelgrim", "title": "Get Bouncy", "discogs_url": "https://www.discogs.com/release/41848-Pelgrim-Amen" },
+          { "artist": "Nasty Django", "title": "Ey Loco!", "discogs_url": "https://www.discogs.com/release/99479-Various-See-Ya-In-2017" },
+          { "artist": "King Dale", "title": "Utter!", "discogs_url": "https://www.discogs.com/release/113099-King-Dale-Utter-" }
+        ]
       },
       {
         "position": "B",
@@ -8280,7 +8298,22 @@
             "url": "https://audio.simfonik.com/tapes/q-dj-josh-swissman-the-hard-and-happy/b.mp3"
           }
         ],
-        "image": "/media/tapes/q-dj-josh-swissman-the-hard-and-happy/sides/b.jpg"
+        "image": "/media/tapes/q-dj-josh-swissman-the-hard-and-happy/sides/b.jpg",
+        "tracks": [
+          { "artist": "Kaotic Chemistry", "title": "Space Cakes", "discogs_url": "https://www.discogs.com/release/6116-Kaotic-Chemistry-LSD-EP" },
+          { "artist": "Altern 8", "title": "One For John", "discogs_url": "https://www.discogs.com/release/26302-Altern-8-Brutal-8-E-Orange-Edition" },
+          { "artist": "N.R.G.", "title": "Feel The Fury", "discogs_url": "https://www.discogs.com/release/58604-NRG-Feel-The-Fury-EP" },
+          { "artist": "Aurora", "title": "Sunshine", "discogs_url": "https://www.discogs.com/release/176899-Aurora-Sunshine-EP" },
+          { "artist": "The Prodigy", "title": "Ruff In The Jungle Bizness", "discogs_url": "https://www.discogs.com/release/2620-The-Prodigy-Experience" },
+          { "artist": "The Criminal Minds", "title": "Flynny's Theme", "discogs_url": "https://www.discogs.com/release/74763-The-Criminal-Minds-Baptized-By-Dub" },
+          { "artist": "Sonz Of A Loop Da Loop Era", "title": "Peace & Loveism", "discogs_url": "https://www.discogs.com/release/54501-Sonz-Of-A-Loop-Da-Loop-Era-Peace-Loveism-EP" },
+          { "artist": "Nu-Matic", "title": "Treat Me Right", "discogs_url": "https://www.discogs.com/master/60001-Nu-Matic-Body-Fusion" },
+          { "artist": "Kaotic Chemistry", "title": "LSD", "discogs_url": "https://www.discogs.com/release/6116-Kaotic-Chemistry-LSD-EP" },
+          { "artist": "Aurora", "title": "369", "discogs_url": "https://www.discogs.com/release/176899-Aurora-Sunshine-EP" },
+          { "artist": "4 Hero", "title": "Cookin' Up Yah Brain", "discogs_url": "https://www.discogs.com/release/308286-4-Hero-Wheres-The-Boy-Cooking-Up-Yah-Brain" },
+          { "artist": "2 Bad Mice", "title": "Drumscare-2", "discogs_url": "https://www.discogs.com/release/21502849-2-Bad-Mice-Hold-It-Down-Waremouse-Bombscare-2BM-Remix-WL" },
+          { "artist": "The Criminal Minds", "title": "Re-Baptised By Dub", "discogs_url": "https://www.discogs.com/release/74763-The-Criminal-Minds-Baptized-By-Dub" }
+        ]
       }
     ]
   }

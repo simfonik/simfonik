@@ -372,36 +372,79 @@ export default async function Page({ params }: Props) {
         })}
       </div>
 
-      {/* Tracklists */}
+      {/* Tracklist */}
       {tape.sides.some(side => side.tracks && side.tracks.length > 0) && (
-        <div className="space-y-10">
-          {tape.sides.map((side, idx) => {
-            if (!side.tracks || side.tracks.length === 0) return null;
-            
-            return (
-              <section key={idx} className="border-t border-[var(--border)] pt-8">
-                <h3 className="text-2xl font-semibold mb-4 text-[var(--text)]">
-                  {side.title ?? `Side ${side.position}`} – Tracklist
-                </h3>
-                <ol className="list-decimal list-inside space-y-1">
-                  {side.tracks.map((track, trackIdx) => (
-                    <li key={trackIdx} className="text-[var(--text)]">
-                      {track.artist} – {track.title}
-                      {track.duration && (
-                        <span className="ml-2 text-[var(--muted)]">
-                          ({track.duration})
+        <section className="border-t border-[var(--border)] pt-8 mt-10">
+          <div className="max-w-2xl">
+            <h3 className="text-2xl font-semibold mb-6 text-[var(--text)]">
+              Tracklist
+            </h3>
+          <div className="space-y-8">
+            {tape.sides.map((side, idx) => {
+              if (!side.tracks || side.tracks.length === 0) return null;
+              
+              return (
+                <div key={idx}>
+                  <h4 className="text-lg font-semibold mb-3 text-[var(--text)]">
+                    {side.title ?? `Side ${side.position}`}
+                  </h4>
+                  <div className="space-y-0 leading-snug text-sm">
+                    {side.tracks.map((track, trackIdx) => (
+                      <div key={trackIdx} className="flex gap-3 text-[var(--text)] hover:bg-[var(--bg-hover)] transition-colors py-1.5 px-3 rounded cursor-pointer group">
+                        <span className="text-[var(--muted)] opacity-50 tabular-nums flex-shrink-0">
+                          {String(trackIdx + 1).padStart(2, '0')}
                         </span>
-                      )}
-                    </li>
-                  ))}
-                </ol>
-              </section>
-            );
-          })}
-        </div>
+                        {track.discogs_url ? (
+                          <a 
+                            href={track.discogs_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-[var(--accent)] transition-colors cursor-pointer flex-1 flex items-center gap-2"
+                          >
+                            <span className="flex-1">
+                              <span className="font-medium">{track.artist}</span>
+                              <span className="text-[var(--muted)]"> - </span>
+                              <span>{track.title}</span>
+                              {track.duration && (
+                                <span className="ml-2 text-[var(--muted)] text-sm">
+                                  ({track.duration})
+                                </span>
+                              )}
+                            </span>
+                            <svg 
+                              className="w-3.5 h-3.5 text-[var(--muted)] group-hover:text-[var(--accent)] flex-shrink-0 opacity-40 group-hover:opacity-100 transition-opacity" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              viewBox="0 0 24 24"
+                              strokeWidth={2}
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                          </a>
+                        ) : (
+                          <span className="flex-1">
+                            <span className="font-medium">{track.artist}</span>
+                            <span className="text-[var(--muted)]"> - </span>
+                            <span>{track.title}</span>
+                            {track.duration && (
+                              <span className="ml-2 text-[var(--muted)] text-sm">
+                                ({track.duration})
+                              </span>
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          </div>
+        </section>
       )}
 
-      {/* Live Comments */}
+      {/* Comments */}
       <section className="border-t border-[var(--border)] pt-8 mt-10">
         <div className="max-w-3xl">
           <h3 className="text-2xl font-semibold mb-4 text-[var(--text)]">
