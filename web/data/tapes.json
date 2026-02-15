@@ -492,7 +492,7 @@
     "released": "2009",
     "djs": [
       {
-        "name": "DJ Mojo",
+        "name": "Mojo",
         "slug": "dj-mojo"
       }
     ],
@@ -1596,7 +1596,7 @@
     "released": "1993",
     "djs": [
       {
-        "name": "DJ Mojo",
+        "name": "Mojo",
         "slug": "dj-mojo"
       },
       {
@@ -1613,7 +1613,7 @@
         "position": "A",
         "djs": [
           {
-            "name": "DJ Mojo",
+            "name": "Mojo",
             "slug": "dj-mojo"
           },
           {
@@ -3103,7 +3103,7 @@
     "released": "2010",
     "djs": [
       {
-        "name": "DJ Mojo",
+        "name": "Mojo",
         "slug": "dj-mojo"
       }
     ],
@@ -3317,7 +3317,7 @@
     "released": "1995",
     "djs": [
       {
-        "name": "DJ Mojo",
+        "name": "Mojo",
         "slug": "dj-mojo"
       }
     ],
@@ -4237,7 +4237,7 @@
     "released": "1994",
     "djs": [
       {
-        "name": "DJ Mojo",
+        "name": "Mojo",
         "slug": "dj-mojo"
       }
     ],
@@ -5893,7 +5893,7 @@
     "released": "1997",
     "djs": [
       {
-        "name": "DJ Mojo",
+        "name": "Mojo",
         "slug": "dj-mojo"
       },
       {
@@ -5909,7 +5909,7 @@
         "position": "A",
         "djs": [
           {
-            "name": "DJ Mojo",
+            "name": "Mojo",
             "slug": "dj-mojo"
           }
         ],
@@ -7278,7 +7278,7 @@
     "released": "2013",
     "djs": [
       {
-        "name": "DJ Mojo",
+        "name": "Mojo",
         "slug": "dj-mojo"
       }
     ],
@@ -8218,5 +8218,29 @@
       }
     ],
     "source": "Josh McClintock"
+  },
+  {
+    "id": "dj-mojo-an-epic-oldskool-journey-iv",
+    "title": "An Epic Oldskool Journey IV",
+    "released": "2026",
+    "djs": [
+      {
+        "name": "Mojo",
+        "slug": "dj-mojo"
+      }
+    ],
+    "images": {
+      "cover": "/media/tapes/dj-mojo-an-epic-oldskool-journey-iv/cover.jpg"
+    },
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/dj-mojo-an-epic-oldskool-journey-iv/a.mp3"
+          }
+        ]
+      }
+    ]
   }
 ]
