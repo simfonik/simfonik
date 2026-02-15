@@ -275,7 +275,7 @@ export default async function Page({ params }: Props) {
 
               // Use playlist player for 2+ tracks, individual player for single side
               if (playlist.length >= 2) {
-                return <PlaylistPlayer tracks={playlist} />;
+                return <PlaylistPlayer tracks={playlist} tapeId={tape.id} />;
               }
 
               // Individual players for 1-2 sides
@@ -310,6 +310,8 @@ export default async function Page({ params }: Props) {
                       <AudioPlayer 
                         src={track.url}
                         title={track.title}
+                        tapeId={tape.id}
+                        sidePosition={track.position}
                       />
                     </div>
                   ))}

@@ -63,6 +63,22 @@ async function migrate() {
     await sql`CREATE INDEX IF NOT EXISTS idx_reset_at ON rate_limits(reset_at);`;
     console.log('✓ Created rate_limits index');
 
+    // Create plays table
+    await sql`
+      CREATE TABLE IF NOT EXISTS plays (
+        id SERIAL PRIMARY KEY,
+        tape_id VARCHAR(255) NOT NULL,
+        side_position VARCHAR(10) NOT NULL,
+        played_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `;
+    console.log('✓ Created plays table');
+
+    // Create indexes for plays
+    await sql`CREATE INDEX IF NOT EXISTS idx_plays_tape ON plays(tape_id);`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_plays_played_at ON plays(played_at DESC);`;
+    console.log('✓ Created plays indexes');
+
     console.log('\n✅ Migration complete!');
   } catch (error) {
     console.error('❌ Migration failed:', error);

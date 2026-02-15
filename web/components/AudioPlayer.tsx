@@ -5,11 +5,13 @@ import { useRef, useState, useEffect } from 'react';
 interface AudioPlayerProps {
   src: string;
   title?: string;
+  tapeId?: string;
+  sidePosition?: string;
 }
 
 const PLAYBACK_RATES = [1, 1.25, 1.5, 2] as const;
 
-export function AudioPlayer({ src, title }: AudioPlayerProps) {
+export function AudioPlayer({ src, title, tapeId, sidePosition }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const rafRef = useRef<number | null>(null);
   
@@ -45,6 +47,13 @@ export function AudioPlayer({ src, title }: AudioPlayerProps) {
 
     const handlePlay = () => {
       setIsPlaying(true);
+      if (tapeId && sidePosition) {
+        fetch('/api/track-play', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tapeId, sidePosition }),
+        }).catch(() => {});
+      }
     };
 
     const handlePause = () => {

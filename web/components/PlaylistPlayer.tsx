@@ -10,11 +10,12 @@ interface Track {
 
 interface PlaylistPlayerProps {
   tracks: Track[];
+  tapeId?: string;
 }
 
 const PLAYBACK_RATES = [1, 1.25, 1.5, 2] as const;
 
-export function PlaylistPlayer({ tracks }: PlaylistPlayerProps) {
+export function PlaylistPlayer({ tracks, tapeId }: PlaylistPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const rafRef = useRef<number | null>(null);
   
@@ -53,6 +54,13 @@ export function PlaylistPlayer({ tracks }: PlaylistPlayerProps) {
 
     const handlePlay = () => {
       setIsPlaying(true);
+      if (tapeId) {
+        fetch('/api/track-play', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tapeId, sidePosition: currentTrack.position }),
+        }).catch(() => {});
+      }
     };
 
     const handlePause = () => {
