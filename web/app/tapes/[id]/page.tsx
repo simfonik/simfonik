@@ -3,6 +3,8 @@ import Image from "next/image";
 import { Fragment } from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
+import fs from "fs";
+import path from "path";
 import { getTapeById, getAllTapes, getCommentsForTape } from "../../../lib/data";
 import { hasOptimizedImages } from "../../../lib/image-utils";
 import { TapeGallery } from "../../../components/TapeGallery";
@@ -29,12 +31,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {};
   }
 
-  // Priority: Cover > Side A > Side B > Default
-  const ogImagePath =
-    tape.images?.cover ||
-    tape.sides[0]?.image ||
-    tape.sides[1]?.image ||
-    '/media/site/og.jpg';
+  // Check if dedicated OG image exists (1200×630 for social sharing)
+  const ogImageFilePath = path.join(process.cwd(), 'public', 'og', `${tape.id}.jpg`);
+  const hasOgImage = fs.existsSync(ogImageFilePath);
+  
+  // Priority: Dedicated OG image > Cover > Side A > Side B > Default
+  const ogImagePath = hasOgImage
+    ? `/og/${tape.id}.jpg`
+    : (tape.images?.cover ||
+       tape.sides[0]?.image ||
+       tape.sides[1]?.image ||
+       '/media/site/og.jpg');
   
   // Make absolute URL for social sharing
   const ogImageUrl = `https://simfonik.com${ogImagePath}`;

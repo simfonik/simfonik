@@ -68,6 +68,36 @@ export async function optimizeImage(inputPath, outputPath, width, quality = 85) 
 }
 
 /**
+ * Generate Open Graph image with letterboxing
+ * 
+ * Creates a 1200×630 image (Facebook's recommended OG size) with black letterboxing
+ * to preserve the entire source image without cropping.
+ * 
+ * @param {string} inputPath - Path to source image
+ * @param {string} outputPath - Path to write OG image
+ * @param {number} quality - JPEG quality (0-100)
+ * @returns {Promise<{size: number}>} Output file size
+ */
+export async function generateOgImage(inputPath, outputPath, quality = 90) {
+  // Ensure output directory exists
+  const outputDir = path.dirname(outputPath);
+  fs.mkdirSync(outputDir, { recursive: true });
+
+  // Process image with sharp - fit: 'contain' adds letterboxing automatically
+  await sharp(inputPath)
+    .resize(1200, 630, {
+      fit: 'contain', // Fit entire image, add padding as needed
+      background: { r: 0, g: 0, b: 0 }, // Black letterboxing
+    })
+    .jpeg({ quality })
+    .toFile(outputPath);
+
+  // Return file stats
+  const stats = fs.statSync(outputPath);
+  return { size: stats.size };
+}
+
+/**
  * Format bytes to human-readable string
  */
 export function formatBytes(bytes) {

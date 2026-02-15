@@ -15,6 +15,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   optimizeImage,
+  generateOgImage,
   getFileHash,
   needsOptimization,
   loadCache,
@@ -29,9 +30,11 @@ const ROOT = path.resolve(__dirname, '..');
 const WIDTHS = [400, 800, 1200];
 const HERO_WIDTHS = [640, 1024, 1920]; // Viewport-based widths for hero
 const QUALITY = 85;
+const OG_QUALITY = 90; // Higher quality for social sharing
 const TAPES_JSON = path.join(ROOT, 'data', 'tapes.json');
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const OUTPUT_DIR = path.join(PUBLIC_DIR, 'optimized');
+const OG_DIR = path.join(PUBLIC_DIR, 'og');
 const CACHE_FILE = path.join(ROOT, '.next', 'cache', 'image-optimization.json');
 
 /**
@@ -67,6 +70,32 @@ async function optimizeImageVariants(sourcePath, outputDir, cacheKeyPrefix, cach
 }
 
 /**
+ * Generate Open Graph image for social sharing (1200×630)
+ */
+async function generateOgImageForTape(sourcePath, tapeId, cache, stats) {
+  const outputPath = path.join(OG_DIR, `${tapeId}.jpg`);
+  const cacheKey = `og:${tapeId}`;
+
+  // Check if generation is needed
+  if (!needsOptimization(sourcePath, outputPath, cache, cacheKey)) {
+    stats.ogCached++;
+    return;
+  }
+
+  try {
+    await generateOgImage(sourcePath, outputPath, OG_QUALITY);
+    
+    // Update cache with source file hash
+    cache[cacheKey] = getFileHash(sourcePath);
+    
+    stats.ogGenerated++;
+  } catch (error) {
+    console.error(`❌ Failed to generate OG image for ${tapeId}:`, error.message);
+    stats.failed++;
+  }
+}
+
+/**
  * Main optimization routine
  */
 async function main() {
@@ -87,6 +116,8 @@ async function main() {
     coversProcessed: 0,
     sidesProcessed: 0,
     heroProcessed: false,
+    ogGenerated: 0,
+    ogCached: 0,
   };
 
   // Process hero image first
@@ -109,8 +140,13 @@ async function main() {
         const sourcePath = path.join(PUBLIC_DIR, coverPath);
 
         if (fs.existsSync(sourcePath)) {
+          // Generate responsive WebP variants
           const outputDir = path.join(OUTPUT_DIR, tape.id);
           await optimizeImageVariants(sourcePath, outputDir, tape.id, cache, stats);
+          
+          // Generate OG image for social sharing
+          await generateOgImageForTape(sourcePath, tape.id, cache, stats);
+          
           stats.coversProcessed++;
         } else {
           console.warn(`⚠️  Cover not found: ${coverPath}`);
@@ -148,6 +184,7 @@ async function main() {
   console.log('\n📊 Summary:');
   console.log(`   Generated: ${stats.generated} images`);
   console.log(`   Cached:    ${stats.cached} images (unchanged)`);
+  console.log(`   OG images: ${stats.ogGenerated} generated, ${stats.ogCached} cached`);
   
   if (stats.failed > 0) {
     console.log(`   Failed:    ${stats.failed} images`);
@@ -159,11 +196,13 @@ async function main() {
 
   console.log(`\n✨ Optimization complete!`);
   console.log(`   Output: ${OUTPUT_DIR}`);
+  console.log(`   OG images: ${OG_DIR}`);
   if (stats.heroProcessed) {
     console.log(`   Hero image: optimized (${HERO_WIDTHS.join('w, ')}w)`);
   }
   console.log(`   Covers optimized: ${stats.coversProcessed} tapes`);
   console.log(`   Sides optimized: ${stats.sidesProcessed} images`);
+  console.log(`   OG images: ${stats.ogGenerated + stats.ogCached} (1200×630 for social sharing)`);
   console.log(`   Variants per tape image: ${WIDTHS.length} (${WIDTHS.join('w, ')}w)\n`);
 
   if (stats.failed > 0) {
