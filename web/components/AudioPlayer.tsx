@@ -210,6 +210,21 @@ export function AudioPlayer({ src, title, tapeId, sidePosition }: AudioPlayerPro
             <span className="text-sm text-[var(--muted)] tabular-nums flex-shrink-0">
               {duration > 0 ? formatTime(duration) : '--:--:--'}
             </span>
+
+            <a
+              href={src}
+              download
+              className="text-[var(--muted)] hover:text-[var(--accent)] transition-colors flex-shrink-0 ml-3"
+              aria-label="Download audio file"
+            >
+              <svg 
+                className="w-5 h-5" 
+                viewBox="0 0 24 24" 
+                fill="currentColor"
+              >
+                <path fillRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm1 6a1 1 0 00-2 0v5.586l-1.707-1.707a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L13 13.586V8z" clipRule="evenodd" />
+              </svg>
+            </a>
           </div>
         </div>
     </div>
