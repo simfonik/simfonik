@@ -375,7 +375,7 @@ export default async function Page({ params }: Props) {
       {/* Tracklist */}
       {tape.sides.some(side => side.tracks && side.tracks.length > 0) && (
         <section className="border-t border-[var(--border)] pt-8 mt-10">
-          <div className="max-w-2xl">
+          <div className="max-w-3xl">
             <h3 className="text-2xl font-semibold mb-6 text-[var(--text)]">
               Tracklist
             </h3>
