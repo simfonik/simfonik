@@ -44,8 +44,19 @@ export function LiveComments({ tapeId }: LiveCommentsProps) {
   useEffect(() => {
     fetch(`/api/comments/${tapeId}`)
       .then(r => r.json())
-      .then(setComments)
-      .catch(err => console.error('Failed to load comments:', err))
+      .then(data => {
+        // Ensure we got an array
+        if (Array.isArray(data)) {
+          setComments(data);
+        } else {
+          console.error('API returned non-array:', data);
+          setComments([]);
+        }
+      })
+      .catch(err => {
+        console.error('Failed to load comments:', err);
+        setComments([]);
+      })
       .finally(() => setLoading(false));
   }, [tapeId]);
 
