@@ -39,21 +39,12 @@ export async function GET(request: Request) {
     const limit = 50;
     const offset = (page - 1) * limit;
 
-    // Get pending comments with parent info
+    // Get pending comments
     const { rows } = await sql`
-      SELECT 
-        c.id, 
-        c.tape_id, 
-        c.author_name, 
-        c.content, 
-        c.created_at,
-        c.parent_id,
-        p.author_name as parent_author,
-        p.content as parent_content
-      FROM comments c
-      LEFT JOIN comments p ON c.parent_id = p.id
-      WHERE c.approved = false
-      ORDER BY c.created_at DESC
+      SELECT id, tape_id, author_name, content, created_at
+      FROM comments
+      WHERE approved = false
+      ORDER BY created_at DESC
       LIMIT ${limit} OFFSET ${offset}
     `;
 

@@ -9,7 +9,7 @@ export async function GET(
     const { tapeId } = await params;
 
     const { rows } = await sql`
-      SELECT id, tape_id, author_name, content, created_at, parent_id
+      SELECT id, tape_id, author_name, content, created_at
       FROM comments
       WHERE tape_id = ${tapeId} AND approved = true
       ORDER BY created_at ASC
