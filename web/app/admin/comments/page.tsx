@@ -9,6 +9,9 @@ type Comment = {
   author_name: string;
   content: string;
   created_at: string;
+  parent_id: number | null;
+  parent_author: string | null;
+  parent_content: string | null;
 };
 
 type CommentsData = {
@@ -104,6 +107,18 @@ export default function AdminCommentsPage() {
             <div className="space-y-4">
               {data.comments.map((comment) => (
                 <div key={comment.id} className="p-4 bg-[var(--muted)]/5 border border-[var(--border)] rounded-md">
+                  {comment.parent_id && comment.parent_author && (
+                    <div className="mb-3 p-3 bg-[var(--bg)] border border-[var(--border)] rounded text-sm">
+                      <div className="text-[var(--muted)] mb-1">
+                        Reply to <span className="font-medium text-[var(--text)]">{comment.parent_author}</span>:
+                      </div>
+                      <div className="text-[var(--muted)] italic">
+                        {comment.parent_content && comment.parent_content.length > 100
+                          ? comment.parent_content.slice(0, 100) + '...'
+                          : comment.parent_content}
+                      </div>
+                    </div>
+                  )}
                   <div className="flex items-start justify-between gap-4 mb-2">
                     <div className="flex-1">
                       <div className="font-medium text-[var(--text)]">{comment.author_name}</div>

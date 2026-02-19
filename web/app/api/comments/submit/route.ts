@@ -4,7 +4,7 @@ import { createHash } from 'crypto';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { tapeId, authorName, authorEmail, content, website } = body;
+    const { tapeId, authorName, authorEmail, content, website, parentId } = body;
 
     // Get IP address for rate limiting
     const forwarded = request.headers.get('x-forwarded-for');
@@ -67,10 +67,30 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Tape ID is required' }, { status: 400 });
     }
 
-    // 4. Insert comment (unapproved by default)
+    // 4. Validate parent comment if replying
+    if (parentId) {
+      const { rows: parentRows } = await sql`
+        SELECT id, tape_id
+        FROM comments
+        WHERE id = ${parentId}
+      `;
+
+      if (parentRows.length === 0) {
+        return Response.json({ error: 'Parent comment not found' }, { status: 400 });
+      }
+
+      const parent = parentRows[0];
+
+      // Ensure parent belongs to same tape
+      if (parent.tape_id !== tapeId) {
+        return Response.json({ error: 'Invalid parent comment' }, { status: 400 });
+      }
+    }
+
+    // 5. Insert comment (unapproved by default)
     await sql`
-      INSERT INTO comments (tape_id, author_name, author_email, content, approved)
-      VALUES (${tapeId}, ${name}, ${authorEmail || null}, ${text}, false)
+      INSERT INTO comments (tape_id, author_name, author_email, content, approved, parent_id)
+      VALUES (${tapeId}, ${name}, ${authorEmail || null}, ${text}, false, ${parentId || null})
     `;
 
     return Response.json({

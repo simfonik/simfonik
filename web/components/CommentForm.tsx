@@ -4,9 +4,12 @@ import { useState, FormEvent } from 'react';
 
 type CommentFormProps = {
   tapeId: string;
+  parentId?: number;
+  parentAuthor?: string;
+  onCancel?: () => void;
 };
 
-export function CommentForm({ tapeId }: CommentFormProps) {
+export function CommentForm({ tapeId, parentId, parentAuthor, onCancel }: CommentFormProps) {
   const [authorName, setAuthorName] = useState('');
   const [authorEmail, setAuthorEmail] = useState('');
   const [content, setContent] = useState('');
@@ -31,7 +34,8 @@ export function CommentForm({ tapeId }: CommentFormProps) {
           authorName,
           authorEmail,
           content,
-          website
+          website,
+          parentId
         })
       });
 
@@ -43,6 +47,12 @@ export function CommentForm({ tapeId }: CommentFormProps) {
         setAuthorName('');
         setAuthorEmail('');
         setContent('');
+        // If this is a reply form, call onCancel to close it
+        if (onCancel) {
+          setTimeout(() => {
+            onCancel();
+          }, 2000);
+        }
       } else {
         setMessage({ type: 'error', text: data.error || 'Failed to submit comment' });
       }
@@ -55,6 +65,11 @@ export function CommentForm({ tapeId }: CommentFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 mb-10">
+      {parentAuthor && (
+        <div className="text-sm text-[var(--muted)] mb-2">
+          Replying to <span className="font-medium text-[var(--text)]">{parentAuthor}</span>
+        </div>
+      )}
       {/* Honeypot field - hidden from users */}
       <input
         type="text"
@@ -124,13 +139,24 @@ export function CommentForm({ tapeId }: CommentFormProps) {
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={submitting || charCount < 10}
-        className="px-6 py-2 bg-[#5e6ad2] hover:bg-[#4a56b8] disabled:bg-[var(--muted)] disabled:cursor-not-allowed text-white font-medium rounded-md transition-colors"
-      >
-        {submitting ? 'Submitting...' : 'Post Comment'}
-      </button>
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          disabled={submitting || charCount < 10}
+          className="px-6 py-2 bg-[#5e6ad2] hover:bg-[#4a56b8] disabled:bg-[var(--muted)] disabled:cursor-not-allowed text-white font-medium rounded-md transition-colors"
+        >
+          {submitting ? 'Submitting...' : parentId ? 'Post Reply' : 'Post Comment'}
+        </button>
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-6 py-2 bg-[var(--muted)]/20 hover:bg-[var(--muted)]/30 text-[var(--text)] font-medium rounded-md transition-colors"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
     </form>
   );
 }
