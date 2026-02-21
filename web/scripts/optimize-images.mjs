@@ -8,6 +8,7 @@
  * 
  * Usage:
  *   node scripts/optimize-images.mjs
+ *   node scripts/optimize-images.mjs --only <tape-id>
  */
 
 import fs from 'node:fs';
@@ -101,9 +102,22 @@ async function generateOgImageForTape(sourcePath, tapeId, cache, stats) {
 async function main() {
   console.log('🖼️  Image Optimization\n');
 
+  // Parse --only flag
+  const onlyIndex = process.argv.indexOf('--only');
+  const onlyId = onlyIndex !== -1 ? process.argv[onlyIndex + 1] : null;
+
   // Load tapes data
-  const tapes = JSON.parse(fs.readFileSync(TAPES_JSON, 'utf8'));
-  console.log(`📼 Loaded ${tapes.length} tapes from tapes.json\n`);
+  let tapes = JSON.parse(fs.readFileSync(TAPES_JSON, 'utf8'));
+  if (onlyId) {
+    tapes = tapes.filter(t => t.id === onlyId);
+    if (tapes.length === 0) {
+      console.error(`❌ No tape found with id: ${onlyId}`);
+      process.exit(1);
+    }
+    console.log(`🎯 Processing only: ${onlyId}\n`);
+  } else {
+    console.log(`📼 Loaded ${tapes.length} tapes from tapes.json\n`);
+  }
 
   // Load optimization cache
   const cache = loadCache(CACHE_FILE);
@@ -120,14 +134,16 @@ async function main() {
     ogCached: 0,
   };
 
-  // Process hero image first
-  const heroPath = 'media/site/home-hero.jpg';
-  const heroSource = path.join(PUBLIC_DIR, heroPath);
-  if (fs.existsSync(heroSource)) {
-    const heroOutputDir = path.join(OUTPUT_DIR, 'site');
-    await optimizeImageVariants(heroSource, heroOutputDir, 'site:home-hero', cache, stats, HERO_WIDTHS);
-    stats.heroProcessed = true;
-    console.log('✅ Optimized hero image\n');
+  // Process hero image first (skip when --only is used)
+  if (!onlyId) {
+    const heroPath = 'media/site/home-hero.jpg';
+    const heroSource = path.join(PUBLIC_DIR, heroPath);
+    if (fs.existsSync(heroSource)) {
+      const heroOutputDir = path.join(OUTPUT_DIR, 'site');
+      await optimizeImageVariants(heroSource, heroOutputDir, 'site:home-hero', cache, stats, HERO_WIDTHS);
+      stats.heroProcessed = true;
+      console.log('✅ Optimized hero image\n');
+    }
   }
 
   // Process each tape

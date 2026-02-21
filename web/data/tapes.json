@@ -8386,5 +8386,92 @@
         ]
       }
     ]
+  },
+  {
+    "id": "dj-thee-o-dr-jeckyll-peace-and-mayhem",
+    "title": "Peace & Mayhem",
+    "released": "1993",
+    "djs": [
+      {
+        "name": "Thee-O",
+        "slug": "dj-thee-o"
+      },
+      {
+        "name": "Dr. Jeckyll",
+        "slug": "dr-jeckyll"
+      }
+    ],
+    "images": {
+      "cover": "/media/tapes/dj-thee-o-dr-jeckyll-peace-and-mayhem/cover.jpg"
+    },
+    "sides": [
+      {
+        "position": "A",
+        "title": "Giving You A Shot",
+        "djs": [
+          {
+            "name": "Dr. Jeckyll",
+            "slug": "dr-jeckyll"
+          }
+        ],
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/dj-thee-o-dr-jeckyll-peace-and-mayhem/a.mp3"
+          }
+        ],
+        "image": "/media/tapes/dj-thee-o-dr-jeckyll-peace-and-mayhem/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "title": "Da' Beat Junkie",
+        "djs": [
+          {
+            "name": "Thee-O",
+            "slug": "dj-thee-o"
+          }
+        ],
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/dj-thee-o-dr-jeckyll-peace-and-mayhem/b.mp3"
+          }
+        ],
+        "image": "/media/tapes/dj-thee-o-dr-jeckyll-peace-and-mayhem/sides/b.jpg"
+      }
+    ]
+  },
+  {
+    "id": "doc-martin-docs-part-of-heaven",
+    "title": "Doc's Part of Heaven",
+    "released": "1990",
+    "source": "Ricky Bonilla",
+    "djs": [
+      {
+        "name": "Doc Martin",
+        "slug": "doc-martin"
+      }
+    ],
+    "images": {
+      "cover": "/media/tapes/doc-martin-docs-part-of-heaven/cover.jpg"
+    },
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/doc-martin-docs-part-of-heaven/a.mp3"
+          }
+        ],
+        "image": "/media/tapes/doc-martin-docs-part-of-heaven/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/doc-martin-docs-part-of-heaven/b.mp3"
+          }
+        ],
+        "image": "/media/tapes/doc-martin-docs-part-of-heaven/sides/b.jpg"
+      }
+    ]
   }
 ]

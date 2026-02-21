@@ -2,10 +2,17 @@
 
 import { useRef, useState, useEffect } from 'react';
 
+interface DJ {
+  name: string;
+  slug: string;
+  link?: boolean;
+}
+
 interface Track {
   title: string;
   url: string;
   position: string;
+  djs?: DJ[];
 }
 
 interface PlaylistPlayerProps {
@@ -285,7 +292,12 @@ export function PlaylistPlayer({ tracks, tapeId }: PlaylistPlayerProps) {
                   )}
                 </div>
                 <div className="flex-1 min-w-0 text-sm">
-                  {track.title}
+                  <div>{track.title}</div>
+                  {track.djs && track.djs.length > 0 && (
+                    <div className="text-xs opacity-60 mt-0.5">
+                      {track.djs.map(dj => dj.name).join(', ')}
+                    </div>
+                  )}
                 </div>
               </div>
             </button>
