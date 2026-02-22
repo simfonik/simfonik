@@ -49,7 +49,8 @@
         ],
         "image": "/media/tapes/dj-trance-raw-wake-up-la/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2008-06-01T00:00:00"
   },
   {
     "id": "aldo-bender-happy-wednesdays",
@@ -81,7 +82,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2008-04-01T00:00:00"
   },
   {
     "id": "oscar-da-grouch-marc-anthony-in-three-dee",
@@ -131,7 +133,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2008-04-01T00:00:00"
   },
   {
     "id": "dj-trance-the-real-oldskool",
@@ -160,7 +163,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2008-04-01T00:00:00"
   },
   {
     "id": "dj-trance-raw-live-at-what",
@@ -210,7 +214,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2008-04-01T00:00:00"
   },
   {
     "id": "steve-loria-chrome",
@@ -242,7 +247,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2008-04-01T00:00:00"
   },
   {
     "id": "steve-loria-cybersonic-technotronic",
@@ -271,7 +277,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2010-07-01T00:00:00"
   },
   {
     "id": "barry-weaver-live-at-bassrush-2002",
@@ -296,7 +303,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2008-04-01T00:00:00"
   },
   {
     "id": "chris-flores-liquid",
@@ -329,7 +337,8 @@
         ]
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2008-05-01T00:00:00"
   },
   {
     "id": "aldo-bender-too-stoned-to-mix",
@@ -362,7 +371,8 @@
         ]
       }
     ],
-    "source": "Aldo Bender"
+    "source": "Aldo Bender",
+    "created_date": "2008-05-01T00:00:00"
   },
   {
     "id": "aldo-bender-conscious-trip",
@@ -395,7 +405,8 @@
         ]
       }
     ],
-    "source": "Aldo Bender"
+    "source": "Aldo Bender",
+    "created_date": "2008-05-01T00:00:00"
   },
   {
     "id": "aldo-bender-so-real",
@@ -428,7 +439,8 @@
         ]
       }
     ],
-    "source": "Aldo Bender"
+    "source": "Aldo Bender",
+    "created_date": "2008-05-01T00:00:00"
   },
   {
     "id": "raw-turntable-psycho-1992",
@@ -460,7 +472,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2008-05-01T00:00:00"
   },
   {
     "id": "raw-live-on-powertools-1994",
@@ -484,7 +497,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2008-05-01T00:00:00"
   },
   {
     "id": "dj-mojo-an-epic-oldskool-journey",
@@ -508,7 +522,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2008-06-01T00:00:00"
   },
   {
     "id": "oscar-da-grouch-live-at-blast",
@@ -532,7 +547,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2008-11-01T00:00:00"
   },
   {
     "id": "dj-trance-fester-vol-1",
@@ -582,7 +598,8 @@
         ],
         "image": "/media/tapes/dj-trance-fester-vol-1/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2008-12-01T00:00:00"
   },
   {
     "id": "barry-weaver-trip-train",
@@ -614,7 +631,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2008-12-01T00:00:00"
   },
   {
     "id": "jon-williams-fruit-salad",
@@ -647,7 +665,8 @@
         ]
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2009-01-01T00:00:00"
   },
   {
     "id": "dj-trance-live-at-bassrush-3",
@@ -671,7 +690,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2009-01-01T00:00:00"
   },
   {
     "id": "jughead-basskick-bassrush-5",
@@ -699,7 +719,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2009-01-01T00:00:00"
   },
   {
     "id": "dj-dan-ron-d-core-dx2",
@@ -749,7 +770,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2009-01-01T00:00:00"
   },
   {
     "id": "dj-trance-raw-4-turntable-madness",
@@ -788,7 +810,8 @@
         ],
         "image": "/media/tapes/dj-trance-raw-4-turntable-madness/sides/a.png"
       }
-    ]
+    ],
+    "created_date": "2009-02-01T00:00:00"
   },
   {
     "id": "raw-live-at-bassrush-3",
@@ -812,7 +835,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2009-02-01T00:00:00"
   },
   {
     "id": "dj-mellinfunk-oscar-da-grouch-live-at-what",
@@ -860,7 +884,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2009-03-01T00:00:00"
   },
   {
     "id": "aldo-bender-smile93-vol2-far-cry",
@@ -893,7 +918,8 @@
         ]
       }
     ],
-    "source": "Aldo Bender"
+    "source": "Aldo Bender",
+    "created_date": "2009-03-01T00:00:00"
   },
   {
     "id": "doc-martin-goa-aum-with-yourself",
@@ -927,7 +953,8 @@
         ],
         "image": "/media/tapes/doc-martin-goa-aum-with-yourself/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2009-03-01T00:00:00"
   },
   {
     "id": "aldo-bender-smile93-vol3-lift-off",
@@ -961,7 +988,8 @@
         ]
       }
     ],
-    "source": "Aldo Bender"
+    "source": "Aldo Bender",
+    "created_date": "2009-03-01T00:00:00"
   },
   {
     "id": "jon-bishop-techno-mix-92",
@@ -992,7 +1020,8 @@
         ],
         "image": "/media/tapes/jon-bishop-techno-mix-92/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2009-03-01T00:00:00"
   },
   {
     "id": "steve-loria-deep-from-within",
@@ -1024,7 +1053,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2009-03-01T00:00:00"
   },
   {
     "id": "dj-thee-o-kandyman-us-them",
@@ -1075,7 +1105,8 @@
         "image": "/media/tapes/dj-thee-o-kandyman-us-them/sides/b.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2009-03-01T00:00:00"
   },
   {
     "id": "jesse-brooks-dj-jesse-92",
@@ -1107,7 +1138,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2009-04-01T00:00:00"
   },
   {
     "id": "steve-loria-love-saved-the-day",
@@ -1139,7 +1171,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2009-04-01T00:00:00"
   },
   {
     "id": "barry-weaver-lone-wolf-marques-wyatt-return-to-paradise",
@@ -1188,7 +1221,8 @@
         ],
         "image": "/media/tapes/barry-weaver-lone-wolf-marques-wyatt-return-to-paradise/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2009-04-01T00:00:00"
   },
   {
     "id": "ron-d-core-louis-love-love-core",
@@ -1238,7 +1272,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2009-04-01T00:00:00"
   },
   {
     "id": "mark-farina-waka-share-basic-foods",
@@ -1275,7 +1310,8 @@
         "image": "/media/tapes/mark-farina-waka-share-basic-foods/sides/b.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2009-04-01T00:00:00"
   },
   {
     "id": "ron-d-core-acid-test",
@@ -1311,7 +1347,8 @@
         ],
         "image": "/media/tapes/ron-d-core-acid-test/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2009-04-01T00:00:00"
   },
   {
     "id": "ernie-munson-pair-a-dime-shift",
@@ -1343,7 +1380,8 @@
         "image": "/media/tapes/ernie-munson-pair-a-dime-shift/sides/b.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2009-05-01T00:00:00"
   },
   {
     "id": "steve-loria-deep-space",
@@ -1379,7 +1417,8 @@
         ],
         "image": "/media/tapes/steve-loria-deep-space/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2009-05-01T00:00:00"
   },
   {
     "id": "chris-hyde-milk-cookies",
@@ -1416,7 +1455,8 @@
         "image": "/media/tapes/chris-hyde-milk-cookies/sides/b.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2009-04-01T00:00:00"
   },
   {
     "id": "jason-bently-oct-92",
@@ -1447,7 +1487,8 @@
         ],
         "image": "/media/tapes/jason-bently-oct-92/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2009-04-01T00:00:00"
   },
   {
     "id": "ernie-munson-ooga-booga",
@@ -1484,7 +1525,8 @@
         "image": "/media/tapes/ernie-munson-ooga-booga/sides/b.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2009-04-01T00:00:00"
   },
   {
     "id": "doc-martin-live-at-citrusonic",
@@ -1516,7 +1558,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2009-04-01T00:00:00"
   },
   {
     "id": "ernie-munson-holographic-universe",
@@ -1551,7 +1594,8 @@
         "image": "/media/tapes/ernie-munson-holographic-universe/sides/b.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2009-05-01T00:00:00"
   },
   {
     "id": "destructo-hard-medium",
@@ -1588,7 +1632,8 @@
         "image": "/media/tapes/destructo-hard-medium/sides/b.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2009-05-01T00:00:00"
   },
   {
     "id": "live-at-what-1993-mojo-unknown",
@@ -1643,7 +1688,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "eli-star-sown-loose-alone-some-lose-as-one",
@@ -1680,7 +1726,8 @@
         "image": "/media/tapes/eli-star-sown-loose-alone-some-lose-as-one/sides/b.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2009-06-01T00:00:00"
   },
   {
     "id": "doc-martin-deep-urban-breakdown",
@@ -1717,7 +1764,8 @@
         "image": "/media/tapes/doc-martin-deep-urban-breakdown/sides/b.jpg"
       }
     ],
-    "source": "Nature Boy"
+    "source": "Nature Boy",
+    "created_date": "2009-06-01T00:00:00"
   },
   {
     "id": "raymond-roker-santa-kruz-7-of-9",
@@ -1753,7 +1801,8 @@
         ]
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2009-07-01T00:00:00"
   },
   {
     "id": "frank-c-we-must-progress",
@@ -1784,7 +1833,8 @@
         ],
         "image": "/media/tapes/frank-c-we-must-progress/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2009-07-01T00:00:00"
   },
   {
     "id": "mark-lewis-global-lust-vol-5",
@@ -1817,7 +1867,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2009-07-01T00:00:00"
   },
   {
     "id": "jon-williams-91",
@@ -1849,7 +1900,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2009-07-01T00:00:00"
   },
   {
     "id": "dj-trance-too-much-going-on-upstairs",
@@ -1885,7 +1937,8 @@
         ],
         "image": "/media/tapes/dj-trance-too-much-going-on-upstairs/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2009-07-01T00:00:00"
   },
   {
     "id": "dj-thee-o-the-california-project",
@@ -1966,7 +2019,8 @@
         "image": "/media/tapes/dj-thee-o-the-california-project/sides/2b.jpg"
       }
     ],
-    "source": "Thee-O"
+    "source": "Thee-O",
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "ron-d-core-the-california-project",
@@ -2047,7 +2101,8 @@
         "image": "/media/tapes/ron-d-core-the-california-project/sides/2b.jpg"
       }
     ],
-    "source": "Thee-O"
+    "source": "Thee-O",
+    "created_date": "2009-08-01T00:00:00"
   },
   {
     "id": "drc-the-california-project",
@@ -2128,7 +2183,8 @@
         "image": "/media/tapes/drc-the-california-project/sides/2b.jpg"
       }
     ],
-    "source": "Thee-O"
+    "source": "Thee-O",
+    "created_date": "2009-08-01T00:00:00"
   },
   {
     "id": "dj-curious-the-darkside-part-1",
@@ -2174,7 +2230,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2009-08-01T00:00:00"
   },
   {
     "id": "dj-dan-the-california-project",
@@ -2255,7 +2312,8 @@
         "image": "/media/tapes/dj-dan-the-california-project/sides/2b.jpg"
       }
     ],
-    "source": "Thee-O"
+    "source": "Thee-O",
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "doc-martin-vibratory-energy",
@@ -2304,7 +2362,8 @@
         "image": "/media/tapes/doc-martin-vibratory-energy/sides/b.jpg"
       }
     ],
-    "source": "Nature Boy"
+    "source": "Nature Boy",
+    "created_date": "2009-09-01T00:00:00"
   },
   {
     "id": "jon-bishop-the-california-project",
@@ -2385,7 +2444,8 @@
         "image": "/media/tapes/jon-bishop-the-california-project/sides/2b.jpg"
       }
     ],
-    "source": "Thee-O"
+    "source": "Thee-O",
+    "created_date": "2009-10-01T00:00:00"
   },
   {
     "id": "simply-jeff-dj-spinn-the-california-project",
@@ -2470,7 +2530,8 @@
         "image": "/media/tapes/simply-jeff-dj-spinn-the-california-project/sides/2b.jpg"
       }
     ],
-    "source": "Thee-O"
+    "source": "Thee-O",
+    "created_date": "2009-10-01T00:00:00"
   },
   {
     "id": "dj-thee-o-sunset-on-venus",
@@ -2516,7 +2577,8 @@
         "image": "/media/tapes/dj-thee-o-sunset-on-venus/sides/b.jpg"
       }
     ],
-    "source": "Thee-O"
+    "source": "Thee-O",
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "dj-curious-the-darkside-part-2",
@@ -2548,7 +2610,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2010-09-01T00:00:00"
   },
   {
     "id": "dj-mark-farina-planet-earth-technology-has-its-subliminal-side",
@@ -2585,7 +2648,8 @@
         "image": "/media/tapes/mark-farina-planet-earth-technology-has-its-subliminal-side/sides/b.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2009-11-01T00:00:00"
   },
   {
     "id": "dj-thee-o-omar-mindwaves",
@@ -2636,7 +2700,8 @@
         "image": "/media/tapes/dj-thee-o-omar-mindwaves/sides/b.jpg"
       }
     ],
-    "source": "Thee-O"
+    "source": "Thee-O",
+    "created_date": "2009-12-01T00:00:00"
   },
   {
     "id": "dj-thee-o-cybersex",
@@ -2672,7 +2737,8 @@
         ],
         "image": "/media/tapes/dj-thee-o-cybersex/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2009-12-01T00:00:00"
   },
   {
     "id": "mark-farina-the-children-are-playing",
@@ -2706,7 +2772,8 @@
         ]
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2010-01-01T00:00:00"
   },
   {
     "id": "ernie-munson-friends-of-distinction",
@@ -2741,7 +2808,8 @@
         "image": "/media/tapes/ernie-munson-friends-of-distinction/sides/b.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2010-01-01T00:00:00"
   },
   {
     "id": "dj-thee-o-live-from-the-desert",
@@ -2778,7 +2846,8 @@
         "image": "/media/tapes/dj-thee-o-live-from-the-desert/sides/b.jpg"
       }
     ],
-    "source": "Thee-O"
+    "source": "Thee-O",
+    "created_date": "2010-01-01T00:00:00"
   },
   {
     "id": "dj-dan-housing-project",
@@ -2815,7 +2884,8 @@
         "image": "/media/tapes/dj-dan-housing-project/sides/b.jpg"
       }
     ],
-    "source": "Greg J"
+    "source": "Greg J",
+    "created_date": "2010-09-01T00:00:00"
   },
   {
     "id": "dj-dan-warehouse-flashbacks-vol-1",
@@ -2849,7 +2919,8 @@
         ],
         "image": "/media/tapes/dj-dan-warehouse-flashbacks-vol-1/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-04-01T00:00:00"
   },
   {
     "id": "eli-star-omega",
@@ -2884,7 +2955,8 @@
         "image": "/media/tapes/eli-star-omega/sides/b.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2010-02-01T00:00:00"
   },
   {
     "id": "dj-trance-live-at-family-joy",
@@ -2918,7 +2990,8 @@
         ],
         "image": "/media/tapes/dj-trance-live-at-family-joy/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-03-01T00:00:00"
   },
   {
     "id": "dj-dan-ron-d-core-dx2-vol-2",
@@ -2970,7 +3043,8 @@
         ],
         "image": "/media/tapes/dj-dan-ron-d-core-dx2-vol-2/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-03-01T00:00:00"
   },
   {
     "id": "dj-dan-ron-d-core-dx2-vol-3",
@@ -3023,7 +3097,8 @@
         "image": "/media/tapes/dj-dan-ron-d-core-dx2-vol-3/sides/b.jpg"
       }
     ],
-    "source": "Christopher Paolini"
+    "source": "Christopher Paolini",
+    "created_date": "2010-03-01T00:00:00"
   },
   {
     "id": "mark-lewis-flammable-liquid",
@@ -3059,7 +3134,8 @@
         ],
         "image": "/media/tapes/mark-lewis-flammable-liquid/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-03-01T00:00:00"
   },
   {
     "id": "ron-d-core-no-doz",
@@ -3095,7 +3171,8 @@
         ],
         "image": "/media/tapes/ron-d-core-no-doz/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-03-01T00:00:00"
   },
   {
     "id": "dj-mojo-an-epic-oldskool-journey-part-2",
@@ -3119,7 +3196,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2010-03-01T00:00:00"
   },
   {
     "id": "spun-josh-come-unity-1",
@@ -3174,7 +3252,8 @@
         ]
       }
     ],
-    "source": "Mario Q."
+    "source": "Mario Q.",
+    "created_date": "2010-04-01T00:00:00"
   },
   {
     "id": "ron-d-core-dj-robin-possessed",
@@ -3224,7 +3303,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2010-04-01T00:00:00"
   },
   {
     "id": "josh-simon-come-unity-ii",
@@ -3278,7 +3358,8 @@
         ],
         "image": "/media/tapes/josh-simon-come-unity-ii/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-09-01T00:00:00"
   },
   {
     "id": "mercury-come-unity-june-92",
@@ -3309,7 +3390,8 @@
         ],
         "image": "/media/tapes/mercury-come-unity-june-92/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-04-01T00:00:00"
   },
   {
     "id": "dj-mojo-return-of-the-funky-warrior",
@@ -3341,7 +3423,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2010-04-01T00:00:00"
   },
   {
     "id": "keoki-jeno-project-x-unlocks-the-house",
@@ -3393,7 +3476,8 @@
         ],
         "image": "/media/tapes/keoki-jeno-project-x-unlocks-the-house/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-04-01T00:00:00"
   },
   {
     "id": "ron-d-core-mkultra-acid-test-2",
@@ -3449,7 +3533,8 @@
         ],
         "image": "/media/tapes/ron-d-core-mkultra-acid-test-2/sides/2b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-04-01T00:00:00"
   },
   {
     "id": "unknown-live-at-what",
@@ -3498,7 +3583,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "dj-vitamin-d-the-california-project",
@@ -3555,7 +3641,8 @@
         "image": "/media/tapes/dj-vitamin-d-the-california-project/sides/2b.jpg"
       }
     ],
-    "source": "Thee-O"
+    "source": "Thee-O",
+    "created_date": "2010-05-01T00:00:00"
   },
   {
     "id": "derrick-carter-genre",
@@ -3592,7 +3679,8 @@
         "image": "/media/tapes/derrick-carter-genre/sides/b.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2010-05-01T00:00:00"
   },
   {
     "id": "mark-farina-chris-hyde-melodic",
@@ -3640,7 +3728,8 @@
         "image": "/media/tapes/mark-farina-chris-hyde-melodic/sides/b.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2010-05-01T00:00:00"
   },
   {
     "id": "raw-dj-mellinfunk-vol-1",
@@ -3693,7 +3782,8 @@
         "image": "/media/tapes/raw-dj-mellinfunk-vol-1/sides/b.jpg"
       }
     ],
-    "source": "Mario Q."
+    "source": "Mario Q.",
+    "created_date": "2010-05-01T00:00:00"
   },
   {
     "id": "dj-dan-funky-dope-green-project",
@@ -3728,7 +3818,8 @@
         "image": "/media/tapes/dj-dan-funky-dope-green-project/sides/b.jpg"
       }
     ],
-    "source": "Mario Q."
+    "source": "Mario Q.",
+    "created_date": "2010-05-01T00:00:00"
   },
   {
     "id": "dj-dan-jolly-house-jams",
@@ -3765,7 +3856,8 @@
         "image": "/media/tapes/dj-dan-jolly-house-jams/sides/b.jpg"
       }
     ],
-    "source": "Mario Q."
+    "source": "Mario Q.",
+    "created_date": "2010-05-01T00:00:00"
   },
   {
     "id": "dubtribe-dubchant",
@@ -3796,7 +3888,8 @@
         ],
         "image": "/media/tapes/dubtribe-dubchant/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "jon-williams-live-at-dream",
@@ -3828,7 +3921,8 @@
         "image": "/media/tapes/jon-williams-live-at-dream/sides/b.jpg"
       }
     ],
-    "source": "Saul Prado"
+    "source": "Saul Prado",
+    "created_date": "2010-05-01T00:00:00"
   },
   {
     "id": "raw-untitled-limited-edition",
@@ -3862,7 +3956,8 @@
         ],
         "image": "/media/tapes/raw-untitled-limited-edition/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-05-01T00:00:00"
   },
   {
     "id": "raymond-roker-fuck-mix-jerk-off-mix",
@@ -3899,7 +3994,8 @@
         "image": "/media/tapes/raymond-roker-fuck-mix-jerk-off-mix/sides/b.jpg"
       }
     ],
-    "source": "Raymond Roker"
+    "source": "Raymond Roker",
+    "created_date": "2010-05-01T00:00:00"
   },
   {
     "id": "scott-hardkiss-first-tape-om-labs",
@@ -3934,7 +4030,8 @@
         "image": "/media/tapes/scott-hardkiss-first-tape-om-labs/sides/b.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "steve-loria-spiral-trance-lions-dance",
@@ -3970,7 +4067,8 @@
         ],
         "image": "/media/tapes/steve-loria-spiral-trance-lions-dance/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-05-01T00:00:00"
   },
   {
     "id": "dj-thee-o-planetary-rave-series",
@@ -4067,7 +4165,8 @@
         "image": "/media/tapes/dj-thee-o-planetary-rave-series/sides/4b.jpg"
       }
     ],
-    "source": "Thee-O"
+    "source": "Thee-O",
+    "created_date": "2010-05-01T00:00:00"
   },
   {
     "id": "dj-dan-wicked-burning-frenzy",
@@ -4102,7 +4201,8 @@
         "image": "/media/tapes/dj-dan-wicked-burning-frenzy/sides/b.jpg"
       }
     ],
-    "source": "Mario Q."
+    "source": "Mario Q.",
+    "created_date": "2010-08-01T00:00:00"
   },
   {
     "id": "doc-martin-teknotronic-dance-mixes",
@@ -4136,7 +4236,8 @@
         "image": "/media/tapes/doc-martin-teknotronic-dance-mixes/sides/b.jpg"
       }
     ],
-    "source": "Tom Schultz"
+    "source": "Tom Schultz",
+    "created_date": "2010-08-01T00:00:00"
   },
   {
     "id": "dj-trance-the-california-project",
@@ -4193,7 +4294,8 @@
         "image": "/media/tapes/dj-trance-the-california-project/sides/2b.jpg"
       }
     ],
-    "source": "Thee-O"
+    "source": "Thee-O",
+    "created_date": "2010-09-01T00:00:00"
   },
   {
     "id": "dj-curious-abstract-technics",
@@ -4229,7 +4331,8 @@
         ],
         "image": "/media/tapes/dj-curious-abstract-technics/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-09-01T00:00:00"
   },
   {
     "id": "dj-mojo-transcendance",
@@ -4262,7 +4365,8 @@
         ],
         "image": "/media/tapes/dj-mojo-transcendance/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-09-01T00:00:00"
   },
   {
     "id": "ron-d-core-robin-funny-farm-ii",
@@ -4314,7 +4418,8 @@
         ],
         "image": "/media/tapes/ron-d-core-robin-funny-farm-ii/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-09-01T00:00:00"
   },
   {
     "id": "dj-thee-o-cybersex-ii",
@@ -4351,7 +4456,8 @@
         "image": "/media/tapes/dj-thee-o-cybersex-ii/sides/b.jpg"
       }
     ],
-    "source": "Thee-O"
+    "source": "Thee-O",
+    "created_date": "2010-09-01T00:00:00"
   },
   {
     "id": "dj-trance-los-angeles",
@@ -4387,7 +4493,8 @@
         ],
         "image": "/media/tapes/dj-trance-los-angeles/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-09-01T00:00:00"
   },
   {
     "id": "eli-star-see-without-eyes",
@@ -4422,7 +4529,8 @@
         "image": "/media/tapes/eli-star-see-without-eyes/sides/b.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2010-09-01T00:00:00"
   },
   {
     "id": "ernie-munson-skyscraper-i-love-you",
@@ -4457,7 +4565,8 @@
         "image": "/media/tapes/ernie-munson-skyscraper-i-love-you/sides/b.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2010-09-01T00:00:00"
   },
   {
     "id": "ernie-munson-wonder-child",
@@ -4492,7 +4601,8 @@
         "image": "/media/tapes/ernie-munson-wonder-child/sides/b.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2010-09-01T00:00:00"
   },
   {
     "id": "ernie-munson-naked",
@@ -4526,7 +4636,8 @@
         ],
         "image": "/media/tapes/ernie-munson-naked/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2011-07-01T00:00:00"
   },
   {
     "id": "jason-blakemore-give",
@@ -4559,7 +4670,8 @@
         ],
         "image": "/media/tapes/jason-blakemore-give/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-09-01T00:00:00"
   },
   {
     "id": "raw-jonny-5-natural-born-junglists",
@@ -4609,7 +4721,8 @@
         ],
         "image": "/media/tapes/raw-jonny-5-natural-born-junglists/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-09-01T00:00:00"
   },
   {
     "id": "keoki-let-the-street-speak-trance-dreamtime-kicking",
@@ -4644,7 +4757,8 @@
         "image": "/media/tapes/keoki-let-the-street-speak-trance-dreamtime-kicking/sides/b.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2010-09-01T00:00:00"
   },
   {
     "id": "markem-x-live-at-dub-6-9-94",
@@ -4676,7 +4790,8 @@
         "image": "/media/tapes/markem-x-live-at-dub-6-9-94/sides/b.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2010-09-01T00:00:00"
   },
   {
     "id": "moonpup-property-of-tef",
@@ -4708,7 +4823,8 @@
         "image": "/media/tapes/moonpup-property-of-tef/sides/b.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2010-09-01T00:00:00"
   },
   {
     "id": "raw-lost-in-the-jungle",
@@ -4744,7 +4860,8 @@
         ],
         "image": "/media/tapes/raw-lost-in-the-jungle/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-09-01T00:00:00"
   },
   {
     "id": "raw-hellborn",
@@ -4778,7 +4895,8 @@
         ],
         "image": "/media/tapes/raw-hellborn/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-09-01T00:00:00"
   },
   {
     "id": "raw-no-darkness",
@@ -4812,7 +4930,8 @@
         ],
         "image": "/media/tapes/raw-no-darkness/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-09-01T00:00:00"
   },
   {
     "id": "raymond-roker-stoned-mental-pilot",
@@ -4844,7 +4963,8 @@
         "image": "/media/tapes/raymond-roker-stoned-mental-pilot/sides/b.jpg"
       }
     ],
-    "source": "Raymond Roker"
+    "source": "Raymond Roker",
+    "created_date": "2010-09-01T00:00:00"
   },
   {
     "id": "robbie-hardkiss-om-labs-7-19-92",
@@ -4876,7 +4996,8 @@
         "image": "/media/tapes/robbie-hardkiss-om-labs-7-19-92/sides/b.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2010-09-01T00:00:00"
   },
   {
     "id": "steve-loria-universal-love",
@@ -4909,7 +5030,8 @@
         ],
         "image": "/media/tapes/steve-loria-universal-love/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-09-01T00:00:00"
   },
   {
     "id": "dj-thee-o-rave-rewind",
@@ -4946,7 +5068,8 @@
         "image": "/media/tapes/dj-thee-o-rave-rewind/sides/b.jpg"
       }
     ],
-    "source": "Thee-O"
+    "source": "Thee-O",
+    "created_date": "2010-09-01T00:00:00"
   },
   {
     "id": "steve-leclair-live-at-808-state",
@@ -4980,7 +5103,8 @@
         "image": "/media/tapes/steve-leclair-live-at-808-state/sides/b.jpg"
       }
     ],
-    "source": "Josh McClintock"
+    "source": "Josh McClintock",
+    "created_date": "2010-10-01T00:00:00"
   },
   {
     "id": "dj-heretic-119-junglist",
@@ -5014,7 +5138,8 @@
         ],
         "image": "/media/tapes/dj-heretic-119-junglist/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-10-01T00:00:00"
   },
   {
     "id": "dj-josh-swissman-ruff",
@@ -5050,7 +5175,8 @@
         ],
         "image": "/media/tapes/dj-josh-swissman-ruff/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-10-01T00:00:00"
   },
   {
     "id": "dj-trance-fester-vol-2",
@@ -5102,7 +5228,8 @@
         ],
         "image": "/media/tapes/dj-trance-fester-vol-2/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-10-01T00:00:00"
   },
   {
     "id": "fester-dj-trance-vol-3",
@@ -5154,7 +5281,8 @@
         ],
         "image": "/media/tapes/fester-dj-trance-vol-3/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-10-01T00:00:00"
   },
   {
     "id": "fester-dj-trance-vol-4",
@@ -5204,7 +5332,8 @@
         ],
         "image": "/media/tapes/fester-dj-trance-vol-4/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-10-01T00:00:00"
   },
   {
     "id": "dj-trance-lost",
@@ -5240,7 +5369,8 @@
         ],
         "image": "/media/tapes/dj-trance-lost/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-10-01T00:00:00"
   },
   {
     "id": "doc-martin-flammable-liquid-11-91",
@@ -5272,7 +5402,8 @@
         "image": "/media/tapes/doc-martin-flammable-liquid-11-91/sides/b.jpg"
       }
     ],
-    "source": "Mark Picking"
+    "source": "Mark Picking",
+    "created_date": "2010-10-01T00:00:00"
   },
   {
     "id": "doc-martin-live-at-gilligans-island-1991",
@@ -5307,7 +5438,8 @@
         "image": "/media/tapes/doc-martin-live-at-gilligans-island-1991/sides/b.jpg"
       }
     ],
-    "source": "Mark Picking"
+    "source": "Mark Picking",
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "markem-x-acid-indigestion",
@@ -5338,7 +5470,8 @@
         ],
         "image": "/media/tapes/markem-x-acid-indigestion/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-10-01T00:00:00"
   },
   {
     "id": "moonpup-this-is-moonpup",
@@ -5371,7 +5504,8 @@
         ],
         "image": "/media/tapes/moonpup-this-is-moonpup/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-10-01T00:00:00"
   },
   {
     "id": "dom-t-music-to-dance-to",
@@ -5404,7 +5538,8 @@
         ],
         "image": "/media/tapes/dom-t-music-to-dance-to/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-10-01T00:00:00"
   },
   {
     "id": "mr-kool-aid-live-from-808-state-rave",
@@ -5438,7 +5573,8 @@
         "image": "/media/tapes/mr-kool-aid-live-from-808-state-rave/sides/b.jpg"
       }
     ],
-    "source": "Josh McClintock"
+    "source": "Josh McClintock",
+    "created_date": "2010-10-01T00:00:00"
   },
   {
     "id": "ron-d-core-hot-lemonade-1",
@@ -5471,7 +5607,8 @@
         ]
       }
     ],
-    "source": "Josh McClintock"
+    "source": "Josh McClintock",
+    "created_date": "2010-10-01T00:00:00"
   },
   {
     "id": "ron-d-core-hot-lemonade-2",
@@ -5504,7 +5641,8 @@
         ]
       }
     ],
-    "source": "Josh McClintock"
+    "source": "Josh McClintock",
+    "created_date": "2010-10-01T00:00:00"
   },
   {
     "id": "ron-d-core-hot-lemonade-3",
@@ -5537,7 +5675,8 @@
         ]
       }
     ],
-    "source": "Josh McClintock"
+    "source": "Josh McClintock",
+    "created_date": "2010-10-01T00:00:00"
   },
   {
     "id": "ron-d-core-psychotic-episodes",
@@ -5571,7 +5710,8 @@
         ],
         "image": "/media/tapes/ron-d-core-psychotic-episodes/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-10-01T00:00:00"
   },
   {
     "id": "circa-92",
@@ -5684,7 +5824,8 @@
         "image": "/media/tapes/circa-92/sides/e.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2010-11-01T00:00:00"
   },
   {
     "id": "barry-weaver-1991",
@@ -5716,7 +5857,8 @@
         "image": "/media/tapes/barry-weaver-1991/sides/b.jpg"
       }
     ],
-    "source": "Josh McClintock"
+    "source": "Josh McClintock",
+    "created_date": "2012-04-01T00:00:00"
   },
   {
     "id": "oscar-da-grouch-fester-equal",
@@ -5766,7 +5908,8 @@
         ],
         "image": "/media/tapes/oscar-da-grouch-fester-equal/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-11-01T00:00:00"
   },
   {
     "id": "raymond-roker-nothing-really-matters",
@@ -5801,7 +5944,8 @@
         "image": "/media/tapes/raymond-roker-nothing-really-matters/sides/b.jpg"
       }
     ],
-    "source": "Raymond Roker"
+    "source": "Raymond Roker",
+    "created_date": "2010-11-01T00:00:00"
   },
   {
     "id": "ron-d-core-louis-love-love-core-2",
@@ -5851,7 +5995,8 @@
         ],
         "image": "/media/tapes/ron-d-core-louis-love-love-core-2/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-11-01T00:00:00"
   },
   {
     "id": "barry-weaver-live-at-soundcheck-1997",
@@ -5885,7 +6030,8 @@
         ],
         "image": "/media/tapes/barry-weaver-live-at-soundcheck-1997/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2011-02-01T00:00:00"
   },
   {
     "id": "dj-mojo-noah-blue-party",
@@ -5933,7 +6079,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2011-02-01T00:00:00"
   },
   {
     "id": "dj-trance-72-animals",
@@ -5965,7 +6112,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2011-02-01T00:00:00"
   },
   {
     "id": "josh-mcclintock-acid-junky-vol-1",
@@ -5999,7 +6147,8 @@
         "image": "/media/tapes/josh-mcclintock-acid-junky-vol-1/sides/b.jpg"
       }
     ],
-    "source": "Josh McClintock"
+    "source": "Josh McClintock",
+    "created_date": "2011-02-01T00:00:00"
   },
   {
     "id": "josh-mcclintock-acid-junky-vol-2",
@@ -6033,7 +6182,8 @@
         "image": "/media/tapes/josh-mcclintock-acid-junky-vol-2/sides/b.jpg"
       }
     ],
-    "source": "Josh McClintock"
+    "source": "Josh McClintock",
+    "created_date": "2011-02-01T00:00:00"
   },
   {
     "id": "moonpup-tekno-for-tefs-ears-only",
@@ -6066,7 +6216,8 @@
         ],
         "image": "/media/tapes/moonpup-tekno-for-tefs-ears-only/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2011-03-01T00:00:00"
   },
   {
     "id": "parliament-1-live-and-fucking-loud",
@@ -6098,7 +6249,8 @@
         ],
         "image": "/media/tapes/parliament-1-live-and-fucking-loud/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2011-03-01T00:00:00"
   },
   {
     "id": "simon-markie-mark-come-unity-iii",
@@ -6152,7 +6304,8 @@
         ],
         "image": "/media/tapes/simon-markie-mark-come-unity-iii/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2011-03-01T00:00:00"
   },
   {
     "id": "dj-trance-mindscratch",
@@ -6183,7 +6336,8 @@
         ],
         "image": "/media/tapes/dj-trance-mindscratch/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2011-04-01T00:00:00"
   },
   {
     "id": "dj-curious-happiness",
@@ -6217,7 +6371,8 @@
         ],
         "image": "/media/tapes/dj-curious-happiness/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2011-05-01T00:00:00"
   },
   {
     "id": "josh-mcclintock-acid-junky-vol-3",
@@ -6251,7 +6406,8 @@
         "image": "/media/tapes/josh-mcclintock-acid-junky-vol-3/sides/b.jpg"
       }
     ],
-    "source": "Josh McClintock"
+    "source": "Josh McClintock",
+    "created_date": "2011-05-01T00:00:00"
   },
   {
     "id": "raw-dj-trance-libra-mindstate",
@@ -6301,7 +6457,8 @@
         ],
         "image": "/media/tapes/raw-dj-trance-libra-mindstate/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2011-05-01T00:00:00"
   },
   {
     "id": "ron-d-core-dr-freeclouds-mixing-lab",
@@ -6332,7 +6489,8 @@
         ],
         "image": "/media/tapes/ron-d-core-dr-freeclouds-mixing-lab/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2011-05-01T00:00:00"
   },
   {
     "id": "xavier-live-at-opium-8-12-95",
@@ -6364,7 +6522,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2011-05-01T00:00:00"
   },
   {
     "id": "n2o-gods-of-nitrous",
@@ -6398,7 +6557,8 @@
         ],
         "image": "/media/tapes/n2o-gods-of-nitrous/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2011-05-01T00:00:00"
   },
   {
     "id": "n2o-lifes-a-gassssss",
@@ -6432,7 +6592,8 @@
         ],
         "image": "/media/tapes/n2o-lifes-a-gassssss/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2010-11-01T00:00:00"
   },
   {
     "id": "dj-curious-underground-flavor",
@@ -6466,7 +6627,8 @@
         ],
         "image": "/media/tapes/dj-curious-underground-flavor/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2011-05-01T00:00:00"
   },
   {
     "id": "dj-thee-o-mara-project",
@@ -6503,7 +6665,8 @@
         "image": "/media/tapes/dj-thee-o-mara-project/sides/b.jpg"
       }
     ],
-    "source": "Thee-O"
+    "source": "Thee-O",
+    "created_date": "2011-05-01T00:00:00"
   },
   {
     "id": "dj-e-zone-3-92",
@@ -6534,7 +6697,8 @@
         ],
         "image": "/media/tapes/dj-e-zone-3-92/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2011-06-01T00:00:00"
   },
   {
     "id": "powertools-10-24-92",
@@ -6575,7 +6739,8 @@
         ]
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2011-06-01T00:00:00"
   },
   {
     "id": "circa-94",
@@ -6700,7 +6865,8 @@
         "image": "/media/tapes/circa-94/sides/h.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2011-07-01T00:00:00"
   },
   {
     "id": "barry-weaver-b-dub-3",
@@ -6734,7 +6900,8 @@
         ],
         "image": "/media/tapes/barry-weaver-b-dub-3/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2011-08-01T00:00:00"
   },
   {
     "id": "eli-star-flux",
@@ -6766,7 +6933,8 @@
         "image": "/media/tapes/eli-star-flux/sides/b.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2011-08-01T00:00:00"
   },
   {
     "id": "jason-blakemore-erik-ludloff-trappy-in-a-closet",
@@ -6816,7 +6984,8 @@
         ],
         "image": "/media/tapes/jason-blakemore-erik-ludloff-trappy-in-a-closet/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2011-08-01T00:00:00"
   },
   {
     "id": "tony-largo-live-at-maxx-v1",
@@ -6851,7 +7020,8 @@
         "image": "/media/tapes/tony-largo-live-at-maxx-v1/sides/b.jpg"
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2011-08-01T00:00:00"
   },
   {
     "id": "moonpup-another-dimension",
@@ -6882,7 +7052,8 @@
         ],
         "image": "/media/tapes/moonpup-another-dimension/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2011-08-01T00:00:00"
   },
   {
     "id": "moonpup-stranded-on-gilligans",
@@ -6913,7 +7084,8 @@
         ],
         "image": "/media/tapes/moonpup-stranded-on-gilligans/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2011-08-01T00:00:00"
   },
   {
     "id": "raymond-roker-goldie-metropolis",
@@ -6949,7 +7121,8 @@
         "image": "/media/tapes/raymond-roker-goldie-metropolis/sides/b.jpg"
       }
     ],
-    "source": "Raymond Roker"
+    "source": "Raymond Roker",
+    "created_date": "2011-08-01T00:00:00"
   },
   {
     "id": "dj-thee-o-mara-project-ii",
@@ -6986,7 +7159,8 @@
         "image": "/media/tapes/dj-thee-o-mara-project-ii/sides/b.jpg"
       }
     ],
-    "source": "Thee-O"
+    "source": "Thee-O",
+    "created_date": "2011-08-01T00:00:00"
   },
   {
     "id": "dj-e-zone-hard-soft",
@@ -7026,7 +7200,8 @@
         ],
         "image": "/media/tapes/dj-e-zone-hard-soft/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2011-09-01T00:00:00"
   },
   {
     "id": "moonpup-tribal-sketchings",
@@ -7057,7 +7232,8 @@
         ],
         "image": "/media/tapes/moonpup-tribal-sketchings/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2011-09-01T00:00:00"
   },
   {
     "id": "dancing-skeletons-fresh-produce-1994",
@@ -7100,7 +7276,8 @@
         ],
         "image": "/media/tapes/dancing-skeletons-fresh-produce-1994/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2011-10-01T00:00:00"
   },
   {
     "id": "jon-bishop-shaheen-electric-tikki-doll",
@@ -7138,7 +7315,8 @@
         ],
         "image": "/media/tapes/jon-bishop-shaheen-electric-tikki-doll/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2011-10-01T00:00:00"
   },
   {
     "id": "josh-mcclintock-acid-junky-vol-4",
@@ -7171,7 +7349,8 @@
         ]
       }
     ],
-    "source": "Josh McClintock"
+    "source": "Josh McClintock",
+    "created_date": "2012-01-01T00:00:00"
   },
   {
     "id": "mr-buzz-acid-hits-14",
@@ -7203,7 +7382,8 @@
         "image": "/media/tapes/mr-buzz-acid-hits-14/sides/b.jpg"
       }
     ],
-    "source": "Josh McClintock"
+    "source": "Josh McClintock",
+    "created_date": "2012-04-01T00:00:00"
   },
   {
     "id": "moonpup-raver-at-heart-this-is-an-e-ticket",
@@ -7236,7 +7416,8 @@
         ],
         "image": "/media/tapes/moonpup-raver-at-heart-this-is-an-e-ticket/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2012-06-01T00:00:00"
   },
   {
     "id": "josh-mcclintock-kuci-riders-of-the-plastic-groove",
@@ -7270,7 +7451,8 @@
         "image": "/media/tapes/josh-mcclintock-kuci-riders-of-the-plastic-groove/sides/b.jpg"
       }
     ],
-    "source": "Josh McClintock"
+    "source": "Josh McClintock",
+    "created_date": "2012-08-01T00:00:00"
   },
   {
     "id": "dj-mojo-an-epic-oldskool-journey-part-3",
@@ -7294,7 +7476,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2013-03-01T00:00:00"
   },
   {
     "id": "raw-raw-is-dead",
@@ -7350,7 +7533,8 @@
         ],
         "image": "/media/tapes/raw-raw-is-dead/sides/2b.jpg"
       }
-    ]
+    ],
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "jason-blakemore-ambience",
@@ -7386,7 +7570,8 @@
         ],
         "image": "/media/tapes/jason-blakemore-ambience/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "dj-trance-you-must-be-stoned-pomme-fritz",
@@ -7422,7 +7607,8 @@
         ],
         "image": "/media/tapes/dj-trance-you-must-be-stoned-pomme-fritz/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "steve-loria-the-street-sounds-deep-house-mix",
@@ -7452,7 +7638,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "mr-kool-aid-mickeys-mental",
@@ -7484,7 +7671,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2010-10-01T00:00:00"
   },
   {
     "id": "dj-trance-mindscratch-ii",
@@ -7520,7 +7708,8 @@
         ],
         "image": "/media/tapes/dj-trance-mindscratch-ii/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "raw-mellinfunk-ii",
@@ -7572,7 +7761,8 @@
         ],
         "image": "/media/tapes/raw-mellinfunk-ii/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2014-01-01T00:00:00"
   },
   {
     "id": "steve-loria-live-at-the-reign-of-ahknaten",
@@ -7605,7 +7795,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2014-01-01T00:00:00"
   },
   {
     "id": "scott-hardkiss-untitled",
@@ -7635,7 +7826,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2010-05-01T00:00:00"
   },
   {
     "id": "jesse-my-tape-02-94",
@@ -7670,7 +7862,8 @@
         ],
         "image": "/media/tapes/jesse-my-tape-02-94/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "fresh-produce-made-in-heaven-1994",
@@ -7705,7 +7898,8 @@
         ],
         "image": "/media/tapes/fresh-produce-made-in-heaven-1994/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "doc-martin-san-francisco-1992",
@@ -7740,7 +7934,8 @@
         ],
         "image": "/media/tapes/doc-martin-san-francisco-1992/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "dj-curious-high-skies",
@@ -7771,7 +7966,8 @@
         ],
         "image": "/media/tapes/dj-curious-high-skies/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "dj-curious-july-4-bbq-jp",
@@ -7802,7 +7998,8 @@
         ],
         "image": "/media/tapes/dj-curious-july-4-bbq-jp/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "mr-buzz-acid-hits-m",
@@ -7834,7 +8031,8 @@
         ],
         "image": "/media/tapes/mr-buzz-acid-hits-m/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "om-labs-sessions-7-18-92",
@@ -7903,7 +8101,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "scott-hardkiss-ernie-munson-untitled-1993",
@@ -7957,7 +8156,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "om-labs-sessions-7-19-92",
@@ -8028,7 +8228,8 @@
           }
         ]
       }
-    ]
+    ],
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "juan-nunez-rhythms-melodic",
@@ -8058,7 +8259,8 @@
         ]
       }
     ],
-    "source": "Linda Kim"
+    "source": "Linda Kim",
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "chris-brownie-live-at-nectar",
@@ -8088,7 +8290,8 @@
         ]
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "derrick-carter-moods-version-iv-second-take",
@@ -8118,7 +8321,8 @@
         ]
       }
     ],
-    "source": "Tef Foo"
+    "source": "Tef Foo",
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "machete-cuttin",
@@ -8153,7 +8357,8 @@
         "image": "/media/tapes/machete-cuttin/sides/b.jpg"
       }
     ],
-    "source": "Jediah Eaton"
+    "source": "Jediah Eaton",
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "mr-buzz-acid-hits-29",
@@ -8185,7 +8390,8 @@
         "image": "/media/tapes/mr-buzz-acid-hits-29/sides/b.jpg"
       }
     ],
-    "source": "Josh McClintock"
+    "source": "Josh McClintock",
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "mr-buzz-acid-hits-16",
@@ -8217,7 +8423,8 @@
         "image": "/media/tapes/mr-buzz-acid-hits-16/sides/b.jpg"
       }
     ],
-    "source": "Josh McClintock"
+    "source": "Josh McClintock",
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "dj-mojo-an-epic-oldskool-journey-iv",
@@ -8242,77 +8449,350 @@
           }
         ],
         "tracks": [
-          { "artist": "Bad Boy Orchestra", "title": "It's Just An 808 (Club Mix)", "discogs_url": "https://www.discogs.com/release/194983-Bad-Boy-Orchestra-Its-Just-An-808-Yes-Yes-Yall" },
-          { "artist": "DJ Mink", "title": "Hey! Hey! Can U Relate (Luke Vibert Mix)", "discogs_url": "https://www.discogs.com/release/12441-Various-Warp103-Remixes" },
-          { "artist": "Renegade Soundwave", "title": "The Phantom (Original Mix)", "discogs_url": "https://www.discogs.com/release/14345-Renegade-Soundwave-The-Phantom-Mixes-Space-Gladiator" },
-          { "artist": "Major Problems", "title": "Paranoia (The Bad Trip)", "discogs_url": "https://www.discogs.com/master/228960-Major-Problems-The-Effects-Can-Last-Forever" },
-          { "artist": "Grey House", "title": "New Beats The House", "discogs_url": "https://www.discogs.com/release/132363-Grey-House-New-Beats-The-House" },
-          { "artist": "Orbital", "title": "Open Mind [Funky Alternatives Mix]", "discogs_url": "https://www.discogs.com/release/43239-Orbital-Chime" },
-          { "artist": "Euphoria", "title": "I'm Going To Explode", "discogs_url": "https://www.discogs.com/release/316952-Euphoria-The-Dreamlight-EP" },
-          { "artist": "React 2 Rhythm", "title": "Intoxication (Clubfield Mix)", "discogs_url": "https://www.discogs.com/master/116445-React-2-Rhythm-Intoxication" },
-          { "artist": "Outlander", "title": "The Vamp", "discogs_url": "https://www.discogs.com/release/6312-Outlander-Vamp" },
-          { "artist": "Xpansions", "title": "Move Your Body (Elevation)", "discogs_url": "https://www.discogs.com/release/9528478-Xpansions-Move-Your-Body-Elevation" },
-          { "artist": "Earth People", "title": "Dance (Beats Mix)", "discogs_url": "https://www.discogs.com/master/21115-Earth-People-Dance" },
-          { "artist": "Coco Steel & Lovebomb", "title": "Feel It", "discogs_url": "https://www.discogs.com/master/80282-Coco-Steel-Lovebomb-Feel-It" },
-          { "artist": "Digital Domain", "title": "I Need Relief", "discogs_url": "https://www.discogs.com/master/178242-Digital-Domain-I-Need-Relief" },
-          { "artist": "Blow", "title": "Cutter (Mix 1)", "discogs_url": "https://www.discogs.com/release/1107659-Blow-Cutter" },
-          { "artist": "Modular Expansion", "title": "Hip In The House", "discogs_url": "https://www.discogs.com/master/46046-Modular-Expansion-Unit-1" },
-          { "artist": "Eon", "title": "Spice (Original Mix with Notes)", "discogs_url": "https://www.discogs.com/master/242745-Eon-Spice" },
-          { "artist": "Bomb The Bass", "title": "You See Me In 3D (Remix)", "discogs_url": "https://www.discogs.com/release/118623-Bomb-The-Bass-Winter-In-July" },
-          { "artist": "Carl Cox", "title": "Lets Do It", "discogs_url": "https://www.discogs.com/release/142676-Carl-Cox-Lets-Do-It" },
-          { "artist": "Sonic Experience", "title": "Protien (Get Stuck In Mix)", "discogs_url": "https://www.discogs.com/release/26909-Sonic-Experience-Protien" },
-          { "artist": "Fantasy UFO", "title": "Fantasy (Masters Of The Universe Remix)", "discogs_url": "https://www.discogs.com/release/75724-Fantasy-UFO-Fantasy-Remix" },
-          { "artist": "Zero B", "title": "Lock Up", "discogs_url": "https://www.discogs.com/release/161505-Zero-B-Module-E-P" },
-          { "artist": "Chemical Company", "title": "Tronic Equator", "discogs_url": "https://www.discogs.com/master/3614725-Chemical-Company-Tronic-Equator" },
-          { "artist": "After Dark", "title": "Assylum", "discogs_url": "https://www.discogs.com/master/4475-After-Dark-After-Dark-EP" },
-          { "artist": "Church Of Extacy", "title": "Oowee I'm Ready", "discogs_url": "https://www.discogs.com/master/6321-C-Of-E-Church-Of-Extacy" },
-          { "artist": "Humanoid", "title": "Stakker Humanoid (Smart Systems Remix)", "discogs_url": "https://www.discogs.com/release/50241-Humanoid-Stakker-Humanoid-92" },
-          { "artist": "Boyzland & Wagga T", "title": "Coming On Strong", "discogs_url": "https://www.discogs.com/master/4454-Boyzland-Wagga-T-Tribal-Instincts-EP" },
-          { "artist": "Bizarre Inc.", "title": "X-Static", "discogs_url": "https://www.discogs.com/release/13089116-Bizarre-Inc-Bizarre-Theme-X-Static" },
-          { "artist": "Tilly Lilly", "title": "Roller Coaster", "discogs_url": "https://www.discogs.com/release/1045932-Various-Rave-Harder-Vol-1" },
-          { "artist": "DJ Seduction", "title": "Hardcore Heaven", "discogs_url": "https://www.discogs.com/master/12137-DJ-Seduction-Hardcore-Heaven-You-And-Me" },
-          { "artist": "M17", "title": "Rockin' Down The House", "discogs_url": "https://www.discogs.com/release/28894-MI-7-Rockin-Down-The-House" },
-          { "artist": "DJ Sparks", "title": "Love Me", "discogs_url": "https://www.discogs.com/release/144572-Danielle-Rochelle-vs-DJ-Sparks-Thats-The-Way-Chapter-1-EP" },
-          { "artist": "Phantasy & Seduction", "title": "DJs Unite", "discogs_url": "https://www.discogs.com/release/34776-Various-Fourplay-Vol-1" },
-          { "artist": "Kicksquad", "title": "Soundclash", "discogs_url": "https://www.discogs.com/release/6544-Kicksquad-Sound-Clash-Champion-Sound" },
-          { "artist": "Destroyer", "title": "Senses", "discogs_url": "https://www.discogs.com/release/116669-Destroyer-Senses" },
-          { "artist": "Voodoo Child", "title": "Voodoo Child (Contracted)", "discogs_url": "https://www.discogs.com/master/1637-Voodoo-Child-Voodoo-Child" },
-          { "artist": "Tronik House", "title": "Uptempo", "discogs_url": "https://www.discogs.com/release/1147415-Tronik-House-Up-Tempo" },
-          { "artist": "Insider", "title": "Destiny", "discogs_url": "https://www.discogs.com/master/31311-Insider-Destiny" },
-          { "artist": "Kid Acid", "title": "Notorious (Original Mix)", "discogs_url": "https://www.discogs.com/master/78029-Kid-Acid-vs-DJ-ESP-Shagadelic" },
-          { "artist": "Equitek", "title": "Stylus Flight", "discogs_url": "https://www.discogs.com/master/27530-Equitek-Stylus-Flight" },
-          { "artist": "Joey Beltram", "title": "Energy Flash", "discogs_url": "https://www.discogs.com/master/27621-Joey-Beltram-Beltram-Vol-1" },
-          { "artist": "Inner Light", "title": "Phantasia ( French Version )", "discogs_url": "https://www.discogs.com/master/503447-Technoland-Free-The-World" },
-          { "artist": "Drax", "title": "Amphetamine", "discogs_url": "https://www.discogs.com/master/23531-Drax-Drax-Ltd-II" },
-          { "artist": "The Hypnotist", "title": "House Is Mine", "discogs_url": "https://www.discogs.com/release/1075427-Hypnotist-House-Is-Mine-92" },
-          { "artist": "2 Frenchmen", "title": "Black Planet (Save The Planet)", "discogs_url": "https://www.discogs.com/release/487299-Various-Art-Of-Compilation-CD-8" },
-          { "artist": "The Mover", "title": "Nightflight (Nonstop 2 Kaos)", "discogs_url": "https://www.discogs.com/master/6665-The-Mover-Frontal-Sickness-Part-1" },
-          { "artist": "Two Little Boys", "title": "Stylophonia (Headstrong mix)", "discogs_url": "https://www.discogs.com/release/283739-Two-Little-Boys-Stylophonia" },
-          { "artist": "C.Y.B.E.R.F.U.N.K.", "title": "Life At The Wunderbar", "discogs_url": "https://www.discogs.com/release/17772-CYBERFUNK-Life-At-The-Wunderbar" },
-          { "artist": "KZ1", "title": "I Know I Can Make It", "discogs_url": "https://www.discogs.com/master/2696519-KZ1-KZ1" },
-          { "artist": "Edge I", "title": "Compnded", "discogs_url": "https://www.discogs.com/master/103995-DJ-Edge-1" },
-          { "artist": "The Turk", "title": "The Lover", "discogs_url": "https://www.discogs.com/release/159990-The-Turk-The-Lover-Who-Rocks-You" },
-          { "artist": "World Dominance", "title": "Compression (Original Mix)", "discogs_url": "https://www.discogs.com/release/135374-World-Dominance-Compression-Remix" },
-          { "artist": "Master Techno", "title": "Capone Stage", "discogs_url": "https://www.discogs.com/master/168941-Master-Techno-Vol-II" },
-          { "artist": "Convert", "title": "Nightbird (Original Mix)", "discogs_url": "https://www.discogs.com/release/74322-Convert-Nightbird" },
-          { "artist": "Nu-Tro-Gen", "title": "Rollin' Reptiles", "discogs_url": "https://www.discogs.com/master/153157-Nu-Tro-Gen-Rollin-Reptiles" },
-          { "artist": "The Alcan Warriors", "title": "Invasion (The F/O/A/D Remix)", "discogs_url": "https://www.discogs.com/master/7327-The-Alcan-Warriors-Invasion" },
-          { "artist": "2 Reefer", "title": "Dont Look Back", "discogs_url": "https://www.discogs.com/master/194306-2-Reefer-Dont-Look-Back-Hardcore-On-Wax" },
-          { "artist": "DJ Crystl", "title": "Drop XTC (Original Mix)", "discogs_url": "https://www.discogs.com/master/463024-DJ-Crystl-Suicidal-Drop-XTC" },
-          { "artist": "Doc Scott", "title": "NHS (Disco Remix)", "discogs_url": "https://www.discogs.com/release/9879268-Doc-Scott-The-NHS-EP-Vol-2-The-Second-Chapter-Remix" },
-          { "artist": "The Criminal Minds", "title": "Baptised By Dub", "discogs_url": "https://www.discogs.com/release/74760-The-Criminal-Minds-Baptized-By-Dub-Virtual-Reality" },
-          { "artist": "Total Science", "title": "Universe 92", "discogs_url": "https://www.discogs.com/release/22444951-Total-Science-25-Years-Of-Metalheadz-The-Series-Part-6-" },
-          { "artist": "Phuture Assassins", "title": "Future Sound (2 Bad Mice Remix)", "discogs_url": "https://www.discogs.com/release/58711-Phuture-Assassins-Future-Sound-Two-Bad-Mice-Remix" },
-          { "artist": "Stuck To Your Lips", "title": "Gold Teet (Bad Bwoy)", "discogs_url": "https://www.discogs.com/master/496757-Stuck-To-Your-Lips-Jammin-To-Tha-Sound" },
-          { "artist": "Acen", "title": "Life And Times Of A Ruffneck (Phuture Assassins Remix)", "discogs_url": "https://www.discogs.com/master/3175140-Acen-The-Monolith-Complete-Box-Set" },
-          { "artist": "The Criminal Minds", "title": "Presence (LCS Dub Mix)", "discogs_url": "https://www.discogs.com/master/493071-The-Criminal-Minds-A-Vision-Of-Dread" },
-          { "artist": "Dance Conspiracy", "title": "Dub War (Chapter One)", "discogs_url": "https://www.discogs.com/master/72549-Dance-Conspiracy-Dub-War" },
-          { "artist": "Subject 13", "title": "Carear Come 1st", "discogs_url": "https://www.discogs.com/master/30623-Subject-13-The-Uniqe-Beatz-EP-Intense-Remixes" },
-          { "artist": "Dance Conspiracy", "title": "Dance Conspiracy - Dub War (Chapter 4)", "discogs_url": "https://www.discogs.com/release/34773-Dance-Conspiracy-Dub-War" },
-          { "artist": "Subject 13", "title": "Armageddon Countdown (Blatant Remix)", "discogs_url": "https://www.discogs.com/master/30623-Subject-13-The-Uniqe-Beatz-EP-Intense-Remixes" }
+          {
+            "artist": "Bad Boy Orchestra",
+            "title": "It's Just An 808 (Club Mix)",
+            "discogs_url": "https://www.discogs.com/release/194983-Bad-Boy-Orchestra-Its-Just-An-808-Yes-Yes-Yall"
+          },
+          {
+            "artist": "DJ Mink",
+            "title": "Hey! Hey! Can U Relate (Luke Vibert Mix)",
+            "discogs_url": "https://www.discogs.com/release/12441-Various-Warp103-Remixes"
+          },
+          {
+            "artist": "Renegade Soundwave",
+            "title": "The Phantom (Original Mix)",
+            "discogs_url": "https://www.discogs.com/release/14345-Renegade-Soundwave-The-Phantom-Mixes-Space-Gladiator"
+          },
+          {
+            "artist": "Major Problems",
+            "title": "Paranoia (The Bad Trip)",
+            "discogs_url": "https://www.discogs.com/master/228960-Major-Problems-The-Effects-Can-Last-Forever"
+          },
+          {
+            "artist": "Grey House",
+            "title": "New Beats The House",
+            "discogs_url": "https://www.discogs.com/release/132363-Grey-House-New-Beats-The-House"
+          },
+          {
+            "artist": "Orbital",
+            "title": "Open Mind [Funky Alternatives Mix]",
+            "discogs_url": "https://www.discogs.com/release/43239-Orbital-Chime"
+          },
+          {
+            "artist": "Euphoria",
+            "title": "I'm Going To Explode",
+            "discogs_url": "https://www.discogs.com/release/316952-Euphoria-The-Dreamlight-EP"
+          },
+          {
+            "artist": "React 2 Rhythm",
+            "title": "Intoxication (Clubfield Mix)",
+            "discogs_url": "https://www.discogs.com/master/116445-React-2-Rhythm-Intoxication"
+          },
+          {
+            "artist": "Outlander",
+            "title": "The Vamp",
+            "discogs_url": "https://www.discogs.com/release/6312-Outlander-Vamp"
+          },
+          {
+            "artist": "Xpansions",
+            "title": "Move Your Body (Elevation)",
+            "discogs_url": "https://www.discogs.com/release/9528478-Xpansions-Move-Your-Body-Elevation"
+          },
+          {
+            "artist": "Earth People",
+            "title": "Dance (Beats Mix)",
+            "discogs_url": "https://www.discogs.com/master/21115-Earth-People-Dance"
+          },
+          {
+            "artist": "Coco Steel & Lovebomb",
+            "title": "Feel It",
+            "discogs_url": "https://www.discogs.com/master/80282-Coco-Steel-Lovebomb-Feel-It"
+          },
+          {
+            "artist": "Digital Domain",
+            "title": "I Need Relief",
+            "discogs_url": "https://www.discogs.com/master/178242-Digital-Domain-I-Need-Relief"
+          },
+          {
+            "artist": "Blow",
+            "title": "Cutter (Mix 1)",
+            "discogs_url": "https://www.discogs.com/release/1107659-Blow-Cutter"
+          },
+          {
+            "artist": "Modular Expansion",
+            "title": "Hip In The House",
+            "discogs_url": "https://www.discogs.com/master/46046-Modular-Expansion-Unit-1"
+          },
+          {
+            "artist": "Eon",
+            "title": "Spice (Original Mix with Notes)",
+            "discogs_url": "https://www.discogs.com/master/242745-Eon-Spice"
+          },
+          {
+            "artist": "Bomb The Bass",
+            "title": "You See Me In 3D (Remix)",
+            "discogs_url": "https://www.discogs.com/release/118623-Bomb-The-Bass-Winter-In-July"
+          },
+          {
+            "artist": "Carl Cox",
+            "title": "Lets Do It",
+            "discogs_url": "https://www.discogs.com/release/142676-Carl-Cox-Lets-Do-It"
+          },
+          {
+            "artist": "Sonic Experience",
+            "title": "Protien (Get Stuck In Mix)",
+            "discogs_url": "https://www.discogs.com/release/26909-Sonic-Experience-Protien"
+          },
+          {
+            "artist": "Fantasy UFO",
+            "title": "Fantasy (Masters Of The Universe Remix)",
+            "discogs_url": "https://www.discogs.com/release/75724-Fantasy-UFO-Fantasy-Remix"
+          },
+          {
+            "artist": "Zero B",
+            "title": "Lock Up",
+            "discogs_url": "https://www.discogs.com/release/161505-Zero-B-Module-E-P"
+          },
+          {
+            "artist": "Chemical Company",
+            "title": "Tronic Equator",
+            "discogs_url": "https://www.discogs.com/master/3614725-Chemical-Company-Tronic-Equator"
+          },
+          {
+            "artist": "After Dark",
+            "title": "Assylum",
+            "discogs_url": "https://www.discogs.com/master/4475-After-Dark-After-Dark-EP"
+          },
+          {
+            "artist": "Church Of Extacy",
+            "title": "Oowee I'm Ready",
+            "discogs_url": "https://www.discogs.com/master/6321-C-Of-E-Church-Of-Extacy"
+          },
+          {
+            "artist": "Humanoid",
+            "title": "Stakker Humanoid (Smart Systems Remix)",
+            "discogs_url": "https://www.discogs.com/release/50241-Humanoid-Stakker-Humanoid-92"
+          },
+          {
+            "artist": "Boyzland & Wagga T",
+            "title": "Coming On Strong",
+            "discogs_url": "https://www.discogs.com/master/4454-Boyzland-Wagga-T-Tribal-Instincts-EP"
+          },
+          {
+            "artist": "Bizarre Inc.",
+            "title": "X-Static",
+            "discogs_url": "https://www.discogs.com/release/13089116-Bizarre-Inc-Bizarre-Theme-X-Static"
+          },
+          {
+            "artist": "Tilly Lilly",
+            "title": "Roller Coaster",
+            "discogs_url": "https://www.discogs.com/release/1045932-Various-Rave-Harder-Vol-1"
+          },
+          {
+            "artist": "DJ Seduction",
+            "title": "Hardcore Heaven",
+            "discogs_url": "https://www.discogs.com/master/12137-DJ-Seduction-Hardcore-Heaven-You-And-Me"
+          },
+          {
+            "artist": "M17",
+            "title": "Rockin' Down The House",
+            "discogs_url": "https://www.discogs.com/release/28894-MI-7-Rockin-Down-The-House"
+          },
+          {
+            "artist": "DJ Sparks",
+            "title": "Love Me",
+            "discogs_url": "https://www.discogs.com/release/144572-Danielle-Rochelle-vs-DJ-Sparks-Thats-The-Way-Chapter-1-EP"
+          },
+          {
+            "artist": "Phantasy & Seduction",
+            "title": "DJs Unite",
+            "discogs_url": "https://www.discogs.com/release/34776-Various-Fourplay-Vol-1"
+          },
+          {
+            "artist": "Kicksquad",
+            "title": "Soundclash",
+            "discogs_url": "https://www.discogs.com/release/6544-Kicksquad-Sound-Clash-Champion-Sound"
+          },
+          {
+            "artist": "Destroyer",
+            "title": "Senses",
+            "discogs_url": "https://www.discogs.com/release/116669-Destroyer-Senses"
+          },
+          {
+            "artist": "Voodoo Child",
+            "title": "Voodoo Child (Contracted)",
+            "discogs_url": "https://www.discogs.com/master/1637-Voodoo-Child-Voodoo-Child"
+          },
+          {
+            "artist": "Tronik House",
+            "title": "Uptempo",
+            "discogs_url": "https://www.discogs.com/release/1147415-Tronik-House-Up-Tempo"
+          },
+          {
+            "artist": "Insider",
+            "title": "Destiny",
+            "discogs_url": "https://www.discogs.com/master/31311-Insider-Destiny"
+          },
+          {
+            "artist": "Kid Acid",
+            "title": "Notorious (Original Mix)",
+            "discogs_url": "https://www.discogs.com/master/78029-Kid-Acid-vs-DJ-ESP-Shagadelic"
+          },
+          {
+            "artist": "Equitek",
+            "title": "Stylus Flight",
+            "discogs_url": "https://www.discogs.com/master/27530-Equitek-Stylus-Flight"
+          },
+          {
+            "artist": "Joey Beltram",
+            "title": "Energy Flash",
+            "discogs_url": "https://www.discogs.com/master/27621-Joey-Beltram-Beltram-Vol-1"
+          },
+          {
+            "artist": "Inner Light",
+            "title": "Phantasia ( French Version )",
+            "discogs_url": "https://www.discogs.com/master/503447-Technoland-Free-The-World"
+          },
+          {
+            "artist": "Drax",
+            "title": "Amphetamine",
+            "discogs_url": "https://www.discogs.com/master/23531-Drax-Drax-Ltd-II"
+          },
+          {
+            "artist": "The Hypnotist",
+            "title": "House Is Mine",
+            "discogs_url": "https://www.discogs.com/release/1075427-Hypnotist-House-Is-Mine-92"
+          },
+          {
+            "artist": "2 Frenchmen",
+            "title": "Black Planet (Save The Planet)",
+            "discogs_url": "https://www.discogs.com/release/487299-Various-Art-Of-Compilation-CD-8"
+          },
+          {
+            "artist": "The Mover",
+            "title": "Nightflight (Nonstop 2 Kaos)",
+            "discogs_url": "https://www.discogs.com/master/6665-The-Mover-Frontal-Sickness-Part-1"
+          },
+          {
+            "artist": "Two Little Boys",
+            "title": "Stylophonia (Headstrong mix)",
+            "discogs_url": "https://www.discogs.com/release/283739-Two-Little-Boys-Stylophonia"
+          },
+          {
+            "artist": "C.Y.B.E.R.F.U.N.K.",
+            "title": "Life At The Wunderbar",
+            "discogs_url": "https://www.discogs.com/release/17772-CYBERFUNK-Life-At-The-Wunderbar"
+          },
+          {
+            "artist": "KZ1",
+            "title": "I Know I Can Make It",
+            "discogs_url": "https://www.discogs.com/master/2696519-KZ1-KZ1"
+          },
+          {
+            "artist": "Edge I",
+            "title": "Compnded",
+            "discogs_url": "https://www.discogs.com/master/103995-DJ-Edge-1"
+          },
+          {
+            "artist": "The Turk",
+            "title": "The Lover",
+            "discogs_url": "https://www.discogs.com/release/159990-The-Turk-The-Lover-Who-Rocks-You"
+          },
+          {
+            "artist": "World Dominance",
+            "title": "Compression (Original Mix)",
+            "discogs_url": "https://www.discogs.com/release/135374-World-Dominance-Compression-Remix"
+          },
+          {
+            "artist": "Master Techno",
+            "title": "Capone Stage",
+            "discogs_url": "https://www.discogs.com/master/168941-Master-Techno-Vol-II"
+          },
+          {
+            "artist": "Convert",
+            "title": "Nightbird (Original Mix)",
+            "discogs_url": "https://www.discogs.com/release/74322-Convert-Nightbird"
+          },
+          {
+            "artist": "Nu-Tro-Gen",
+            "title": "Rollin' Reptiles",
+            "discogs_url": "https://www.discogs.com/master/153157-Nu-Tro-Gen-Rollin-Reptiles"
+          },
+          {
+            "artist": "The Alcan Warriors",
+            "title": "Invasion (The F/O/A/D Remix)",
+            "discogs_url": "https://www.discogs.com/master/7327-The-Alcan-Warriors-Invasion"
+          },
+          {
+            "artist": "2 Reefer",
+            "title": "Dont Look Back",
+            "discogs_url": "https://www.discogs.com/master/194306-2-Reefer-Dont-Look-Back-Hardcore-On-Wax"
+          },
+          {
+            "artist": "DJ Crystl",
+            "title": "Drop XTC (Original Mix)",
+            "discogs_url": "https://www.discogs.com/master/463024-DJ-Crystl-Suicidal-Drop-XTC"
+          },
+          {
+            "artist": "Doc Scott",
+            "title": "NHS (Disco Remix)",
+            "discogs_url": "https://www.discogs.com/release/9879268-Doc-Scott-The-NHS-EP-Vol-2-The-Second-Chapter-Remix"
+          },
+          {
+            "artist": "The Criminal Minds",
+            "title": "Baptised By Dub",
+            "discogs_url": "https://www.discogs.com/release/74760-The-Criminal-Minds-Baptized-By-Dub-Virtual-Reality"
+          },
+          {
+            "artist": "Total Science",
+            "title": "Universe 92",
+            "discogs_url": "https://www.discogs.com/release/22444951-Total-Science-25-Years-Of-Metalheadz-The-Series-Part-6-"
+          },
+          {
+            "artist": "Phuture Assassins",
+            "title": "Future Sound (2 Bad Mice Remix)",
+            "discogs_url": "https://www.discogs.com/release/58711-Phuture-Assassins-Future-Sound-Two-Bad-Mice-Remix"
+          },
+          {
+            "artist": "Stuck To Your Lips",
+            "title": "Gold Teet (Bad Bwoy)",
+            "discogs_url": "https://www.discogs.com/master/496757-Stuck-To-Your-Lips-Jammin-To-Tha-Sound"
+          },
+          {
+            "artist": "Acen",
+            "title": "Life And Times Of A Ruffneck (Phuture Assassins Remix)",
+            "discogs_url": "https://www.discogs.com/master/3175140-Acen-The-Monolith-Complete-Box-Set"
+          },
+          {
+            "artist": "The Criminal Minds",
+            "title": "Presence (LCS Dub Mix)",
+            "discogs_url": "https://www.discogs.com/master/493071-The-Criminal-Minds-A-Vision-Of-Dread"
+          },
+          {
+            "artist": "Dance Conspiracy",
+            "title": "Dub War (Chapter One)",
+            "discogs_url": "https://www.discogs.com/master/72549-Dance-Conspiracy-Dub-War"
+          },
+          {
+            "artist": "Subject 13",
+            "title": "Carear Come 1st",
+            "discogs_url": "https://www.discogs.com/master/30623-Subject-13-The-Uniqe-Beatz-EP-Intense-Remixes"
+          },
+          {
+            "artist": "Dance Conspiracy",
+            "title": "Dance Conspiracy - Dub War (Chapter 4)",
+            "discogs_url": "https://www.discogs.com/release/34773-Dance-Conspiracy-Dub-War"
+          },
+          {
+            "artist": "Subject 13",
+            "title": "Armageddon Countdown (Blatant Remix)",
+            "discogs_url": "https://www.discogs.com/master/30623-Subject-13-The-Uniqe-Beatz-EP-Intense-Remixes"
+          }
         ]
       }
-    ]
+    ],
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "q-dj-josh-swissman-the-hard-and-happy",
@@ -8342,22 +8822,86 @@
         ],
         "image": "/media/tapes/q-dj-josh-swissman-the-hard-and-happy/sides/a.jpg",
         "tracks": [
-          { "artist": "Bach", "title": "Toccata & Fugue In D Minor", "discogs_url": "https://www.discogs.com/master/591808-Bach-Carl-Weinrich-Toccata-Fugue-In-D-Minor" },
-          { "artist": "Moby", "title": "Go", "discogs_url": "https://www.discogs.com/release/31277-Moby-Go" },
-          { "artist": "Overmind", "title": "Everybody Let's F**k", "discogs_url": "https://www.discogs.com/release/153375-Overmind-Everybody-Lets-Fk" },
-          { "artist": "Mescalinum United", "title": "The 2nd Coming", "discogs_url": "https://www.discogs.com/release/99479-Various-See-Ya-In-2017" },
-          { "artist": "Lenny Dee", "title": "Hammer Head", "discogs_url": "https://www.discogs.com/release/46576-Lenny-Dee-Untitled" },
-          { "artist": "Moby", "title": "Thousand", "discogs_url": "https://www.discogs.com/release/18587-Moby-Next-Is-The-E" },
-          { "artist": "Wishdokta", "title": "M.A.D.", "discogs_url": "https://www.discogs.com/master/7195-Wishdokta-MAD" },
-          { "artist": "Mind Of Kane", "title": "Kaned", "discogs_url": "https://www.discogs.com/release/91673-Mind-Of-Kane-Kaned-EP" },
-          { "artist": "Equinox", "title": "Surveyor 3", "discogs_url": "https://www.discogs.com/release/39073-Equinox-Pulzar" },
-          { "artist": "DJ Dick", "title": "Malefactor", "discogs_url": "https://www.discogs.com/master/66811-DJ-Dick-No-Chill-Out-Necessary" },
-          { "artist": "General Noise", "title": "Drugs", "discogs_url": "https://www.discogs.com/release/34037-General-Noise-Rotterdam-Subway" },
-          { "artist": "Lenny Dee", "title": "Bug Spray", "discogs_url": "https://www.discogs.com/release/46576-Lenny-Dee-Untitled" },
-          { "artist": "Rotterdam Termination Source", "title": "Rough Justice", "discogs_url": "https://www.discogs.com/release/37513-Rotterdam-Termination-Source-Rough-Justice-Feyenoord" },
-          { "artist": "Pelgrim", "title": "Get Bouncy", "discogs_url": "https://www.discogs.com/release/41848-Pelgrim-Amen" },
-          { "artist": "Nasty Django", "title": "Ey Loco!", "discogs_url": "https://www.discogs.com/release/99479-Various-See-Ya-In-2017" },
-          { "artist": "King Dale", "title": "Utter!", "discogs_url": "https://www.discogs.com/release/113099-King-Dale-Utter-" }
+          {
+            "artist": "Bach",
+            "title": "Toccata & Fugue In D Minor",
+            "discogs_url": "https://www.discogs.com/master/591808-Bach-Carl-Weinrich-Toccata-Fugue-In-D-Minor"
+          },
+          {
+            "artist": "Moby",
+            "title": "Go",
+            "discogs_url": "https://www.discogs.com/release/31277-Moby-Go"
+          },
+          {
+            "artist": "Overmind",
+            "title": "Everybody Let's F**k",
+            "discogs_url": "https://www.discogs.com/release/153375-Overmind-Everybody-Lets-Fk"
+          },
+          {
+            "artist": "Mescalinum United",
+            "title": "The 2nd Coming",
+            "discogs_url": "https://www.discogs.com/release/99479-Various-See-Ya-In-2017"
+          },
+          {
+            "artist": "Lenny Dee",
+            "title": "Hammer Head",
+            "discogs_url": "https://www.discogs.com/release/46576-Lenny-Dee-Untitled"
+          },
+          {
+            "artist": "Moby",
+            "title": "Thousand",
+            "discogs_url": "https://www.discogs.com/release/18587-Moby-Next-Is-The-E"
+          },
+          {
+            "artist": "Wishdokta",
+            "title": "M.A.D.",
+            "discogs_url": "https://www.discogs.com/master/7195-Wishdokta-MAD"
+          },
+          {
+            "artist": "Mind Of Kane",
+            "title": "Kaned",
+            "discogs_url": "https://www.discogs.com/release/91673-Mind-Of-Kane-Kaned-EP"
+          },
+          {
+            "artist": "Equinox",
+            "title": "Surveyor 3",
+            "discogs_url": "https://www.discogs.com/release/39073-Equinox-Pulzar"
+          },
+          {
+            "artist": "DJ Dick",
+            "title": "Malefactor",
+            "discogs_url": "https://www.discogs.com/master/66811-DJ-Dick-No-Chill-Out-Necessary"
+          },
+          {
+            "artist": "General Noise",
+            "title": "Drugs",
+            "discogs_url": "https://www.discogs.com/release/34037-General-Noise-Rotterdam-Subway"
+          },
+          {
+            "artist": "Lenny Dee",
+            "title": "Bug Spray",
+            "discogs_url": "https://www.discogs.com/release/46576-Lenny-Dee-Untitled"
+          },
+          {
+            "artist": "Rotterdam Termination Source",
+            "title": "Rough Justice",
+            "discogs_url": "https://www.discogs.com/release/37513-Rotterdam-Termination-Source-Rough-Justice-Feyenoord"
+          },
+          {
+            "artist": "Pelgrim",
+            "title": "Get Bouncy",
+            "discogs_url": "https://www.discogs.com/release/41848-Pelgrim-Amen"
+          },
+          {
+            "artist": "Nasty Django",
+            "title": "Ey Loco!",
+            "discogs_url": "https://www.discogs.com/release/99479-Various-See-Ya-In-2017"
+          },
+          {
+            "artist": "King Dale",
+            "title": "Utter!",
+            "discogs_url": "https://www.discogs.com/release/113099-King-Dale-Utter-"
+          }
         ]
       },
       {
@@ -8370,28 +8914,82 @@
         ],
         "image": "/media/tapes/q-dj-josh-swissman-the-hard-and-happy/sides/b.jpg",
         "tracks": [
-          { "artist": "Kaotic Chemistry", "title": "Space Cakes", "discogs_url": "https://www.discogs.com/release/6116-Kaotic-Chemistry-LSD-EP" },
-          { "artist": "Altern 8", "title": "One For John", "discogs_url": "https://www.discogs.com/release/26302-Altern-8-Brutal-8-E-Orange-Edition" },
-          { "artist": "N.R.G.", "title": "Feel The Fury", "discogs_url": "https://www.discogs.com/release/58604-NRG-Feel-The-Fury-EP" },
-          { "artist": "Aurora", "title": "Sunshine", "discogs_url": "https://www.discogs.com/release/176899-Aurora-Sunshine-EP" },
-          { "artist": "The Prodigy", "title": "Ruff In The Jungle Bizness", "discogs_url": "https://www.discogs.com/release/2620-The-Prodigy-Experience" },
-          { "artist": "The Criminal Minds", "title": "Flynny's Theme", "discogs_url": "https://www.discogs.com/release/74763-The-Criminal-Minds-Baptized-By-Dub" },
-          { "artist": "Sonz Of A Loop Da Loop Era", "title": "Peace & Loveism", "discogs_url": "https://www.discogs.com/release/54501-Sonz-Of-A-Loop-Da-Loop-Era-Peace-Loveism-EP" },
-          { "artist": "Nu-Matic", "title": "Treat Me Right", "discogs_url": "https://www.discogs.com/master/60001-Nu-Matic-Body-Fusion" },
-          { "artist": "Kaotic Chemistry", "title": "LSD", "discogs_url": "https://www.discogs.com/release/6116-Kaotic-Chemistry-LSD-EP" },
-          { "artist": "Aurora", "title": "369", "discogs_url": "https://www.discogs.com/release/176899-Aurora-Sunshine-EP" },
-          { "artist": "4 Hero", "title": "Cookin' Up Yah Brain", "discogs_url": "https://www.discogs.com/release/308286-4-Hero-Wheres-The-Boy-Cooking-Up-Yah-Brain" },
-          { "artist": "2 Bad Mice", "title": "Drumscare-2", "discogs_url": "https://www.discogs.com/release/21502849-2-Bad-Mice-Hold-It-Down-Waremouse-Bombscare-2BM-Remix-WL" },
-          { "artist": "The Criminal Minds", "title": "Re-Baptised By Dub", "discogs_url": "https://www.discogs.com/release/74763-The-Criminal-Minds-Baptized-By-Dub" }
+          {
+            "artist": "Kaotic Chemistry",
+            "title": "Space Cakes",
+            "discogs_url": "https://www.discogs.com/release/6116-Kaotic-Chemistry-LSD-EP"
+          },
+          {
+            "artist": "Altern 8",
+            "title": "One For John",
+            "discogs_url": "https://www.discogs.com/release/26302-Altern-8-Brutal-8-E-Orange-Edition"
+          },
+          {
+            "artist": "N.R.G.",
+            "title": "Feel The Fury",
+            "discogs_url": "https://www.discogs.com/release/58604-NRG-Feel-The-Fury-EP"
+          },
+          {
+            "artist": "Aurora",
+            "title": "Sunshine",
+            "discogs_url": "https://www.discogs.com/release/176899-Aurora-Sunshine-EP"
+          },
+          {
+            "artist": "The Prodigy",
+            "title": "Ruff In The Jungle Bizness",
+            "discogs_url": "https://www.discogs.com/release/2620-The-Prodigy-Experience"
+          },
+          {
+            "artist": "The Criminal Minds",
+            "title": "Flynny's Theme",
+            "discogs_url": "https://www.discogs.com/release/74763-The-Criminal-Minds-Baptized-By-Dub"
+          },
+          {
+            "artist": "Sonz Of A Loop Da Loop Era",
+            "title": "Peace & Loveism",
+            "discogs_url": "https://www.discogs.com/release/54501-Sonz-Of-A-Loop-Da-Loop-Era-Peace-Loveism-EP"
+          },
+          {
+            "artist": "Nu-Matic",
+            "title": "Treat Me Right",
+            "discogs_url": "https://www.discogs.com/master/60001-Nu-Matic-Body-Fusion"
+          },
+          {
+            "artist": "Kaotic Chemistry",
+            "title": "LSD",
+            "discogs_url": "https://www.discogs.com/release/6116-Kaotic-Chemistry-LSD-EP"
+          },
+          {
+            "artist": "Aurora",
+            "title": "369",
+            "discogs_url": "https://www.discogs.com/release/176899-Aurora-Sunshine-EP"
+          },
+          {
+            "artist": "4 Hero",
+            "title": "Cookin' Up Yah Brain",
+            "discogs_url": "https://www.discogs.com/release/308286-4-Hero-Wheres-The-Boy-Cooking-Up-Yah-Brain"
+          },
+          {
+            "artist": "2 Bad Mice",
+            "title": "Drumscare-2",
+            "discogs_url": "https://www.discogs.com/release/21502849-2-Bad-Mice-Hold-It-Down-Waremouse-Bombscare-2BM-Remix-WL"
+          },
+          {
+            "artist": "The Criminal Minds",
+            "title": "Re-Baptised By Dub",
+            "discogs_url": "https://www.discogs.com/release/74763-The-Criminal-Minds-Baptized-By-Dub"
+          }
         ]
       }
-    ]
+    ],
+    "created_date": "2026-02-21T00:00:00"
   },
   {
     "id": "dj-thee-o-dr-jeckyll-peace-and-mayhem",
     "title": "Peace & Mayhem",
     "released": "1993",
     "source": "Thee-O",
+    "created_date": "2026-02-20T21:39:23",
     "djs": [
       {
         "name": "Thee-O",
@@ -8445,6 +9043,7 @@
     "title": "Doc's Part of Heaven",
     "released": "1990",
     "source": "Ricky Bonilla",
+    "created_date": "2026-02-20T21:39:23",
     "djs": [
       {
         "name": "Doc Martin",
@@ -8472,6 +9071,62 @@
           }
         ],
         "image": "/media/tapes/doc-martin-docs-part-of-heaven/sides/b.jpg"
+      }
+    ]
+  },
+  {
+    "id": "frank-c-thomas-michael-the-garden",
+    "title": "The Garden",
+    "released": "1994",
+    "source": "Ricky Bonilla",
+    "created_date": "2026-02-22T10:55:03",
+    "djs": [
+      {
+        "name": "Frank C",
+        "slug": "frank-c"
+      },
+      {
+        "name": "Thomas Michael",
+        "slug": "thomas-michael"
+      }
+    ],
+    "images": {
+      "cover": "/media/tapes/frank-c-thomas-michael-the-garden/cover.jpg"
+    },
+    "sides": [
+      {
+        "position": "A",
+        "djs": [
+          {
+            "name": "Frank C",
+            "slug": "frank-c"
+          }
+        ],
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/frank-c-thomas-michael-the-garden/a.mp3"
+          }
+        ],
+        "image": "/media/tapes/frank-c-thomas-michael-the-garden/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "djs": [
+          {
+            "name": "Frank C",
+            "slug": "frank-c"
+          },
+          {
+            "name": "Thomas Michael",
+            "slug": "thomas-michael"
+          }
+        ],
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/frank-c-thomas-michael-the-garden/b.mp3"
+          }
+        ],
+        "image": "/media/tapes/frank-c-thomas-michael-the-garden/sides/b.jpg"
       }
     ]
   }
