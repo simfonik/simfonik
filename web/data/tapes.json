@@ -9129,5 +9129,41 @@
         "image": "/media/tapes/frank-c-thomas-michael-the-garden/sides/b.jpg"
       }
     ]
+  },
+  {
+    "id": "american-thomas-the-garden",
+    "title": "The Garden",
+    "released": "1994",
+    "source": "Ricky Bonilla",
+    "created_date": "2026-02-22T13:53:02",
+    "djs": [
+      {
+        "name": "American Thomas",
+        "slug": "american-thomas"
+      }
+    ],
+    "images": {
+      "cover": "/media/tapes/american-thomas-the-garden/cover.jpg"
+    },
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/american-thomas-the-garden/a.mp3"
+          }
+        ],
+        "image": "/media/tapes/american-thomas-the-garden/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/american-thomas-the-garden/b.mp3"
+          }
+        ],
+        "image": "/media/tapes/american-thomas-the-garden/sides/b.jpg"
+      }
+    ]
   }
 ]
