@@ -8,11 +8,23 @@
   "thomas-michael": {
     "links": [
       "https://www.discogs.com/artist/54920-Thomas-Michael"
+    ],
+    "aliases": [
+      {
+        "name": "American Thomas",
+        "slug": "american-thomas"
+      }
     ]
   },
   "american-thomas": {
     "links": [
       "https://www.discogs.com/artist/54920-Thomas-Michael"
+    ],
+    "aliases": [
+      {
+        "name": "Thomas Michael",
+        "slug": "thomas-michael"
+      }
     ]
   },
   "bad-boy-bill": {
