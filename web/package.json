@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run generate-placeholders && npm run optimize-images && next build",
+    "build": "pnpm run generate-placeholders && pnpm run optimize-images && next build",
     "start": "next start",
     "lint": "eslint",
     "validate": "node scripts/validate-tapes.mjs",
