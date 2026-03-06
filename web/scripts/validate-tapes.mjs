@@ -200,14 +200,13 @@ function validateTapes() {
     }
   });
 
-  // Check for DJ slug consistency across tapes
+  // Check for DJ slug name variations across tapes (warning only — variations are intentional)
   djSlugToNames.forEach((names, slug) => {
     if (names.size > 1) {
-      addError(
+      addWarning(
         '(global)', 
         `dj.slug="${slug}"`, 
-        `Same slug has different names: ${Array.from(names).join(', ')}`,
-        'Use a consistent name for this DJ across all tapes'
+        `Name varies across tapes: ${Array.from(names).join(', ')}`
       );
     }
   });
