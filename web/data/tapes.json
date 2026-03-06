@@ -9165,5 +9165,40 @@
         "image": "/media/tapes/american-thomas-the-garden/sides/b.jpg"
       }
     ]
+  },
+  {
+    "id": "oscar-da-grouch-respect-ii",
+    "title": "Respect II",
+    "released": "1995",
+    "source": "Jedaiah Eaton",
+    "djs": [
+      {
+        "name": "Oscar Da Grouch",
+        "slug": "oscar-da-grouch"
+      }
+    ],
+    "images": {
+      "cover": "/media/tapes/oscar-da-grouch-respect-ii/cover.jpg"
+    },
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/oscar-da-grouch-respect-ii/a.mp3"
+          }
+        ],
+        "image": "/media/tapes/oscar-da-grouch-respect-ii/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/oscar-da-grouch-respect-ii/b.mp3"
+          }
+        ],
+        "image": "/media/tapes/oscar-da-grouch-respect-ii/sides/b.jpg"
+      }
+    ]
   }
 ]
