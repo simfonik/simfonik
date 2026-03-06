@@ -31,23 +31,6 @@ function isValidSlug(slug) {
   return typeof slug === 'string' && SLUG_REGEX.test(slug);
 }
 
-// Check if Dropbox URL is streamable
-function validateDropboxUrl(url, tapeId, sidePath) {
-  if (!url.includes('dropbox.com')) return;
-  
-  const isStreamable = 
-    url.includes('raw=1') || 
-    url.includes('dl.dropboxusercontent.com');
-  
-  if (!isStreamable) {
-    const hasDl0 = url.includes('dl=0');
-    const hint = hasDl0 
-      ? 'Replace dl=0 with raw=1 in the URL'
-      : 'Add raw=1 parameter to the URL';
-    addError(tapeId, sidePath, 'Dropbox URL is not streamable', hint);
-  }
-}
-
 // Check if a media file exists
 function validateMediaPath(mediaPath, tapeId, jsonPath) {
   if (!mediaPath || !mediaPath.startsWith('/media/')) return;
@@ -183,8 +166,6 @@ function validateTapes() {
             
             if (!link.url || typeof link.url !== 'string' || link.url.trim() === '') {
               addError(tape.id, `${linkPath}.url`, 'Audio link URL is missing or empty', 'Add a valid URL');
-            } else {
-              validateDropboxUrl(link.url, tape.id, `${linkPath}.url`);
             }
           });
         }
