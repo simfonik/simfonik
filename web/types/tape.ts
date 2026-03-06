@@ -38,6 +38,7 @@ export type Side = {
     images?: TapeImages;
     sides: Side[];
     source?: string; // Name of person/entity who contributed the tape
+    source_url?: string; // URL for the source (e.g. YouTube channel, website)
     created_date?: string; // ISO datetime when the tape was added to the archive (YYYY-MM-DDTHH:MM:SS)
   };
 

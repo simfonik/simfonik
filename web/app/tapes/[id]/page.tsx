@@ -212,7 +212,9 @@ export default async function Page({ params }: Props) {
         </div>
         <p className="mb-1 text-[var(--muted)]">Released: {tape.released}</p>
         {tape.source && (
-          <p className="text-[var(--muted)]">Source: {tape.source}</p>
+          <p className="text-[var(--muted)]">Source: {tape.source_url ? (
+            <a href={tape.source_url} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline">{tape.source}</a>
+          ) : tape.source}</p>
         )}
       </header>
 
@@ -257,7 +259,9 @@ export default async function Page({ params }: Props) {
               </div>
               <p className="mb-1 text-[var(--muted)]">Released: {tape.released}</p>
               {tape.source && (
-                <p className="text-[var(--muted)]">Source: {tape.source}</p>
+                <p className="text-[var(--muted)]">Source: {tape.source_url ? (
+                  <a href={tape.source_url} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline">{tape.source}</a>
+                ) : tape.source}</p>
               )}
             </header>
 

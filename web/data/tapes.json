@@ -9199,6 +9199,44 @@
         ],
         "image": "/media/tapes/oscar-da-grouch-respect-ii/sides/b.jpg"
       }
-    ]
+    ],
+    "created_date": "2026-03-05T00:00:00"
+  },
+  {
+    "id": "destructo-intrance",
+    "title": "Intrance",
+    "released": "1993",
+    "djs": [
+      {
+        "name": "Destructo",
+        "slug": "destructo"
+      }
+    ],
+    "images": {
+      "cover": "/media/tapes/destructo-intrance/cover.jpg"
+    },
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/destructo-intrance/a.mp3"
+          }
+        ],
+        "image": "/media/tapes/destructo-intrance/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/destructo-intrance/b.mp3"
+          }
+        ],
+        "image": "/media/tapes/destructo-intrance/sides/b.jpg"
+      }
+    ],
+    "source": "The Mixtape Archive",
+    "source_url": "https://www.youtube.com/@TheMixtapeArchive",
+    "created_date": "2026-03-06T13:39:00"
   }
 ]

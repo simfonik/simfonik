@@ -1,7 +1,5 @@
 ---
 description: Steps for adding a new tape to the archive
-globs: web/data/tapes.json
-alwaysApply: false
 ---
 
 # Adding a New Tape
@@ -17,11 +15,13 @@ alwaysApply: false
    - `web/public/media/tapes/{id}/sides/a.jpg` *(if side images exist)*
    - `web/public/media/tapes/{id}/sides/b.jpg` *(if side images exist)*
 
+// turbo
 3. **Validate** — must pass before committing
    ```
    node web/scripts/validate-tapes.mjs
    ```
 
+// turbo
 4. **Run image optimization** (generates WebP variants — output is gitignored)
    ```
    node web/scripts/optimize-images.mjs
