@@ -10,5 +10,5 @@ Build a simple, functioning website for a DJ mixtape archive.
 - If a requirement is ambiguous, ask before building.
 
 ## Guardrails
-- Do not add auth/admin features in v1.
+- Do not add auth/admin features unless explicitly requested.
 - Do not introduce extra services unless explicitly requested.

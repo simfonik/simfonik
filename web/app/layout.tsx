@@ -51,6 +51,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Preload hero image early so browser fetches it with initial HTML, not after JS parses */}
+        <link
+          rel="preload"
+          as="image"
+          href="/optimized/site/640.avif"
+          type="image/avif"
+          imageSrcSet="/optimized/site/640.avif 640w, /optimized/site/1024.avif 1024w, /optimized/site/1920.avif 1920w"
+          imageSizes="(max-width: 640px) 400px, (max-width: 1024px) 800px, 1200px"
+          // @ts-expect-error fetchpriority is a valid HTML attribute not yet in TS types
+          fetchpriority="high"
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[var(--bg)] text-[var(--text)] min-h-screen`}
       >
