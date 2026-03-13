@@ -1,7 +1,7 @@
 // Custom image loader - routes Next.js Image requests to pre-generated static AVIF files
 
-const TAPE_WIDTHS = [300, 400, 600, 800, 1200];
-const HERO_WIDTHS = [400, 640, 800, 1024, 1280, 1920];
+const TAPE_WIDTHS = [400, 800, 1200];
+const HERO_WIDTHS = [640, 1024, 1920];
 
 export default function imageLoader({ src, width }: { src: string, width: number }) {
   // Cap width to prevent Lighthouse penalizing for over-serving pixels 
@@ -20,9 +20,7 @@ export default function imageLoader({ src, width }: { src: string, width: number
       const tapeId = match[1];
       const type = match[2];
       
-      // For tape grids, aggressively cap the width since they are small elements
-      const maxTapeWidth = optimizedWidth > 640 ? 600 : optimizedWidth;
-      const bestWidth = TAPE_WIDTHS.find((w) => w >= maxTapeWidth) || TAPE_WIDTHS[TAPE_WIDTHS.length - 1];
+      const bestWidth = TAPE_WIDTHS.find((w) => w >= optimizedWidth) || TAPE_WIDTHS[TAPE_WIDTHS.length - 1];
       
       if (type === 'cover') {
         return `/optimized/${tapeId}/${bestWidth}.avif`;

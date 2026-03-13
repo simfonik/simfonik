@@ -59,7 +59,7 @@ export async function optimizeImage(inputPath, outputPath, width, quality = 60) 
       fit: 'inside',
       withoutEnlargement: true,
     })
-    .avif({ quality, effort: 4 })
+    .avif({ quality, effort: 2 })
     .toFile(outputPath);
 
   // Return file stats

@@ -28,9 +28,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 
 // Configuration
-const WIDTHS = [300, 400, 600, 800, 1200];
-const HERO_WIDTHS = [400, 640, 800, 1024, 1280, 1920]; // Viewport-based widths for hero
-const QUALITY = 70;
+const WIDTHS = [400, 800, 1200];
+const HERO_WIDTHS = [640, 1024, 1920]; // Viewport-based widths for hero
+const QUALITY = 65;
 const HERO_QUALITY = 55; // More aggressive compression for decorative background image
 const OG_QUALITY = 90; // Higher quality for social sharing
 const TAPES_JSON = path.join(ROOT, 'data', 'tapes.json');
