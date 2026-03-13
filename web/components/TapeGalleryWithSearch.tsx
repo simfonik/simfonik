@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo, useTransition } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Tape, TapeListSubset } from '../types/tape';
+import imageLoader from '../lib/imageLoader';
 
 type TapeWithCover = TapeListSubset & { coverImage: string };
 
@@ -117,12 +118,14 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
               {/* Cover Image */}
               <div className="relative w-full aspect-[3/2] bg-[var(--muted)]/10 pointer-events-none">
                   <Image
+                    loader={tape.coverImage.startsWith('/media/tapes/') ? imageLoader : undefined}
                     src={tape.coverImage}
                     alt={`${tape.title} mixtape cover`}
                     fill
+                    quality={60}
                     priority={isAboveFold}
                     className={`object-contain transition-opacity duration-300 ${tape.coverImage.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
-                    sizes="(max-width: 640px) 400px, (max-width: 1024px) 400px, 400px"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                   />
               </div>
 

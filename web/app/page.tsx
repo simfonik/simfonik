@@ -43,6 +43,7 @@ export default async function Home() {
           src="/media/site/home-hero.jpg"
           alt="Cassette tapes from 1990s Los Angeles rave scene"
           priority
+          quality={60}
           fill
           sizes="(max-width: 640px) 400px, (max-width: 1024px) 800px, 1200px"
           className="object-cover"

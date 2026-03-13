@@ -3,7 +3,7 @@
 /**
  * Pre-optimize tape cover images at build time
  * 
- * Generates responsive WebP variants (400w, 800w, 1200w) for all tape covers.
+ * Generates responsive AVIF variants (400w, 800w, 1200w) for all tape covers.
  * Uses hash-based caching to skip unchanged images.
  * 
  * Usage:
@@ -46,7 +46,7 @@ async function optimizeImageVariants(sourcePath, outputDir, cacheKeyPrefix, cach
   const sourceSize = fs.statSync(sourcePath).size;
 
   for (const width of widths) {
-    const outputPath = path.join(outputDir, `${width}.webp`);
+    const outputPath = path.join(outputDir, `${width}.avif`);
     const cacheKey = `${cacheKeyPrefix}:${width}`;
 
     // Check if optimization is needed
@@ -65,7 +65,7 @@ async function optimizeImageVariants(sourcePath, outputDir, cacheKeyPrefix, cach
       stats.generated++;
       stats.totalSavings += sourceSize - size;
     } catch (error) {
-      console.error(`❌ Failed to optimize ${cacheKeyPrefix}/${width}.webp:`, error.message);
+      console.error(`❌ Failed to optimize ${cacheKeyPrefix}/${width}.avif:`, error.message);
       stats.failed++;
     }
   }
@@ -157,7 +157,7 @@ async function main() {
         const sourcePath = path.join(PUBLIC_DIR, coverPath);
 
         if (fs.existsSync(sourcePath)) {
-          // Generate responsive WebP variants
+          // Generate responsive AVIF variants
           const outputDir = path.join(OUTPUT_DIR, tape.id);
           await optimizeImageVariants(sourcePath, outputDir, tape.id, cache, stats);
 

@@ -39,15 +39,15 @@ export function needsOptimization(sourceFile, outputFile, cache, cacheKey) {
 }
 
 /**
- * Optimize an image to WebP at specified width and quality
+ * Optimize an image to AVIF at specified width and quality
  * 
  * @param {string} inputPath - Path to source image
  * @param {string} outputPath - Path to write optimized image
  * @param {number} width - Target width in pixels
- * @param {number} quality - WebP quality (0-100)
+ * @param {number} quality - AVIF quality (0-100)
  * @returns {Promise<{size: number}>} Output file size
  */
-export async function optimizeImage(inputPath, outputPath, width, quality = 85) {
+export async function optimizeImage(inputPath, outputPath, width, quality = 60) {
   // Ensure output directory exists
   const outputDir = path.dirname(outputPath);
   fs.mkdirSync(outputDir, { recursive: true });
@@ -59,7 +59,7 @@ export async function optimizeImage(inputPath, outputPath, width, quality = 85) 
       fit: 'inside',
       withoutEnlargement: true,
     })
-    .webp({ quality })
+    .avif({ quality, effort: 4 })
     .toFile(outputPath);
 
   // Return file stats
