@@ -4,7 +4,7 @@
 Introduce frontend unit testing infrastructure to verify the core logic of the `useAudioPlayer` hook, specifically ensuring its resilience against duplicate `/api/track-play` calls and race conditions during source transitions, as well as verifying high-level integration with the `PlaylistPlayer`.
 
 ## Context
-The project currently lacks a frontend test runner. Following the 0018 Audio Player refactor, the complex DOM media interactions and API tracking deduplication logic are now isolated within `web/hooks/useAudioPlayer.ts`, while playlist state management remains in `web/components/PlaylistPlayer.tsx`. To prevent behavioral regressions, we need to establish a testing baseline.
+The project currently lacks a frontend test runner. Following the 0018 Audio Player refactor, the complex DOM media interactions and API tracking deduplication logic are now isolated within `web/hooks/useAudioPlayer.ts`, while playlist state management remains in `web/components/PlaylistPlayer.tsx`. To prevent behavioral regressions, I need to establish a testing baseline.
 
 ## Proposed Stack
 - **Test Runner:** Vitest (Native ESM support, incredibly fast, drop-in Jest replacement).
@@ -12,7 +12,7 @@ The project currently lacks a frontend test runner. Following the 0018 Audio Pla
 - **Libraries:** `@testing-library/react` and `@testing-library/user-event` (Standard for React hook and component testing).
 
 ## Testing Strategy
-Because Node/jsdom does not implement the HTML5 `<audio>` element natively, we will need to create a robust mock for `HTMLAudioElement.prototype`. This mock must simulate `play()`, `pause()`, rejected promises on `play()`, and dispatched events (`loadedmetadata`, `timeupdate`, `ended`, `error`).
+Because Node/jsdom does not implement the HTML5 `<audio>` element natively, I will need to create a robust mock for `HTMLAudioElement.prototype`. This mock must simulate `play()`, `pause()`, rejected promises on `play()`, and dispatched events (`loadedmetadata`, `timeupdate`, `ended`, `error`).
 
 The test suite will focus strictly on the `useAudioPlayer` hook's state and transport behavior, followed by one focused integration test on `PlaylistPlayer` to verify coordinator auto-advance behavior.
 
