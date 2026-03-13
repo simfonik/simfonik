@@ -149,7 +149,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
                         <Link
                           key={dj.slug}
                           href={`/djs/${dj.slug}`}
-                          className="relative pointer-events-auto rounded-md bg-[#5e6ad2]/10 px-2.5 py-1.5 text-sm font-medium text-[#5e6ad2] hover:bg-[#5e6ad2]/20 dark:bg-[#5e6ad2]/25 dark:text-[#a8aef5] dark:hover:bg-[#5e6ad2]/40 transition-colors"
+                          className="relative pointer-events-auto rounded-md bg-[#5e6ad2]/15 px-2.5 py-1.5 text-sm font-medium text-[#4a55b3] hover:bg-[#5e6ad2]/25 dark:bg-[#5e6ad2]/25 dark:text-[#a8aef5] dark:hover:bg-[#5e6ad2]/40 transition-colors"
                         >
                           {dj.name}
                         </Link>
