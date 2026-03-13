@@ -97,7 +97,7 @@ export function PlaylistPlayer({ tracks, tapeId }: PlaylistPlayerProps) {
               onClick={() => selectTrack(index)}
               className={`w-full text-left px-3 py-3 rounded transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-1 ${
                 index === currentTrackIndex
-                  ? 'bg-[var(--accent)]/20 text-[var(--accent)]'
+                  ? 'bg-[var(--accent)]/15 text-[var(--text)] dark:bg-[var(--accent)]/25 dark:text-[#a8aef5]'
                   : 'hover:bg-[var(--bg-secondary)] text-[var(--text)]'
               }`}
             >
@@ -108,7 +108,7 @@ export function PlaylistPlayer({ tracks, tapeId }: PlaylistPlayerProps) {
                       <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
                     </svg>
                   ) : (
-                    <svg className="w-4 h-4 opacity-60" viewBox="0 0 24 24" fill="currentColor">
+                    <svg className="w-4 h-4 text-[var(--muted)]" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M8 5v14l11-7z" />
                     </svg>
                   )}
@@ -116,7 +116,7 @@ export function PlaylistPlayer({ tracks, tapeId }: PlaylistPlayerProps) {
                 <div className="flex-1 min-w-0 text-sm">
                   <div>{track.title}</div>
                   {track.djs && track.djs.length > 0 && (
-                    <div className="text-xs opacity-60 mt-0.5">
+                    <div className="text-xs text-[var(--muted)] mt-0.5">
                       {track.djs.map(dj => dj.name).join(', ')}
                     </div>
                   )}
