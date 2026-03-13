@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import type { Tape } from '../types/tape';
+import type { Tape, TapeListSubset } from '../types/tape';
 import { hasOptimizedImages, getOptimizedSrcSet, getOptimizedSrc } from '../lib/image-utils';
 
-type TapeWithCover = Tape & { coverImage: string };
+type TapeWithCover = TapeListSubset & { coverImage: string };
 
 interface TapeGalleryWithSearchProps {
   tapes: TapeWithCover[];
@@ -49,22 +49,24 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
   }, [hydrated]);
 
   // Filter tapes based on search query
-  const filteredTapes = tapes.filter((tape) => {
-    if (!searchQuery.trim()) return true;
+  const filteredTapes = useMemo(() => {
+    return tapes.filter((tape) => {
+      if (!searchQuery.trim()) return true;
 
-    // Normalize: lowercase and remove common punctuation (periods, dashes, spaces)
-    const normalize = (str: string) =>
-      str.toLowerCase().replace(/[.\-\s]/g, '');
+      // Normalize: lowercase and remove common punctuation (periods, dashes, spaces)
+      const normalize = (str: string) =>
+        str.toLowerCase().replace(/[.\-\s]/g, '');
 
-    const normalizedQuery = normalize(searchQuery);
-    const titleMatch = normalize(tape.title).includes(normalizedQuery);
-    const djMatch = tape.djs.some((dj) =>
-      normalize(dj.name).includes(normalizedQuery)
-    );
-    const yearMatch = tape.released?.includes(searchQuery.trim());
+      const normalizedQuery = normalize(searchQuery);
+      const titleMatch = normalize(tape.title).includes(normalizedQuery);
+      const djMatch = tape.djs.some((dj) =>
+        normalize(dj.name).includes(normalizedQuery)
+      );
+      const yearMatch = tape.released?.includes(searchQuery.trim());
 
-    return titleMatch || djMatch || yearMatch;
-  });
+      return titleMatch || djMatch || yearMatch;
+    });
+  }, [tapes, searchQuery]);
 
   const visibleTapes = filteredTapes.slice(0, visibleCount);
 

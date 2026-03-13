@@ -22,8 +22,12 @@ export default async function Home() {
   const recentComments = await getRecentComments(10);
 
   // Prepare tape data with cover images for client component
+  // We ONLY pass the fields needed by the gallery to prevent sending a 230KB RSC JSON payload
   const tapesWithCovers = tapes.map(tape => ({
-    ...tape,
+    id: tape.id,
+    title: tape.title,
+    released: tape.released,
+    djs: tape.djs,
     coverImage: getCoverImageWithFallback(tape),
   }));
 

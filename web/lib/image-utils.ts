@@ -1,9 +1,9 @@
-import type { Tape } from "../types/tape";
+import type { Tape, TapeListSubset } from "../types/tape";
 
 /**
  * Check if a tape cover should use optimized images
  */
-export function hasOptimizedImages(tape: Tape): boolean {
+export function hasOptimizedImages(tape: Tape | TapeListSubset): boolean {
   const cover = tape.images?.cover;
   return !!(cover && cover.includes('/media/') && cover.endsWith('.jpg'));
 }
@@ -12,7 +12,7 @@ export function hasOptimizedImages(tape: Tape): boolean {
  * Get optimized image srcset for responsive loading
  * Returns null for placeholders and non-optimized images
  */
-export function getOptimizedSrcSet(tape: Tape): string | null {
+export function getOptimizedSrcSet(tape: Tape | TapeListSubset): string | null {
   if (!hasOptimizedImages(tape)) {
     return null;
   }
@@ -29,7 +29,7 @@ export function getOptimizedSrcSet(tape: Tape): string | null {
 /**
  * Get default optimized image source (medium size)
  */
-export function getOptimizedSrc(tape: Tape): string | null {
+export function getOptimizedSrc(tape: Tape | TapeListSubset): string | null {
   if (!hasOptimizedImages(tape)) {
     return null;
   }
