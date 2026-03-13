@@ -9,7 +9,7 @@ import { JsonLd } from "../../../components/JsonLd";
 import { generateDJSchema } from "../../../lib/structured-data";
 
 // Shared DJ badge styling
-const DJ_BADGE_CLASS = "rounded-md bg-[#5e6ad2]/10 px-2.5 py-1 text-sm font-medium text-[#5e6ad2] hover:bg-[#5e6ad2]/20 dark:bg-[#5e6ad2]/25 dark:text-[#a8aef5] dark:hover:bg-[#5e6ad2]/40 transition-colors";
+const DJ_BADGE_CLASS = "rounded-md bg-[var(--accent)]/10 px-2.5 py-1 text-sm font-medium text-[var(--text)] hover:bg-[var(--accent)]/20 dark:bg-[var(--accent)]/25 dark:text-[#a8aef5] dark:hover:bg-[var(--accent)]/40 transition-colors";
 
 // Helper to extract domain from URL
 function extractDomain(url: string): string {
@@ -123,15 +123,15 @@ export default async function DJPage({ params }: Props) {
             if (isJpg) {
               if (tape.images?.cover === coverImage) {
                 // It's the primary cover
-                optimizedSrc = `/optimized/${tape.id}/800.webp`;
-                optimizedSrcSet = `/optimized/${tape.id}/400.webp 400w, /optimized/${tape.id}/800.webp 800w, /optimized/${tape.id}/1200.webp 1200w`;
+                optimizedSrc = `/optimized/${tape.id}/800.avif`;
+                optimizedSrcSet = `/optimized/${tape.id}/400.avif 400w, /optimized/${tape.id}/800.avif 800w, /optimized/${tape.id}/1200.avif 1200w`;
               } else {
                 // It's a side image fallback - find which side
                 const side = tape.sides.find(s => s.image === coverImage);
                 if (side) {
                   const pos = side.position.toLowerCase();
-                  optimizedSrc = `/optimized/${tape.id}/sides/${pos}/800.webp`;
-                  optimizedSrcSet = `/optimized/${tape.id}/sides/${pos}/400.webp 400w, /optimized/${tape.id}/sides/${pos}/800.webp 800w, /optimized/${tape.id}/sides/${pos}/1200.webp 1200w`;
+                  optimizedSrc = `/optimized/${tape.id}/sides/${pos}/800.avif`;
+                  optimizedSrcSet = `/optimized/${tape.id}/sides/${pos}/400.avif 400w, /optimized/${tape.id}/sides/${pos}/800.avif 800w, /optimized/${tape.id}/sides/${pos}/1200.avif 1200w`;
                 }
               }
             }
