@@ -23,20 +23,6 @@ export function TapeGallery({ allImages }: TapeGalleryProps) {
       {allImages.length > 1 && (
         <div className="flex flex-col gap-2">
           {allImages.map((img, idx) => {
-            const isOptimized = img.tapeId && img.src.startsWith("/");
-            let thumbSrc = img.src;
-            let thumbSrcSet = undefined;
-            
-            if (isOptimized) {
-              if (img.sidePosition) {
-                thumbSrc = `/optimized/${img.tapeId}/sides/${img.sidePosition}/400.webp`;
-                thumbSrcSet = `/optimized/${img.tapeId}/sides/${img.sidePosition}/400.webp 400w, /optimized/${img.tapeId}/sides/${img.sidePosition}/800.webp 800w`;
-              } else {
-                thumbSrc = `/optimized/${img.tapeId}/400.webp`;
-                thumbSrcSet = `/optimized/${img.tapeId}/400.webp 400w, /optimized/${img.tapeId}/800.webp 800w`;
-              }
-            }
-            
             return (
               <button
                 key={idx}
@@ -48,31 +34,15 @@ export function TapeGallery({ allImages }: TapeGalleryProps) {
                 }`}
                 title={img.label}
               >
-                {isOptimized ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={thumbSrc}
-                    srcSet={thumbSrcSet}
-                    alt={img.label}
-                    className="w-20 h-auto max-h-20 object-contain rounded"
-                    loading="lazy"
-                  />
-                ) : img.src.startsWith("/") ? (
+                <div className="relative w-20 h-20">
                   <Image
                     src={img.src}
                     alt={img.label}
-                    width={80}
-                    height={50}
-                    className={`w-20 h-auto max-h-20 object-contain rounded ${img.src.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
+                    fill
+                    sizes="80px"
+                    className={`object-contain rounded ${img.src.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
                   />
-                ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={img.src}
-                    alt={img.label}
-                    className={`w-20 h-auto max-h-20 object-contain rounded ${img.src.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
-                  />
-                )}
+                </div>
               </button>
             );
           })}
@@ -81,55 +51,16 @@ export function TapeGallery({ allImages }: TapeGalleryProps) {
 
       {/* Main Image */}
       <div className="flex-1">
-        {(() => {
-          const selectedImg = allImages.find(img => img.src === selectedImage);
-          const isOptimized = selectedImg?.tapeId && selectedImage.startsWith("/");
-          
-          if (isOptimized) {
-            let mainSrc, mainSrcSet;
-            if (selectedImg.sidePosition) {
-              mainSrc = `/optimized/${selectedImg.tapeId}/sides/${selectedImg.sidePosition}/800.webp`;
-              mainSrcSet = `/optimized/${selectedImg.tapeId}/sides/${selectedImg.sidePosition}/400.webp 400w, /optimized/${selectedImg.tapeId}/sides/${selectedImg.sidePosition}/800.webp 800w, /optimized/${selectedImg.tapeId}/sides/${selectedImg.sidePosition}/1200.webp 1200w`;
-            } else {
-              mainSrc = `/optimized/${selectedImg.tapeId}/800.webp`;
-              mainSrcSet = `/optimized/${selectedImg.tapeId}/400.webp 400w, /optimized/${selectedImg.tapeId}/800.webp 800w, /optimized/${selectedImg.tapeId}/1200.webp 1200w`;
-            }
-            
-            return (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={selectedImage}
-                src={mainSrc}
-                srcSet={mainSrcSet}
-                sizes="(max-width: 768px) 100vw, 600px"
-                alt="Tape image"
-                className="w-full h-auto max-h-[650px] object-contain rounded-lg shadow-lg"
-                loading="eager"
-              />
-            );
-          } else if (selectedImage.startsWith("/")) {
-            return (
-              <Image
-                key={selectedImage}
-                src={selectedImage}
-                alt="Tape image"
-                width={600}
-                height={600}
-                className={`w-full h-auto max-h-[650px] object-contain rounded-lg shadow-lg ${selectedImage.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
-              />
-            );
-          } else {
-            return (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={selectedImage}
-                src={selectedImage}
-                alt="Tape image"
-                className={`w-full h-auto max-h-[650px] object-contain rounded-lg shadow-lg ${selectedImage.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
-              />
-            );
-          }
-        })()}
+        <Image
+          key={selectedImage}
+          src={selectedImage}
+          alt="Tape image"
+          width={800}
+          height={600}
+          priority
+          sizes="(max-width: 768px) 100vw, 800px"
+          className={`w-full h-auto max-h-[650px] object-contain rounded-lg shadow-lg ${selectedImage.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
+        />
       </div>
     </div>
   );

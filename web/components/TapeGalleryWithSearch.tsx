@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useTransition } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Tape, TapeListSubset } from '../types/tape';
-import { hasOptimizedImages, getOptimizedSrcSet, getOptimizedSrc } from '../lib/image-utils';
 
 type TapeWithCover = TapeListSubset & { coverImage: string };
 
@@ -13,8 +12,10 @@ interface TapeGalleryWithSearchProps {
 }
 
 export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
+  const [inputValue, setInputValue] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(6);
+  const [isPending, startTransition] = useTransition();
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // Infinite scroll using IntersectionObserver
@@ -64,8 +65,12 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
   const visibleTapes = filteredTapes.slice(0, visibleCount);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    setVisibleCount(6); // Reset visible count on new search
+    const value = e.target.value;
+    setInputValue(value);
+    startTransition(() => {
+      setSearchQuery(value);
+      setVisibleCount(6); // Reset visible count on new search
+    });
   };
 
   return (
@@ -84,7 +89,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
           </div>
           <input
             type="search"
-            value={searchQuery}
+            value={inputValue}
             onChange={handleSearchChange}
             placeholder="Search by DJ, Mix Title, or Year"
             className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] pl-10 pr-4 py-2.5 text-base text-[var(--text)] placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 transition-colors"
@@ -111,27 +116,14 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
 
               {/* Cover Image */}
               <div className="relative w-full aspect-[3/2] bg-[var(--muted)]/10 pointer-events-none">
-                {hasOptimizedImages(tape) ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={getOptimizedSrc(tape) || ''}
-                    srcSet={getOptimizedSrcSet(tape) || undefined}
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    alt={`${tape.title} mixtape cover`}
-                    loading={isAboveFold ? "eager" : "lazy"}
-                    fetchPriority={isAboveFold ? "high" : "auto"}
-                    className="absolute inset-0 w-full h-full object-contain"
-                  />
-                ) : (
                   <Image
                     src={tape.coverImage}
                     alt={`${tape.title} mixtape cover`}
                     fill
                     priority={isAboveFold}
-                    className={`object-contain ${tape.coverImage.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className={`object-contain transition-opacity duration-300 ${tape.coverImage.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
+                    sizes="(max-width: 640px) 400px, (max-width: 1024px) 400px, 400px"
                   />
-                )}
               </div>
 
               <div className="relative pointer-events-none p-6 flex flex-col flex-grow">

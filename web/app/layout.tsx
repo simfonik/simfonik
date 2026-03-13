@@ -5,7 +5,6 @@ import Link from "next/link";
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
 import { Header } from '../components/Header';
-import { preload } from 'react-dom';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,11 +49,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  preload('/optimized/site/800.webp', {
-    as: 'image',
-    fetchPriority: 'high'
-  });
-
   return (
     <html lang="en">
       <body

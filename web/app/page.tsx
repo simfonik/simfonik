@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { getAllTapes, getCoverImageWithFallback } from "../lib/data";
 import { getRecentComments } from "../lib/comments";
 import { TapeGalleryWithSearch } from "../components/TapeGalleryWithSearch";
@@ -38,25 +39,14 @@ export default async function Home() {
 
       {/* Full-bleed hero section */}
       <div className="relative h-[140px] sm:h-[200px] lg:h-[280px] w-full overflow-hidden">
-        <picture className="absolute inset-0 w-full h-full">
-          <source
-            media="(max-width: 640px)"
-            srcSet="/optimized/site/400.webp 400w, /optimized/site/640.webp 640w, /optimized/site/800.webp 800w"
-            sizes="100vw"
-          />
-          <source
-            media="(min-width: 641px)"
-            srcSet="/optimized/site/800.webp 800w, /optimized/site/1024.webp 1024w, /optimized/site/1280.webp 1280w, /optimized/site/1920.webp 1920w"
-            sizes="100vw"
-          />
-          <img
-            src="/optimized/site/800.webp"
-            alt="Cassette tapes from 1990s Los Angeles rave scene"
-            fetchPriority="high"
-            loading="eager"
-            className="w-full h-full object-cover"
-          />
-        </picture>
+        <Image
+          src="/media/site/home-hero.jpg"
+          alt="Cassette tapes from 1990s Los Angeles rave scene"
+          priority
+          fill
+          sizes="(max-width: 640px) 400px, (max-width: 1024px) 800px, 1200px"
+          className="object-cover"
+        />
         {/* Overlay for legibility */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/50" />
       </div>
