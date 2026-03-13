@@ -30,7 +30,7 @@ export function AudioPlayer({ src, title, tapeId, sidePosition }: AudioPlayerPro
       <audio
         ref={ref}
         src={src}
-        preload="metadata"
+        preload="none"
         playsInline
       />
       

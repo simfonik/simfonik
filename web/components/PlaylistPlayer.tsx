@@ -72,7 +72,7 @@ export function PlaylistPlayer({ tracks, tapeId }: PlaylistPlayerProps) {
         <audio
           ref={ref}
           src={currentTrack.url}
-          preload="metadata"
+          preload="none"
           playsInline
         />
 
