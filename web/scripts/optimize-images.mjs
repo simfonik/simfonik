@@ -30,7 +30,7 @@ const ROOT = path.resolve(__dirname, '..');
 // Configuration
 const WIDTHS = [300, 400, 600, 800, 1200];
 const HERO_WIDTHS = [400, 640, 800, 1024, 1280, 1920]; // Viewport-based widths for hero
-const QUALITY = 85;
+const QUALITY = 70;
 const OG_QUALITY = 90; // Higher quality for social sharing
 const TAPES_JSON = path.join(ROOT, 'data', 'tapes.json');
 const PUBLIC_DIR = path.join(ROOT, 'public');
