@@ -16,16 +16,9 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(6);
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  const [hydrated, setHydrated] = useState(false);
 
-  // Mark as hydrated after first client render — avoids SSR/client mismatch
+  // Infinite scroll using IntersectionObserver
   useEffect(() => {
-    setHydrated(true);
-  }, []);
-
-  // Infinite scroll using IntersectionObserver — only after hydration
-  useEffect(() => {
-    if (!hydrated) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -46,7 +39,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
         observer.unobserve(currentRef);
       }
     };
-  }, [hydrated]);
+  }, []);
 
   // Filter tapes based on search query
   const filteredTapes = useMemo(() => {
