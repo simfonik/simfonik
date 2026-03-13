@@ -28,6 +28,7 @@ export default async function Home() {
     title: tape.title,
     released: tape.released,
     djs: tape.djs,
+    images: tape.images,
     coverImage: getCoverImageWithFallback(tape),
   }));
 
