@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import type { RecentComment } from '../lib/comments';
 import { formatTimeAgo } from '../lib/time-utils';
@@ -9,6 +10,11 @@ interface RecentCommentsTickerProps {
 }
 
 export function RecentCommentsTicker({ comments }: RecentCommentsTickerProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   if (comments.length === 0) {
     return null;
   }
@@ -40,7 +46,9 @@ export function RecentCommentsTicker({ comments }: RecentCommentsTickerProps) {
                 >
                   <span>
                     {comment.dj_names} - {comment.tape_title}{' '}
-                    <span className="text-[var(--muted)]">({formatTimeAgo(comment.created_at)})</span>
+                    <span className="text-[var(--muted)]">
+                      {mounted ? `(${formatTimeAgo(comment.created_at)})` : ''}
+                    </span>
                   </span>
                   <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
