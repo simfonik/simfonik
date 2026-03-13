@@ -28,8 +28,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 
 // Configuration
-const WIDTHS = [400, 800, 1200];
-const HERO_WIDTHS = [640, 1024, 1920]; // Viewport-based widths for hero
+const WIDTHS = [300, 400, 600, 800, 1200];
+const HERO_WIDTHS = [400, 640, 800, 1024, 1280, 1920]; // Viewport-based widths for hero
 const QUALITY = 85;
 const OG_QUALITY = 90; // Higher quality for social sharing
 const TAPES_JSON = path.join(ROOT, 'data', 'tapes.json');
@@ -57,10 +57,10 @@ async function optimizeImageVariants(sourcePath, outputDir, cacheKeyPrefix, cach
     try {
       // Optimize image
       const { size } = await optimizeImage(sourcePath, outputPath, width, QUALITY);
-      
+
       // Update cache with source file hash
       cache[cacheKey] = getFileHash(sourcePath);
-      
+
       stats.generated++;
       stats.totalSavings += sourceSize - size;
     } catch (error) {
@@ -85,10 +85,10 @@ async function generateOgImageForTape(sourcePath, tapeId, cache, stats) {
 
   try {
     await generateOgImage(sourcePath, outputPath, OG_QUALITY);
-    
+
     // Update cache with source file hash
     cache[cacheKey] = getFileHash(sourcePath);
-    
+
     stats.ogGenerated++;
   } catch (error) {
     console.error(`❌ Failed to generate OG image for ${tapeId}:`, error.message);
@@ -159,10 +159,10 @@ async function main() {
           // Generate responsive WebP variants
           const outputDir = path.join(OUTPUT_DIR, tape.id);
           await optimizeImageVariants(sourcePath, outputDir, tape.id, cache, stats);
-          
+
           // Generate OG image for social sharing
           await generateOgImageForTape(sourcePath, tape.id, cache, stats);
-          
+
           stats.coversProcessed++;
         } else {
           console.warn(`⚠️  Cover not found: ${coverPath}`);
@@ -201,7 +201,7 @@ async function main() {
   console.log(`   Generated: ${stats.generated} images`);
   console.log(`   Cached:    ${stats.cached} images (unchanged)`);
   console.log(`   OG images: ${stats.ogGenerated} generated, ${stats.ogCached} cached`);
-  
+
   if (stats.failed > 0) {
     console.log(`   Failed:    ${stats.failed} images`);
   }

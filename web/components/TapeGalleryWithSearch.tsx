@@ -14,24 +14,32 @@ interface TapeGalleryWithSearchProps {
 
 export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [visibleCount, setVisibleCount] = useState(12);
 
   // Filter tapes based on search query
   const filteredTapes = tapes.filter((tape) => {
     if (!searchQuery.trim()) return true;
-    
+
     // Normalize: lowercase and remove common punctuation (periods, dashes, spaces)
-    const normalize = (str: string) => 
+    const normalize = (str: string) =>
       str.toLowerCase().replace(/[.\-\s]/g, '');
-    
+
     const normalizedQuery = normalize(searchQuery);
     const titleMatch = normalize(tape.title).includes(normalizedQuery);
-    const djMatch = tape.djs.some((dj) => 
+    const djMatch = tape.djs.some((dj) =>
       normalize(dj.name).includes(normalizedQuery)
     );
     const yearMatch = tape.released?.includes(searchQuery.trim());
-    
+
     return titleMatch || djMatch || yearMatch;
   });
+
+  const visibleTapes = filteredTapes.slice(0, visibleCount);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setVisibleCount(12); // Reset visible count on new search
+  };
 
   return (
     <>
@@ -40,7 +48,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
         <h1 className="text-3xl font-bold text-[var(--text)]">
           Mixtapes
         </h1>
-        
+
         <div className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-1rem)] relative">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-[var(--muted)]">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,7 +58,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
           <input
             type="search"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={handleSearchChange}
             placeholder="Search by DJ, Mix Title, or Year"
             className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] pl-10 pr-4 py-2.5 text-base text-[var(--text)] placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 transition-colors"
           />
@@ -59,10 +67,10 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
 
       {/* Tape grid */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredTapes.map((tape, index) => {
+        {visibleTapes.map((tape, index) => {
           // Prioritize first 6 images (first 2 rows on desktop)
           const isAboveFold = index < 6;
-          
+
           return (
             <article
               key={tape.id}
@@ -73,7 +81,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
                 className="absolute inset-0 rounded-lg"
                 aria-label={`View ${tape.title}`}
               />
-              
+
               {/* Cover Image */}
               <div className="relative w-full aspect-[3/2] bg-[var(--muted)]/10 pointer-events-none">
                 {hasOptimizedImages(tape) ? (
@@ -98,7 +106,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
                   />
                 )}
               </div>
-              
+
               <div className="relative pointer-events-none p-6 flex flex-col flex-grow">
                 <div className="flex-grow">
                   <h2 className="text-xl font-semibold text-[var(--text)]">
@@ -111,7 +119,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
                 <div className="mt-3 flex flex-wrap gap-2">
                   {tape.djs.map((dj) => {
                     const shouldLink = dj.link !== false && dj.slug !== "unknown";
-                    
+
                     if (shouldLink) {
                       return (
                         <Link
@@ -123,7 +131,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
                         </Link>
                       );
                     }
-                    
+
                     return (
                       <span
                         key={dj.slug}
@@ -139,6 +147,26 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
           );
         })}
       </div>
+
+      {/* Load More Button */}
+      {visibleTapes.length < filteredTapes.length && (
+        <div className="mt-12 flex justify-center">
+          <button
+            onClick={() => setVisibleCount((prev) => prev + 12)}
+            className="px-6 py-3 rounded-full bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] font-medium hover:border-[var(--accent)] hover:text-[var(--accent)] hover:shadow-lg transition-all flex items-center gap-2 group cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+          >
+            Show More Mixtapes
+            <svg
+              className="w-4 h-4 group-hover:translate-y-0.5 transition-transform"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
+      )}
 
       {/* No results message */}
       {filteredTapes.length === 0 && (

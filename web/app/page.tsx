@@ -20,7 +20,7 @@ export const revalidate = 60;
 export default async function Home() {
   const tapes = getAllTapes();
   const recentComments = await getRecentComments(10);
-  
+
   // Prepare tape data with cover images for client component
   const tapesWithCovers = tapes.map(tape => ({
     ...tape,
@@ -30,13 +30,13 @@ export default async function Home() {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       <JsonLd data={generateWebsiteSchema()} />
-      
+
       {/* Full-bleed hero section */}
       <div className="relative h-[140px] sm:h-[200px] lg:h-[280px] w-full overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/optimized/site/1024.webp"
-          srcSet="/optimized/site/640.webp 640w, /optimized/site/1024.webp 1024w, /optimized/site/1920.webp 1920w"
+          srcSet="/optimized/site/400.webp 400w, /optimized/site/640.webp 640w, /optimized/site/800.webp 800w, /optimized/site/1024.webp 1024w, /optimized/site/1280.webp 1280w, /optimized/site/1920.webp 1920w"
           sizes="100vw"
           alt="Cassette tapes from 1990s Los Angeles rave scene"
           fetchPriority="high"

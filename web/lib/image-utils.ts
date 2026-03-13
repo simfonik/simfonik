@@ -18,7 +18,9 @@ export function getOptimizedSrcSet(tape: Tape): string | null {
   }
 
   return [
+    `/optimized/${tape.id}/300.webp 300w`,
     `/optimized/${tape.id}/400.webp 400w`,
+    `/optimized/${tape.id}/600.webp 600w`,
     `/optimized/${tape.id}/800.webp 800w`,
     `/optimized/${tape.id}/1200.webp 1200w`,
   ].join(', ');
@@ -57,7 +59,9 @@ export function getOptimizedSideImagePath(tapeId: string, position: string, orig
   return {
     src: `/optimized/${tapeId}/sides/${pos}/800.webp`,
     srcSet: [
+      `/optimized/${tapeId}/sides/${pos}/300.webp 300w`,
       `/optimized/${tapeId}/sides/${pos}/400.webp 400w`,
+      `/optimized/${tapeId}/sides/${pos}/600.webp 600w`,
       `/optimized/${tapeId}/sides/${pos}/800.webp 800w`,
       `/optimized/${tapeId}/sides/${pos}/1200.webp 1200w`,
     ].join(', '),
