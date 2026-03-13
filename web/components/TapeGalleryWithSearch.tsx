@@ -14,7 +14,7 @@ interface TapeGalleryWithSearchProps {
 
 export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [visibleCount, setVisibleCount] = useState(12);
+  const [visibleCount, setVisibleCount] = useState(6);
 
   // Filter tapes based on search query
   const filteredTapes = tapes.filter((tape) => {
@@ -38,7 +38,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    setVisibleCount(12); // Reset visible count on new search
+    setVisibleCount(6); // Reset visible count on new search
   };
 
   return (
@@ -67,10 +67,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
 
       {/* Tape grid */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {visibleTapes.map((tape, index) => {
-          // Prioritize first 6 images (first 2 rows on desktop)
-          const isAboveFold = index < 6;
-
+        {visibleTapes.map((tape) => {
           return (
             <article
               key={tape.id}
@@ -91,8 +88,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
                     srcSet={getOptimizedSrcSet(tape) || undefined}
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     alt={`${tape.title} mixtape cover`}
-                    loading={isAboveFold ? "eager" : "lazy"}
-                    fetchPriority={isAboveFold ? "high" : "auto"}
+                    loading="lazy"
                     className="absolute inset-0 w-full h-full object-contain"
                   />
                 ) : (
@@ -100,7 +96,6 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
                     src={tape.coverImage}
                     alt={`${tape.title} mixtape cover`}
                     fill
-                    priority={isAboveFold}
                     className={`object-contain ${tape.coverImage.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   />
