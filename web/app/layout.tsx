@@ -5,6 +5,7 @@ import Link from "next/link";
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
 import { Header } from '../components/Header';
+import { preload } from 'react-dom';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,21 +50,13 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  preload('/optimized/site/800.webp', {
+    as: 'image',
+    fetchPriority: 'high'
+  });
+
   return (
     <html lang="en">
-      <head>
-        {/* Preload hero image to eliminate CSS-blocking discovery delay on LCP */}
-        <link
-          rel="preload"
-          as="image"
-          href="/optimized/site/800.webp"
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore - imagesrcset/imagesizes are valid preload attributes
-          imagesrcset="/optimized/site/400.webp 400w, /optimized/site/640.webp 640w, /optimized/site/800.webp 800w, /optimized/site/1024.webp 1024w"
-          imagesizes="(max-width: 640px) 800px, 100vw"
-          fetchPriority="high"
-        />
-      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[var(--bg)] text-[var(--text)] min-h-screen`}
       >
