@@ -31,6 +31,7 @@ const ROOT = path.resolve(__dirname, '..');
 const WIDTHS = [300, 400, 600, 800, 1200];
 const HERO_WIDTHS = [400, 640, 800, 1024, 1280, 1920]; // Viewport-based widths for hero
 const QUALITY = 70;
+const HERO_QUALITY = 55; // More aggressive compression for decorative background image
 const OG_QUALITY = 90; // Higher quality for social sharing
 const TAPES_JSON = path.join(ROOT, 'data', 'tapes.json');
 const PUBLIC_DIR = path.join(ROOT, 'public');
@@ -41,7 +42,7 @@ const CACHE_FILE = path.join(ROOT, '.next', 'cache', 'image-optimization.json');
 /**
  * Optimize a single image (cover or side)
  */
-async function optimizeImageVariants(sourcePath, outputDir, cacheKeyPrefix, cache, stats, widths = WIDTHS) {
+async function optimizeImageVariants(sourcePath, outputDir, cacheKeyPrefix, cache, stats, widths = WIDTHS, quality = QUALITY) {
   const sourceSize = fs.statSync(sourcePath).size;
 
   for (const width of widths) {
@@ -56,7 +57,7 @@ async function optimizeImageVariants(sourcePath, outputDir, cacheKeyPrefix, cach
 
     try {
       // Optimize image
-      const { size } = await optimizeImage(sourcePath, outputPath, width, QUALITY);
+      const { size } = await optimizeImage(sourcePath, outputPath, width, quality);
 
       // Update cache with source file hash
       cache[cacheKey] = getFileHash(sourcePath);
@@ -140,7 +141,7 @@ async function main() {
     const heroSource = path.join(PUBLIC_DIR, heroPath);
     if (fs.existsSync(heroSource)) {
       const heroOutputDir = path.join(OUTPUT_DIR, 'site');
-      await optimizeImageVariants(heroSource, heroOutputDir, 'site:home-hero', cache, stats, HERO_WIDTHS);
+      await optimizeImageVariants(heroSource, heroOutputDir, 'site:home-hero', cache, stats, HERO_WIDTHS, HERO_QUALITY);
       stats.heroProcessed = true;
       console.log('✅ Optimized hero image\n');
     }
