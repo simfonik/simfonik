@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Tape } from '../types/tape';
@@ -15,6 +15,30 @@ interface TapeGalleryWithSearchProps {
 export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(6);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  // Infinite scroll using IntersectionObserver
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((prev) => prev + 12);
+        }
+      },
+      { rootMargin: '600px' } // Pre-load before user actually hits the bottom
+    );
+
+    const currentRef = loadMoreRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, []);
 
   // Filter tapes based on search query
   const filteredTapes = tapes.filter((tape) => {
@@ -143,24 +167,9 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
         })}
       </div>
 
-      {/* Load More Button */}
+      {/* Infinite Scroll Trigger */}
       {visibleTapes.length < filteredTapes.length && (
-        <div className="mt-12 flex justify-center">
-          <button
-            onClick={() => setVisibleCount((prev) => prev + 12)}
-            className="px-6 py-3 rounded-full bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] font-medium hover:border-[var(--accent)] hover:text-[var(--accent)] hover:shadow-lg transition-all flex items-center gap-2 group cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-          >
-            Show More Mixtapes
-            <svg
-              className="w-4 h-4 group-hover:translate-y-0.5 transition-transform"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-        </div>
+        <div ref={loadMoreRef} className="h-10 mt-8 w-full" aria-hidden="true" />
       )}
 
       {/* No results message */}
