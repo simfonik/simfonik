@@ -175,7 +175,7 @@ export default async function Page({ params }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg)]">
+    <main className="min-h-screen bg-[var(--bg)]">
       <JsonLd data={generateTapeSchema(tape)} />
       
       <AudioCoordinator />
@@ -193,7 +193,7 @@ export default async function Page({ params }: Props) {
                 <Link
                   key={dj.slug}
                   href={`/djs/${dj.slug}`}
-                  className="px-2.5 py-1 bg-[#5e6ad2]/10 hover:bg-[#5e6ad2]/20 rounded-md text-[#5e6ad2] dark:bg-[#5e6ad2]/25 dark:hover:bg-[#5e6ad2]/40 dark:text-[#a8aef5] transition-colors font-medium text-sm"
+                  className="px-2.5 py-1 bg-[var(--accent)]/10 hover:bg-[var(--accent)]/20 rounded-md text-[var(--text)] dark:bg-[var(--accent)]/25 dark:hover:bg-[var(--accent)]/40 dark:text-[#a8aef5] transition-colors font-medium text-sm"
                 >
                   {dj.name}
                 </Link>
@@ -240,7 +240,7 @@ export default async function Page({ params }: Props) {
                       <Link
                         key={dj.slug}
                         href={`/djs/${dj.slug}`}
-                        className="px-2.5 py-1 bg-[#5e6ad2]/10 hover:bg-[#5e6ad2]/20 rounded-md text-[#5e6ad2] dark:bg-[#5e6ad2]/25 dark:hover:bg-[#5e6ad2]/40 dark:text-[#a8aef5] transition-colors font-medium text-sm"
+                        className="px-2.5 py-1 bg-[var(--accent)]/10 hover:bg-[var(--accent)]/20 rounded-md text-[var(--text)] dark:bg-[var(--accent)]/25 dark:hover:bg-[var(--accent)]/40 dark:text-[#a8aef5] transition-colors font-medium text-sm"
                       >
                         {dj.name}
                       </Link>
@@ -335,11 +335,11 @@ export default async function Page({ params }: Props) {
           
           if (isOptimized) {
             if (img.sidePosition) {
-              mobileSrc = `/optimized/${img.tapeId}/sides/${img.sidePosition}/800.webp`;
-              mobileSrcSet = `/optimized/${img.tapeId}/sides/${img.sidePosition}/400.webp 400w, /optimized/${img.tapeId}/sides/${img.sidePosition}/800.webp 800w, /optimized/${img.tapeId}/sides/${img.sidePosition}/1200.webp 1200w`;
+              mobileSrc = `/optimized/${img.tapeId}/sides/${img.sidePosition}/800.avif`;
+              mobileSrcSet = `/optimized/${img.tapeId}/sides/${img.sidePosition}/400.avif 400w, /optimized/${img.tapeId}/sides/${img.sidePosition}/800.avif 800w, /optimized/${img.tapeId}/sides/${img.sidePosition}/1200.avif 1200w`;
             } else {
-              mobileSrc = `/optimized/${img.tapeId}/800.webp`;
-              mobileSrcSet = `/optimized/${img.tapeId}/400.webp 400w, /optimized/${img.tapeId}/800.webp 800w, /optimized/${img.tapeId}/1200.webp 1200w`;
+              mobileSrc = `/optimized/${img.tapeId}/800.avif`;
+              mobileSrcSet = `/optimized/${img.tapeId}/400.avif 400w, /optimized/${img.tapeId}/800.avif 800w, /optimized/${img.tapeId}/1200.avif 1200w`;
             }
           }
           
@@ -380,9 +380,9 @@ export default async function Page({ params }: Props) {
       {tape.sides.some(side => side.tracks && side.tracks.length > 0) && (
         <section className="border-t border-[var(--border)] pt-8 mt-10">
           <div className="max-w-3xl">
-            <h3 className="text-2xl font-semibold mb-6 text-[var(--text)]">
+            <h2 className="text-2xl font-semibold mb-6 text-[var(--text)]">
               Tracklist
-            </h3>
+            </h2>
           <div className="space-y-8">
             {tape.sides.map((side, idx) => {
               if (!side.tracks || side.tracks.length === 0) return null;
@@ -451,14 +451,14 @@ export default async function Page({ params }: Props) {
       {/* Comments */}
       <section className="border-t border-[var(--border)] pt-8 mt-10">
         <div className="max-w-3xl">
-          <h3 className="text-2xl font-semibold mb-4 text-[var(--text)]">
+          <h2 className="text-2xl font-semibold mb-4 text-[var(--text)]">
             Comments
-          </h3>
+          </h2>
           <LiveComments tapeId={id} />
 
-          <h3 className="text-2xl font-semibold mb-4 mt-10 text-[var(--text)]">
+          <h2 className="text-2xl font-semibold mb-4 mt-10 text-[var(--text)]">
             Leave a Comment
-          </h3>
+          </h2>
           <CommentForm tapeId={id} />
         </div>
       </section>
@@ -467,9 +467,9 @@ export default async function Page({ params }: Props) {
       {archivedComments.length > 0 && (
         <section className="border-t border-[var(--border)] pt-8 mt-10">
           <div className="max-w-3xl">
-            <h3 className="text-2xl font-semibold mb-2 text-[var(--text)]">
+            <h2 className="text-2xl font-semibold mb-2 text-[var(--text)]">
               Archived Comments
-            </h3>
+            </h2>
             <p className="text-sm text-[var(--muted)] mb-6">
               {archivedComments.length} comment{archivedComments.length !== 1 ? 's' : ''} from the original simfonik.com
             </p>
@@ -574,6 +574,6 @@ export default async function Page({ params }: Props) {
         </section>
       )}
       </div>
-    </div>
+    </main>
   );
 }
