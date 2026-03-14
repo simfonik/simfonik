@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
-import imageLoader from "../../lib/imageLoader";
 import { getPaginatedComments } from "../../lib/comments";
 import { formatTimeAgo } from "../../lib/time-utils";
 import { getCoverImageWithFallback, getTapeById } from "../../lib/data";
@@ -59,6 +57,14 @@ export default async function CommentsPage({ searchParams }: Props) {
             {comments.map((comment) => {
               const tape = getTapeById(comment.tape_id);
               const coverImage = tape ? getCoverImageWithFallback(tape) : null;
+              const optimizedCover = (() => {
+                if (!coverImage || !tape) return coverImage;
+                if (coverImage.match(/\/media\/tapes\/[^/]+\/cover\.jpg$/))
+                  return `/optimized/${tape.id}/400.avif`;
+                const sideMatch = coverImage.match(/\/media\/tapes\/[^/]+\/sides\/(a|b)\.jpg$/);
+                if (sideMatch) return `/optimized/${tape.id}/sides/${sideMatch[1]}/400.avif`;
+                return coverImage;
+              })();
               
               return (
                 <Link
@@ -68,15 +74,14 @@ export default async function CommentsPage({ searchParams }: Props) {
                 >
                   <div className="flex gap-4 p-4 sm:p-5">
                     {/* Tape cover thumbnail */}
-                    {coverImage && (
+                    {optimizedCover && (
                       <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 relative rounded overflow-hidden bg-[var(--muted)]/10">
-                        <Image
-                          loader={imageLoader}
-                          src={coverImage}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={optimizedCover}
                           alt={`${comment.tape_title} cover`}
-                          fill
-                          className="object-cover"
-                          sizes="80px"
+                          className="absolute inset-0 w-full h-full object-cover"
+                          loading="lazy"
                         />
                       </div>
                     )}

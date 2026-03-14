@@ -1,5 +1,3 @@
-import Image from "next/image";
-import imageLoader from "../../lib/imageLoader";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -18,15 +16,14 @@ export default function AboutPage() {
           {/* Image column */}
           <div className="flex-shrink-0 w-full md:w-80 mx-auto md:mx-0 space-y-6">
             <div className="overflow-hidden rounded-lg border border-[var(--border)]">
-              <Image
-                loader={imageLoader}
-                src="/media/site/recording-setup-cropped.jpg"
-                alt="Rack of TASCAM 122 MK III cassette decks used for digitizing mixtapes"
-                width={800}
-                height={1200}
-                className="w-full h-auto"
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/optimized/site/about/800.avif"
+                srcSet="/optimized/site/about/400.avif 400w, /optimized/site/about/800.avif 800w, /optimized/site/about/1200.avif 1200w"
                 sizes="(max-width: 768px) 100vw, 320px"
-                priority
+                alt="Rack of TASCAM 122 MK III cassette decks used for digitizing mixtapes"
+                className="w-full h-auto"
+                fetchPriority="high"
               />
             </div>
             
