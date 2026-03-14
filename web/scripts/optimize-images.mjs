@@ -135,15 +135,21 @@ async function main() {
     ogCached: 0,
   };
 
-  // Process hero image first (skip when --only is used)
+  // Process site images first (skip when --only is used)
   if (!onlyId) {
-    const heroPath = 'media/site/home-hero.jpg';
-    const heroSource = path.join(PUBLIC_DIR, heroPath);
+    const heroSource = path.join(PUBLIC_DIR, 'media/site/home-hero.jpg');
     if (fs.existsSync(heroSource)) {
       const heroOutputDir = path.join(OUTPUT_DIR, 'site');
       await optimizeImageVariants(heroSource, heroOutputDir, 'site:home-hero', cache, stats, HERO_WIDTHS, HERO_QUALITY);
       stats.heroProcessed = true;
       console.log('✅ Optimized hero image\n');
+    }
+
+    const aboutSource = path.join(PUBLIC_DIR, 'media/site/recording-setup-cropped.jpg');
+    if (fs.existsSync(aboutSource)) {
+      const aboutOutputDir = path.join(OUTPUT_DIR, 'site', 'about');
+      await optimizeImageVariants(aboutSource, aboutOutputDir, 'site:about', cache, stats);
+      console.log('✅ Optimized about page image\n');
     }
   }
 

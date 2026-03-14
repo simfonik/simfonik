@@ -1,4 +1,5 @@
 import Image from "next/image";
+import imageLoader from "../../lib/imageLoader";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -18,6 +19,7 @@ export default function AboutPage() {
           <div className="flex-shrink-0 w-full md:w-80 mx-auto md:mx-0 space-y-6">
             <div className="overflow-hidden rounded-lg border border-[var(--border)]">
               <Image
+                loader={imageLoader}
                 src="/media/site/recording-setup-cropped.jpg"
                 alt="Rack of TASCAM 122 MK III cassette decks used for digitizing mixtapes"
                 width={800}

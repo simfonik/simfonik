@@ -13,6 +13,11 @@ export default function imageLoader({ src, width }: { src: string, width: number
     const bestWidth = HERO_WIDTHS.find((w) => w >= optimizedWidth) || HERO_WIDTHS[HERO_WIDTHS.length - 1];
     return `/optimized/site/${bestWidth}.avif`;
   }
+
+  if (src === '/media/site/recording-setup-cropped.jpg') {
+    const bestWidth = TAPE_WIDTHS.find((w) => w >= optimizedWidth) || TAPE_WIDTHS[TAPE_WIDTHS.length - 1];
+    return `/optimized/site/about/${bestWidth}.avif`;
+  }
   
   if (src.startsWith('/media/tapes/')) {
     const bestWidth = TAPE_WIDTHS.find((w) => w >= optimizedWidth) || TAPE_WIDTHS[TAPE_WIDTHS.length - 1];

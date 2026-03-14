@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/20/solid';
@@ -149,25 +148,15 @@ export default async function DJPage({ params }: Props) {
                 
                 {/* Cover Image */}
                 <div className="relative w-full aspect-[3/2] bg-[var(--muted)]/10 pointer-events-none">
-                  {optimizedSrc ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={optimizedSrc}
-                      srcSet={optimizedSrcSet || undefined}
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      alt={`${tape.title} mixtape by ${dj.name}`}
-                      loading="lazy"
-                      className="absolute inset-0 w-full h-full object-contain"
-                    />
-                  ) : (
-                    <Image
-                      src={coverImage}
-                      alt={`${tape.title} mixtape by ${dj.name}`}
-                      fill
-                      className={`object-contain ${coverImage.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
-                  )}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={optimizedSrc || coverImage}
+                    srcSet={optimizedSrcSet || undefined}
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    alt={`${tape.title} mixtape by ${dj.name}`}
+                    loading="lazy"
+                    className={`absolute inset-0 w-full h-full object-contain ${coverImage.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
+                  />
                 </div>
                 
                 <div className="relative pointer-events-none p-6 flex flex-col flex-grow">
