@@ -15,7 +15,8 @@ Build a simple, functioning website for a DJ mixtape archive.
 
 ## Image optimization
 - All images are pre-generated as static AVIF files at build time. Do NOT use Vercel's on-demand image optimization (`/_next/image`).
-- Every `<Image>` component must use `loader={imageLoader}` from `lib/imageLoader.ts` — or be replaced with a plain `<img>` tag for SVGs and non-optimizable assets.
+- In **Client Components** (`"use client"`): use `<Image loader={imageLoader}>` from `next/image`.
+- In **Server Components**: use a plain `<img>` tag with explicit AVIF paths (e.g. `/optimized/{tapeId}/800.avif`). Do NOT pass `loader` as a prop — Next.js 15 prohibits passing functions across the server/client boundary.
 - `next.config.ts` intentionally has no `unoptimized: true` flag; the imageLoader handles routing to pre-generated files.
 - To add a new site-level image (not a tape), add it to the site images section of `scripts/optimize-images.mjs` and add a case to `lib/imageLoader.ts`.
 - Tape images are handled automatically by `scripts/optimize-images.mjs` — run it after adding any new tape.
