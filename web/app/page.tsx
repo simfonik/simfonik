@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
+import imageLoader from "../lib/imageLoader";
 import { getAllTapes, getCoverImageWithFallback } from "../lib/data";
 import { getRecentComments } from "../lib/comments";
 import { TapeGalleryWithSearch } from "../components/TapeGalleryWithSearch";
@@ -40,6 +41,7 @@ export default async function Home() {
       {/* Full-bleed hero section */}
       <div className="relative h-[140px] sm:h-[200px] lg:h-[280px] w-full overflow-hidden">
         <Image
+          loader={imageLoader}
           src="/media/site/home-hero.jpg"
           alt="Cassette tapes from 1990s Los Angeles rave scene"
           priority

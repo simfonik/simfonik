@@ -15,19 +15,16 @@ export default function imageLoader({ src, width }: { src: string, width: number
   }
   
   if (src.startsWith('/media/tapes/')) {
-    const match = src.match(/^\/media\/tapes\/([^\/]+)\/(cover|side-[ab])\.jpg$/);
-    if (match) {
-      const tapeId = match[1];
-      const type = match[2];
-      
-      const bestWidth = TAPE_WIDTHS.find((w) => w >= optimizedWidth) || TAPE_WIDTHS[TAPE_WIDTHS.length - 1];
-      
-      if (type === 'cover') {
-        return `/optimized/${tapeId}/${bestWidth}.avif`;
-      } else {
-        const sidePosition = type === 'side-a' ? 'a' : 'b';
-        return `/optimized/${tapeId}/sides/${sidePosition}/${bestWidth}.avif`;
-      }
+    const bestWidth = TAPE_WIDTHS.find((w) => w >= optimizedWidth) || TAPE_WIDTHS[TAPE_WIDTHS.length - 1];
+
+    const coverMatch = src.match(/^\/media\/tapes\/([^\/]+)\/cover\.jpg$/);
+    if (coverMatch) {
+      return `/optimized/${coverMatch[1]}/${bestWidth}.avif`;
+    }
+
+    const sideMatch = src.match(/^\/media\/tapes\/([^\/]+)\/sides\/(a|b)\.jpg$/);
+    if (sideMatch) {
+      return `/optimized/${sideMatch[1]}/sides/${sideMatch[2]}/${bestWidth}.avif`;
     }
   }
 

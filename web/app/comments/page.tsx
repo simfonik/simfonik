@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
+import imageLoader from "../../lib/imageLoader";
 import { getPaginatedComments } from "../../lib/comments";
 import { formatTimeAgo } from "../../lib/time-utils";
 import { getCoverImageWithFallback, getTapeById } from "../../lib/data";
@@ -70,6 +71,7 @@ export default async function CommentsPage({ searchParams }: Props) {
                     {coverImage && (
                       <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 relative rounded overflow-hidden bg-[var(--muted)]/10">
                         <Image
+                          loader={imageLoader}
                           src={coverImage}
                           alt={`${comment.tape_title} cover`}
                           fill

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import imageLoader from "../lib/imageLoader";
 
 type TapeGalleryProps = {
   allImages: Array<{ 
@@ -36,6 +37,7 @@ export function TapeGallery({ allImages }: TapeGalleryProps) {
               >
                 <div className="relative w-20 h-20">
                   <Image
+                    loader={imageLoader}
                     src={img.src}
                     alt={img.label}
                     fill
@@ -53,6 +55,7 @@ export function TapeGallery({ allImages }: TapeGalleryProps) {
       {/* Main Image */}
       <div className="flex-1">
         <Image
+          loader={imageLoader}
           key={selectedImage}
           src={selectedImage}
           alt="Tape image"
