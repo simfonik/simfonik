@@ -179,7 +179,7 @@ export default async function Page({ params }: Props) {
       <JsonLd data={generateTapeSchema(tape)} />
       
       <AudioCoordinator />
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       
       {/* Mobile-only Header */}
       <header className="mb-6 lg:hidden">

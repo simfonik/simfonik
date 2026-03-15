@@ -5,6 +5,7 @@ import Link from "next/link";
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
 import { Header } from '../components/Header';
+import { NewsletterFooter } from '../components/NewsletterSignup';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -58,13 +59,20 @@ export default function RootLayout({
         {children}
         <Analytics />
         <footer className="mt-auto">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <p className="text-xs text-[var(--muted)]">
-              © respective artists and rights holders. Non-commercial archive.{" "}
-              <Link href="/rights" className="text-[var(--muted)] hover:text-[var(--accent)] transition-colors underline">
-                Rights &amp; Takedown
-              </Link>
-            </p>
+          <div className="border-t border-[var(--accent)]/20 bg-[var(--accent)]/[0.03]">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+              <NewsletterFooter />
+            </div>
+          </div>
+          <div className="border-t border-[var(--border)]">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-[var(--muted)]">
+              <p>© respective artists and rights holders. Non-commercial archive.</p>
+              <div className="flex gap-4">
+                <Link href="/about" className="hover:text-[var(--accent)] transition-colors">About</Link>
+                <Link href="/contribute" className="hover:text-[var(--accent)] transition-colors">Contribute</Link>
+                <Link href="/rights" className="hover:text-[var(--accent)] transition-colors">Rights &amp; Takedown</Link>
+              </div>
+            </div>
           </div>
         </footer>
         {process.env.VERCEL_ENV === 'production' && <SpeedInsights />}
