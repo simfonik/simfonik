@@ -178,6 +178,17 @@ async function main() {
       }
     }
 
+    // No cover — generate OG from side A if available
+    if (!tape.images?.cover && tape.sides) {
+      const sideA = tape.sides.find(s => s.position === 'A' && s.image?.endsWith('.jpg'));
+      if (sideA) {
+        const sourcePath = path.join(PUBLIC_DIR, sideA.image.replace(/^\//, ''));
+        if (fs.existsSync(sourcePath)) {
+          await generateOgImageForTape(sourcePath, tape.id, cache, stats);
+        }
+      }
+    }
+
     // Process side images if they're JPGs
     if (tape.sides && Array.isArray(tape.sides)) {
       for (const side of tape.sides) {
