@@ -9238,5 +9238,38 @@
     "source": "The Mixtape Archive",
     "source_url": "https://www.youtube.com/@TheMixtapeArchive",
     "created_date": "2026-03-06T13:39:00"
+  },
+  {
+    "id": "mr-buzz-acid-hits-9",
+    "title": "Acid Hits 9",
+    "released": "1991",
+    "source": "Josh McClintock",
+    "created_date": "2026-03-15T00:00:00",
+    "djs": [
+      {
+        "name": "Mr. Buzz",
+        "slug": "mr-buzz"
+      }
+    ],
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/mr-buzz-acid-hits-9/a.mp3"
+          }
+        ],
+        "image": "/media/tapes/mr-buzz-acid-hits-9/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/mr-buzz-acid-hits-9/b.mp3"
+          }
+        ],
+        "image": "/media/tapes/mr-buzz-acid-hits-9/sides/b.jpg"
+      }
+    ]
   }
 ]

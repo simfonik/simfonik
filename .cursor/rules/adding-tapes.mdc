@@ -11,6 +11,7 @@ alwaysApply: false
 1. **Add entry to `web/data/tapes.json`**
    - Append to the end of the array
    - Follow the schema below; only include fields that apply
+   - Always include `created_date` (today's date in `YYYY-MM-DDTHH:MM:SS` format)
 
 2. **Place source images locally**
    - `web/public/media/tapes/{id}/cover.jpg`
@@ -22,12 +23,12 @@ alwaysApply: false
    node web/scripts/validate-tapes.mjs
    ```
 
-4. **Run image optimization** (generates WebP variants — output is gitignored)
+4. **Run image optimization** (generates AVIF variants — output is committed to git)
    ```
-   node web/scripts/optimize-images.mjs
+   node web/scripts/optimize-images.mjs --only {id}
    ```
 
-5. **Commit** — include `tapes.json` + source JPGs; optimized WebP files are gitignored and should not be committed
+5. **Commit** — include `tapes.json`, source JPGs, and optimized AVIF files
 
 ---
 
