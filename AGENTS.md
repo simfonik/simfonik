@@ -13,6 +13,9 @@ Build a simple, functioning website for a DJ mixtape archive.
 - Do not add auth/admin features unless explicitly requested.
 - Do not introduce extra services unless explicitly requested.
 
+## UI conventions
+- All interactive elements (`<button>`, clickable icons, links styled as buttons) must use `cursor-pointer`.
+
 ## Image optimization
 - All images are pre-generated as static AVIF files at build time. Do NOT use Vercel's on-demand image optimization (`/_next/image`).
 - In **Client Components** (`"use client"`): use `<Image loader={imageLoader}>` from `next/image`.

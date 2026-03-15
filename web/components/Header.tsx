@@ -50,14 +50,14 @@ export function Header() {
                 Contribute
               </Link>
               <button onClick={onOpen} className="rounded-md bg-[var(--accent)] px-4 py-2 text-white font-medium hover:bg-[var(--accent-hover)] transition-colors cursor-pointer">
-                Newsletter
+                Subscribe
               </button>
             </nav>
 
             {/* Mobile Navigation - Button + Hamburger */}
             <div className="md:hidden flex items-center gap-3">
               <button onClick={() => { setMobileMenuOpen(false); onOpen(); }} className="rounded-md bg-[var(--accent)] px-3 py-1.5 text-sm text-white font-medium hover:bg-[var(--accent-hover)] transition-colors whitespace-nowrap cursor-pointer">
-                Newsletter
+                Subscribe
               </button>
               <button
                 type="button"

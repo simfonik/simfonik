@@ -59,7 +59,7 @@ export function NewsletterModal({ open, onClose }: { open: boolean; onClose: () 
       <div className="relative bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-2xl w-full max-w-md p-8">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-[var(--muted)] hover:text-[var(--text)] transition-colors"
+          className="absolute top-4 right-4 text-[var(--muted)] hover:text-[var(--text)] transition-colors cursor-pointer"
           aria-label="Close"
         >
           <XMarkIcon className="w-5 h-5" />
@@ -81,7 +81,7 @@ export function NewsletterModal({ open, onClose }: { open: boolean; onClose: () 
             <form onSubmit={handleSubmit} className="space-y-3">
               <input
                 type="email"
-                placeholder="Email address"
+                placeholder="you@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -129,7 +129,7 @@ export function NewsletterFooter() {
       <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-center gap-3 max-w-md mx-auto">
         <input
           type="email"
-          placeholder="Email address"
+          placeholder="you@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
