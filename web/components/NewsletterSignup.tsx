@@ -93,7 +93,7 @@ export function NewsletterModal({ open, onClose }: { open: boolean; onClose: () 
                 disabled={status === 'loading'}
                 className="w-full rounded-md bg-[var(--accent)] py-2.5 text-sm text-white font-medium hover:bg-[var(--accent-hover)] transition-colors disabled:opacity-50 cursor-pointer"
               >
-                {status === 'loading' ? 'Joining...' : 'Join'}
+                {status === 'loading' ? 'Subscribing...' : 'Subscribe'}
               </button>
             </form>
             <p className={`mt-3 text-xs text-center h-4 transition-opacity ${status === 'error' ? 'text-red-500 opacity-100' : 'opacity-0'}`}>
@@ -140,7 +140,7 @@ export function NewsletterFooter() {
           disabled={status === 'loading'}
           className="w-full sm:w-auto rounded-md bg-[var(--accent)] px-8 py-2.5 text-sm text-white font-medium hover:bg-[var(--accent-hover)] transition-colors disabled:opacity-50 whitespace-nowrap cursor-pointer"
         >
-          {status === 'loading' ? 'Joining...' : 'Join'}
+          {status === 'loading' ? 'Subscribing...' : 'Subscribe'}
         </button>
       </form>
       <p className={`mt-3 text-xs text-center h-4 transition-opacity ${status === 'error' ? 'text-red-500 opacity-100' : 'opacity-0'}`}>
