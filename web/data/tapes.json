@@ -2624,7 +2624,7 @@
       }
     ],
     "images": {
-      "cover": "/media/tapes/mark-farina-planet-earth-technology-has-its-subliminal-side/cover.jpg"
+      "cover": "/media/tapes/dj-mark-farina-planet-earth-technology-has-its-subliminal-side/cover.jpg"
     },
     "sides": [
       {
@@ -2635,7 +2635,7 @@
             "url": "https://audio.simfonik.com/tapes/dj-mark-farina-planet-earth-technology-has-its-subliminal-side/a.mp3"
           }
         ],
-        "image": "/media/tapes/mark-farina-planet-earth-technology-has-its-subliminal-side/sides/a.jpg"
+        "image": "/media/tapes/dj-mark-farina-planet-earth-technology-has-its-subliminal-side/sides/a.jpg"
       },
       {
         "position": "B",
@@ -2645,7 +2645,7 @@
             "url": "https://audio.simfonik.com/tapes/dj-mark-farina-planet-earth-technology-has-its-subliminal-side/b.mp3"
           }
         ],
-        "image": "/media/tapes/mark-farina-planet-earth-technology-has-its-subliminal-side/sides/b.jpg"
+        "image": "/media/tapes/dj-mark-farina-planet-earth-technology-has-its-subliminal-side/sides/b.jpg"
       }
     ],
     "source": "Tef Foo",
@@ -9292,7 +9292,54 @@
             "url": "https://audio.simfonik.com/tapes/mr-buzz-acid-hits-10/a.mp3"
           }
         ],
-        "image": "/media/tapes/mr-buzz-acid-hits-10/sides/a.jpg"
+        "image": "/media/tapes/mr-buzz-acid-hits-10/sides/a.jpg",
+        "tracks": [
+          {
+            "artist": "Bitin' Back",
+            "title": "She's Breaking Up",
+            "discogs_url": "https://www.discogs.com/master/98765-Bitin-Back-Shes-Breaking-Up"
+          },
+          {
+            "artist": "Fierce Ruling Diva",
+            "title": "Rubb It In",
+            "discogs_url": "https://www.discogs.com/master/35432-Fierce-Ruling-Diva-Rubb-It-In"
+          },
+          {
+            "artist": "West World",
+            "title": "The Slam",
+            "discogs_url": "https://www.discogs.com/release/152118-West-World-The-Slam"
+          },
+          {
+            "artist": "K.A.O.S.",
+            "title": "Just Not Satisfied",
+            "discogs_url": "https://www.discogs.com/master/4036822-KAOS-I-Cant-Stop"
+          },
+          {
+            "artist": "Bitin' Back",
+            "title": "She's Breaking Up",
+            "discogs_url": "https://www.discogs.com/master/98765-Bitin-Back-Shes-Breaking-Up"
+          },
+          {
+            "artist": "Price 2 Pounds",
+            "title": "Curiosity",
+            "discogs_url": "https://www.discogs.com/master/116205-Price-2-Pounds-P-2--Curiosity"
+          },
+          {
+            "artist": "Beat In Time",
+            "title": "Time",
+            "discogs_url": "https://www.discogs.com/release/519428-Beat-In-Time-Time"
+          },
+          {
+            "artist": "LaTour",
+            "title": "People Are Still Having Sex",
+            "discogs_url": "https://www.discogs.com/master/133596-LaTour-People-Are-Still-Having-Sex"
+          },
+          {
+            "artist": "Tech Nine",
+            "title": "Slam Jam",
+            "discogs_url": "https://www.discogs.com/master/173156-Tech-Nine-Slam-Jam"
+          }
+        ]
       },
       {
         "position": "B",
@@ -9301,7 +9348,59 @@
             "url": "https://audio.simfonik.com/tapes/mr-buzz-acid-hits-10/b.mp3"
           }
         ],
-        "image": "/media/tapes/mr-buzz-acid-hits-10/sides/b.jpg"
+        "image": "/media/tapes/mr-buzz-acid-hits-10/sides/b.jpg",
+        "tracks": [
+          {
+            "artist": "Big Baby",
+            "title": "Big House",
+            "discogs_url": "https://www.discogs.com/master/196471-Big-Baby-Big-House"
+          },
+          {
+            "artist": "The Homer Projekt",
+            "title": "Fear",
+            "discogs_url": "https://www.discogs.com/release/66009-The-Homer-Projekt-Fear"
+          },
+          {
+            "artist": "N-Joi",
+            "title": "The Kraken",
+            "discogs_url": "https://www.discogs.com/master/135424-N-Joi-Adrenalin-EP"
+          },
+          {
+            "artist": "The Homer Projekt",
+            "title": "Fear (80 Aum Remix)",
+            "discogs_url": "https://www.discogs.com/release/66009-The-Homer-Projekt-Fear"
+          },
+          {
+            "artist": "N-Joi",
+            "title": "Rhythm Zone",
+            "discogs_url": "https://www.discogs.com/master/135424-N-Joi-Adrenalin-EP"
+          },
+          {
+            "artist": "R.J.'s Rule",
+            "title": "Kinetic Flight",
+            "discogs_url": "https://www.discogs.com/master/3597863-RJs-Rule-On-The-Arsenal"
+          },
+          {
+            "artist": "Kick Ass Project",
+            "title": "Always High, Never Down!",
+            "discogs_url": "https://www.discogs.com/master/77173-Kick-Ass-Project-Always-High-Never-Down"
+          },
+          {
+            "artist": "K.A.O.S.",
+            "title": "I Can't Stop",
+            "discogs_url": "https://www.discogs.com/master/4036822-KAOS-I-Cant-Stop"
+          },
+          {
+            "artist": "Frank De Wulf",
+            "title": "Traffic",
+            "discogs_url": "https://www.discogs.com/master/30673-Frank-De-Wulf-B-Sides-Volume-IV"
+          },
+          {
+            "artist": "N-Joi",
+            "title": "Manic",
+            "discogs_url": "https://www.discogs.com/release/1670518-N-Joi-Anthem-Manic-Techno-Gangsters"
+          }
+        ]
       }
     ]
   }
