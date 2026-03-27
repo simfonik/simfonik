@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo, useTransition } from 'react';
+import { useState, useCallback, useMemo, useTransition } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Tape, TapeListSubset } from '../types/tape';
@@ -17,30 +17,22 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(6);
   const [isPending, startTransition] = useTransition();
-  const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  // Infinite scroll using IntersectionObserver
-  useEffect(() => {
-
+  // Ref callback: attaches/detaches the observer whenever the sentinel mounts or unmounts.
+  // This is necessary because the sentinel is conditionally rendered — a one-time useEffect
+  // misses re-mounts that happen when visibleCount resets on a new search.
+  const loadMoreRef = useCallback((node: HTMLDivElement | null) => {
+    if (!node) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
           setVisibleCount((prev) => prev + 12);
         }
       },
-      { rootMargin: '400px' } // Pre-load before user actually hits the bottom
+      { rootMargin: '400px' }
     );
-
-    const currentRef = loadMoreRef.current;
-    if (currentRef) {
-      observer.observe(currentRef);
-    }
-
-    return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
-      }
-    };
+    observer.observe(node);
+    return () => observer.disconnect();
   }, []);
 
   // Filter tapes based on search query
