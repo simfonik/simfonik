@@ -9403,5 +9403,38 @@
         ]
       }
     ]
+  },
+  {
+    "id": "mr-buzz-acid-hits-15",
+    "title": "Acid Hits 15",
+    "released": "1991",
+    "source": "Josh McClintock",
+    "created_date": "2026-03-27T18:12:24",
+    "djs": [
+      {
+        "name": "Mr. Buzz",
+        "slug": "mr-buzz"
+      }
+    ],
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/mr-buzz-acid-hits-15/a.mp3"
+          }
+        ],
+        "image": "/media/tapes/mr-buzz-acid-hits-15/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/mr-buzz-acid-hits-15/b.mp3"
+          }
+        ],
+        "image": "/media/tapes/mr-buzz-acid-hits-15/sides/b.jpg"
+      }
+    ]
   }
 ]
