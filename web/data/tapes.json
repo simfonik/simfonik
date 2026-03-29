@@ -5090,7 +5090,54 @@
             "url": "https://audio.simfonik.com/tapes/steve-leclair-live-at-808-state/a.mp3"
           }
         ],
-        "image": "/media/tapes/steve-leclair-live-at-808-state/sides/a.jpg"
+        "image": "/media/tapes/steve-leclair-live-at-808-state/sides/a.jpg",
+        "tracks": [
+          {
+            "artist": "Air of Gloom",
+            "title": "Meditation",
+            "discogs_url": "https://www.discogs.com/release/20332-Air-Of-Gloom-Meditation"
+          },
+          {
+            "artist": "Pandemic",
+            "title": "Slammin",
+            "discogs_url": "https://www.discogs.com/release/153055-Pandemic-Slammin"
+          },
+          {
+            "artist": "The Ya Ya's",
+            "title": "Loove",
+            "discogs_url": "https://www.discogs.com/release/124277-The-Ya-Yas-Looove"
+          },
+          {
+            "artist": "Tech-Noise",
+            "title": "The Sound of Music",
+            "discogs_url": "https://www.discogs.com/release/98054-Tech-Noise-I-Luv-U"
+          },
+          {
+            "artist": "Holy Noise",
+            "title": "James Brown Is Still Alive",
+            "discogs_url": "https://www.discogs.com/release/163991-Holy-Noise-James-Brown-Is-Still-Alive-The-Remixes"
+          },
+          {
+            "artist": "Photon Inc",
+            "title": "Generate Power",
+            "discogs_url": "https://www.discogs.com/release/112830-Photon-Inc-Featuring-Paula-Brion-Generate-Power"
+          },
+          {
+            "artist": "The Ragga Twins",
+            "title": "Hooligan 69",
+            "discogs_url": "https://www.discogs.com/release/82456-The-Ragga-Twins-Ragga-Trip-Hooligan-69"
+          },
+          {
+            "artist": "Bobby Konders",
+            "title": "The Poem",
+            "discogs_url": "https://www.discogs.com/release/140455-Bobby-Konders-The-Poem"
+          },
+          {
+            "artist": "808 State",
+            "title": "Pacific",
+            "discogs_url": "https://www.discogs.com/release/3493-808-State-Pacific"
+          }
+        ]
       },
       {
         "position": "B",
@@ -5100,7 +5147,79 @@
             "url": "https://audio.simfonik.com/tapes/steve-leclair-live-at-808-state/b.mp3"
           }
         ],
-        "image": "/media/tapes/steve-leclair-live-at-808-state/sides/b.jpg"
+        "image": "/media/tapes/steve-leclair-live-at-808-state/sides/b.jpg",
+        "tracks": [
+          {
+            "artist": "Turntable Hype",
+            "title": "Set You Free",
+            "discogs_url": "https://www.discogs.com/release/107597-Turntable-Hype-Set-You-Free-The-Mario-Brothers"
+          },
+          {
+            "artist": "Outlander",
+            "title": "Vamp",
+            "discogs_url": "https://www.discogs.com/release/31031-Outlander-Vamp"
+          },
+          {
+            "artist": "Quadrophonia",
+            "title": "Quadrophonia",
+            "discogs_url": "https://www.discogs.com/release/49842-Quadrophonia-Quadrophonia"
+          },
+          {
+            "artist": "A Homeboy, a Hippie, and a Funky Dread",
+            "title": "Total Confusion",
+            "discogs_url": "https://www.discogs.com/release/35800-A-Homeboy-A-Hippie-A-Funki-Dredd-Total-Confusion"
+          },
+          {
+            "artist": "L.A. Style",
+            "title": "James Brown Is Dead",
+            "discogs_url": "https://www.discogs.com/release/112311-LA-Style-James-Brown-Is-Dead"
+          },
+          {
+            "artist": "The Future",
+            "title": "Locked In Madness",
+            "discogs_url": "https://www.discogs.com/release/2479-The-Future-Locked-In-Madness"
+          },
+          {
+            "artist": "9-10-Boy",
+            "title": "Revenge of the Gatorade",
+            "discogs_url": "https://www.discogs.com/release/1133776-9-10-Boy-Robocop-Revenge-Of-The-Gatorade"
+          },
+          {
+            "artist": "KA-22",
+            "title": "Organism (K's Gabber In Tomorrowland Mix)",
+            "discogs_url": "https://www.discogs.com/release/81404-KA-22-Metamorphism"
+          },
+          {
+            "artist": "Lennie De Ice",
+            "title": "We Are IE",
+            "discogs_url": "https://www.discogs.com/release/497089-Lennie-De-Ice-We-Are-IE"
+          },
+          {
+            "artist": "C.Y.B.E.R.F.U.N.K.",
+            "title": "Live at Wunderbar",
+            "discogs_url": "https://www.discogs.com/release/80330-CYBERFUNK-Live-At-The-Wunderbar"
+          },
+          {
+            "artist": "Air of Gloom",
+            "title": "Meditation",
+            "discogs_url": "https://www.discogs.com/release/20332-Air-Of-Gloom-Meditation"
+          },
+          {
+            "artist": "Pandemic",
+            "title": "Slammin",
+            "discogs_url": "https://www.discogs.com/release/153055-Pandemic-Slammin"
+          },
+          {
+            "artist": "The Ya Ya's",
+            "title": "Loove",
+            "discogs_url": "https://www.discogs.com/release/124277-The-Ya-Yas-Looove"
+          },
+          {
+            "artist": "Tech-Noise",
+            "title": "The Sound of Music",
+            "discogs_url": "https://www.discogs.com/release/98054-Tech-Noise-I-Luv-U"
+          }
+        ]
       }
     ],
     "source": "Josh McClintock",
