@@ -41,7 +41,6 @@ export function TapeGallery({ allImages }: TapeGalleryProps) {
                     src={img.src}
                     alt={img.label}
                     fill
-                    quality={60}
                     sizes="80px"
                     className={`object-contain rounded ${img.src.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
                   />
@@ -62,7 +61,6 @@ export function TapeGallery({ allImages }: TapeGalleryProps) {
           width={800}
           height={600}
           priority
-          quality={60}
           sizes="(max-width: 768px) 100vw, 800px"
           className={`w-full h-auto max-h-[650px] object-contain rounded-lg shadow-lg ${selectedImage.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
         />

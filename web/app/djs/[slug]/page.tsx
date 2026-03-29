@@ -8,7 +8,7 @@ import { JsonLd } from "../../../components/JsonLd";
 import { generateDJSchema } from "../../../lib/structured-data";
 
 // Shared DJ badge styling
-const DJ_BADGE_CLASS = "rounded-md bg-[var(--accent)]/10 px-2.5 py-1 text-sm font-medium text-[var(--text)] hover:bg-[var(--accent)]/20 dark:bg-[var(--accent)]/25 dark:text-[#a8aef5] dark:hover:bg-[var(--accent)]/40 transition-colors";
+const DJ_BADGE_CLASS = "rounded-full border border-[var(--accent)]/30 bg-[var(--accent)]/10 px-3 py-1 text-sm font-medium text-[var(--text)] hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] dark:border-[#5e6ad2]/50 dark:bg-[#5e6ad2]/20 dark:hover:bg-[#5e6ad2] dark:hover:text-white transition-all cursor-pointer";
 
 // Helper to extract domain from URL
 function extractDomain(url: string): string {
@@ -187,7 +187,7 @@ export default async function DJPage({ params }: Props) {
                       return (
                         <span
                           key={dj.slug}
-                          className="relative pointer-events-auto rounded-md bg-[var(--muted)]/20 border border-[var(--border)] px-2.5 py-1 text-sm font-medium text-[var(--muted)] cursor-default"
+                          className="relative pointer-events-auto rounded-full bg-[var(--muted)]/10 border border-[var(--border)] px-3 py-1 text-sm font-medium text-[var(--muted)] cursor-default"
                         >
                           {dj.name}
                         </span>

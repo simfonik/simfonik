@@ -114,7 +114,6 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
                     src={tape.coverImage}
                     alt={`${tape.title} mixtape cover`}
                     fill
-                    quality={60}
                     priority={isAboveFold}
                     className={`object-contain transition-opacity duration-300 ${tape.coverImage.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
@@ -139,7 +138,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
                         <Link
                           key={dj.slug}
                           href={`/djs/${dj.slug}`}
-                          className="relative pointer-events-auto rounded-md bg-[#5e6ad2]/15 px-2.5 py-1.5 text-sm font-medium text-[#4a55b3] hover:bg-[#5e6ad2]/25 dark:bg-[#5e6ad2]/25 dark:text-[#a8aef5] dark:hover:bg-[#5e6ad2]/40 transition-colors"
+                          className="relative pointer-events-auto rounded-full border border-[var(--accent)]/30 bg-[var(--accent)]/10 px-3 py-1 text-sm font-medium text-[var(--text)] hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] dark:border-[#5e6ad2]/50 dark:bg-[#5e6ad2]/20 dark:hover:bg-[#5e6ad2] dark:hover:text-white transition-all cursor-pointer"
                         >
                           {dj.name}
                         </Link>
@@ -149,7 +148,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
                     return (
                       <span
                         key={dj.slug}
-                        className="relative pointer-events-auto rounded-md bg-[var(--muted)]/20 border border-[var(--border)] px-2.5 py-1.5 text-sm font-medium text-[var(--muted)] cursor-default"
+                        className="relative pointer-events-auto rounded-full bg-[var(--muted)]/10 border border-[var(--border)] px-3 py-1 text-sm font-medium text-[var(--muted)] cursor-default"
                       >
                         {dj.name}
                       </span>

@@ -193,7 +193,7 @@ export default async function Page({ params }: Props) {
                 <Link
                   key={dj.slug}
                   href={`/djs/${dj.slug}`}
-                  className="px-2.5 py-1 bg-[var(--accent)]/10 hover:bg-[var(--accent)]/20 rounded-md text-[var(--text)] dark:bg-[var(--accent)]/25 dark:hover:bg-[var(--accent)]/40 dark:text-[#a8aef5] transition-colors font-medium text-sm"
+                  className="rounded-full border border-[var(--accent)]/30 bg-[var(--accent)]/10 px-3 py-1 text-sm font-medium text-[var(--text)] hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] dark:border-[#5e6ad2]/50 dark:bg-[#5e6ad2]/20 dark:hover:bg-[#5e6ad2] dark:hover:text-white transition-all cursor-pointer"
                 >
                   {dj.name}
                 </Link>
@@ -203,7 +203,7 @@ export default async function Page({ params }: Props) {
             return (
               <span
                 key={dj.slug}
-                className="px-2.5 py-1 bg-[var(--muted)]/20 border border-[var(--border)] rounded-md text-[var(--muted)] font-medium text-sm cursor-default"
+                className="rounded-full bg-[var(--muted)]/10 border border-[var(--border)] px-3 py-1 text-sm font-medium text-[var(--muted)] cursor-default"
               >
                 {dj.name}
               </span>
@@ -240,7 +240,7 @@ export default async function Page({ params }: Props) {
                       <Link
                         key={dj.slug}
                         href={`/djs/${dj.slug}`}
-                        className="px-2.5 py-1 bg-[var(--accent)]/10 hover:bg-[var(--accent)]/20 rounded-md text-[var(--text)] dark:bg-[var(--accent)]/25 dark:hover:bg-[var(--accent)]/40 dark:text-[#a8aef5] transition-colors font-medium text-sm"
+                        className="rounded-full border border-[var(--accent)]/30 bg-[var(--accent)]/10 px-3 py-1 text-sm font-medium text-[var(--text)] hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] dark:border-[#5e6ad2]/50 dark:bg-[#5e6ad2]/20 dark:hover:bg-[#5e6ad2] dark:hover:text-white transition-all cursor-pointer"
                       >
                         {dj.name}
                       </Link>
@@ -250,7 +250,7 @@ export default async function Page({ params }: Props) {
                   return (
                     <span
                       key={dj.slug}
-                      className="px-2.5 py-1 bg-[var(--muted)]/20 border border-[var(--border)] rounded-md text-[var(--muted)] font-medium text-sm cursor-default"
+                      className="rounded-full bg-[var(--muted)]/10 border border-[var(--border)] px-3 py-1 text-sm font-medium text-[var(--muted)] cursor-default"
                     >
                       {dj.name}
                     </span>

@@ -40,7 +40,7 @@ export default function DJsIndexPage() {
                     <h2 className="text-xl font-semibold text-[var(--text)]">
                       {dj.name}
                     </h2>
-                    <span className="inline-block mt-2 rounded-md bg-[#5e6ad2]/10 px-2 py-0.5 text-xs font-medium text-[#5e6ad2] dark:bg-[#5e6ad2]/25 dark:text-[#a8aef5]">
+                    <span className="inline-block mt-2 rounded-full border border-[var(--accent)]/30 bg-[var(--accent)]/10 px-2.5 py-0.5 text-xs font-medium text-[var(--accent)] dark:border-[#5e6ad2]/50 dark:bg-[#5e6ad2]/20 dark:text-[#d1d4fa]">
                       {dj.tapeCount} {dj.tapeCount === 1 ? "mix" : "mixes"}
                     </span>
                     {dj.tapes.length > 0 && (
