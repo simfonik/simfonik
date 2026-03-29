@@ -9259,7 +9259,54 @@
             "url": "https://audio.simfonik.com/tapes/mr-buzz-acid-hits-9/a.mp3"
           }
         ],
-        "image": "/media/tapes/mr-buzz-acid-hits-9/sides/a.jpg"
+        "image": "/media/tapes/mr-buzz-acid-hits-9/sides/a.jpg",
+        "tracks": [
+          {
+            "artist": "Reggie Griffin & Technofunk",
+            "title": "Mirda Rock",
+            "discogs_url": "https://www.discogs.com/release/101608-Reggie-Griffin-Technofunk-Mirda-Rock"
+          },
+          {
+            "artist": "Eon",
+            "title": "Spice",
+            "discogs_url": "https://www.discogs.com/release/18925-Eon-Spice"
+          },
+          {
+            "artist": "Defcon",
+            "title": "Technotime",
+            "discogs_url": "https://www.discogs.com/release/121603-Defcon-Vol-III"
+          },
+          {
+            "artist": "Jupiter 6",
+            "title": "Section Two",
+            "discogs_url": "https://www.discogs.com/release/127872-Jupiter-6-The-Tracking-System"
+          },
+          {
+            "artist": "Defcon",
+            "title": "Altitude",
+            "discogs_url": "https://www.discogs.com/release/121603-Defcon-Vol-III"
+          },
+          {
+            "artist": "Hardhouse",
+            "title": "It's Something Real (Latino Mix)",
+            "discogs_url": "https://www.discogs.com/release/972365-Hardhouse-Its-Something-Real"
+          },
+          {
+            "artist": "Cappella",
+            "title": "Everybody",
+            "discogs_url": "https://www.discogs.com/release/94618-Cappella-Everybody"
+          },
+          {
+            "artist": "Moby",
+            "title": "Permanent Green",
+            "discogs_url": "https://www.discogs.com/release/2017332-Moby-Early-Underground"
+          },
+          {
+            "artist": "Rebel MC",
+            "title": "Just Keep Rockin'",
+            "discogs_url": "https://www.discogs.com/release/93614-Double-Trouble-Rebel-MC-Just-Keep-Rockin"
+          }
+        ]
       },
       {
         "position": "B",
@@ -9268,7 +9315,54 @@
             "url": "https://audio.simfonik.com/tapes/mr-buzz-acid-hits-9/b.mp3"
           }
         ],
-        "image": "/media/tapes/mr-buzz-acid-hits-9/sides/b.jpg"
+        "image": "/media/tapes/mr-buzz-acid-hits-9/sides/b.jpg",
+        "tracks": [
+          {
+            "artist": "Kraftwerk",
+            "title": "Numbers",
+            "discogs_url": "https://www.discogs.com/release/96570-Kraftwerk-Numbers"
+          },
+          {
+            "artist": "808 State",
+            "title": "Cubik",
+            "discogs_url": "https://www.discogs.com/release/14270-808-State-Cubik"
+          },
+          {
+            "artist": "Fun 4 Fun",
+            "title": "Relax Your Soul",
+            "discogs_url": "https://www.discogs.com/release/122012-Fun-4-Fun-Relax-Your-Soul"
+          },
+          {
+            "artist": "Nature Boyeeeee",
+            "title": "You Used To Salsa",
+            "discogs_url": "https://www.discogs.com/release/1752153-Unknown-Artist-Untitled"
+          },
+          {
+            "artist": "Fun 4 Fun",
+            "title": "Relax Your Soul (Relax Your Dub Version)",
+            "discogs_url": "https://www.discogs.com/release/122012-Fun-4-Fun-Relax-Your-Soul"
+          },
+          {
+            "artist": "Nature Boyeeeee",
+            "title": "Nuts \"N\" Noise",
+            "discogs_url": "https://www.discogs.com/release/1752153-Unknown-Artist-Untitled"
+          },
+          {
+            "artist": "Criminal Element Orchestra",
+            "title": "House Time, Anytime",
+            "discogs_url": "https://www.discogs.com/release/114174-Criminal-Element-Orchestra-House-Time-Anytime"
+          },
+          {
+            "artist": "DJ Dick",
+            "title": "Weekend",
+            "discogs_url": "https://www.discogs.com/release/101614-DJ-Dick-Weekend"
+          },
+          {
+            "artist": "Big House",
+            "title": "Big Baby",
+            "discogs_url": "https://www.discogs.com/release/1971375-Big-Baby-Big-House"
+          }
+        ]
       }
     ]
   },
@@ -9424,7 +9518,44 @@
             "url": "https://audio.simfonik.com/tapes/mr-buzz-acid-hits-15/a.mp3"
           }
         ],
-        "image": "/media/tapes/mr-buzz-acid-hits-15/sides/a.jpg"
+        "image": "/media/tapes/mr-buzz-acid-hits-15/sides/a.jpg",
+        "tracks": [
+          {
+            "artist": "Musto & Bones",
+            "title": "Dangerous On The Dancefloor",
+            "discogs_url": "https://www.discogs.com/release/118998-Musto-Bones-Dangerous-On-The-Dancefloor"
+          },
+          {
+            "artist": "Human Resource",
+            "title": "Dominator",
+            "discogs_url": "https://www.discogs.com/release/20339-Human-Resource-Dominator"
+          },
+          {
+            "artist": "Radikal Buzz",
+            "title": "Hipnotize",
+            "discogs_url": "https://www.discogs.com/release/114130-Various-TOS-EP-1"
+          },
+          {
+            "artist": "Hardbeat",
+            "title": "Possession",
+            "discogs_url": "https://www.discogs.com/release/366827-Hardbeat-Hardcore-Members"
+          },
+          {
+            "artist": "Plutone",
+            "title": "Cold Stomper",
+            "discogs_url": "https://www.discogs.com/release/128621-Plutone-Confused"
+          },
+          {
+            "artist": "Space Trax",
+            "title": "The Bells",
+            "discogs_url": "https://www.discogs.com/release/79261-Space-Trax-Vol-2"
+          },
+          {
+            "artist": "Oliver Adams",
+            "title": "I'm On Fire",
+            "discogs_url": "https://www.discogs.com/release/49631-Oliver-Adams-Im-On-Fire"
+          }
+        ]
       },
       {
         "position": "B",
@@ -9433,7 +9564,44 @@
             "url": "https://audio.simfonik.com/tapes/mr-buzz-acid-hits-15/b.mp3"
           }
         ],
-        "image": "/media/tapes/mr-buzz-acid-hits-15/sides/b.jpg"
+        "image": "/media/tapes/mr-buzz-acid-hits-15/sides/b.jpg",
+        "tracks": [
+          {
+            "artist": "All In 1",
+            "title": "Precious Silence",
+            "discogs_url": "https://www.discogs.com/release/88731-All-In-1-Precious-Silence"
+          },
+          {
+            "artist": "Digital Boy",
+            "title": "Kokko",
+            "discogs_url": "https://www.discogs.com/release/91530-Digital-Boy-OKAlright-Kokko-Remixes"
+          },
+          {
+            "artist": "Rhythmatic",
+            "title": "Take Me Back",
+            "discogs_url": "https://www.discogs.com/release/124875-Rhythmatic-Take-Me-Back"
+          },
+          {
+            "artist": "Afro Erotica",
+            "title": "Wubba Wubba",
+            "discogs_url": "https://www.discogs.com/release/59983-Afro-Erotica-French-Kiss"
+          },
+          {
+            "artist": "Bazz",
+            "title": "House Of Pax",
+            "discogs_url": "https://www.discogs.com/release/28284-Bazz-House-Of-Pax"
+          },
+          {
+            "artist": "Afro Erotica",
+            "title": "French Kiss",
+            "discogs_url": "https://www.discogs.com/release/59983-Afro-Erotica-French-Kiss"
+          },
+          {
+            "artist": "Hypersonic",
+            "title": "Dance Tones",
+            "discogs_url": "https://www.discogs.com/release/1091629-Hypersonic-Dance-Tones"
+          }
+        ]
       }
     ]
   }
