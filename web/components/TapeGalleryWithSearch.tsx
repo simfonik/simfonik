@@ -110,7 +110,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
               {/* Cover Image */}
               <div className="relative w-full aspect-[3/2] bg-[var(--muted)]/10 pointer-events-none">
                   <Image
-                    loader={tape.coverImage.startsWith('/media/tapes/') ? imageLoader : undefined}
+                    loader={imageLoader}
                     src={tape.coverImage}
                     alt={`${tape.title} mixtape cover`}
                     fill

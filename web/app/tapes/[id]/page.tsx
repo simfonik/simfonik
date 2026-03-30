@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import { Fragment } from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -354,14 +353,6 @@ export default async function Page({ params }: Props) {
                   alt={img.label}
                   className="w-full h-auto max-h-[650px] object-contain rounded-lg shadow-lg"
                   loading="lazy"
-                />
-              ) : img.src.startsWith("/") ? (
-                <Image
-                  src={img.src}
-                  alt={img.label}
-                  width={600}
-                  height={600}
-                  className={`w-full h-auto max-h-[650px] object-contain rounded-lg shadow-lg ${img.src.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
                 />
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element

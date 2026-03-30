@@ -3,6 +3,8 @@ import redirectsData from './data/redirects.json';
 
 const nextConfig: NextConfig = {
   images: {
+    loader: 'custom',
+    loaderFile: './lib/imageLoader.ts',
     deviceSizes: [384, 480, 640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256],
   },
