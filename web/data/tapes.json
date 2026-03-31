@@ -197,7 +197,8 @@
           {
             "url": "https://audio.simfonik.com/tapes/dj-trance-raw-live-at-what/a.mp3"
           }
-        ]
+        ],
+        "image": "/media/tapes/dj-trance-raw-live-at-what/sides/a.jpg"
       },
       {
         "position": "B",
@@ -212,9 +213,11 @@
           {
             "url": "https://audio.simfonik.com/tapes/dj-trance-raw-live-at-what/b.mp3"
           }
-        ]
+        ],
+        "image": "/media/tapes/dj-trance-raw-live-at-what/sides/b.jpg"
       }
     ],
+    "source": "The Mixtape Archive",
     "created_date": "2008-04-01T00:00:00"
   },
   {
