@@ -9779,5 +9779,38 @@
       }
     ],
     "created_date": "2026-03-29T00:00:00"
+  },
+  {
+    "id": "dj-trance-im-brown-im-frying",
+    "title": "I'm Brown, I'm Frying",
+    "released": "1994",
+    "djs": [
+      {
+        "name": "DJ Trance",
+        "slug": "dj-trance"
+      }
+    ],
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/dj-trance-im-brown-im-frying/a.mp3"
+          }
+        ],
+        "image": "/media/tapes/dj-trance-im-brown-im-frying/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/dj-trance-im-brown-im-frying/b.mp3"
+          }
+        ],
+        "image": "/media/tapes/dj-trance-im-brown-im-frying/sides/b.jpg"
+      }
+    ],
+    "source": "Maca Damion",
+    "created_date": "2026-03-31T00:00:00"
   }
 ]
