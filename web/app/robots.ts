@@ -5,7 +5,6 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: [],
     },
     sitemap: 'https://simfonik.com/sitemap.xml',
   }

@@ -40,6 +40,7 @@ export type Tape = {
   source?: string; // Name of person/entity who contributed the tape
   source_url?: string; // URL for the source (e.g. YouTube channel, website)
   created_date?: string; // ISO datetime when the tape was added to the archive (YYYY-MM-DDTHH:MM:SS)
+  last_updated?: string; // ISO datetime when tape data was significantly edited
 };
 
 /** Lightweight subset of Tape used to prevent massive 230KB JSON RSC payloads to client components */

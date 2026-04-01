@@ -98,6 +98,12 @@ export function generateTapeSchema(tape: Tape) {
     schema.datePublished = tape.released;
   }
 
+  // Add dateModified referencing new schema fallback pattern
+  const modDate = tape.last_updated || tape.created_date;
+  if (modDate) {
+    schema.dateModified = new Date(modDate).toISOString();
+  }
+
   // Add cover image if exists
   if (tape.images?.cover) {
     schema.image = `${BASE_URL}${tape.images.cover}`;

@@ -7,6 +7,10 @@ import { getCoverImageWithFallback, getTapeById } from "../../lib/data";
 export const metadata: Metadata = {
   title: "Recent Comments - Simfonik",
   description: "Recent comments from the Simfonik mixtape archive community",
+  robots: {
+    index: false,
+    follow: true,
+  },
 };
 
 // ISR: Revalidate every 60 seconds (same as homepage)
