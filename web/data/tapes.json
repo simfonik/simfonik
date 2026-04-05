@@ -9812,5 +9812,30 @@
     ],
     "source": "Maca Damion",
     "created_date": "2026-03-31T00:00:00"
+  },
+  {
+    "id": "moonpup-90s-breakbeat-retrospective",
+    "title": "90s Breakbeat Retrospective",
+    "released": "2026",
+    "created_date": "2026-04-04T20:47:32",
+    "djs": [
+      {
+        "name": "Milton \"MoonPup\" Cecil",
+        "slug": "moonpup"
+      }
+    ],
+    "images": {
+      "cover": "/media/tapes/moonpup-90s-breakbeat-retrospective/cover.jpg"
+    },
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/moonpup-90s-breakbeat-retrospective/a.mp3"
+          }
+        ]
+      }
+    ]
   }
 ]
