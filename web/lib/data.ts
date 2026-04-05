@@ -3,6 +3,7 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 import type { Tape, DJ, ArchivedComment } from "../types/tape";
+import type { Series } from "../types/series";
 
 function readTapesFile(): Tape[] {
   const filePath = path.join(process.cwd(), "data", "tapes.json");
@@ -176,6 +177,37 @@ export function getCoverImageWithFallback(tape: Tape): string {
   
   // Final fallback to blank tape
   return "/media/site/blank-tape.svg";
+}
+
+// Cache for series data
+let seriesCache: Series[] | null = null;
+
+function readSeriesFile(): Series[] {
+  if (seriesCache === null) {
+    const filePath = path.join(process.cwd(), "data", "series.json");
+    try {
+      const raw = fs.readFileSync(filePath, "utf8");
+      seriesCache = JSON.parse(raw);
+    } catch {
+      seriesCache = [];
+    }
+  }
+  return seriesCache!;
+}
+
+export function getAllSeries(): Series[] {
+  return readSeriesFile();
+}
+
+export function getSeriesBySlug(slug: string): Series | undefined {
+  return readSeriesFile().find((s) => s.slug === slug);
+}
+
+/**
+ * Get all tapes belonging to a given series slug, in display order.
+ */
+export function getTapesBySeries(slug: string): Tape[] {
+  return getAllTapes().filter((t) => t.series?.includes(slug));
 }
 
 // Cache for archived comments

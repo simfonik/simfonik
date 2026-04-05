@@ -37,6 +37,7 @@ export type Tape = {
   djs: DJ[];
   images?: TapeImages;
   sides: Side[];
+  series?: string[]; // Slugs of series this tape belongs to (e.g. ["dx2", "90s-retrospective"])
   source?: string; // Name of person/entity who contributed the tape
   source_url?: string; // URL for the source (e.g. YouTube channel, website)
   created_date?: string; // ISO datetime when the tape was added to the archive (YYYY-MM-DDTHH:MM:SS)

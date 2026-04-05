@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import fs from "fs";
 import path from "path";
-import { getTapeById, getAllTapes, getCommentsForTape } from "../../../lib/data";
+import { getTapeById, getAllTapes, getCommentsForTape, getAllSeries } from "../../../lib/data";
 import { hasOptimizedImages } from "../../../lib/image-utils";
 import { TapeGallery } from "../../../components/TapeGallery";
 import { AudioCoordinator } from "../../../components/AudioCoordinator";
@@ -134,6 +134,12 @@ export default async function Page({ params }: Props) {
   // Load archived comments from WordPress site
   const archivedComments = getCommentsForTape(id);
 
+  // Resolve series names for this tape
+  const allSeries = getAllSeries();
+  const tapeSeriesNames = (tape.series ?? []).map(
+    (slug) => allSeries.find((s) => s.slug === slug)?.name ?? slug
+  );
+
   // Collect all images: cover + side images
   const allImages: Array<{
     src: string;
@@ -210,6 +216,22 @@ export default async function Page({ params }: Props) {
           })}
         </div>
         <p className="mb-1 text-[var(--muted)]">Released: {tape.released}</p>
+        {tapeSeriesNames.length > 0 && (
+          <p className="mb-1 text-[var(--muted)]">
+            Series:{" "}
+            {(tape.series ?? []).map((slug, i) => (
+              <span key={slug}>
+                {i > 0 && ", "}
+                <Link
+                  href={`/series/${slug}`}
+                  className="text-[var(--accent)] hover:underline transition-colors"
+                >
+                  {tapeSeriesNames[i]}
+                </Link>
+              </span>
+            ))}
+          </p>
+        )}
         {tape.source && (
           <p className="text-[var(--muted)]">Source: {tape.source_url ? (
             <a href={tape.source_url} target="_blank" rel="nofollow noopener noreferrer" className="text-[var(--accent)] hover:underline">{tape.source}</a>
@@ -257,6 +279,22 @@ export default async function Page({ params }: Props) {
                 })}
               </div>
               <p className="mb-1 text-[var(--muted)]">Released: {tape.released}</p>
+              {tapeSeriesNames.length > 0 && (
+                <p className="mb-1 text-[var(--muted)]">
+                  Series:{" "}
+                  {(tape.series ?? []).map((slug, i) => (
+                    <span key={slug}>
+                      {i > 0 && ", "}
+                      <Link
+                        href={`/series/${slug}`}
+                        className="text-[var(--accent)] hover:underline transition-colors"
+                      >
+                        {tapeSeriesNames[i]}
+                      </Link>
+                    </span>
+                  ))}
+                </p>
+              )}
               {tape.source && (
                 <p className="text-[var(--muted)]">Source: {tape.source_url ? (
                   <a href={tape.source_url} target="_blank" rel="nofollow noopener noreferrer" className="text-[var(--accent)] hover:underline">{tape.source}</a>
