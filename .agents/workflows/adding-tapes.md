@@ -22,12 +22,12 @@ description: Steps for adding a new tape to the archive
    ```
 
 // turbo
-4. **Run image optimization** (generates WebP variants — output is gitignored)
+4. **Run image optimization** (generates AVIF variants and OG images)
    ```
    node web/scripts/optimize-images.mjs
    ```
 
-5. **Commit** — include `tapes.json` + source JPGs; optimized WebP files are gitignored and should not be committed
+5. **Commit** — include `tapes.json`, source JPGs, and ALL freshly generated optimized assets in `web/public/optimized/` and `web/public/og/`. (Do NOT gitignore the generated files; tracking them locally allows Vercel to skip heavy image processing via hashing.)
 
 ---
 
