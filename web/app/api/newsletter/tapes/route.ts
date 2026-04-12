@@ -8,9 +8,13 @@ export async function GET() {
 
   const options = tapes.map((tape) => {
     const coverPath = getCoverImageWithFallback(tape);
-    const coverUrl = coverPath.startsWith('/media/tapes/')
-      ? `${SITE_URL}/optimized/${tape.id}/800.avif`
-      : `${SITE_URL}${coverPath}`;
+    // Side image paths look like /media/tapes/{id}/sides/a.jpg
+    const sideMatch = coverPath.match(/\/media\/tapes\/[^/]+\/sides\/([ab])\./);
+    const coverUrl = sideMatch
+      ? `${SITE_URL}/optimized/${tape.id}/sides/${sideMatch[1]}/800.avif`
+      : coverPath.startsWith('/media/tapes/')
+        ? `${SITE_URL}/optimized/${tape.id}/800.avif`
+        : `${SITE_URL}${coverPath}`;
 
     return {
       id: tape.id,
