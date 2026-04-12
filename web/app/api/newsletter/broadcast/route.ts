@@ -79,6 +79,7 @@ export async function POST(request: Request) {
     const subject = `New mix: ${tape.title}`;
 
     const { data, error } = await resend.broadcasts.create({
+      name: `${tape.title} — ${djName}`,
       segmentId,
       from: FROM,
       replyTo: REPLY_TO,
