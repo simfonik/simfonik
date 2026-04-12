@@ -9846,5 +9846,32 @@
         ]
       }
     ]
+  },
+  {
+    "id": "dj-trance-legalize-it",
+    "title": "Legalize It",
+    "source": "Maca Damion",
+    "created_date": "2026-04-12T14:36:00",
+    "djs": [
+      { "name": "DJ Trance", "slug": "dj-trance" }
+    ],
+    "sides": [
+      {
+        "position": "A",
+        "title": "Side F",
+        "audio_links": [
+          { "url": "https://audio.simfonik.com/tapes/dj-trance-legalize-it/a.mp3" }
+        ],
+        "image": "/media/tapes/dj-trance-legalize-it/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "title": "XXX",
+        "audio_links": [
+          { "url": "https://audio.simfonik.com/tapes/dj-trance-legalize-it/b.mp3" }
+        ],
+        "image": "/media/tapes/dj-trance-legalize-it/sides/b.jpg"
+      }
+    ]
   }
 ]
