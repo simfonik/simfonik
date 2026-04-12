@@ -179,6 +179,26 @@ export function getCoverImageWithFallback(tape: Tape): string {
   return "/media/site/blank-tape.svg";
 }
 
+const SITE_URL = 'https://simfonik.com';
+
+/**
+ * Resolve the best available cover image for a tape as a full absolute URL,
+ * routing through pre-generated optimized AVIF assets.
+ * Falls back: cover AVIF → side A AVIF → side B AVIF → blank tape SVG.
+ */
+export function getCoverImageUrl(tape: Tape): string {
+  const coverPath = getCoverImageWithFallback(tape);
+  // Side image paths look like /media/tapes/{id}/sides/a.jpg
+  const sideMatch = coverPath.match(/\/media\/tapes\/[^/]+\/sides\/([ab])\./);
+  if (sideMatch) {
+    return `${SITE_URL}/optimized/${tape.id}/sides/${sideMatch[1]}/800.avif`;
+  }
+  if (coverPath.startsWith('/media/tapes/')) {
+    return `${SITE_URL}/optimized/${tape.id}/800.avif`;
+  }
+  return `${SITE_URL}${coverPath}`;
+}
+
 // Cache for series data
 let seriesCache: Series[] | null = null;
 

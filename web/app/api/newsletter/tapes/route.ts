@@ -1,20 +1,13 @@
 import { NextResponse } from 'next/server';
-import { getAllTapes, getCoverImageWithFallback } from '@/lib/data';
+import { getAllTapes, getCoverImageUrl } from '@/lib/data';
 
-const SITE_URL = 'https://simfonik.com';
+
 
 export async function GET() {
   const tapes = getAllTapes(); // already reversed: newest first
 
   const options = tapes.map((tape) => {
-    const coverPath = getCoverImageWithFallback(tape);
-    // Side image paths look like /media/tapes/{id}/sides/a.jpg
-    const sideMatch = coverPath.match(/\/media\/tapes\/[^/]+\/sides\/([ab])\./);
-    const coverUrl = sideMatch
-      ? `${SITE_URL}/optimized/${tape.id}/sides/${sideMatch[1]}/800.avif`
-      : coverPath.startsWith('/media/tapes/')
-        ? `${SITE_URL}/optimized/${tape.id}/800.avif`
-        : `${SITE_URL}${coverPath}`;
+    const coverUrl = getCoverImageUrl(tape);
 
     return {
       id: tape.id,

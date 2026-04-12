@@ -1,4 +1,4 @@
-import { getCoverImageWithFallback } from '@/lib/data';
+import { getCoverImageUrl } from '@/lib/data';
 import type { Tape } from '@/types/tape';
 
 export const SITE_URL = 'https://simfonik.com';
@@ -8,10 +8,7 @@ export const REPLY_TO = 'mixes@simfonik.com';
 export function tapeEmailData(tape: Tape, message = '') {
   const djName = tape.djs.map((dj) => dj.name).join(' & ');
   const tapeUrl = `${SITE_URL}/tapes/${tape.id}`;
-  const coverPath = getCoverImageWithFallback(tape);
-  const coverImageUrl = coverPath.startsWith('/media/tapes/')
-    ? `${SITE_URL}/optimized/${tape.id}/800.avif`
-    : `${SITE_URL}${coverPath}`;
+  const coverImageUrl = getCoverImageUrl(tape);
   const previewText = `New mix just dropped: ${tape.title} by ${djName}`;
   return { djName, tapeUrl, coverImageUrl, message: message.trim(), previewText };
 }
