@@ -380,10 +380,14 @@ export default function AdminNewsletterPage() {
               <textarea
                 id="message"
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                onChange={(e) => {
+                  setMessage(e.target.value);
+                  e.target.style.height = 'auto';
+                  e.target.style.height = `${e.target.scrollHeight}px`;
+                }}
                 placeholder="Add a short note to include in the email…"
                 rows={3}
-                className="w-full px-3 py-2.5 bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] rounded-md focus:outline-none focus:border-[#5e6ad2] transition-colors resize-none placeholder:text-[var(--muted)]/40"
+                className="w-full px-3 py-2.5 bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] rounded-md focus:outline-none focus:border-[#5e6ad2] transition-colors resize-none placeholder:text-[var(--muted)]/40 overflow-hidden"
               />
             </div>
 

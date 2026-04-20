@@ -67,7 +67,7 @@ export function buildEmailHtml(opts: {
           ${message ? `
           <tr>
             <td style="padding:20px 32px 0 32px;">
-              <p style="margin:0;font-size:15px;line-height:1.6;color:#b0b0b0;">${message}</p>
+              <p style="margin:0;font-size:15px;line-height:1.6;color:#b0b0b0;">${message.replace(/\n/g, '<br>')}</p>
             </td>
           </tr>` : ''}
 
