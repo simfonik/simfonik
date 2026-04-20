@@ -1385,7 +1385,8 @@ function generateOpArtWaves(rng: SeededRandom, scheme: typeof COLOR_SCHEMES[0]):
   
   for (let i = 0; i < bands; i++) {
     const filled = i % 2 === 0;
-    let path1 = '', path2 = '';
+    let path1 = '';
+    const path2 = '';
     
     if (direction === 'horizontal') {
       const y1 = (i / bands) * 161;

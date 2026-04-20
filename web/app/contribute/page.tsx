@@ -14,7 +14,7 @@ export default function ContributePage() {
           <div>
             <h1 className="text-3xl font-bold text-[var(--text)]">Contribute</h1>
             <p className="mt-2 text-[var(--muted)]">
-              Have old mixtapes from the 90s rave scene? We'd love to hear from you.
+              Have old mixtapes from the 90s rave scene? We&apos;d love to hear from you.
             </p>
           </div>
 

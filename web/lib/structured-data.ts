@@ -41,7 +41,7 @@ function getEncodingFormat(url: string): string {
 }
 
 export function generateTapeSchema(tape: Tape) {
-  const schema: any = {
+  const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'MusicPlaylist',
     '@id': `${BASE_URL}/tapes/${tape.id}#playlist`,
@@ -54,7 +54,7 @@ export function generateTapeSchema(tape: Tape) {
       const sideNumber = index + 1;
       const audioUrl = side.audio_links[0]?.url; // Use first audio link
       
-      const musicRecording: any = {
+      const musicRecording: Record<string, unknown> = {
         '@type': 'MusicRecording',
         '@id': `${BASE_URL}/tapes/${tape.id}#side-${sidePosition}`,
         name: `${tape.title} (Side ${side.position})`,
@@ -118,7 +118,7 @@ export function generateTapeSchema(tape: Tape) {
 }
 
 export function generateDJSchema(dj: { name: string; slug: string }, bio?: string | null, links?: string[]) {
-  const schema: any = {
+  const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Person',
     '@id': `${BASE_URL}/djs/${dj.slug}#person`,
