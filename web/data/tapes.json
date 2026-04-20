@@ -9874,5 +9874,30 @@
         "image": "/media/tapes/dj-trance-legalize-it/sides/b.jpg"
       }
     ]
+  },
+  {
+    "id": "jesse-love-city",
+    "title": "Lovecity",
+    "released": "1994",
+    "created_date": "2026-04-19T00:00:00",
+    "source": "Ricky Bonilla",
+    "djs": [
+      { "name": "DJ Jesse", "slug": "dj-jesse" }
+    ],
+    "images": {
+      "cover": "/media/tapes/jesse-love-city/cover.jpg"
+    },
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [{ "url": "https://audio.simfonik.com/tapes/jesse-love-city/a.mp3" }],
+        "image": "/media/tapes/jesse-love-city/sides/a.jpg"
+      },
+      {
+        "position": "B",
+        "audio_links": [{ "url": "https://audio.simfonik.com/tapes/jesse-love-city/b.mp3" }],
+        "image": "/media/tapes/jesse-love-city/sides/b.jpg"
+      }
+    ]
   }
 ]
