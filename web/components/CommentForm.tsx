@@ -53,8 +53,13 @@ export function CommentForm({ tapeId }: CommentFormProps) {
     }
   };
 
+  const labelClasses =
+    'block font-mono text-[10px] uppercase tracking-[0.25em] text-[var(--muted)] mb-2';
+  const inputClasses =
+    'font-mono w-full border-[1.5px] border-[var(--text)] bg-[var(--bg)] px-3 py-2 text-sm text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none focus:bg-[var(--surface)]';
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 mb-10">
+    <form onSubmit={handleSubmit} className="space-y-5 mb-10">
       {/* Honeypot field - hidden from users */}
       <input
         type="text"
@@ -67,8 +72,8 @@ export function CommentForm({ tapeId }: CommentFormProps) {
       />
 
       <div>
-        <label htmlFor="authorName" className="block text-sm font-medium text-[var(--text)] mb-1">
-          Name <span className="text-red-500">*</span>
+        <label htmlFor="authorName" className={labelClasses}>
+          Name <span className="text-[var(--accent-text)]">*</span>
         </label>
         <input
           type="text"
@@ -77,13 +82,13 @@ export function CommentForm({ tapeId }: CommentFormProps) {
           onChange={(e) => setAuthorName(e.target.value)}
           required
           maxLength={100}
-          className="w-full px-3 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-md text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+          className={inputClasses}
         />
       </div>
 
       <div>
-        <label htmlFor="authorEmail" className="block text-sm font-medium text-[var(--text)] mb-1">
-          Email <span className="text-sm text-[var(--muted)]">(optional)</span>
+        <label htmlFor="authorEmail" className={labelClasses}>
+          Email <span className="lowercase tracking-normal text-[var(--muted)]">(optional)</span>
         </label>
         <input
           type="email"
@@ -91,13 +96,13 @@ export function CommentForm({ tapeId }: CommentFormProps) {
           value={authorEmail}
           onChange={(e) => setAuthorEmail(e.target.value)}
           maxLength={255}
-          className="w-full px-3 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-md text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+          className={inputClasses}
         />
       </div>
 
       <div>
-        <label htmlFor="content" className="block text-sm font-medium text-[var(--text)] mb-1">
-          Comment <span className="text-red-500">*</span>
+        <label htmlFor="content" className={labelClasses}>
+          Comment <span className="text-[var(--accent-text)]">*</span>
         </label>
         <textarea
           id="content"
@@ -107,19 +112,21 @@ export function CommentForm({ tapeId }: CommentFormProps) {
           minLength={10}
           maxLength={maxChars}
           rows={6}
-          className="w-full px-3 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-md text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] resize-y"
+          className={`${inputClasses} resize-y`}
         />
-        <div className="text-sm text-[var(--muted)] mt-1">
+        <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mt-2">
           {charCount} / {maxChars} characters
         </div>
       </div>
 
       {message && (
-        <div className={`p-3 rounded-md ${
-          message.type === 'success'
-            ? 'bg-green-500/10 text-green-500 border border-green-500/20'
-            : 'bg-red-500/10 text-red-500 border border-red-500/20'
-        }`}>
+        <div
+          className={`font-mono text-[11px] uppercase tracking-[0.18em] px-3 py-2 border-[1.5px] ${
+            message.type === 'success'
+              ? 'border-[var(--text)] text-[var(--text)]'
+              : 'border-red-500 text-red-500'
+          }`}
+        >
           {message.text}
         </div>
       )}
@@ -127,9 +134,9 @@ export function CommentForm({ tapeId }: CommentFormProps) {
       <button
         type="submit"
         disabled={submitting || charCount < 10}
-        className="px-6 py-2 bg-[#5e6ad2] hover:bg-[#4a56b8] disabled:bg-[var(--muted)] disabled:cursor-not-allowed text-white font-medium rounded-md transition-colors"
+        className="poster-btn"
       >
-        {submitting ? 'Submitting...' : 'Post Comment'}
+        {submitting ? 'Submitting…' : 'Post Comment'}
       </button>
     </form>
   );

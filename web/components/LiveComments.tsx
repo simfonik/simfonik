@@ -15,16 +15,14 @@ type LiveCommentsProps = {
 };
 
 function sanitizeContent(text: string): string {
-  // 1. Escape HTML entities
   const escaped = text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
-  // 2. Linkify Discogs URLs only
   return escaped.replace(
     /(https?:\/\/(?:www\.)?discogs\.com\/[^\s]+)/gi,
-    '<a href="$1" target="_blank" rel="nofollow noopener noreferrer" class="text-[var(--accent)] hover:underline break-all">$1</a>'
+    '<a href="$1" target="_blank" rel="nofollow noopener noreferrer" class="text-[var(--accent-text)] hover:underline break-all">$1</a>'
   );
 }
 
@@ -61,7 +59,11 @@ export function LiveComments({ tapeId }: LiveCommentsProps) {
   }, [tapeId]);
 
   if (loading) {
-    return <div className="text-[var(--muted)]">Loading comments...</div>;
+    return (
+      <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
+        Loading comments…
+      </div>
+    );
   }
 
   if (comments.length === 0) {
@@ -71,12 +73,12 @@ export function LiveComments({ tapeId }: LiveCommentsProps) {
   return (
     <div className="space-y-6">
       {comments.map((comment) => (
-        <div key={comment.id} className="border-l-2 border-[var(--border)] pl-4 py-1">
+        <div key={comment.id} className="border-l-4 border-[var(--accent)] pl-4 py-1">
           <div className="mb-2">
-            <div className="font-medium text-[var(--text)]">
+            <div className="font-display text-xl leading-tight text-[var(--text)]">
               {comment.author_name}
             </div>
-            <div className="text-sm text-[var(--muted)]">
+            <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mt-1">
               {formatDate(comment.created_at)}
             </div>
           </div>

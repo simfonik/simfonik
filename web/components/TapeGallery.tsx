@@ -20,29 +20,30 @@ export function TapeGallery({ allImages }: TapeGalleryProps) {
 
   return (
     <div className="flex gap-4">
-      {/* Thumbnails - Vertical on left */}
       {allImages.length > 1 && (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 flex-shrink-0">
           {allImages.map((img, idx) => {
+            const isActive = selectedImage === img.src;
             return (
               <button
                 key={idx}
                 onClick={() => setSelectedImage(img.src)}
-                className={`flex-shrink-0 rounded border-2 transition-all ${
-                  selectedImage === img.src
-                    ? "border-[var(--accent)] shadow-md"
-                    : "border-[var(--border)] hover:border-[var(--muted)] opacity-70 hover:opacity-100"
-                }`}
+                aria-label={img.label}
                 title={img.label}
+                className={`block w-20 h-20 transition-colors cursor-pointer ${
+                  isActive
+                    ? 'border-[1.5px] border-[var(--text)]'
+                    : 'border-[1.5px] border-[var(--border)] hover:border-[var(--text)]'
+                }`}
               >
-                <div className="relative w-20 h-20">
+                <div className="relative w-full h-full">
                   <Image
                     loader={imageLoader}
                     src={img.src}
                     alt={img.label}
                     fill
                     sizes="80px"
-                    className={`object-contain rounded ${img.src.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
+                    className={`object-cover ${img.src.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
                   />
                 </div>
               </button>
@@ -51,8 +52,7 @@ export function TapeGallery({ allImages }: TapeGalleryProps) {
         </div>
       )}
 
-      {/* Main Image */}
-      <div className="flex-1">
+      <div className="flex-1 min-w-0 border-[1.5px] border-[var(--text)]">
         <Image
           loader={imageLoader}
           key={selectedImage}
@@ -62,7 +62,7 @@ export function TapeGallery({ allImages }: TapeGalleryProps) {
           height={600}
           priority
           sizes="(max-width: 768px) 100vw, 800px"
-          className={`w-full h-auto max-h-[650px] object-contain rounded-lg shadow-lg ${selectedImage.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
+          className={`block w-full h-auto max-h-[650px] object-contain ${selectedImage.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
         />
       </div>
     </div>

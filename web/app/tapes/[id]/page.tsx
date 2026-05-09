@@ -187,56 +187,70 @@ export default async function Page({ params }: Props) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       
       {/* Mobile-only Header */}
-      <header className="mb-6 lg:hidden">
-        <h1 className="text-3xl font-bold mb-4 text-[var(--text)]">{tape.title}</h1>
-        <div className="flex gap-2 flex-wrap mb-4">
+      <header className="mb-8 lg:hidden">
+        <h1 className="font-display text-4xl sm:text-5xl leading-[0.95] text-[var(--text)] mb-6">
+          {tape.title}
+        </h1>
+        <div className="flex gap-2 flex-wrap mb-6">
           {tape.djs.map((dj) => {
             const shouldLink = dj.link !== false && dj.slug !== "unknown";
-            
             if (shouldLink) {
               return (
                 <Link
                   key={dj.slug}
                   href={`/djs/${dj.slug}`}
-                  className="rounded-full border border-[var(--accent)]/30 bg-[var(--accent)]/10 px-3 py-1 text-sm font-medium text-[var(--text)] hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] dark:border-[#5e6ad2]/50 dark:bg-[#5e6ad2]/20 dark:hover:bg-[#5e6ad2] dark:hover:text-white transition-all cursor-pointer"
+                  className="dj-pill"
                 >
                   {dj.name}
                 </Link>
               );
             }
-            
             return (
               <span
                 key={dj.slug}
-                className="rounded-full bg-[var(--muted)]/10 border border-[var(--border)] px-3 py-1 text-sm font-medium text-[var(--muted)] cursor-default"
+                className="dj-pill cursor-default"
               >
                 {dj.name}
               </span>
             );
           })}
         </div>
-        <p className="mb-1 text-[var(--muted)]">Released: {tape.released}</p>
-        {tapeSeriesNames.length > 0 && (
-          <p className="mb-1 text-[var(--muted)]">
-            Series:{" "}
-            {(tape.series ?? []).map((slug, i) => (
-              <span key={slug}>
-                {i > 0 && ", "}
-                <Link
-                  href={`/series/${slug}`}
-                  className="text-[var(--accent)] hover:underline transition-colors"
+        <div className="space-y-1 font-mono text-[11px] uppercase tracking-[0.22em] text-[var(--muted)]">
+          {tape.released && <p>Released · {tape.released}</p>}
+          {tapeSeriesNames.length > 0 && (
+            <p>
+              Series ·{" "}
+              {(tape.series ?? []).map((slug, i) => (
+                <span key={slug}>
+                  {i > 0 && ", "}
+                  <Link
+                    href={`/series/${slug}`}
+                    className="hover:text-[var(--accent-text)] transition-colors"
+                  >
+                    {tapeSeriesNames[i]}
+                  </Link>
+                </span>
+              ))}
+            </p>
+          )}
+          {tape.source && (
+            <p>
+              Source ·{" "}
+              {tape.source_url ? (
+                <a
+                  href={tape.source_url}
+                  target="_blank"
+                  rel="nofollow noopener noreferrer"
+                  className="hover:text-[var(--accent-text)] transition-colors"
                 >
-                  {tapeSeriesNames[i]}
-                </Link>
-              </span>
-            ))}
-          </p>
-        )}
-        {tape.source && (
-          <p className="text-[var(--muted)]">Source: {tape.source_url ? (
-            <a href={tape.source_url} target="_blank" rel="nofollow noopener noreferrer" className="text-[var(--accent)] hover:underline">{tape.source}</a>
-          ) : tape.source}</p>
-        )}
+                  {tape.source}
+                </a>
+              ) : (
+                tape.source
+              )}
+            </p>
+          )}
+        </div>
       </header>
 
       {/* Hero: Image Gallery with Players */}
@@ -250,56 +264,70 @@ export default async function Page({ params }: Props) {
           {/* Right Column: Header + Audio Players */}
           <div>
             {/* Desktop-only Header */}
-            <header className="mb-6 hidden lg:block">
-              <h1 className="text-3xl font-bold mb-4 text-[var(--text)]">{tape.title}</h1>
-              <div className="flex gap-2 flex-wrap mb-4">
+            <header className="mb-8 hidden lg:block">
+              <h1 className="font-display text-4xl sm:text-5xl leading-[0.95] text-[var(--text)] mb-6">
+                {tape.title}
+              </h1>
+              <div className="flex gap-2 flex-wrap mb-6">
                 {tape.djs.map((dj) => {
                   const shouldLink = dj.link !== false && dj.slug !== "unknown";
-                  
                   if (shouldLink) {
                     return (
                       <Link
                         key={dj.slug}
                         href={`/djs/${dj.slug}`}
-                        className="rounded-full border border-[var(--accent)]/30 bg-[var(--accent)]/10 px-3 py-1 text-sm font-medium text-[var(--text)] hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] dark:border-[#5e6ad2]/50 dark:bg-[#5e6ad2]/20 dark:hover:bg-[#5e6ad2] dark:hover:text-white transition-all cursor-pointer"
+                        className="dj-pill"
                       >
                         {dj.name}
                       </Link>
                     );
                   }
-                  
                   return (
                     <span
                       key={dj.slug}
-                      className="rounded-full bg-[var(--muted)]/10 border border-[var(--border)] px-3 py-1 text-sm font-medium text-[var(--muted)] cursor-default"
+                      className="dj-pill cursor-default"
                     >
                       {dj.name}
                     </span>
                   );
                 })}
               </div>
-              <p className="mb-1 text-[var(--muted)]">Released: {tape.released}</p>
-              {tapeSeriesNames.length > 0 && (
-                <p className="mb-1 text-[var(--muted)]">
-                  Series:{" "}
-                  {(tape.series ?? []).map((slug, i) => (
-                    <span key={slug}>
-                      {i > 0 && ", "}
-                      <Link
-                        href={`/series/${slug}`}
-                        className="text-[var(--accent)] hover:underline transition-colors"
+              <div className="space-y-1 font-mono text-[11px] uppercase tracking-[0.22em] text-[var(--muted)]">
+                {tape.released && <p>Released · {tape.released}</p>}
+                {tapeSeriesNames.length > 0 && (
+                  <p>
+                    Series ·{" "}
+                    {(tape.series ?? []).map((slug, i) => (
+                      <span key={slug}>
+                        {i > 0 && ", "}
+                        <Link
+                          href={`/series/${slug}`}
+                          className="hover:text-[var(--accent-text)] transition-colors"
+                        >
+                          {tapeSeriesNames[i]}
+                        </Link>
+                      </span>
+                    ))}
+                  </p>
+                )}
+                {tape.source && (
+                  <p>
+                    Source ·{" "}
+                    {tape.source_url ? (
+                      <a
+                        href={tape.source_url}
+                        target="_blank"
+                        rel="nofollow noopener noreferrer"
+                        className="hover:text-[var(--accent-text)] transition-colors"
                       >
-                        {tapeSeriesNames[i]}
-                      </Link>
-                    </span>
-                  ))}
-                </p>
-              )}
-              {tape.source && (
-                <p className="text-[var(--muted)]">Source: {tape.source_url ? (
-                  <a href={tape.source_url} target="_blank" rel="nofollow noopener noreferrer" className="text-[var(--accent)] hover:underline">{tape.source}</a>
-                ) : tape.source}</p>
-              )}
+                        {tape.source}
+                      </a>
+                    ) : (
+                      tape.source
+                    )}
+                  </p>
+                )}
+              </div>
             </header>
 
             {/* Audio Players */}
@@ -321,34 +349,39 @@ export default async function Page({ params }: Props) {
 
               // Individual players for 1-2 sides
               return (
-                <div className="space-y-4">
-                  {playlist.map((track, idx) => (
-                    <div key={track.position}>
-                      <div className="mb-2">
-                        <h2 className="text-xl font-semibold text-[var(--text)]">
-                          {track.title}
-                        </h2>
-                        {track.djs && track.djs.length > 0 && (
-                          <p className="text-sm text-[var(--muted)] mt-1">
-                            By{" "}
-                            {track.djs.map((dj, djIdx) => {
-                              const shouldLink = dj.link !== false && dj.slug !== "unknown";
-                              
-                              return (
-                                <Fragment key={dj.slug}>
-                                  {shouldLink ? (
-                                    <Link href={`/djs/${dj.slug}`} className="hover:underline hover:text-[var(--accent)] transition-colors">{dj.name}</Link>
-                                  ) : (
-                                    <span className="cursor-default">{dj.name}</span>
-                                  )}
-                                  {djIdx < track.djs!.length - 1 && ", "}
-                                </Fragment>
-                              );
-                            })}
-                          </p>
-                        )}
-                      </div>
-                      <AudioPlayer 
+                <div className="space-y-3">
+                  {playlist.map((track) => (
+                    <div
+                      key={track.position}
+                      className="border-[1.5px] border-[var(--text)] bg-[var(--surface)] p-4"
+                    >
+                      <h2 className="font-display text-xl leading-tight text-[var(--text)] mb-2">
+                        {track.title}
+                      </h2>
+                      {track.djs && track.djs.length > 0 && (
+                        <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mb-3">
+                          By{" "}
+                          {track.djs.map((dj, djIdx) => {
+                            const shouldLink = dj.link !== false && dj.slug !== "unknown";
+                            return (
+                              <Fragment key={dj.slug}>
+                                {shouldLink ? (
+                                  <Link
+                                    href={`/djs/${dj.slug}`}
+                                    className="hover:text-[var(--accent-text)] transition-colors"
+                                  >
+                                    {dj.name}
+                                  </Link>
+                                ) : (
+                                  <span className="cursor-default">{dj.name}</span>
+                                )}
+                                {djIdx < track.djs!.length - 1 && ", "}
+                              </Fragment>
+                            );
+                          })}
+                        </p>
+                      )}
+                      <AudioPlayer
                         src={track.url}
                         title={track.title}
                         tapeId={tape.id}
@@ -389,7 +422,7 @@ export default async function Page({ params }: Props) {
                   srcSet={mobileSrcSet}
                   sizes="100vw"
                   alt={img.label}
-                  className="w-full h-auto max-h-[650px] object-contain rounded-lg shadow-lg"
+                  className="block w-full h-auto max-h-[650px] object-contain border-[1.5px] border-[var(--text)]"
                   loading="lazy"
                 />
               ) : (
@@ -397,7 +430,7 @@ export default async function Page({ params }: Props) {
                 <img
                   src={img.src}
                   alt={img.label}
-                  className={`w-full h-auto max-h-[650px] object-contain rounded-lg shadow-lg ${img.src.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
+                  className={`block w-full h-auto max-h-[650px] object-contain border-[1.5px] border-[var(--text)] ${img.src.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
                 />
               )}
             </div>
@@ -407,47 +440,47 @@ export default async function Page({ params }: Props) {
 
       {/* Tracklist */}
       {tape.sides.some(side => side.tracks && side.tracks.length > 0) && (
-        <section className="border-t border-[var(--border)] pt-8 mt-10">
+        <section className="border-t-[1.5px] border-[var(--border)] pt-14 mt-16">
           <div className="max-w-3xl">
-            <h2 className="text-2xl font-semibold mb-6 text-[var(--text)]">
+            <h2 className="font-display text-4xl sm:text-5xl leading-[0.95] text-[var(--text)] mb-8">
               Tracklist
             </h2>
-          <div className="space-y-8">
+          <div className="space-y-10">
             {tape.sides.map((side, idx) => {
               if (!side.tracks || side.tracks.length === 0) return null;
-              
+
               return (
                 <div key={idx}>
-                  <h4 className="text-lg font-semibold mb-3 text-[var(--text)]">
+                  <h3 className="font-display text-xl leading-tight text-[var(--text)] mb-4">
                     {side.title ?? `Side ${side.position}`}
-                  </h4>
+                  </h3>
                   <div className="space-y-0 leading-snug text-sm">
                     {side.tracks.map((track, trackIdx) => (
-                      <div key={trackIdx} className="flex gap-3 text-[var(--text)] hover:bg-[var(--bg-hover)] transition-colors py-1.5 px-3 rounded cursor-pointer group">
-                        <span className="text-[var(--muted)] opacity-50 tabular-nums flex-shrink-0">
+                      <div key={trackIdx} className="flex gap-3 text-[var(--text)] hover:bg-[var(--bg-hover)] transition-colors py-2 px-2 group">
+                        <span className="font-mono text-[var(--muted)] tabular-nums flex-shrink-0">
                           {String(trackIdx + 1).padStart(2, '0')}
                         </span>
                         {track.discogs_url ? (
-                          <a 
+                          <a
                             href={track.discogs_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="hover:text-[var(--accent)] transition-colors cursor-pointer flex-1 flex items-center gap-2"
+                            className="cursor-pointer flex-1 flex items-center gap-2 group-hover:text-[var(--accent-text)] transition-colors"
                           >
                             <span className="flex-1">
                               <span className="font-medium">{track.artist}</span>
-                              <span className="text-[var(--muted)]"> - </span>
+                              <span className="text-[var(--muted)]"> — </span>
                               <span>{track.title}</span>
                               {track.duration && (
-                                <span className="ml-2 text-[var(--muted)] text-sm">
+                                <span className="ml-2 font-mono text-[var(--muted)] text-xs">
                                   ({track.duration})
                                 </span>
                               )}
                             </span>
-                            <svg 
-                              className="w-3.5 h-3.5 text-[var(--muted)] group-hover:text-[var(--accent)] flex-shrink-0 opacity-40 group-hover:opacity-100 transition-opacity" 
-                              fill="none" 
-                              stroke="currentColor" 
+                            <svg
+                              className="w-3.5 h-3.5 text-[var(--muted)] flex-shrink-0 opacity-40 group-hover:opacity-100 transition-opacity"
+                              fill="none"
+                              stroke="currentColor"
                               viewBox="0 0 24 24"
                               strokeWidth={2}
                             >
@@ -457,10 +490,10 @@ export default async function Page({ params }: Props) {
                         ) : (
                           <span className="flex-1">
                             <span className="font-medium">{track.artist}</span>
-                            <span className="text-[var(--muted)]"> - </span>
+                            <span className="text-[var(--muted)]"> — </span>
                             <span>{track.title}</span>
                             {track.duration && (
-                              <span className="ml-2 text-[var(--muted)] text-sm">
+                              <span className="ml-2 font-mono text-[var(--muted)] text-xs">
                                 ({track.duration})
                               </span>
                             )}
@@ -478,14 +511,14 @@ export default async function Page({ params }: Props) {
       )}
 
       {/* Comments */}
-      <section className="border-t border-[var(--border)] pt-8 mt-10">
+      <section className="border-t-[1.5px] border-[var(--border)] pt-14 mt-16">
         <div className="max-w-3xl">
-          <h2 className="text-2xl font-semibold mb-4 text-[var(--text)]">
+          <h2 className="font-display text-4xl sm:text-5xl leading-[0.95] text-[var(--text)] mb-8">
             Comments
           </h2>
           <LiveComments tapeId={id} />
 
-          <h2 className="text-2xl font-semibold mb-4 mt-10 text-[var(--text)]">
+          <h2 className="font-display text-3xl sm:text-4xl leading-[0.95] text-[var(--text)] mb-6 mt-14">
             Leave a Comment
           </h2>
           <CommentForm tapeId={id} />
@@ -494,30 +527,28 @@ export default async function Page({ params }: Props) {
 
       {/* Archived Comments */}
       {archivedComments.length > 0 && (
-        <section className="border-t border-[var(--border)] pt-8 mt-10">
+        <section className="border-t-[1.5px] border-[var(--border)] pt-14 mt-16">
           <div className="max-w-3xl">
-            <h2 className="text-2xl font-semibold mb-2 text-[var(--text)]">
+            <h2 className="font-display text-4xl sm:text-5xl leading-[0.95] text-[var(--text)] mb-3">
               Archived Comments
             </h2>
-            <p className="text-sm text-[var(--muted)] mb-6">
-              {archivedComments.length} comment{archivedComments.length !== 1 ? 's' : ''} from the original simfonik.com
+            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mb-8">
+              {archivedComments.length} entr{archivedComments.length !== 1 ? 'ies' : 'y'} from the original simfonik.com
             </p>
-            
+
             {(() => {
-              // Group comments by source for circa tapes
               const isCircaTape = id === 'circa-92' || id === 'circa-94';
-              
+
               if (!isCircaTape) {
-                // Normal tape: flat list
                 return (
                   <div className="space-y-6">
                     {archivedComments.map((comment, idx) => (
-                      <div key={idx} className="border-l-2 border-[var(--border)] pl-4 py-1">
+                      <div key={idx} className="border-l-4 border-[var(--accent)] pl-4 py-1">
                         <div className="mb-2">
-                          <div className="font-medium text-[var(--text)]">
+                          <div className="font-display text-xl leading-tight text-[var(--text)]">
                             {comment.author}
                           </div>
-                          <div className="text-sm text-[var(--muted)]">
+                          <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mt-1">
                             {formatDate(comment.date)}
                           </div>
                         </div>
@@ -530,7 +561,7 @@ export default async function Page({ params }: Props) {
                                   href={part.content}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-[var(--accent)] hover:underline break-all"
+                                  className="text-[var(--accent-text)] hover:underline break-all"
                                 >
                                   {part.content}
                                 </a>
@@ -559,17 +590,17 @@ export default async function Page({ params }: Props) {
                 <div className="space-y-10">
                   {Array.from(grouped.entries()).map(([sourceTitle, comments]) => (
                     <div key={sourceTitle}>
-                      <h4 className="text-lg font-semibold mb-4 text-[var(--text)] border-b border-[var(--border)] pb-2">
+                      <h3 className="font-display text-xl leading-tight text-[var(--text)] border-b-[1.5px] border-[var(--border)] pb-3 mb-4">
                         {sourceTitle}
-                      </h4>
+                      </h3>
                       <div className="space-y-6">
                         {comments.map((comment, idx) => (
-                          <div key={idx} className="border-l-2 border-[var(--border)] pl-4 py-1">
+                          <div key={idx} className="border-l-4 border-[var(--accent)] pl-4 py-1">
                             <div className="mb-2">
-                              <div className="font-medium text-[var(--text)]">
+                              <div className="font-display text-xl leading-tight text-[var(--text)]">
                                 {comment.author}
                               </div>
-                              <div className="text-sm text-[var(--muted)]">
+                              <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mt-1">
                                 {formatDate(comment.date)}
                               </div>
                             </div>
@@ -582,7 +613,7 @@ export default async function Page({ params }: Props) {
                                       href={part.content}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="text-[var(--accent)] hover:underline break-all"
+                                      className="text-[var(--accent-text)] hover:underline break-all"
                                     >
                                       {part.content}
                                     </a>
