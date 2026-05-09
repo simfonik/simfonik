@@ -22,12 +22,12 @@ export default function imageLoader({ src, width }: { src: string, width: number
   if (src.startsWith('/media/tapes/')) {
     const bestWidth = TAPE_WIDTHS.find((w) => w >= optimizedWidth) || TAPE_WIDTHS[TAPE_WIDTHS.length - 1];
 
-    const coverMatch = src.match(/^\/media\/tapes\/([^\/]+)\/cover\.jpg$/);
+    const coverMatch = src.match(/^\/media\/tapes\/([^\/]+)\/cover\.(jpg|jpeg|png)$/i);
     if (coverMatch) {
       return `/optimized/${coverMatch[1]}/${bestWidth}.avif`;
     }
 
-    const sideMatch = src.match(/^\/media\/tapes\/([^\/]+)\/sides\/(a|b)\.jpg$/);
+    const sideMatch = src.match(/^\/media\/tapes\/([^\/]+)\/sides\/(a|b)\.(jpg|jpeg|png)$/i);
     if (sideMatch) {
       return `/optimized/${sideMatch[1]}/sides/${sideMatch[2]}/${bestWidth}.avif`;
     }
