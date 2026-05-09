@@ -31,7 +31,7 @@ export default async function Home() {
   }));
 
   return (
-    <div className="min-h-screen bg-[var(--bg)]">
+    <div className="min-h-screen">
       <JsonLd data={generateWebsiteSchema()} />
 
       {/* Hero — oscilloscope waveform */}

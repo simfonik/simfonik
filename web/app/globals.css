@@ -12,6 +12,8 @@
   --accent-hover: #000000;
   --accent-text: #1a1a1a;
   --on-accent: #ffffff;
+  --bg-image: url("/media/site/textured-paper-light.png");
+  --bg-image-opacity: 0.4;
 }
 
 @theme inline {
@@ -40,6 +42,8 @@
     --accent-hover: #ffffff;
     --accent-text: #f5f5f5;
     --on-accent: #0a0a0a;
+    --bg-image: url("/media/site/textured-paper-dark.png");
+    --bg-image-opacity: 1;
   }
 }
 :root.theme-dark {
@@ -54,12 +58,27 @@
   --accent-hover: #ffffff;
   --accent-text: #f5f5f5;
   --on-accent: #0a0a0a;
+  --bg-image: url("/media/site/textured-paper-dark.png");
+  --bg-image-opacity: 1;
 }
 
 body {
   background: var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  isolation: isolate; /* contains body::before z:-1 so it sits above bg-color */
+}
+
+/* Light-mode paper texture, fixed-position behind content. Image is set to
+   `none` in dark mode so nothing renders. Opacity dialed via --bg-image-opacity. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--bg-image);
+  opacity: var(--bg-image-opacity);
 }
 
 /* Prevent iOS Safari from zooming when an input is focused. iOS zooms

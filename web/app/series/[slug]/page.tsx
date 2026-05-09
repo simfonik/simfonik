@@ -39,7 +39,7 @@ export default async function SeriesPage({ params }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg)]">
+    <div className="min-h-screen">
       <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
         <p className="font-mono text-[10px] uppercase tracking-[0.32em] text-[var(--muted)] mb-2">
           Series

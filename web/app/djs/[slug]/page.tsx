@@ -66,7 +66,7 @@ export default async function DJPage({ params }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg)]">
+    <div className="min-h-screen">
       <JsonLd data={generateDJSchema(dj, bio, links)} />
       
       <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">

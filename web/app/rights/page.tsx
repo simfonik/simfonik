@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function RightsPage() {
   return (
-    <div className="min-h-screen bg-[var(--bg)]">
+    <div className="min-h-screen">
       <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
         <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl leading-[0.95] text-[var(--text)] mb-10">
           Rights &amp; Takedown

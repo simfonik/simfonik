@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { NewsletterModal, useNewsletterModal } from './NewsletterSignup';
 import { ThemeToggle } from './ThemeToggle';
+import { Wordmark } from './Wordmark';
 
 const NAV_LINK_CLASSES =
   'font-mono text-[12px] uppercase tracking-[0.1em] font-semibold text-[var(--text)] hover:underline underline-offset-[6px] decoration-[1.5px] transition-colors';
@@ -32,14 +33,15 @@ export function Header() {
 
   return (
     <>
-      <header ref={menuRef} className="bg-[var(--bg)]">
+      <header ref={menuRef}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between gap-4">
             <Link
               href="/"
-              className="font-display text-3xl leading-none text-[var(--text)]"
+              className="inline-flex items-center gap-1.5 font-display text-3xl leading-none text-[var(--text)]"
               onClick={() => setMobileMenuOpen(false)}
             >
+              <Wordmark size={44} className="translate-y-[2px]" />
               simfonik
             </Link>
 

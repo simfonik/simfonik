@@ -37,7 +37,7 @@ export default async function CommentsPage({ searchParams }: Props) {
   const { comments, totalPages, currentPage } = await getPaginatedComments(validPage, 30);
 
   return (
-    <div className="min-h-screen bg-[var(--bg)]">
+    <div className="min-h-screen">
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
         <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl leading-[0.95] text-[var(--text)] mb-10">
           Recent Comments

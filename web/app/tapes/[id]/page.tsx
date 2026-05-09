@@ -181,7 +181,7 @@ export default async function Page({ params }: Props) {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--bg)]">
+    <main className="min-h-screen">
       <JsonLd data={generateTapeSchema(tape)} />
       
       <AudioCoordinator />
