@@ -43,3 +43,36 @@ body {
   color: var(--text);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
+
+/* Poster-block button — outline, mono caps, lift + offset shadow on hover */
+.poster-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border: 1.5px solid var(--text);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.55rem 1.1rem;
+  border-radius: 0.125rem;
+  transition: transform 0.22s cubic-bezier(0.34, 1.16, 0.5, 1), box-shadow 0.18s;
+  cursor: pointer;
+  line-height: 1;
+  color: var(--text);
+  background: transparent;
+}
+.poster-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--text);
+}
+.poster-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.poster-btn:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}

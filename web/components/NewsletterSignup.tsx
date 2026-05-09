@@ -112,33 +112,35 @@ export function NewsletterFooter() {
   if (status === 'success') {
     return (
       <div className="text-center">
-        <p className="text-xl font-semibold text-[var(--text)] mb-1">You&apos;re now subscribed!</p>
-        <p className="text-sm text-[var(--muted)]">We&apos;ll let you know when new tapes are added.</p>
+        <p className="font-display text-3xl sm:text-4xl leading-[0.95] text-[var(--text)] mb-3">You&apos;re now subscribed!</p>
+        <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-[var(--muted)]">
+          We&apos;ll let you know when new tapes are added
+        </p>
       </div>
     );
   }
 
   return (
     <div className="text-center">
-      <h3 className="text-lg font-semibold text-[var(--text)] mb-1">
+      <h3 className="font-display text-3xl sm:text-4xl lg:text-5xl leading-[0.95] text-[var(--text)] mb-3">
         Get notified when new tapes drop.
       </h3>
-      <p className="text-sm text-[var(--muted)] mb-5">
+      <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-[var(--muted)] mb-8">
         No spam. Just new recordings added to the archive.
       </p>
-      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-center gap-3 max-w-md mx-auto">
+      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-stretch gap-3 max-w-md mx-auto">
         <input
           type="email"
           placeholder="you@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full sm:flex-1 rounded-md border border-[var(--accent)]/30 bg-[var(--bg)] px-4 py-2.5 text-sm text-[var(--text)] placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/40 focus:outline-none transition-all"
+          className="font-mono w-full sm:flex-1 border-[1.5px] border-[var(--text)] bg-[var(--bg)] px-4 py-2.5 text-sm text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none"
         />
         <button
           type="submit"
           disabled={status === 'loading'}
-          className="w-full sm:w-auto rounded-md bg-[var(--accent)] px-8 py-2.5 text-sm text-white font-medium hover:bg-[var(--accent-hover)] transition-colors disabled:opacity-50 whitespace-nowrap cursor-pointer"
+          className="poster-btn whitespace-nowrap"
         >
           {status === 'loading' ? 'Subscribing...' : 'Subscribe'}
         </button>

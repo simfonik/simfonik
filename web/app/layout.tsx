@@ -71,18 +71,18 @@ export default async function RootLayout({
         <Analytics />
         {!isAdmin && !isMock && (
           <footer className="mt-auto">
-            <div className="border-t border-[var(--accent)]/20 bg-[var(--accent)]/[0.03]">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+            <div className="border-t-[1.5px] border-[var(--border)]">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
                 <NewsletterFooter />
               </div>
             </div>
-            <div className="border-t border-[var(--border)]">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-[var(--muted)]">
-                <p>© respective artists and rights holders. Non-commercial archive.</p>
-                <div className="flex gap-4">
-                  <Link href="/about" className="hover:text-[var(--accent)] transition-colors">About</Link>
-                  <Link href="/contribute" className="hover:text-[var(--accent)] transition-colors">Contribute</Link>
-                  <Link href="/rights" className="hover:text-[var(--accent)] transition-colors">Rights &amp; Takedown</Link>
+            <div className="border-t-[1.5px] border-[var(--border)]">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
+                <p>© respective artists &amp; rights holders · non-commercial</p>
+                <div className="flex gap-6">
+                  <Link href="/about" className="hover:text-[var(--accent-text)] transition-colors">About</Link>
+                  <Link href="/contribute" className="hover:text-[var(--accent-text)] transition-colors">Contribute</Link>
+                  <Link href="/rights" className="hover:text-[var(--accent-text)] transition-colors">Rights &amp; Takedown</Link>
                 </div>
               </div>
             </div>
