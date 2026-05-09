@@ -74,7 +74,7 @@ export default async function RootLayout({
         {children}
         <Analytics />
         {!isAdmin && !isMock && (
-          <footer className="mt-auto">
+          <footer className="mt-16 sm:mt-24">
             <div className="border-t-[1.5px] border-[var(--border)]">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
                 <NewsletterFooter />
