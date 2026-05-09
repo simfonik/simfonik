@@ -64,6 +64,11 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Default content; themeInitScript updates it synchronously
+            before paint based on stored/OS theme. ThemeToggle keeps it
+            in sync on manual toggles. Drives iOS Safari browser
+            chrome color (and Android Chrome status bar). */}
+        <meta name="theme-color" content="#f7f7f7" />
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body

@@ -8,6 +8,12 @@ function applyTheme(theme: 'light' | 'dark' | 'system') {
   const dark = theme === 'dark' || (theme === 'system' && prefersDark);
   root.classList.toggle('theme-dark', dark);
   root.classList.toggle('theme-light', !dark);
+  // Sync iOS Safari browser chrome / Android status bar color.
+  // Values match the perceived top-of-page color: light is #ffffff with
+  // textured-paper PNG overlay at 0.4 opacity (blends to ~#f7f7f7);
+  // dark is #0a0a0a with overlay at 1.0 opacity (~#0b0b0b).
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', dark ? '#0b0b0b' : '#f7f7f7');
 }
 
 function readStored(): 'light' | 'dark' | 'system' {
@@ -72,4 +78,4 @@ export function ThemeToggle() {
 
 // Inline script content — runs synchronously in <head> to set the theme class
 // before paint, preventing FOUC. Mirrors the logic in applyTheme above.
-export const themeInitScript = `(function(){try{var s=localStorage.getItem('theme');var d=s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.add(d?'theme-dark':'theme-light');}catch(e){}})();`;
+export const themeInitScript = `(function(){try{var s=localStorage.getItem('theme');var d=s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.add(d?'theme-dark':'theme-light');var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',d?'#0b0b0b':'#f7f7f7');}catch(e){}})();`;
