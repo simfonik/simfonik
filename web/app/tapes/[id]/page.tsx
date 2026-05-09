@@ -351,10 +351,7 @@ export default async function Page({ params }: Props) {
               return (
                 <div className="space-y-3">
                   {playlist.map((track) => (
-                    <div
-                      key={track.position}
-                      className="border-[1.5px] border-[var(--text)] bg-[var(--surface)] p-4"
-                    >
+                    <div key={track.position}>
                       <h2 className="font-display text-xl leading-tight text-[var(--text)] mb-2">
                         {track.title}
                       </h2>
@@ -430,7 +427,7 @@ export default async function Page({ params }: Props) {
                 <img
                   src={img.src}
                   alt={img.label}
-                  className={`block w-full h-auto max-h-[650px] object-contain border-[1.5px] border-[var(--text)] ${img.src.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
+                  className={`block w-full h-auto max-h-[650px] object-contain ${img.src.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
                 />
               )}
             </div>

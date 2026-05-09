@@ -27,6 +27,15 @@ import {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 
+// Supported source image formats. Sharp handles all three natively;
+// PNG sources preserve alpha through to the AVIF output.
+const SOURCE_EXTENSIONS = ['.jpg', '.jpeg', '.png'];
+function isSupportedSource(filePath) {
+  if (!filePath) return false;
+  const lower = filePath.toLowerCase();
+  return SOURCE_EXTENSIONS.some((ext) => lower.endsWith(ext));
+}
+
 // Configuration
 const WIDTHS = [400, 800, 1200];
 const HERO_WIDTHS = [640, 1024, 1920]; // Viewport-based widths for hero
@@ -155,10 +164,10 @@ async function main() {
 
   // Process each tape
   for (const tape of tapes) {
-    // Process cover image if it's a JPG
+    // Process cover image if it's a supported format (JPG / JPEG / PNG)
     if (tape.images?.cover) {
       const cover = tape.images.cover;
-      if (cover.includes('/media/') && cover.endsWith('.jpg')) {
+      if (cover.includes('/media/') && isSupportedSource(cover)) {
         const coverPath = cover.replace(/^\//, '');
         const sourcePath = path.join(PUBLIC_DIR, coverPath);
 
@@ -180,7 +189,7 @@ async function main() {
 
     // No cover — generate OG from side A if available
     if (!tape.images?.cover && tape.sides) {
-      const sideA = tape.sides.find(s => s.position === 'A' && s.image?.endsWith('.jpg'));
+      const sideA = tape.sides.find(s => s.position === 'A' && isSupportedSource(s.image));
       if (sideA) {
         const sourcePath = path.join(PUBLIC_DIR, sideA.image.replace(/^\//, ''));
         if (fs.existsSync(sourcePath)) {
@@ -189,10 +198,10 @@ async function main() {
       }
     }
 
-    // Process side images if they're JPGs
+    // Process side images (JPG / JPEG / PNG)
     if (tape.sides && Array.isArray(tape.sides)) {
       for (const side of tape.sides) {
-        if (side.image && side.image.includes('/media/') && side.image.endsWith('.jpg')) {
+        if (side.image && side.image.includes('/media/') && isSupportedSource(side.image)) {
           const sidePath = side.image.replace(/^\//, '');
           const sourcePath = path.join(PUBLIC_DIR, sidePath);
 

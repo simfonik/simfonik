@@ -56,29 +56,33 @@ export function NewsletterModal({ open, onClose }: { open: boolean; onClose: () 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-2xl w-full max-w-md p-8">
+      <div className="relative bg-[var(--bg)] border-[1.5px] border-[var(--text)] w-full max-w-2xl p-8 sm:p-10">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-[var(--muted)] hover:text-[var(--text)] transition-colors cursor-pointer"
+          className="absolute top-3 right-3 text-[var(--muted)] hover:text-[var(--text)] transition-colors cursor-pointer p-1"
           aria-label="Close"
         >
           <XMarkIcon className="w-5 h-5" />
         </button>
 
         {status === 'success' ? (
-          <div className="text-center py-4">
-            <p className="text-xl font-semibold text-[var(--text)] mb-2">You&apos;re now subscribed!</p>
-            <p className="text-sm text-[var(--muted)]">We&apos;ll let you know when new tapes are added.</p>
+          <div className="text-center py-2">
+            <p className="font-display text-3xl sm:text-4xl leading-[0.95] text-[var(--text)] mb-3">
+              You&apos;re now subscribed!
+            </p>
+            <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-[var(--muted)]">
+              We&apos;ll let you know when new tapes are added
+            </p>
           </div>
         ) : (
           <>
-            <h2 className="text-xl font-semibold text-[var(--text)] mb-1">
+            <h2 className="font-display text-3xl sm:text-4xl leading-[0.95] text-[var(--text)] mb-3">
               Get notified when new tapes drop.
             </h2>
-            <p className="text-sm text-[var(--muted)] mb-6">
+            <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-[var(--muted)] mb-6">
               No spam. Just new recordings added to the archive.
             </p>
-            <form onSubmit={handleSubmit} className="space-y-3">
+            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-stretch gap-3">
               <input
                 type="email"
                 placeholder="you@email.com"
@@ -86,17 +90,17 @@ export function NewsletterModal({ open, onClose }: { open: boolean; onClose: () 
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoFocus
-                className="w-full rounded-md border border-[var(--border)] bg-[var(--bg)] px-4 py-2.5 text-sm text-[var(--text)] placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/40 focus:outline-none transition-all"
+                className="font-mono w-full sm:flex-1 border-[1.5px] border-[var(--text)] bg-[var(--bg)] px-4 py-2.5 text-sm text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none"
               />
               <button
                 type="submit"
                 disabled={status === 'loading'}
-                className="w-full rounded-md bg-[var(--accent)] py-2.5 text-sm text-white font-medium hover:bg-[var(--accent-hover)] transition-colors disabled:opacity-50 cursor-pointer"
+                className="poster-btn whitespace-nowrap"
               >
-                {status === 'loading' ? 'Subscribing...' : 'Subscribe'}
+                {status === 'loading' ? 'Subscribing\u2026' : 'Subscribe'}
               </button>
             </form>
-            <p className={`mt-3 text-xs text-center h-4 transition-opacity ${status === 'error' ? 'text-red-500 opacity-100' : 'opacity-0'}`}>
+            <p className={`mt-3 font-mono text-[10px] uppercase tracking-[0.18em] text-center h-4 transition-opacity ${status === 'error' ? 'text-red-500 opacity-100' : 'opacity-0'}`}>
               {errorMessage || '\u00A0'}
             </p>
           </>

@@ -66,7 +66,7 @@ export function PlaylistPlayer({ tracks, tapeId }: PlaylistPlayerProps) {
   }
 
   return (
-    <div className="border-[1.5px] border-[var(--text)] bg-[var(--surface)] p-4 space-y-4">
+    <div className="space-y-4">
       <audio ref={ref} src={currentTrack.url} preload="none" playsInline />
 
       <PlayerControls
@@ -89,10 +89,8 @@ export function PlaylistPlayer({ tracks, tapeId }: PlaylistPlayerProps) {
               <button
                 key={track.position}
                 onClick={() => selectTrack(index)}
-                className={`w-full text-left px-2 py-2.5 transition-colors cursor-pointer focus:outline-none flex items-center gap-3 ${
-                  isCurrent
-                    ? 'text-[var(--text)]'
-                    : 'text-[var(--text)] hover:bg-[var(--bg-hover)]'
+                className={`w-full text-left px-3 py-2.5 transition-colors cursor-pointer focus:outline-none flex items-center gap-3 text-[var(--text)] ${
+                  isCurrent ? 'bg-[var(--bg-hover)]' : 'hover:bg-[var(--bg-hover)]'
                 }`}
               >
                 <span className="flex-shrink-0 text-[var(--text)]">

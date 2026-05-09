@@ -11,9 +11,11 @@ description: Steps for adding a new tape to the archive
    - Follow the schema below; only include fields that apply
 
 2. **Place source images locally**
-   - `web/public/media/tapes/{id}/cover.jpg`
-   - `web/public/media/tapes/{id}/sides/a.jpg` *(if side images exist)*
-   - `web/public/media/tapes/{id}/sides/b.jpg` *(if side images exist)*
+   - `web/public/media/tapes/{id}/cover.{jpg|png}`
+   - `web/public/media/tapes/{id}/sides/a.{jpg|png}` *(if side images exist)*
+   - `web/public/media/tapes/{id}/sides/b.{jpg|png}` *(if side images exist)*
+   - **JPG**: standard photo covers, smaller file size, no transparency
+   - **PNG**: covers with transparent backgrounds (e.g. cassettes cut out from a backdrop). Alpha is preserved through to the AVIF output, so transparent regions show the page bg in both light and dark mode.
 
 // turbo
 3. **Validate** — must pass before committing
@@ -44,7 +46,7 @@ description: Steps for adding a new tape to the archive
     { "name": "DJ Name", "slug": "dj-slug" }
   ],
   "images": {
-    "cover": "/media/tapes/{id}/cover.jpg"
+    "cover": "/media/tapes/{id}/cover.jpg"  // or cover.png
   },
   "sides": [
     {

@@ -7,7 +7,7 @@ import { NewsletterModal, useNewsletterModal } from './NewsletterSignup';
 import { ThemeToggle } from './ThemeToggle';
 
 const NAV_LINK_CLASSES =
-  'font-mono text-[12px] uppercase tracking-[0.1em] font-semibold text-[var(--text)] hover:text-[var(--accent-text)] transition-colors';
+  'font-mono text-[12px] uppercase tracking-[0.1em] font-semibold text-[var(--text)] hover:underline underline-offset-[6px] decoration-[1.5px] transition-colors';
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

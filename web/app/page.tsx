@@ -36,7 +36,7 @@ export default async function Home() {
 
       {/* Hero — oscilloscope waveform */}
       <div
-        className="relative h-[70px] sm:h-[100px] lg:h-[140px] w-full overflow-hidden"
+        className="relative h-[77px] sm:h-[110px] lg:h-[154px] w-full overflow-hidden"
         aria-hidden
       >
         <Oscilloscope className="oscilloscope-hero absolute inset-0" />

@@ -32,31 +32,31 @@ export function PlayerControls({
 
   return (
     <div className="flex items-center gap-4">
-      {/* Play/Pause Button — outline circle with line-system aesthetic */}
+      {/* Play/Pause Button — borderless, larger icon, ghost hover */}
       <button
         onClick={isPlaying ? onPause : onPlay}
         disabled={isLoading}
         aria-label={isPlaying ? 'Pause' : 'Play'}
-        className="flex-shrink-0 w-10 h-10 flex items-center justify-center border-[1.5px] border-[var(--text)] text-[var(--text)] hover:bg-[var(--text)] hover:text-[var(--bg)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors focus:outline-none"
+        className="flex-shrink-0 w-16 h-16 flex items-center justify-center text-[var(--text)] hover:bg-[var(--bg-hover)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors focus:outline-none"
       >
         {isLoading ? (
-          <svg className="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <svg className="w-12 h-12 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
         ) : isPlaying ? (
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+          <svg className="w-12 h-12" viewBox="0 0 24 24" fill="currentColor">
             <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
           </svg>
         ) : (
-          <svg className="w-4 h-4 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+          <svg className="w-12 h-12 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
             <path d="M8 5v14l11-7z" />
           </svg>
         )}
       </button>
 
       {/* Scrubber + time */}
-      <div className="flex-1 flex items-center gap-3 min-w-0 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--muted)]">
+      <div className="flex-1 flex items-center gap-3 min-w-0 font-mono text-[12px] tabular-nums text-[var(--muted)]">
         <span className="tabular-nums flex-shrink-0">
           {formatTime(currentTime)}
         </span>

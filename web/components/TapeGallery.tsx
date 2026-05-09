@@ -19,9 +19,9 @@ export function TapeGallery({ allImages }: TapeGalleryProps) {
   if (allImages.length === 0) return null;
 
   return (
-    <div className="flex gap-4">
+    <div className="flex gap-4 items-start">
       {allImages.length > 1 && (
-        <div className="flex flex-col gap-2 flex-shrink-0">
+        <div className="flex flex-col gap-2 flex-shrink-0 max-h-[500px] overflow-y-auto pr-1">
           {allImages.map((img, idx) => {
             const isActive = selectedImage === img.src;
             return (
@@ -30,10 +30,8 @@ export function TapeGallery({ allImages }: TapeGalleryProps) {
                 onClick={() => setSelectedImage(img.src)}
                 aria-label={img.label}
                 title={img.label}
-                className={`block w-20 h-20 transition-all cursor-pointer ${
-                  isActive
-                    ? 'border-[1.5px] border-[var(--text)] opacity-100'
-                    : 'border-[1.5px] border-[var(--border)] hover:border-[var(--text)] opacity-70 hover:opacity-100'
+                className={`block w-20 h-20 transition-opacity cursor-pointer ${
+                  isActive ? 'opacity-100' : 'opacity-50 hover:opacity-100'
                 }`}
               >
                 <div className="relative w-full h-full">
@@ -52,7 +50,7 @@ export function TapeGallery({ allImages }: TapeGalleryProps) {
         </div>
       )}
 
-      <div className="flex-1 min-w-0 border-[1.5px] border-[var(--text)]">
+      <div className="flex-1 min-w-0">
         <Image
           loader={imageLoader}
           key={selectedImage}

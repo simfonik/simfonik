@@ -83,16 +83,13 @@ export function Oscilloscope({ className = "" }: OscilloscopeProps) {
       ctx.beginPath();
       for (let x = BAR_SPACING / 2; x < w; x += BAR_SPACING) {
         const u = x / Math.max(w, 1);
-        // Sum of sines → audio-waveform-like character
         const wave =
           Math.sin(u * Math.PI * 3 + t * 0.5) * 0.45 +
           Math.sin(u * Math.PI * 8 + t * 0.72) * 0.3 +
           Math.sin(u * Math.PI * 17 + t * 1.05) * 0.2;
-        // Slow drifting envelope so the whole track "breathes"
-        const envelope = 0.55 + 0.45 * Math.sin(t * 0.22 + u * Math.PI * 1.3);
+        const envelope = 0.75 + 0.25 * Math.sin(t * 0.22 + u * Math.PI * 1.3);
         const heightNorm = Math.abs(wave) * envelope;
         const barHalf = maxAmp * heightNorm;
-        // Minimum 1px height so even quiet sections show a tick
         const drawHalf = Math.max(barHalf, 0.5);
         ctx.moveTo(x, centerY - drawHalf);
         ctx.lineTo(x, centerY + drawHalf);
