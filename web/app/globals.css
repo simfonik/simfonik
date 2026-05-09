@@ -62,6 +62,17 @@ body {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
+/* Prevent iOS Safari from zooming when an input is focused. iOS zooms
+   any input with computed font-size < 16px and doesn't zoom back. The
+   design's smaller input text resumes at sm: (640px) and up. */
+@media (max-width: 640px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
 /* Poster-block button — outline, mono caps, lift + offset shadow on hover */
 .poster-btn {
   display: inline-flex;
