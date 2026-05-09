@@ -53,15 +53,16 @@ export default async function RootLayout({
 }>) {
   const pathname = (await headers()).get('x-pathname') ?? '';
   const isAdmin = pathname.startsWith('/admin');
+  const isMock = pathname.startsWith('/mock');
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[var(--bg)] text-[var(--text)] min-h-screen`}
       >
-        <Header />
+        {!isMock && <Header />}
         {children}
         <Analytics />
-        {!isAdmin && (
+        {!isAdmin && !isMock && (
           <footer className="mt-auto">
             <div className="border-t border-[var(--accent)]/20 bg-[var(--accent)]/[0.03]">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
