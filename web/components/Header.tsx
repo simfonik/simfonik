@@ -38,7 +38,7 @@ export function Header() {
           <div className="flex items-center justify-between gap-4">
             <Link
               href="/"
-              className="inline-flex items-center gap-1.5 font-display text-3xl leading-none text-[var(--text)]"
+              className="wordmark-link inline-flex items-center gap-1.5 font-display text-3xl leading-none text-[var(--text)]"
               onClick={() => setMobileMenuOpen(false)}
             >
               <Wordmark size={44} className="translate-y-[2px]" />
