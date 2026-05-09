@@ -92,23 +92,18 @@ body::before {
   }
 }
 
-/* Wordmark mark: CMY circles wrapped in a riso-edge mask. Multiply
-   blend produces secondary colors where circles overlap. */
+/* Wordmark mark: CMY circles with code-only riso-edge filter (see
+   Wordmark.tsx). Multiply blend produces secondary colors where the
+   visible colored circles overlap. The .wordmark-colors group scopes
+   the blend so it only applies to the visible circles, not the
+   white circles inside the SVG mask source. */
 .wordmark-mark {
   display: inline-block;
-  -webkit-mask-image: url("/media/site/riso-mask.png");
-          mask-image: url("/media/site/riso-mask.png");
-  -webkit-mask-size: contain;
-          mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-          mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-          mask-position: center;
 }
 .wordmark-mark svg {
   display: block;
 }
-.wordmark-mark svg circle {
+.wordmark-mark .wordmark-colors circle {
   mix-blend-mode: multiply;
 }
 
@@ -133,13 +128,13 @@ body::before {
   33% { fill: #FB5FB6; }
   66% { fill: #1A84C4; }
 }
-.wordmark-link:hover .wordmark-mark svg circle:nth-of-type(1) {
+.wordmark-link:hover .wordmark-mark .wordmark-colors circle:nth-of-type(1) {
   animation: wordmark-rotate-pos-b 2.7s linear infinite;
 }
-.wordmark-link:hover .wordmark-mark svg circle:nth-of-type(2) {
+.wordmark-link:hover .wordmark-mark .wordmark-colors circle:nth-of-type(2) {
   animation: wordmark-rotate-pos-c 2.7s linear infinite;
 }
-.wordmark-link:hover .wordmark-mark svg circle:nth-of-type(3) {
+.wordmark-link:hover .wordmark-mark .wordmark-colors circle:nth-of-type(3) {
   animation: wordmark-rotate-pos-a 2.7s linear infinite;
 }
 
