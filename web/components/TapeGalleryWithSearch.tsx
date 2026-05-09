@@ -109,7 +109,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
                 className="absolute inset-0"
                 aria-label={`View ${tape.title}`}
               />
-              <div className="relative w-full aspect-[3/2] mb-5 border-[1.5px] border-[var(--text)] overflow-hidden">
+              <div className="relative w-full aspect-[3/2] mb-5 overflow-hidden">
                 <Image
                   loader={imageLoader}
                   src={tape.coverImage}

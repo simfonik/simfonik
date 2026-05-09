@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { NewsletterModal, useNewsletterModal } from './NewsletterSignup';
+import { ThemeToggle } from './ThemeToggle';
 
 const NAV_LINK_CLASSES =
   'font-mono text-[12px] uppercase tracking-[0.1em] font-semibold text-[var(--text)] hover:text-[var(--accent-text)] transition-colors';
@@ -53,13 +54,15 @@ export function Header() {
               <Link href="/contribute" className={NAV_LINK_CLASSES}>
                 Contribute
               </Link>
+              <ThemeToggle />
               <button onClick={onOpen} className="poster-btn">
                 Subscribe
               </button>
             </nav>
 
             {/* Mobile Navigation - Button + Hamburger */}
-            <div className="md:hidden flex items-center gap-3">
+            <div className="md:hidden flex items-center gap-2">
+              <ThemeToggle />
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);

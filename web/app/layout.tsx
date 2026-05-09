@@ -7,6 +7,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
 import { Header } from '../components/Header';
 import { NewsletterFooter } from '../components/NewsletterSignup';
+import { themeInitScript } from '../components/ThemeToggle';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -62,7 +63,10 @@ export default async function RootLayout({
   const isAdmin = pathname.startsWith('/admin');
   const isMock = pathname.startsWith('/mock');
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${anton.variable} antialiased bg-[var(--bg)] text-[var(--text)] min-h-screen`}
       >
