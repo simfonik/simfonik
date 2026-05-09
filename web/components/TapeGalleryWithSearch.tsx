@@ -3,10 +3,13 @@
 import { useState, useCallback, useMemo, useTransition } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import type { Tape, TapeListSubset } from '../types/tape';
+import type { TapeListSubset } from '../types/tape';
 import imageLoader from '../lib/imageLoader';
 
-type TapeWithCover = TapeListSubset & { coverImage: string };
+type TapeWithCover = TapeListSubset & {
+  coverImage: string;
+  catalogNumber: string;
+};
 
 interface TapeGalleryWithSearchProps {
   tapes: TapeWithCover[];
@@ -16,7 +19,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
   const [inputValue, setInputValue] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(6);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   // Ref callback: attaches/detaches the observer whenever the sentinel mounts or unmounts.
   // This is necessary because the sentinel is conditionally rendered — a one-time useEffect
@@ -35,22 +38,17 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
     return () => observer.disconnect();
   }, []);
 
-  // Filter tapes based on search query
   const filteredTapes = useMemo(() => {
     return tapes.filter((tape) => {
       if (!searchQuery.trim()) return true;
-
-      // Normalize: lowercase and remove common punctuation (periods, dashes, spaces)
       const normalize = (str: string) =>
         str.toLowerCase().replace(/[.\-\s]/g, '');
-
       const normalizedQuery = normalize(searchQuery);
       const titleMatch = normalize(tape.title).includes(normalizedQuery);
       const djMatch = tape.djs.some((dj) =>
         normalize(dj.name).includes(normalizedQuery)
       );
       const yearMatch = tape.released?.includes(searchQuery.trim());
-
       return titleMatch || djMatch || yearMatch;
     });
   }, [tapes, searchQuery]);
@@ -62,114 +60,115 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
     setInputValue(value);
     startTransition(() => {
       setSearchQuery(value);
-      setVisibleCount(6); // Reset visible count on new search
+      setVisibleCount(6);
     });
   };
 
   return (
     <>
-      {/* Header with search */}
-      <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-3xl font-bold text-[var(--text)]">
-          Mixtapes
-        </h1>
-
-        <div className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-1rem)] relative">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-[var(--muted)]">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      {/* Mixtapes header + underline search */}
+      <div className="mb-10">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl leading-[0.95] text-[var(--text)]">
+            Mixtapes
+          </h1>
+          <div className="w-full sm:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.333rem)] relative pb-1 border-b-[1.5px] border-[var(--text)] flex items-center gap-2">
+            <svg
+              className="w-4 h-4 flex-shrink-0 text-[var(--muted)]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
             </svg>
+            <input
+              type="search"
+              value={inputValue}
+              onChange={handleSearchChange}
+              placeholder="Search by DJ, title, or year"
+              className="font-mono w-full bg-transparent py-1.5 text-[12px] tracking-wide text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none"
+            />
           </div>
-          <input
-            type="search"
-            value={inputValue}
-            onChange={handleSearchChange}
-            placeholder="Search by DJ, Mix Title, or Year"
-            className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] pl-10 pr-4 py-2.5 text-base text-[var(--text)] placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 transition-colors"
-          />
         </div>
       </div>
 
       {/* Tape grid */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
         {visibleTapes.map((tape, index) => {
-          // Prioritize first 3 images (first row desktop, first 3 rows mobile)
           const isAboveFold = index < 3;
-
           return (
-            <article
-              key={tape.id}
-              className="relative rounded-lg border border-[var(--border)] bg-[var(--surface)] overflow-hidden transition-[border-color,box-shadow] duration-500 hover:border-[var(--accent)]/40 hover:shadow-[0_0_20px_rgba(94,106,210,0.15)] dark:hover:shadow-[0_0_20px_rgba(168,174,245,0.1)] focus-within:ring-2 focus-within:ring-[var(--accent)] flex flex-col"
-            >
+            <article key={tape.id} className="group relative">
               <Link
                 href={`/tapes/${tape.id}`}
-                className="absolute inset-0 rounded-lg"
+                className="absolute inset-0"
                 aria-label={`View ${tape.title}`}
               />
-
-              {/* Cover Image */}
-              <div className="relative w-full aspect-[3/2] bg-[var(--muted)]/10 pointer-events-none">
-                  <Image
-                    loader={imageLoader}
-                    src={tape.coverImage}
-                    alt={`${tape.title} mixtape cover`}
-                    fill
-                    priority={isAboveFold}
-                    className={`object-contain transition-opacity duration-300 ${tape.coverImage.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                  />
+              <div className="relative w-full aspect-[3/2] mb-5 border-[1.5px] border-[var(--text)] overflow-hidden">
+                <Image
+                  loader={imageLoader}
+                  src={tape.coverImage}
+                  alt={`${tape.title} mixtape cover`}
+                  fill
+                  priority={isAboveFold}
+                  className={`object-contain ${tape.coverImage.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                />
               </div>
-
-              <div className="relative pointer-events-none p-6 flex flex-col flex-grow">
-                <div className="flex-grow">
-                  <h2 className="text-xl font-semibold text-[var(--text)]">
-                    {tape.title}
-                  </h2>
-                  <p className="mt-2 text-sm text-[var(--muted)] min-h-[1.25rem]">
+              <div className="flex items-baseline justify-between gap-3 mb-3">
+                <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-[var(--muted)]">
+                  № {tape.catalogNumber}
+                </span>
+                {tape.released && (
+                  <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-[var(--muted)]">
                     {tape.released}
-                  </p>
-                </div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {tape.djs.map((dj) => {
-                    const shouldLink = dj.link !== false && dj.slug !== "unknown";
-
-                    if (shouldLink) {
-                      return (
-                        <Link
-                          key={dj.slug}
-                          href={`/djs/${dj.slug}`}
-                          className="relative pointer-events-auto rounded-full border border-[var(--accent)]/30 bg-[var(--accent)]/10 px-3 py-1 text-sm font-medium text-[var(--text)] hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] dark:border-[#5e6ad2]/50 dark:bg-[#5e6ad2]/20 dark:hover:bg-[#5e6ad2] dark:hover:text-white transition-all cursor-pointer"
-                        >
-                          {dj.name}
-                        </Link>
-                      );
-                    }
-
+                  </span>
+                )}
+              </div>
+              <h2 className="font-display text-2xl sm:text-3xl leading-[1.05] text-[var(--text)] mb-3 group-hover:text-[var(--accent-text)] transition-colors">
+                {tape.title}
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {tape.djs.map((dj) => {
+                  const shouldLink = dj.link !== false && dj.slug !== 'unknown';
+                  if (shouldLink) {
                     return (
-                      <span
+                      <Link
                         key={dj.slug}
-                        className="relative pointer-events-auto rounded-full bg-[var(--muted)]/10 border border-[var(--border)] px-3 py-1 text-sm font-medium text-[var(--muted)] cursor-default"
+                        href={`/djs/${dj.slug}`}
+                        className="dj-pill relative pointer-events-auto"
                       >
                         {dj.name}
-                      </span>
+                      </Link>
                     );
-                  })}
-                </div>
+                  }
+                  return (
+                    <span
+                      key={dj.slug}
+                      className="dj-pill relative pointer-events-auto cursor-default"
+                    >
+                      {dj.name}
+                    </span>
+                  );
+                })}
               </div>
             </article>
           );
         })}
       </div>
 
-      {/* Infinite Scroll Trigger */}
       {visibleTapes.length < filteredTapes.length && (
         <div ref={loadMoreRef} className="h-10 mt-8 w-full" aria-hidden="true" />
       )}
 
-      {/* No results message */}
       {filteredTapes.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-lg text-[var(--muted)]">
+          <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-[var(--muted)]">
             No mixtapes found matching &ldquo;{searchQuery}&rdquo;
           </p>
         </div>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Anton } from "next/font/google";
 import { getAllTapes } from "../../lib/data";
 import { ThemeToggle } from "./ThemeToggle";
-import { Oscilloscope } from "./Oscilloscope";
+import { Oscilloscope } from "../../components/Oscilloscope";
 import { RotatingWord } from "./RotatingWord";
 import { MockPlayer } from "./MockPlayer";
 import { MockGallery } from "./MockGallery";
@@ -98,7 +98,7 @@ export default function MockPage() {
           className="mock-hero relative h-[70px] sm:h-[100px] lg:h-[140px] w-full overflow-hidden"
           aria-hidden
         >
-          <Oscilloscope className="absolute inset-0" />
+          <Oscilloscope className="absolute inset-0 mock-oscilloscope" />
         </div>
 
         <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">

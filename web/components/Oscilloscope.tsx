@@ -124,7 +124,7 @@ export function Oscilloscope({ className = "" }: OscilloscopeProps) {
   return (
     <canvas
       ref={canvasRef}
-      className={`mock-oscilloscope ${className}`}
+      className={className}
       style={{ width: "100%", height: "100%" }}
       aria-hidden
     />
