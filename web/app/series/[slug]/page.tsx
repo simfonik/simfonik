@@ -3,9 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getAllSeries, getSeriesBySlug, getTapesBySeries, getCoverImageWithFallback } from "../../../lib/data";
 
-// Shared DJ badge styling (same as DJ page)
-const DJ_BADGE_CLASS =
-  "rounded-full border border-[var(--accent)]/30 bg-[var(--accent)]/10 px-3 py-1 text-sm font-medium text-[var(--text)] hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] dark:border-[#5e6ad2]/50 dark:bg-[#5e6ad2]/20 dark:hover:bg-[#5e6ad2] dark:hover:text-white transition-all cursor-pointer";
+const DJ_BADGE_CLASS = "dj-pill";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -42,14 +40,18 @@ export default async function SeriesPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-        <p className="mb-2 text-sm text-[var(--muted)]">Series</p>
-        <h1 className="mb-2 text-3xl font-bold text-[var(--text)]">{series.name}</h1>
+      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
+        <p className="font-mono text-[10px] uppercase tracking-[0.32em] text-[var(--muted)] mb-2">
+          Series
+        </p>
+        <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl leading-[0.95] text-[var(--text)] mb-4">
+          {series.name}
+        </h1>
         {series.description && (
-          <p className="mb-8 text-[var(--muted)]">{series.description}</p>
+          <p className="text-[var(--muted)] mb-10 max-w-3xl leading-relaxed">{series.description}</p>
         )}
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
           {tapes.map((tape) => {
             const coverImage = getCoverImageWithFallback(tape);
             const isJpg = coverImage.includes("/media/") && coverImage.endsWith(".jpg");
@@ -72,18 +74,13 @@ export default async function SeriesPage({ params }: Props) {
             }
 
             return (
-              <article
-                key={tape.id}
-                className="relative rounded-lg border border-[var(--border)] bg-[var(--surface)] overflow-hidden transition-all hover:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent)] flex flex-col"
-              >
+              <article key={tape.id} className="group relative cursor-pointer">
                 <Link
                   href={`/tapes/${tape.id}`}
-                  className="absolute inset-0 rounded-lg"
+                  className="absolute inset-0 z-10"
                   aria-label={`View ${tape.title}`}
                 />
-
-                {/* Cover Image */}
-                <div className="relative w-full aspect-[3/2] bg-[var(--muted)]/10 pointer-events-none">
+                <div className="relative w-full aspect-[3/2] mb-5 overflow-hidden pointer-events-none">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={optimizedSrc || coverImage}
@@ -94,36 +91,39 @@ export default async function SeriesPage({ params }: Props) {
                     className={`absolute inset-0 w-full h-full object-contain ${coverImage.includes("/generated/placeholders/") ? "scale-90" : ""}`}
                   />
                 </div>
-
-                <div className="relative pointer-events-none p-6 flex flex-col flex-grow">
-                  <div className="flex-grow">
-                    <h2 className="text-xl font-semibold text-[var(--text)]">{tape.title}</h2>
-                    <p className="mt-2 text-sm text-[var(--muted)]">{tape.released}</p>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {tape.djs.map((dj) => {
-                      const shouldLink = dj.link !== false && dj.slug !== "unknown";
-                      if (shouldLink) {
-                        return (
-                          <Link
-                            key={dj.slug}
-                            href={`/djs/${dj.slug}`}
-                            className={`relative pointer-events-auto ${DJ_BADGE_CLASS}`}
-                          >
-                            {dj.name}
-                          </Link>
-                        );
-                      }
+                <div className="flex items-baseline justify-between gap-3 mb-3 pointer-events-none">
+                  {tape.released && (
+                    <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-[var(--muted)]">
+                      {tape.released}
+                    </span>
+                  )}
+                </div>
+                <h2 className="font-display text-2xl sm:text-3xl leading-[1.05] text-[var(--text)] mb-3 group-hover:text-[var(--accent-text)] transition-colors pointer-events-none">
+                  {tape.title}
+                </h2>
+                <div className="flex flex-wrap gap-2 relative z-20">
+                  {tape.djs.map((dj) => {
+                    const shouldLink = dj.link !== false && dj.slug !== "unknown";
+                    if (shouldLink) {
                       return (
-                        <span
+                        <Link
                           key={dj.slug}
-                          className="relative pointer-events-auto rounded-full bg-[var(--muted)]/10 border border-[var(--border)] px-3 py-1 text-sm font-medium text-[var(--muted)] cursor-default"
+                          href={`/djs/${dj.slug}`}
+                          className={DJ_BADGE_CLASS}
                         >
                           {dj.name}
-                        </span>
+                        </Link>
                       );
-                    })}
-                  </div>
+                    }
+                    return (
+                      <span
+                        key={dj.slug}
+                        className="dj-pill cursor-default"
+                      >
+                        {dj.name}
+                      </span>
+                    );
+                  })}
                 </div>
               </article>
             );

@@ -10,23 +10,26 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
+      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
+        <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl leading-[0.95] text-[var(--text)] mb-10">
+          About
+        </h1>
 
         <div className="flex flex-col md:flex-row gap-8 md:gap-10 items-start">
           {/* Image column */}
           <div className="flex-shrink-0 w-full md:w-80 mx-auto md:mx-0 space-y-6">
-            <div className="overflow-hidden rounded-lg border border-[var(--border)]">
+            <div className="overflow-hidden border-[1.5px] border-[var(--text)]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/optimized/site/about/800.avif"
                 srcSet="/optimized/site/about/400.avif 400w, /optimized/site/about/800.avif 800w, /optimized/site/about/1200.avif 1200w"
                 sizes="(max-width: 768px) 100vw, 320px"
                 alt="Rack of TASCAM 122 MK III cassette decks used for digitizing mixtapes"
-                className="w-full h-auto"
+                className="block w-full h-auto"
                 fetchPriority="high"
               />
             </div>
-            
+
             {/* Pull quote */}
             <blockquote className="border-l-4 border-[var(--accent)] pl-4 py-2">
               <p className="text-base leading-relaxed text-[var(--text)] italic">

@@ -44,23 +44,27 @@ export function ThemeToggle() {
       type="button"
       onClick={toggle}
       aria-label={mounted ? (dark ? 'Switch to light' : 'Switch to dark') : 'Toggle theme'}
-      className="inline-flex items-center justify-center w-9 h-9 rounded-md text-[var(--text)] hover:bg-[var(--bg-hover)] transition-colors cursor-pointer"
+      className="inline-flex shrink-0 items-center justify-center w-8 h-8 rounded-md text-[var(--text)] hover:bg-[var(--bg-hover)] hover:text-[var(--accent-text)] transition-colors cursor-pointer"
       suppressHydrationWarning
     >
-      <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden>
-        <defs>
-          <clipPath id="theme-moon-left">
-            <path d="M12 3 A9 9 0 0 0 12 21 Z" />
-          </clipPath>
-        </defs>
-        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth={2} />
-        <path d="M12 3 A9 9 0 0 1 12 21 Z" fill="currentColor" />
-        <g clipPath="url(#theme-moon-left)" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round">
-          <line x1="-2" y1="22" x2="22" y2="-2" />
-          <line x1="-2" y1="17" x2="22" y2="-7" />
-          <line x1="-2" y1="27" x2="22" y2="3" />
-          <line x1="-2" y1="32" x2="22" y2="8" />
-        </g>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      >
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+        <path d="M12 3l0 18" />
+        <path d="M12 9l4.65 -4.65" />
+        <path d="M12 14.3l7.37 -7.37" />
+        <path d="M12 19.6l8.85 -8.85" />
       </svg>
     </button>
   );

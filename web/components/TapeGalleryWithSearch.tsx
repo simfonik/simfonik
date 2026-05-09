@@ -103,13 +103,13 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
         {visibleTapes.map((tape, index) => {
           const isAboveFold = index < 3;
           return (
-            <article key={tape.id} className="group relative">
+            <article key={tape.id} className="group relative cursor-pointer">
               <Link
                 href={`/tapes/${tape.id}`}
-                className="absolute inset-0"
+                className="absolute inset-0 z-10"
                 aria-label={`View ${tape.title}`}
               />
-              <div className="relative w-full aspect-[3/2] mb-5 overflow-hidden">
+              <div className="relative w-full aspect-[3/2] mb-5 overflow-hidden pointer-events-none">
                 <Image
                   loader={imageLoader}
                   src={tape.coverImage}
@@ -120,7 +120,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                 />
               </div>
-              <div className="flex items-baseline justify-between gap-3 mb-3">
+              <div className="flex items-baseline justify-between gap-3 mb-3 pointer-events-none">
                 <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-[var(--muted)]">
                   № {tape.catalogNumber}
                 </span>
@@ -130,10 +130,10 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
                   </span>
                 )}
               </div>
-              <h2 className="font-display text-2xl sm:text-3xl leading-[1.05] text-[var(--text)] mb-3 group-hover:text-[var(--accent-text)] transition-colors">
+              <h2 className="font-display text-2xl sm:text-3xl leading-[1.05] text-[var(--text)] mb-3 group-hover:text-[var(--accent-text)] transition-colors pointer-events-none">
                 {tape.title}
               </h2>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 relative z-20">
                 {tape.djs.map((dj) => {
                   const shouldLink = dj.link !== false && dj.slug !== 'unknown';
                   if (shouldLink) {
@@ -141,7 +141,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
                       <Link
                         key={dj.slug}
                         href={`/djs/${dj.slug}`}
-                        className="dj-pill relative pointer-events-auto"
+                        className="dj-pill"
                       >
                         {dj.name}
                       </Link>
@@ -150,7 +150,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
                   return (
                     <span
                       key={dj.slug}
-                      className="dj-pill relative pointer-events-auto cursor-default"
+                      className="dj-pill cursor-default"
                     >
                       {dj.name}
                     </span>

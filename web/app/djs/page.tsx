@@ -15,46 +15,44 @@ export default function DJsIndexPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-        <h1 className="mb-8 text-3xl font-bold text-[var(--text)]">
+      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
+        <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl leading-[0.95] text-[var(--text)] mb-10">
           DJs
         </h1>
 
         {djs.length === 0 ? (
-          <p className="text-[var(--muted)]">No DJs found.</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
+            No DJs found.
+          </p>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
             {djs.map((dj) => {
               const visibleTapes = dj.tapes.slice(0, MAX_VISIBLE_TAPES);
               const remainingCount = dj.tapes.length - MAX_VISIBLE_TAPES;
-              
+
               return (
-                <article
-                  key={dj.slug}
-                  className="rounded-lg border border-[var(--border)] bg-[var(--surface)] overflow-hidden transition-[border-color,box-shadow] duration-500 hover:border-[var(--accent)]/40 hover:shadow-[0_0_20px_rgba(94,106,210,0.15)] dark:hover:shadow-[0_0_20px_rgba(168,174,245,0.1)]"
-                >
+                <article key={dj.slug} className="group">
                   <Link
                     href={`/djs/${dj.slug}`}
-                    className="block h-full p-6 rounded-lg focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:outline-none"
+                    className="block h-full focus-visible:outline-none"
                   >
-                    <h2 className="text-xl font-semibold text-[var(--text)]">
+                    <div className="flex items-baseline justify-between gap-3 mb-3">
+                      <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-[var(--muted)]">
+                        {dj.tapeCount} {dj.tapeCount === 1 ? "mix" : "mixes"}
+                      </span>
+                    </div>
+                    <h2 className="font-display text-2xl sm:text-3xl leading-[1.05] text-[var(--text)] group-hover:text-[var(--accent-text)] transition-colors mb-3">
                       {dj.name}
                     </h2>
-                    <span className="inline-block mt-2 rounded-full border border-[var(--accent)]/30 bg-[var(--accent)]/10 px-2.5 py-0.5 text-xs font-medium text-[var(--accent)] dark:border-[#5e6ad2]/50 dark:bg-[#5e6ad2]/20 dark:text-[#d1d4fa]">
-                      {dj.tapeCount} {dj.tapeCount === 1 ? "mix" : "mixes"}
-                    </span>
                     {dj.tapes.length > 0 && (
-                      <ul className="mt-3 space-y-1">
+                      <ul className="space-y-1">
                         {visibleTapes.map((tape) => (
-                          <li
-                            key={tape.id}
-                            className="text-sm text-[var(--muted)] truncate"
-                          >
+                          <li key={tape.id} className="text-sm text-[var(--muted)] truncate">
                             {tape.title}
                           </li>
                         ))}
                         {remainingCount > 0 && (
-                          <li className="text-sm text-[var(--muted)] font-medium">
+                          <li className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mt-2">
                             + {remainingCount} more
                           </li>
                         )}

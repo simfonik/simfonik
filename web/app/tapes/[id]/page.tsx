@@ -422,7 +422,7 @@ export default async function Page({ params }: Props) {
                   srcSet={mobileSrcSet}
                   sizes="100vw"
                   alt={img.label}
-                  className="block w-full h-auto max-h-[650px] object-contain border-[1.5px] border-[var(--text)]"
+                  className="block w-full h-auto max-h-[650px] object-contain"
                   loading="lazy"
                 />
               ) : (

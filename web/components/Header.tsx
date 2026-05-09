@@ -60,18 +60,9 @@ export function Header() {
               </button>
             </nav>
 
-            {/* Mobile Navigation - Button + Hamburger */}
+            {/* Mobile Navigation - ThemeToggle + Hamburger */}
             <div className="md:hidden flex items-center gap-2">
               <ThemeToggle />
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  onOpen();
-                }}
-                className="poster-btn"
-              >
-                Subscribe
-              </button>
               <button
                 type="button"
                 className="inline-flex items-center justify-center p-2 text-[var(--text)] hover:text-[var(--accent-text)] transition-colors cursor-pointer"
@@ -111,6 +102,16 @@ export function Header() {
               >
                 Contribute
               </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onOpen();
+                }}
+                className={`block px-3 py-2 text-left ${NAV_LINK_CLASSES}`}
+              >
+                Subscribe
+              </button>
             </nav>
           )}
         </div>

@@ -10,14 +10,14 @@ export const metadata: Metadata = {
 export default function RightsPage() {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-        <h1 className="mb-8 text-3xl font-bold text-[var(--text)]">
+      <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
+        <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl leading-[0.95] text-[var(--text)] mb-10">
           Rights &amp; Takedown
         </h1>
 
-        <div className="space-y-6 text-[var(--text)]">
+        <div className="space-y-10 text-[var(--text)]">
           <section>
-            <h2 className="text-xl font-semibold mb-3 text-[var(--text)]">
+            <h2 className="font-display text-2xl sm:text-3xl leading-tight mb-3 text-[var(--text)]">
               About This Archive
             </h2>
             <p className="text-base leading-relaxed">
@@ -29,7 +29,7 @@ export default function RightsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-3 text-[var(--text)]">
+            <h2 className="font-display text-2xl sm:text-3xl leading-tight mb-3 text-[var(--text)]">
               Ownership and Rights
             </h2>
             <p className="text-base leading-relaxed">
@@ -52,7 +52,7 @@ export default function RightsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-3 text-[var(--text)]">
+            <h2 className="font-display text-2xl sm:text-3xl leading-tight mb-3 text-[var(--text)]">
               Source of Content
             </h2>
             <p className="text-base leading-relaxed">
@@ -75,7 +75,7 @@ export default function RightsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-3 text-[var(--text)]">
+            <h2 className="font-display text-2xl sm:text-3xl leading-tight mb-3 text-[var(--text)]">
               Non-Commercial Use
             </h2>
             <p className="text-base leading-relaxed">
@@ -98,7 +98,7 @@ export default function RightsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-3 text-[var(--text)]">
+            <h2 className="font-display text-2xl sm:text-3xl leading-tight mb-3 text-[var(--text)]">
               Takedown Requests
             </h2>
             <p className="text-base leading-relaxed">
@@ -127,7 +127,7 @@ export default function RightsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-3 text-[var(--text)]">
+            <h2 className="font-display text-2xl sm:text-3xl leading-tight mb-3 text-[var(--text)]">
               No Endorsement
             </h2>
             <p className="text-base leading-relaxed">
@@ -136,7 +136,7 @@ export default function RightsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-3 text-[var(--text)]">
+            <h2 className="font-display text-2xl sm:text-3xl leading-tight mb-3 text-[var(--text)]">
               Disclaimer
             </h2>
             <p className="text-base leading-relaxed">

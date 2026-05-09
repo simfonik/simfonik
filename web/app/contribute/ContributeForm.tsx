@@ -33,96 +33,77 @@ export function ContributeForm() {
     }
   }
 
+  const labelClasses =
+    'block font-mono text-[10px] uppercase tracking-[0.25em] text-[var(--muted)] mb-2';
+  const inputClasses =
+    'font-mono w-full border-[1.5px] border-[var(--text)] bg-[var(--bg)] px-3 py-2 text-sm text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none focus:bg-[var(--surface)]';
+
   return (
-    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-6">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Hidden access key */}
-        <input 
-          type="hidden" 
-          name="access_key" 
-          value="a13233a0-9133-44b1-9b22-b902329edcc9"
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <input type="hidden" name="access_key" value="a13233a0-9133-44b1-9b22-b902329edcc9" />
+      <input type="hidden" name="subject" value="New Contribution from simfonik.com" />
+
+      <div>
+        <label htmlFor="name" className={labelClasses}>
+          Name <span className="text-[var(--accent-text)]">*</span>
+        </label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          required
+          className={inputClasses}
+          placeholder="Your name"
         />
-        
-        {/* Hidden field to set email subject */}
-        <input 
-          type="hidden" 
-          name="subject" 
-          value="New Contribution from simfonik.com"
+      </div>
+
+      <div>
+        <label htmlFor="email" className={labelClasses}>
+          Email <span className="text-[var(--accent-text)]">*</span>
+        </label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          required
+          className={inputClasses}
+          placeholder="your.email@example.com"
         />
+      </div>
 
-        {/* Name field */}
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-[var(--text)]">
-            Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            required
-            className="mt-1 block w-full rounded-md border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-[var(--text)] placeholder-[var(--muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-            placeholder="Your name"
-          />
-        </div>
+      <div>
+        <label htmlFor="message" className={labelClasses}>
+          What would you like to contribute? <span className="text-[var(--accent-text)]">*</span>
+        </label>
+        <textarea
+          id="message"
+          name="message"
+          required
+          rows={8}
+          className={`${inputClasses} resize-y`}
+          placeholder="Tell us about the mixtapes you have, DJ names, years, etc..."
+        />
+      </div>
 
-        {/* Email field */}
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-[var(--text)]">
-            Email <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            required
-            className="mt-1 block w-full rounded-md border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-[var(--text)] placeholder-[var(--muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-            placeholder="your.email@example.com"
-          />
-        </div>
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="poster-btn"
+      >
+        {isSubmitting ? 'Sending…' : 'Send Message'}
+      </button>
 
-        {/* Message field */}
-        <div>
-          <label htmlFor="message" className="block text-sm font-medium text-[var(--text)]">
-            What would you like to contribute? <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            id="message"
-            name="message"
-            required
-            rows={8}
-            className="mt-1 block w-full rounded-md border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-[var(--text)] placeholder-[var(--muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-            placeholder="Tell us about the mixtapes you have, DJ names, years, etc..."
-          />
-        </div>
+      {submitStatus === 'success' && (
+        <p className="font-mono text-[11px] uppercase tracking-[0.18em] px-3 py-2 border-[1.5px] border-[var(--text)] text-[var(--text)]">
+          Thank you. Your message has been sent.
+        </p>
+      )}
 
-        {/* Submit button */}
-        <div>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full rounded-md bg-[var(--accent)] px-4 py-2 text-white font-medium hover:bg-[var(--accent-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isSubmitting ? 'Sending...' : 'Send Message'}
-          </button>
-        </div>
-
-        {/* Status messages */}
-        {submitStatus === 'success' && (
-          <div className="rounded-md bg-green-50 dark:bg-green-900/20 p-4">
-            <p className="text-sm text-green-800 dark:text-green-200">
-              Thank you! Your message has been sent successfully.
-            </p>
-          </div>
-        )}
-
-        {submitStatus === 'error' && (
-          <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4">
-            <p className="text-sm text-red-800 dark:text-red-200">
-              Sorry, there was an error sending your message. Please try again.
-            </p>
-          </div>
-        )}
-      </form>
-    </div>
+      {submitStatus === 'error' && (
+        <p className="font-mono text-[11px] uppercase tracking-[0.18em] px-3 py-2 border-[1.5px] border-red-500 text-red-500">
+          Sorry, there was an error sending your message. Please try again.
+        </p>
+      )}
+    </form>
   );
 }

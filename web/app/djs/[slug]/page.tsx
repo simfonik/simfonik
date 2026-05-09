@@ -7,8 +7,8 @@ import { DJBio } from "./DJBio";
 import { JsonLd } from "../../../components/JsonLd";
 import { generateDJSchema } from "../../../lib/structured-data";
 
-// Shared DJ badge styling
-const DJ_BADGE_CLASS = "rounded-full border border-[var(--accent)]/30 bg-[var(--accent)]/10 px-3 py-1 text-sm font-medium text-[var(--text)] hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] dark:border-[#5e6ad2]/50 dark:bg-[#5e6ad2]/20 dark:hover:bg-[#5e6ad2] dark:hover:text-white transition-all cursor-pointer";
+// Shared DJ pill class — same hover-reveal outline as home grid
+const DJ_BADGE_CLASS = "dj-pill";
 
 // Helper to extract domain from URL
 function extractDomain(url: string): string {
@@ -69,14 +69,14 @@ export default async function DJPage({ params }: Props) {
     <div className="min-h-screen bg-[var(--bg)]">
       <JsonLd data={generateDJSchema(dj, bio, links)} />
       
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-        <h1 className="mb-2 text-3xl font-bold text-[var(--text)]">
+      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
+        <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl leading-[0.95] text-[var(--text)] mb-4">
           {dj.name}
         </h1>
-        
+
         {dj.aka && dj.aka.length > 0 && (
-          <div className="mb-4 flex items-center gap-2 text-sm text-[var(--muted)]">
-            <span>AKA:</span>
+          <div className="mb-4 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
+            <span>AKA</span>
             <div className="flex flex-wrap gap-2">
               {dj.aka.map((alias) => (
                 <Link
@@ -92,17 +92,17 @@ export default async function DJPage({ params }: Props) {
         )}
 
         {links.length > 0 && (
-          <div className="mb-6 flex flex-wrap gap-3 text-sm">
+          <div className="mb-8 flex flex-wrap gap-4 font-mono text-[10px] uppercase tracking-[0.22em]">
             {links.map((link, i) => (
               <a
                 key={i}
                 href={link}
                 target="_blank"
                 rel="nofollow noopener noreferrer"
-                className="text-[var(--accent)] hover:text-[var(--accent-hover)] inline-flex items-center gap-1 transition-colors"
+                className="text-[var(--text)] hover:text-[var(--accent-text)] inline-flex items-center gap-1 transition-colors"
               >
                 {extractDomain(link)}
-                <ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" />
+                <ArrowTopRightOnSquareIcon className="h-3 w-3" />
               </a>
             ))}
           </div>
@@ -110,22 +110,19 @@ export default async function DJPage({ params }: Props) {
 
         {bio && <DJBio bio={bio} />}
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
           {tapes.map((tape) => {
             const coverImage = getCoverImageWithFallback(tape);
             const isJpg = coverImage.includes('/media/') && coverImage.endsWith('.jpg');
-            
-            // Determine if this is a cover image or a side image
+
             let optimizedSrc = null;
             let optimizedSrcSet = null;
-            
+
             if (isJpg) {
               if (tape.images?.cover === coverImage) {
-                // It's the primary cover
                 optimizedSrc = `/optimized/${tape.id}/800.avif`;
                 optimizedSrcSet = `/optimized/${tape.id}/400.avif 400w, /optimized/${tape.id}/800.avif 800w, /optimized/${tape.id}/1200.avif 1200w`;
               } else {
-                // It's a side image fallback - find which side
                 const side = tape.sides.find(s => s.image === coverImage);
                 if (side) {
                   const pos = side.position.toLowerCase();
@@ -134,20 +131,15 @@ export default async function DJPage({ params }: Props) {
                 }
               }
             }
-            
+
             return (
-              <article
-                key={tape.id}
-                className="relative rounded-lg border border-[var(--border)] bg-[var(--surface)] overflow-hidden transition-all hover:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent)] flex flex-col"
-              >
+              <article key={tape.id} className="group relative cursor-pointer">
                 <Link
                   href={`/tapes/${tape.id}`}
-                  className="absolute inset-0 rounded-lg"
+                  className="absolute inset-0 z-10"
                   aria-label={`View ${tape.title}`}
                 />
-                
-                {/* Cover Image */}
-                <div className="relative w-full aspect-[3/2] bg-[var(--muted)]/10 pointer-events-none">
+                <div className="relative w-full aspect-[3/2] mb-5 overflow-hidden pointer-events-none">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={optimizedSrc || coverImage}
@@ -158,42 +150,39 @@ export default async function DJPage({ params }: Props) {
                     className={`absolute inset-0 w-full h-full object-contain ${coverImage.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
                   />
                 </div>
-                
-                <div className="relative pointer-events-none p-6 flex flex-col flex-grow">
-                  <div className="flex-grow">
-                    <h2 className="text-xl font-semibold text-[var(--text)]">
-                      {tape.title}
-                    </h2>
-                    <p className="mt-2 text-sm text-[var(--muted)]">
+                <div className="flex items-baseline justify-between gap-3 mb-3 pointer-events-none">
+                  {tape.released && (
+                    <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-[var(--muted)]">
                       {tape.released}
-                    </p>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {tape.djs.map((dj) => {
-                      const shouldLink = dj.link !== false && dj.slug !== "unknown";
-                      
-                      if (shouldLink) {
-                        return (
-                          <Link
-                            key={dj.slug}
-                            href={`/djs/${dj.slug}`}
-                            className={`relative pointer-events-auto ${DJ_BADGE_CLASS}`}
-                          >
-                            {dj.name}
-                          </Link>
-                        );
-                      }
-                      
+                    </span>
+                  )}
+                </div>
+                <h2 className="font-display text-2xl sm:text-3xl leading-[1.05] text-[var(--text)] mb-3 group-hover:text-[var(--accent-text)] transition-colors pointer-events-none">
+                  {tape.title}
+                </h2>
+                <div className="flex flex-wrap gap-2 relative z-20">
+                  {tape.djs.map((tdj) => {
+                    const shouldLink = tdj.link !== false && tdj.slug !== "unknown";
+                    if (shouldLink) {
                       return (
-                        <span
-                          key={dj.slug}
-                          className="relative pointer-events-auto rounded-full bg-[var(--muted)]/10 border border-[var(--border)] px-3 py-1 text-sm font-medium text-[var(--muted)] cursor-default"
+                        <Link
+                          key={tdj.slug}
+                          href={`/djs/${tdj.slug}`}
+                          className="dj-pill"
                         >
-                          {dj.name}
-                        </span>
+                          {tdj.name}
+                        </Link>
                       );
-                    })}
-                  </div>
+                    }
+                    return (
+                      <span
+                        key={tdj.slug}
+                        className="dj-pill cursor-default"
+                      >
+                        {tdj.name}
+                      </span>
+                    );
+                  })}
                 </div>
               </article>
             );

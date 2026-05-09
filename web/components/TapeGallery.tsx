@@ -30,10 +30,10 @@ export function TapeGallery({ allImages }: TapeGalleryProps) {
                 onClick={() => setSelectedImage(img.src)}
                 aria-label={img.label}
                 title={img.label}
-                className={`block w-20 h-20 transition-colors cursor-pointer ${
+                className={`block w-20 h-20 transition-all cursor-pointer ${
                   isActive
-                    ? 'border-[1.5px] border-[var(--text)]'
-                    : 'border-[1.5px] border-[var(--border)] hover:border-[var(--text)]'
+                    ? 'border-[1.5px] border-[var(--text)] opacity-100'
+                    : 'border-[1.5px] border-[var(--border)] hover:border-[var(--text)] opacity-70 hover:opacity-100'
                 }`}
               >
                 <div className="relative w-full h-full">
@@ -43,7 +43,7 @@ export function TapeGallery({ allImages }: TapeGalleryProps) {
                     alt={img.label}
                     fill
                     sizes="80px"
-                    className={`object-cover ${img.src.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
+                    className={`object-contain ${img.src.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
                   />
                 </div>
               </button>

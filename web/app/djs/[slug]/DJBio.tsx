@@ -21,7 +21,7 @@ export function DJBio({ bio }: DJBioProps) {
         {isLong && (
           <button
             onClick={() => setExpanded(!expanded)}
-            className="mt-2 text-[var(--accent)] hover:text-[var(--accent-hover)] font-medium transition-colors"
+            className="mt-2 font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--text)] hover:text-[var(--accent-text)] transition-colors cursor-pointer"
           >
             {expanded ? 'Show less' : 'Read more'}
           </button>
