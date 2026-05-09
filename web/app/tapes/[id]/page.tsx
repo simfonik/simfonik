@@ -5,7 +5,8 @@ import type { Metadata } from "next";
 import fs from "fs";
 import path from "path";
 import { getTapeById, getAllTapes, getCommentsForTape, getAllSeries } from "../../../lib/data";
-import { hasOptimizedImages } from "../../../lib/image-utils";
+import { hasOptimizedImages, isOptimizableImagePath } from "../../../lib/image-utils";
+import { ASSET_CACHE_VERSION } from "../../../lib/imageLoader";
 import { TapeGallery } from "../../../components/TapeGallery";
 import { AudioCoordinator } from "../../../components/AudioCoordinator";
 import { AudioPlayer } from "../../../components/AudioPlayer";
@@ -160,13 +161,13 @@ export default async function Page({ params }: Props) {
   }
   tape.sides.forEach((side) => {
     if (side.image) {
-      const isSideJpg = side.image.includes('/media/') && side.image.endsWith('.jpg');
-      allImages.push({ 
-        src: side.image, 
+      const isSideOptimizable = isOptimizableImagePath(side.image);
+      allImages.push({
+        src: side.image,
         label: `${tape.title} – ${side.title ?? `Side ${side.position}`} image`,
         isCover: false,
-        tapeId: isSideJpg ? tape.id : undefined,
-        sidePosition: isSideJpg ? side.position.toLowerCase() : undefined
+        tapeId: isSideOptimizable ? tape.id : undefined,
+        sidePosition: isSideOptimizable ? side.position.toLowerCase() : undefined
       });
     }
   });
@@ -402,12 +403,15 @@ export default async function Page({ params }: Props) {
           let mobileSrcSet = undefined;
           
           if (isOptimized) {
+            const v = `?v=${ASSET_CACHE_VERSION}`;
             if (img.sidePosition) {
-              mobileSrc = `/optimized/${img.tapeId}/sides/${img.sidePosition}/800.avif`;
-              mobileSrcSet = `/optimized/${img.tapeId}/sides/${img.sidePosition}/400.avif 400w, /optimized/${img.tapeId}/sides/${img.sidePosition}/800.avif 800w, /optimized/${img.tapeId}/sides/${img.sidePosition}/1200.avif 1200w`;
+              const base = `/optimized/${img.tapeId}/sides/${img.sidePosition}`;
+              mobileSrc = `${base}/800.avif${v}`;
+              mobileSrcSet = `${base}/400.avif${v} 400w, ${base}/800.avif${v} 800w, ${base}/1200.avif${v} 1200w`;
             } else {
-              mobileSrc = `/optimized/${img.tapeId}/800.avif`;
-              mobileSrcSet = `/optimized/${img.tapeId}/400.avif 400w, /optimized/${img.tapeId}/800.avif 800w, /optimized/${img.tapeId}/1200.avif 1200w`;
+              const base = `/optimized/${img.tapeId}`;
+              mobileSrc = `${base}/800.avif${v}`;
+              mobileSrcSet = `${base}/400.avif${v} 400w, ${base}/800.avif${v} 800w, ${base}/1200.avif${v} 1200w`;
             }
           }
           

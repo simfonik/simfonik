@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getAllSeries, getSeriesBySlug, getTapesBySeries, getCoverImageWithFallback } from "../../../lib/data";
+import { isOptimizableImagePath } from "../../../lib/image-utils";
+import { ASSET_CACHE_VERSION } from "../../../lib/imageLoader";
 
 const DJ_BADGE_CLASS = "dj-pill";
 
@@ -54,21 +56,23 @@ export default async function SeriesPage({ params }: Props) {
         <div className="grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
           {tapes.map((tape) => {
             const coverImage = getCoverImageWithFallback(tape);
-            const isJpg = coverImage.includes("/media/") && coverImage.endsWith(".jpg");
+            const v = `?v=${ASSET_CACHE_VERSION}`;
 
             let optimizedSrc: string | null = null;
             let optimizedSrcSet: string | null = null;
 
-            if (isJpg) {
+            if (isOptimizableImagePath(coverImage)) {
               if (tape.images?.cover === coverImage) {
-                optimizedSrc = `/optimized/${tape.id}/800.avif`;
-                optimizedSrcSet = `/optimized/${tape.id}/400.avif 400w, /optimized/${tape.id}/800.avif 800w, /optimized/${tape.id}/1200.avif 1200w`;
+                const base = `/optimized/${tape.id}`;
+                optimizedSrc = `${base}/800.avif${v}`;
+                optimizedSrcSet = `${base}/400.avif${v} 400w, ${base}/800.avif${v} 800w, ${base}/1200.avif${v} 1200w`;
               } else {
                 const side = tape.sides.find((s) => s.image === coverImage);
                 if (side) {
                   const pos = side.position.toLowerCase();
-                  optimizedSrc = `/optimized/${tape.id}/sides/${pos}/800.avif`;
-                  optimizedSrcSet = `/optimized/${tape.id}/sides/${pos}/400.avif 400w, /optimized/${tape.id}/sides/${pos}/800.avif 800w, /optimized/${tape.id}/sides/${pos}/1200.avif 1200w`;
+                  const base = `/optimized/${tape.id}/sides/${pos}`;
+                  optimizedSrc = `${base}/800.avif${v}`;
+                  optimizedSrcSet = `${base}/400.avif${v} 400w, ${base}/800.avif${v} 800w, ${base}/1200.avif${v} 1200w`;
                 }
               }
             }
