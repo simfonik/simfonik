@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const WORDS = ["Leave a Comment", "Give Some Love", "Share a Memory", "ID a Track"];
+const PHRASES = ["Leave a Comment", "Give Some Love", "Share a Memory", "ID a Track"];
 const INTERVAL_MS = 2800;
 const SCRAMBLE_MS = 700;
 const TICK_MS = 50;
@@ -12,8 +12,11 @@ function randomChar() {
   return CHARSET[Math.floor(Math.random() * CHARSET.length)];
 }
 
+// Each phrase rotation runs a left-to-right scramble: random letters in
+// every non-space position, settling onto the target one position at a
+// time over SCRAMBLE_MS. Spaces in the target stay as spaces throughout.
 export function RotatingWord() {
-  const [text, setText] = useState(WORDS[0]);
+  const [text, setText] = useState(PHRASES[0]);
   const [reduceMotion, setReduceMotion] = useState(false);
   const indexRef = useRef(0);
 
@@ -28,9 +31,9 @@ export function RotatingWord() {
     let scrambleTimer: ReturnType<typeof setInterval> | null = null;
 
     const cycle = setInterval(() => {
-      const nextIndex = (indexRef.current + 1) % WORDS.length;
-      const fromText = WORDS[indexRef.current];
-      const toText = WORDS[nextIndex];
+      const nextIndex = (indexRef.current + 1) % PHRASES.length;
+      const fromText = PHRASES[indexRef.current];
+      const toText = PHRASES[nextIndex];
       indexRef.current = nextIndex;
 
       const start = performance.now();
@@ -67,5 +70,5 @@ export function RotatingWord() {
     };
   }, [reduceMotion]);
 
-  return <span className="mock-rotating-word">{text}</span>;
+  return <span className="inline-block">{text}</span>;
 }

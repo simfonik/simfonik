@@ -12,6 +12,7 @@ import { AudioPlayer } from "../../../components/AudioPlayer";
 import { PlaylistPlayer } from "../../../components/PlaylistPlayer";
 import { CommentForm } from "../../../components/CommentForm";
 import { LiveComments } from "../../../components/LiveComments";
+import { RotatingWord } from "../../../components/RotatingWord";
 import { JsonLd } from "../../../components/JsonLd";
 import { generateTapeSchema } from "../../../lib/structured-data";
 
@@ -516,7 +517,7 @@ export default async function Page({ params }: Props) {
           <LiveComments tapeId={id} />
 
           <h2 className="font-display text-3xl sm:text-4xl leading-[0.95] text-[var(--text)] mb-6 mt-14">
-            Leave a Comment
+            <RotatingWord />
           </h2>
           <CommentForm tapeId={id} />
         </div>
