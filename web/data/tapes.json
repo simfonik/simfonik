@@ -9751,7 +9751,7 @@
       }
     ],
     "images": {
-      "cover": "/media/tapes/raw-dj-trance-blunted-sessions/cover.jpg"
+      "cover": "/media/tapes/raw-dj-trance-blunted-sessions/cover.png"
     },
     "sides": [
       {
@@ -9767,7 +9767,7 @@
             "url": "https://audio.simfonik.com/tapes/raw-dj-trance-blunted-sessions/a.mp3"
           }
         ],
-        "image": "/media/tapes/raw-dj-trance-blunted-sessions/sides/a.jpg"
+        "image": "/media/tapes/raw-dj-trance-blunted-sessions/sides/a.png"
       },
       {
         "position": "B",
@@ -9782,7 +9782,7 @@
             "url": "https://audio.simfonik.com/tapes/raw-dj-trance-blunted-sessions/b.mp3"
           }
         ],
-        "image": "/media/tapes/raw-dj-trance-blunted-sessions/sides/b.jpg"
+        "image": "/media/tapes/raw-dj-trance-blunted-sessions/sides/b.png"
       }
     ],
     "created_date": "2026-03-29T00:00:00"
@@ -9805,7 +9805,7 @@
             "url": "https://audio.simfonik.com/tapes/dj-trance-im-brown-im-frying/a.mp3"
           }
         ],
-        "image": "/media/tapes/dj-trance-im-brown-im-frying/sides/a.jpg"
+        "image": "/media/tapes/dj-trance-im-brown-im-frying/sides/a.png"
       },
       {
         "position": "B",
@@ -9814,7 +9814,7 @@
             "url": "https://audio.simfonik.com/tapes/dj-trance-im-brown-im-frying/b.mp3"
           }
         ],
-        "image": "/media/tapes/dj-trance-im-brown-im-frying/sides/b.jpg"
+        "image": "/media/tapes/dj-trance-im-brown-im-frying/sides/b.png"
       }
     ],
     "source": "Maca Damion",
@@ -9863,7 +9863,7 @@
         "audio_links": [
           { "url": "https://audio.simfonik.com/tapes/dj-trance-legalize-it/a.mp3" }
         ],
-        "image": "/media/tapes/dj-trance-legalize-it/sides/a.jpg"
+        "image": "/media/tapes/dj-trance-legalize-it/sides/a.png"
       },
       {
         "position": "B",
@@ -9871,7 +9871,7 @@
         "audio_links": [
           { "url": "https://audio.simfonik.com/tapes/dj-trance-legalize-it/b.mp3" }
         ],
-        "image": "/media/tapes/dj-trance-legalize-it/sides/b.jpg"
+        "image": "/media/tapes/dj-trance-legalize-it/sides/b.png"
       }
     ]
   },
