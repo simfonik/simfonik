@@ -204,9 +204,48 @@ function validateTapes() {
   djSlugToNames.forEach((names, slug) => {
     if (names.size > 1) {
       addWarning(
-        '(global)', 
-        `dj.slug="${slug}"`, 
+        '(global)',
+        `dj.slug="${slug}"`,
         `Name varies across tapes: ${Array.from(names).join(', ')}`
+      );
+    }
+  });
+
+  // Derive canonical source_url per source name from existing tapes, then
+  // flag tapes that use the same source name but are missing the URL.
+  // No hardcoded list — the source of truth is the rest of the dataset.
+  const sourceToUrls = new Map(); // source name -> Set of urls seen
+  const sourceTapesMissingUrl = []; // [{ tapeId, source }]
+  tapes.forEach((tape) => {
+    if (!tape.source) return;
+    if (tape.source_url) {
+      if (!sourceToUrls.has(tape.source)) sourceToUrls.set(tape.source, new Set());
+      sourceToUrls.get(tape.source).add(tape.source_url);
+    } else {
+      sourceTapesMissingUrl.push({ tapeId: tape.id, source: tape.source });
+    }
+  });
+
+  // Warn on conflicting URLs for the same source name.
+  sourceToUrls.forEach((urls, source) => {
+    if (urls.size > 1) {
+      addWarning(
+        '(global)',
+        `source="${source}"`,
+        `URL varies across tapes: ${Array.from(urls).join(', ')}`
+      );
+    }
+  });
+
+  // Warn on tapes missing the canonical source_url that other tapes set.
+  sourceTapesMissingUrl.forEach(({ tapeId, source }) => {
+    const urls = sourceToUrls.get(source);
+    if (urls && urls.size === 1) {
+      const canonical = Array.from(urls)[0];
+      addWarning(
+        tapeId,
+        'source_url',
+        `Source "${source}" links to ${canonical} on other tapes — consider adding source_url here`
       );
     }
   });
