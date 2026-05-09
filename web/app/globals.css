@@ -1,38 +1,45 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #fafafa;
+  --bg: #ffffff;
   --bg-secondary: #ffffff;
-  --bg-hover: #f3f4f6;
+  --bg-hover: #f4f4f5;
   --surface: #ffffff;
   --border: #e5e7eb;
-  --text: #16181d;
+  --text: #0a0a0a;
   --muted: #6b7280;
-  --accent: #5e6ad2;
-  --accent-hover: #7c84e8;
+  --accent: #1a1a1a;
+  --accent-hover: #000000;
+  --accent-text: #1a1a1a;
+  --on-accent: #ffffff;
 }
 
 @theme inline {
   --color-background: var(--bg);
   --color-foreground: var(--text);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-anton);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #0a0a0a;
     --bg-secondary: #131316;
-    --bg-hover: #1a1a1d;
+    --bg-hover: #1a1a1a;
     --surface: #131316;
     --border: #27282d;
     --text: #f5f5f5;
-    --muted: #b0b0b0;
+    --muted: #a1a1aa;
+    --accent: #f5f5f5;
+    --accent-hover: #ffffff;
+    --accent-text: #f5f5f5;
+    --on-accent: #0a0a0a;
   }
 }
 
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
