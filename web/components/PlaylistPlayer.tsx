@@ -59,71 +59,70 @@ export function PlaylistPlayer({ tracks, tapeId }: PlaylistPlayerProps) {
 
   if (state.error) {
     return (
-      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-        <p className="text-red-800 dark:text-red-200 text-sm">{state.error}</p>
-      </div>
+      <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-red-500 border-[1.5px] border-red-500 px-3 py-2">
+        {state.error}
+      </p>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {/* Main Player */}
-      <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg p-2.5">
-        <audio
-          ref={ref}
-          src={currentTrack.url}
-          preload="none"
-          playsInline
-        />
+    <div className="border-[1.5px] border-[var(--text)] bg-[var(--surface)] p-4 space-y-4">
+      <audio ref={ref} src={currentTrack.url} preload="none" playsInline />
 
-        <PlayerControls
-          isPlaying={state.isPlaying}
-          currentTime={state.currentTime}
-          duration={state.duration}
-          isLoading={state.isLoading}
-          title={currentTrack.title}
-          onPlay={controls.play}
-          onPause={controls.pause}
-          onSeek={controls.seek}
-        />
-      </div>
+      <PlayerControls
+        isPlaying={state.isPlaying}
+        currentTime={state.currentTime}
+        duration={state.duration}
+        isLoading={state.isLoading}
+        title={currentTrack.title}
+        onPlay={controls.play}
+        onPause={controls.pause}
+        onSeek={controls.seek}
+      />
 
       {/* Track List */}
-      <div>
-        <div className="space-y-0.5">
-          {tracks.map((track, index) => (
-            <button
-              key={track.position}
-              onClick={() => selectTrack(index)}
-              className={`w-full text-left px-3 py-3 rounded transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-1 ${
-                index === currentTrackIndex
-                  ? 'bg-[var(--accent)]/15 text-[var(--text)] dark:bg-[var(--accent)]/25 dark:text-[#a8aef5]'
-                  : 'hover:bg-[var(--bg-secondary)] text-[var(--text)]'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex-shrink-0">
-                  {index === currentTrackIndex && state.isPlaying ? (
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+      <div className="border-t-[1.5px] border-[var(--border)] pt-3">
+        <div className="space-y-0">
+          {tracks.map((track, index) => {
+            const isCurrent = index === currentTrackIndex;
+            return (
+              <button
+                key={track.position}
+                onClick={() => selectTrack(index)}
+                className={`w-full text-left px-2 py-2.5 transition-colors cursor-pointer focus:outline-none flex items-center gap-3 ${
+                  isCurrent
+                    ? 'text-[var(--text)]'
+                    : 'text-[var(--text)] hover:bg-[var(--bg-hover)]'
+                }`}
+              >
+                <span className="flex-shrink-0 text-[var(--text)]">
+                  {isCurrent && state.isPlaying ? (
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
                     </svg>
                   ) : (
-                    <svg className="w-4 h-4 text-[var(--muted)]" viewBox="0 0 24 24" fill="currentColor">
+                    <svg
+                      className={`w-3.5 h-3.5 ${isCurrent ? '' : 'text-[var(--muted)]'}`}
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
                       <path d="M8 5v14l11-7z" />
                     </svg>
                   )}
-                </div>
-                <div className="flex-1 min-w-0 text-sm">
-                  <div>{track.title}</div>
+                </span>
+                <span className="flex-1 min-w-0">
+                  <span className="font-display text-base leading-tight">
+                    {track.title}
+                  </span>
                   {track.djs && track.djs.length > 0 && (
-                    <div className="text-xs text-[var(--muted)] mt-0.5">
-                      {track.djs.map(dj => dj.name).join(', ')}
-                    </div>
+                    <span className="block font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mt-0.5">
+                      {track.djs.map((dj) => dj.name).join(', ')}
+                    </span>
                   )}
-                </div>
-              </div>
-            </button>
-          ))}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

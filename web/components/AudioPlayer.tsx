@@ -19,21 +19,15 @@ export function AudioPlayer({ src, title, tapeId, sidePosition }: AudioPlayerPro
 
   if (state.error) {
     return (
-      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-        <p className="text-red-800 dark:text-red-200 text-sm">{state.error}</p>
-      </div>
+      <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-red-500 border-[1.5px] border-red-500 px-3 py-2">
+        {state.error}
+      </p>
     );
   }
 
   return (
-    <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg p-2.5">
-      <audio
-        ref={ref}
-        src={src}
-        preload="none"
-        playsInline
-      />
-      
+    <>
+      <audio ref={ref} src={src} preload="none" playsInline />
       <PlayerControls
         isPlaying={state.isPlaying}
         currentTime={state.currentTime}
@@ -44,6 +38,6 @@ export function AudioPlayer({ src, title, tapeId, sidePosition }: AudioPlayerPro
         onPause={controls.pause}
         onSeek={controls.seek}
       />
-    </div>
+    </>
   );
 }
