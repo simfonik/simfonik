@@ -50,14 +50,19 @@ export default function DJsIndexPage() {
                     {dj.name}
                   </h2>
                   {visibleTapes.length > 0 && (
-                    <ul className="space-y-1 pointer-events-none">
+                    <ul className="space-y-1">
                       {visibleTapes.map((tape) => (
-                        <li key={tape.id} className="text-sm text-[var(--muted)] truncate">
-                          {tape.title}
+                        <li key={tape.id} className="truncate">
+                          <Link
+                            href={`/tapes/${tape.id}`}
+                            className="relative text-sm text-[var(--muted)] hover:text-[var(--accent-hover)] transition-colors"
+                          >
+                            {tape.title}
+                          </Link>
                         </li>
                       ))}
                       {remainingCount > 0 && (
-                        <li className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mt-2">
+                        <li className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mt-2 pointer-events-none">
                           + {remainingCount} more
                         </li>
                       )}
