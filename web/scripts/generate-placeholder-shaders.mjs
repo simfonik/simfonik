@@ -150,15 +150,20 @@ function buildCassetteSvg(shaderDataUri, grainSeed) {
 console.log(`🖼️  Generating ${TAPES.length} placeholder cassettes (${OUTPUT_W}px wide)…\n`);
 const startTotal = Date.now();
 
-const randSeed = () => Math.floor(Math.random() * 0xffffffff);
 const manifestEntries = {};
 
+// Deterministic per-tape seeding: re-baking on every Vercel deploy
+// produces byte-identical output, keeping the manifest hash stable
+// and the CDN cache valid until the tape itself changes. Variant
+// alternates by index (stable 4/3 split for 7 tapes); shader seed is
+// hashed from the tape ID directly (would be lumpy for variant choice
+// at this small N, but produces good visual variety as a 32-bit seed).
 for (let i = 0; i < TAPES.length; i++) {
   const tapeId = TAPES[i];
   const start = Date.now();
+  const idHash = hashString(tapeId);
   const variant = variantPool[i % variantPool.length];
-  const seed = randSeed();
-  const params = variant.paramsFn(seed);
+  const params = variant.paramsFn(idHash);
   const rgba = variant.renderFn(params, SHADER_W, SHADER_H);
 
   // RGBA → PNG buffer → base64 data URI for SVG <image>.
@@ -167,7 +172,7 @@ for (let i = 0; i < TAPES.length; i++) {
   }).png({ compressionLevel: 6 }).toBuffer();
   const shaderDataUri = `data:image/png;base64,${shaderPng.toString('base64')}`;
 
-  const grainSeed = hashString(tapeId) % 100;
+  const grainSeed = idHash % 100;
   const svg = buildCassetteSvg(shaderDataUri, grainSeed);
 
   // density:288 = 4× the SVG's natural 72dpi → ~1492×932 base raster,
