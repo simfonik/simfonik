@@ -9,7 +9,7 @@ const HERO_WIDTHS = [640, 1024, 1920];
 // fetch through Vercel/Cloudflare. Headers in next.config.ts mark
 // /optimized/ + /media/ + /generated/ as immutable for a year, so
 // without this bump cached responses persist past file updates.
-export const ASSET_CACHE_VERSION = 3;
+export const ASSET_CACHE_VERSION = 4;
 const V = `?v=${ASSET_CACHE_VERSION}`;
 
 export default function imageLoader({ src, width }: { src: string, width: number }) {
@@ -40,6 +40,13 @@ export default function imageLoader({ src, width }: { src: string, width: number
     if (sideMatch) {
       return `/optimized/${sideMatch[1]}/sides/${sideMatch[2]}/${bestWidth}.avif${V}`;
     }
+  }
+
+  // /generated/ assets (placeholder cassettes, etc.) are served as-is
+  // but still need the cache-bust query so re-bakes invalidate the
+  // immutable CDN cache.
+  if (src.startsWith('/generated/')) {
+    return `${src}${V}`;
   }
 
   return src;
