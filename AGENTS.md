@@ -9,6 +9,19 @@ Build a simple, functioning website for a DJ mixtape archive.
 - Prefer editing existing files over rewriting.
 - If a requirement is ambiguous, ask before building.
 
+## Issue tracking
+- Every code change requires a Linear issue in the **Simfonik** team (`SIM-` prefix) before work begins.
+- Reference the issue ID in the commit message — e.g. `feat(home): add activity module (SIM-5)`.
+- Move the issue to **In Progress** when starting and **Done** when shipping.
+- If a change is requested without an existing issue, file one first.
+
+### When to use a Linear project
+A Linear project is warranted only when **both** are true:
+1. The work spans 3+ discrete issues with a shared goal.
+2. The total scope would take more than a day or two of human effort (even though AI often ships it faster).
+
+Otherwise, file issues directly under the team.
+
 ## Guardrails
 - Do not add auth/admin features unless explicitly requested.
 - Do not introduce extra services unless explicitly requested.
