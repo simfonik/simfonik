@@ -43,7 +43,7 @@
     --accent-text: #f5f5f5;
     --on-accent: #0a0a0a;
     --bg-image: url("/media/site/textured-paper-dark.png");
-    --bg-image-opacity: 1;
+    --bg-image-opacity: 0.2;
   }
 }
 :root.theme-dark {
@@ -59,7 +59,7 @@
   --accent-text: #f5f5f5;
   --on-accent: #0a0a0a;
   --bg-image: url("/media/site/textured-paper-dark.png");
-  --bg-image-opacity: 1;
+  --bg-image-opacity: 0.2;
 }
 
 body {
