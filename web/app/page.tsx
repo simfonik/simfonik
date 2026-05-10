@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getAllTapes, getCoverImageWithFallback } from "../lib/data";
 import { TapeGalleryWithSearch } from "../components/TapeGalleryWithSearch";
 import { Oscilloscope } from "../components/Oscilloscope";
+import { RecentActivity } from "../components/RecentActivity";
 import { JsonLd } from "../components/JsonLd";
 import { generateWebsiteSchema } from "../lib/structured-data";
 
@@ -41,6 +42,8 @@ export default async function Home() {
       >
         <Oscilloscope className="oscilloscope-hero absolute inset-0" />
       </div>
+
+      <RecentActivity />
 
       <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
         <TapeGalleryWithSearch tapes={tapesWithCovers} />
