@@ -107,6 +107,22 @@ body::before {
   mix-blend-mode: multiply;
 }
 
+/* The rotation animation is applied to all three circles continuously
+   and paused by default. Hover flips animation-play-state to running;
+   mouseleave flips it back to paused, so the colors freeze at the
+   current frame instead of snapping back to the resting CMY. Resting
+   keyframes (0%/100%) match Wordmark.tsx CIRCLES so a fresh load
+   starts at the canonical layout. */
+.wordmark-mark .wordmark-colors circle:nth-of-type(1) {
+  animation: wordmark-rotate-pos-b 2.7s linear infinite paused;
+}
+.wordmark-mark .wordmark-colors circle:nth-of-type(2) {
+  animation: wordmark-rotate-pos-c 2.7s linear infinite paused;
+}
+.wordmark-mark .wordmark-colors circle:nth-of-type(3) {
+  animation: wordmark-rotate-pos-a 2.7s linear infinite paused;
+}
+
 /* Wordmark color rotation: on hover, circles stay in their positions
    but their fills rotate clockwise around the triangle. */
 
@@ -128,14 +144,8 @@ body::before {
   33% { fill: #FB5FB6; }
   66% { fill: #1A84C4; }
 }
-.wordmark-link:hover .wordmark-mark .wordmark-colors circle:nth-of-type(1) {
-  animation: wordmark-rotate-pos-b 2.7s linear infinite;
-}
-.wordmark-link:hover .wordmark-mark .wordmark-colors circle:nth-of-type(2) {
-  animation: wordmark-rotate-pos-c 2.7s linear infinite;
-}
-.wordmark-link:hover .wordmark-mark .wordmark-colors circle:nth-of-type(3) {
-  animation: wordmark-rotate-pos-a 2.7s linear infinite;
+.wordmark-link:hover .wordmark-mark .wordmark-colors circle {
+  animation-play-state: running;
 }
 
 /* Poster-block button — outline, mono caps, lift + offset shadow on hover */
