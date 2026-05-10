@@ -1,4 +1,4 @@
-name: Tests
+name: CI
 
 on:
   push:
@@ -7,8 +7,15 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  ci:
     runs-on: ubuntu-latest
+
+    # Fake DATABASE_URL: lib/db.ts wraps the connection string at module
+    # load but @neondatabase/serverless only opens connections lazily, so
+    # the build proceeds. Any network calls during static prerendering
+    # fail and fall through to the existing try/catch, returning [].
+    env:
+      DATABASE_URL: postgres://ci:ci@ci.invalid/ci?sslmode=require
 
     steps:
       - name: Checkout code
@@ -31,6 +38,14 @@ jobs:
         working-directory: web
         run: pnpm install
 
-      - name: Run unit tests
+      - name: Lint
+        working-directory: web
+        run: pnpm lint --max-warnings=0
+
+      - name: Test
         working-directory: web
         run: pnpm test
+
+      - name: Build
+        working-directory: web
+        run: pnpm build
