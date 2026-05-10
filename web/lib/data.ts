@@ -45,7 +45,7 @@ function enrichTapeWithPlaceholder(tape: Tape): Tape {
       ...tape,
       images: {
         ...tape.images,
-        cover: `/generated/placeholders/${tape.id}.svg`,
+        cover: `/generated/placeholders/${tape.id}.avif`,
       },
     };
   }

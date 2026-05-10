@@ -36,8 +36,7 @@ const DEFAULT_CASSETTE_PARAMS: CassetteParams = {
 const CassetteContext = createContext<CassetteParams>(DEFAULT_CASSETTE_PARAMS);
 
 // Cassette tape body path, isolated into the four addressable
-// subpaths it actually contains. Originally lifted from
-// scripts/lib/pattern-generator.mjs as one big string.
+// subpaths it actually contains.
 //
 //   OUTER_BODY_D    — the cassette outline (no cutouts)
 //   RIGHT_REEL_D    — toothed/notched gear shape, ~centered (266, 107)

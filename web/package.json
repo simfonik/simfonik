@@ -12,7 +12,7 @@
     "validate": "node scripts/validate-tapes.mjs",
     "validate:fix": "node scripts/validate-tapes.mjs --fix",
     "generate-icon": "node scripts/generate-icon.mjs",
-    "generate-placeholders": "node scripts/generate-placeholders.mjs",
+    "generate-placeholders": "node scripts/generate-placeholder-shaders.mjs",
     "optimize-images": "node scripts/optimize-images.mjs"
   },
   "dependencies": {
