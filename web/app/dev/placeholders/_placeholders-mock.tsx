@@ -65,6 +65,10 @@ const MUTED = [
   { name: 'mint',           value: '#9CC4B8' },
 ];
 
+/* eslint-disable @typescript-eslint/no-unused-vars --
+ * Dev playground: alternate cassette designs and palettes are kept here
+ * as in-progress reference even when not currently rendered. */
+
 const CREAM = '#EFE6D2';
 
 function hashString(str: string): number {

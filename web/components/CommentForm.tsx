@@ -46,7 +46,7 @@ export function CommentForm({ tapeId }: CommentFormProps) {
       } else {
         setMessage({ type: 'error', text: data.error || 'Failed to submit comment' });
       }
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: 'Failed to submit comment' });
     } finally {
       setSubmitting(false);

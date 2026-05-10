@@ -34,8 +34,12 @@ export function ThemeToggle() {
     setMounted(true);
   }, []);
 
+  // Derive dark from theme state instead of reading the DOM class —
+  // applyTheme keeps the class in sync, so theme is the source of truth.
   const dark = mounted
-    ? document.documentElement.classList.contains('theme-dark')
+    ? theme === 'dark' ||
+      (theme === 'system' &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches)
     : false;
 
   const toggle = () => {

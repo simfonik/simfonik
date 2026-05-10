@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Anton } from "next/font/google";
+import { Geist_Mono, Anton } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 import { headers } from 'next/headers';
@@ -8,11 +8,6 @@ import { Analytics } from '@vercel/analytics/next';
 import { Header } from '../components/Header';
 import { NewsletterFooter } from '../components/NewsletterSignup';
 import { themeInitScript } from '../components/ThemeToggle';
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -72,7 +67,7 @@ export default async function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${anton.variable} antialiased bg-[var(--bg)] text-[var(--text)] min-h-screen`}
+        className={`${geistMono.variable} ${anton.variable} antialiased bg-[var(--bg)] text-[var(--text)] min-h-screen`}
       >
         <Header />
         {children}

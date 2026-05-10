@@ -239,7 +239,7 @@ function readArchivedComments(): Record<string, ArchivedComment[]> {
     try {
       const raw = fs.readFileSync(filePath, "utf8");
       archivedCommentsCache = JSON.parse(raw);
-    } catch (error) {
+    } catch {
       // If file doesn't exist, return empty object
       archivedCommentsCache = {};
     }
