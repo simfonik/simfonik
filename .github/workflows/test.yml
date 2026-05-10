@@ -10,12 +10,18 @@ jobs:
   ci:
     runs-on: ubuntu-latest
 
-    # Fake DATABASE_URL: lib/db.ts wraps the connection string at module
-    # load but @neondatabase/serverless only opens connections lazily, so
-    # the build proceeds. Any network calls during static prerendering
-    # fail and fall through to the existing try/catch, returning [].
+    # Fake env values so module-level constructions don't throw during
+    # build's page-data collection step:
+    # - DATABASE_URL: @neondatabase/serverless opens connections lazily,
+    #   so this never actually tries to resolve. Network calls during
+    #   static prerendering fall through the existing try/catch.
+    # - RESEND_API_KEY: Resend's constructor (used at module load by
+    #   the newsletter API routes) throws on a falsy key. Any truthy
+    #   string passes the validation gate; real API calls during build
+    #   never happen.
     env:
       DATABASE_URL: postgres://ci:ci@ci.invalid/ci?sslmode=require
+      RESEND_API_KEY: re_ci_fake_key
 
     steps:
       - name: Checkout code
