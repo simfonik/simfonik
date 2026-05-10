@@ -11,6 +11,11 @@ const PLAYGROUNDS = [
     title: 'circles2',
     description: 'Code-only riso wordmark — live filter knobs.',
   },
+  {
+    slug: 'placeholders',
+    title: 'placeholders',
+    description: 'Missing-cover tape placeholder variants.',
+  },
 ] as const;
 
 export default function DevIndexPage() {
