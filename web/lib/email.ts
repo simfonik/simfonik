@@ -101,13 +101,14 @@ export function buildEmailHtml(opts: {
               <table role="presentation" cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="vertical-align:middle;padding-right:6px;line-height:0;">
-                    <!-- 2px down-shift mirrors site's translate-y-[2px] on the
-                         wordmark — optical centering against Anton's baseline. -->
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="44" height="44" style="display:block;isolation:isolate;transform:translateY(2px);">
-                      <circle cx="245" cy="220" r="100" fill="#1A84C4" style="mix-blend-mode:multiply;" />
-                      <circle cx="120" cy="220" r="100" fill="#FB5FB6" style="mix-blend-mode:multiply;" />
-                      <circle cx="190" cy="120" r="100" fill="#FDEB44" style="mix-blend-mode:multiply;" />
-                    </svg>
+                    <!-- Static PNG of the riso wordmark mark. Source is
+                         176×176 (4× the 44px display size) so it stays
+                         crisp on retina. PNG is the universally-compatible
+                         choice — Gmail strips inline SVG. Regenerate via
+                         scripts/generate-wordmark-png.mjs.
+                         2px down-shift mirrors site's translate-y-[2px] —
+                         optical centering against Anton's baseline. -->
+                    <img src="${SITE_URL}/media/site/wordmark-mark.png" alt="" width="44" height="44" style="display:block;transform:translateY(2px);" />
                   </td>
                   <td style="vertical-align:middle;">
                     <p class="email-text" style="margin:0;font-family:'Anton',Impact,'Helvetica Neue',Arial,sans-serif;font-size:30px;font-weight:400;line-height:1;color:#f5f5f5;letter-spacing:-0.01em;">simfonik</p>
