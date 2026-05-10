@@ -1,16 +1,24 @@
 // Custom image loader - routes Next.js Image requests to pre-generated static AVIF files
 
+import manifest from './asset-manifest.json';
+
 const TAPE_WIDTHS = [400, 800, 1200];
 const HERO_WIDTHS = [640, 1024, 1920];
 
-// Cache-bust version. Bump this whenever optimized images on disk are
-// regenerated and the existing immutable CDN cache needs to be
-// invalidated. URLs become /optimized/...?v=N — different URL = fresh
-// fetch through Vercel/Cloudflare. Headers in next.config.ts mark
-// /optimized/ + /media/ + /generated/ as immutable for a year, so
-// without this bump cached responses persist past file updates.
+// Fallback cache-bust version. Used only when an asset isn't in the
+// manifest yet (e.g. dev session before the bake/optimize scripts have
+// run). Bumping ASSET_CACHE_VERSION will invalidate every fallback URL
+// at once. Surgical invalidation flows through the manifest's
+// per-source hashes — bumps shouldn't normally be needed.
 export const ASSET_CACHE_VERSION = 4;
-const V = `?v=${ASSET_CACHE_VERSION}`;
+const FALLBACK_V = `?v=${ASSET_CACHE_VERSION}`;
+
+const m = manifest as Record<string, string>;
+
+function v(key: string): string {
+  const hash = m[key];
+  return hash ? `?v=${hash}` : FALLBACK_V;
+}
 
 export default function imageLoader({ src, width }: { src: string, width: number }) {
   // Cap width to prevent Lighthouse penalizing for over-serving pixels
@@ -20,12 +28,12 @@ export default function imageLoader({ src, width }: { src: string, width: number
 
   if (src === '/media/site/home-hero.jpg' || src === '/optimized/site/800.webp') {
     const bestWidth = HERO_WIDTHS.find((w) => w >= optimizedWidth) || HERO_WIDTHS[HERO_WIDTHS.length - 1];
-    return `/optimized/site/${bestWidth}.avif${V}`;
+    return `/optimized/site/${bestWidth}.avif${v('site/home-hero')}`;
   }
 
   if (src === '/media/site/recording-setup-cropped.jpg') {
     const bestWidth = TAPE_WIDTHS.find((w) => w >= optimizedWidth) || TAPE_WIDTHS[TAPE_WIDTHS.length - 1];
-    return `/optimized/site/about/${bestWidth}.avif${V}`;
+    return `/optimized/site/about/${bestWidth}.avif${v('site/about')}`;
   }
 
   if (src.startsWith('/media/tapes/')) {
@@ -33,20 +41,22 @@ export default function imageLoader({ src, width }: { src: string, width: number
 
     const coverMatch = src.match(/^\/media\/tapes\/([^\/]+)\/cover\.(jpg|jpeg|png)$/i);
     if (coverMatch) {
-      return `/optimized/${coverMatch[1]}/${bestWidth}.avif${V}`;
+      const id = coverMatch[1];
+      return `/optimized/${id}/${bestWidth}.avif${v(`tapes/${id}/cover`)}`;
     }
 
     const sideMatch = src.match(/^\/media\/tapes\/([^\/]+)\/sides\/(a|b)\.(jpg|jpeg|png)$/i);
     if (sideMatch) {
-      return `/optimized/${sideMatch[1]}/sides/${sideMatch[2]}/${bestWidth}.avif${V}`;
+      const [, id, ab] = sideMatch;
+      return `/optimized/${id}/sides/${ab}/${bestWidth}.avif${v(`tapes/${id}/sides/${ab}`)}`;
     }
   }
 
-  // /generated/ assets (placeholder cassettes, etc.) are served as-is
-  // but still need the cache-bust query so re-bakes invalidate the
-  // immutable CDN cache.
+  // /generated/ assets (placeholder cassettes, etc.) — manifest key
+  // strips the leading slash and file extension.
   if (src.startsWith('/generated/')) {
-    return `${src}${V}`;
+    const key = src.slice(1).replace(/\.[^./]+$/, '');
+    return `${src}${v(key)}`;
   }
 
   return src;

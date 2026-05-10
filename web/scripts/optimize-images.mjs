@@ -23,6 +23,7 @@ import {
   saveCache,
   formatBytes,
 } from './lib/image-optimizer.mjs';
+import { mergeIntoManifest, shortHashOfFile } from './lib/asset-manifest.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -132,6 +133,11 @@ async function main() {
   // Load optimization cache
   const cache = loadCache(CACHE_FILE);
 
+  // Per-source manifest entries; merged into web/lib/asset-manifest.json
+  // at the end. Source-level keys (no width) — same hash applies to
+  // every responsive variant derived from the same source file.
+  const manifestEntries = {};
+
   const stats = {
     generated: 0,
     cached: 0,
@@ -150,6 +156,7 @@ async function main() {
     if (fs.existsSync(heroSource)) {
       const heroOutputDir = path.join(OUTPUT_DIR, 'site');
       await optimizeImageVariants(heroSource, heroOutputDir, 'site:home-hero', cache, stats, HERO_WIDTHS, HERO_QUALITY);
+      manifestEntries['site/home-hero'] = shortHashOfFile(heroSource);
       stats.heroProcessed = true;
       console.log('✅ Optimized hero image\n');
     }
@@ -158,6 +165,7 @@ async function main() {
     if (fs.existsSync(aboutSource)) {
       const aboutOutputDir = path.join(OUTPUT_DIR, 'site', 'about');
       await optimizeImageVariants(aboutSource, aboutOutputDir, 'site:about', cache, stats);
+      manifestEntries['site/about'] = shortHashOfFile(aboutSource);
       console.log('✅ Optimized about page image\n');
     }
   }
@@ -175,6 +183,7 @@ async function main() {
           // Generate responsive AVIF variants
           const outputDir = path.join(OUTPUT_DIR, tape.id);
           await optimizeImageVariants(sourcePath, outputDir, tape.id, cache, stats);
+          manifestEntries[`tapes/${tape.id}/cover`] = shortHashOfFile(sourcePath);
 
           // Generate OG image for social sharing
           await generateOgImageForTape(sourcePath, tape.id, cache, stats);
@@ -210,6 +219,7 @@ async function main() {
             const outputDir = path.join(OUTPUT_DIR, tape.id, 'sides', sidePosition);
             const cacheKey = `${tape.id}:sides:${sidePosition}`;
             await optimizeImageVariants(sourcePath, outputDir, cacheKey, cache, stats);
+            manifestEntries[`tapes/${tape.id}/sides/${sidePosition}`] = shortHashOfFile(sourcePath);
             stats.sidesProcessed++;
           } else {
             console.warn(`⚠️  Side image not found: ${sidePath}`);
@@ -222,6 +232,10 @@ async function main() {
 
   // Save cache
   saveCache(CACHE_FILE, cache);
+
+  // Merge into web/lib/asset-manifest.json — bundled into imageLoader.ts
+  // for per-source ?v=hash cache-busting.
+  mergeIntoManifest(manifestEntries);
 
   // Print summary
   console.log('\n📊 Summary:');
