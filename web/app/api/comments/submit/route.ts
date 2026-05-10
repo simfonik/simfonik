@@ -75,13 +75,20 @@ export async function POST(request: Request) {
       VALUES (${tapeId}, ${name}, ${authorEmail || null}, ${text}, true)
     `;
 
-    // Best-effort notification — must not fail the request.
-    await sendCommentNotification({
-      tapeId,
-      authorName: name,
-      authorEmail: authorEmail || null,
-      content: text,
-    });
+    // Best-effort notification — must not fail the request. The
+    // implementation in lib/email.ts already swallows its own errors,
+    // but defense-in-depth: wrap here too so any sync throw before its
+    // try/catch can't leak out and 500 a comment that already inserted.
+    try {
+      await sendCommentNotification({
+        tapeId,
+        authorName: name,
+        authorEmail: authorEmail || null,
+        content: text,
+      });
+    } catch (err) {
+      console.error('Comment notification failed (comment is still posted):', err);
+    }
 
     return Response.json({
       success: true,
