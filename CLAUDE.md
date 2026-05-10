@@ -1,6 +1,6 @@
 # simfonik
 
-A curated archive of 90s rave DJ mixes. Next.js 16 app in `/web`, deployed on Vercel.
+A curated archive of 90s rave DJ mixes. Next.js 15 app in `/web`, deployed on Vercel.
 
 ## Required reading
 
