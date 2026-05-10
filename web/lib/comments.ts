@@ -1,4 +1,4 @@
-import { sql } from '@vercel/postgres';
+import { sql } from './db';
 import { getTapeById } from './data';
 
 export type RecentComment = {

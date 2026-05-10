@@ -1,4 +1,4 @@
-import { sql } from '@vercel/postgres';
+import { sql } from '@/lib/db';
 import { timingSafeEqual } from 'crypto';
 
 function checkAuth(authHeader: string | null): boolean {
