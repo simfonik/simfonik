@@ -1,4 +1,5 @@
 import { sql } from '@/lib/db';
+import { sendCommentNotification } from '@/lib/email';
 import { createHash } from 'crypto';
 
 export async function POST(request: Request) {
@@ -67,15 +68,24 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Tape ID is required' }, { status: 400 });
     }
 
-    // 4. Insert comment (unapproved by default)
+    // 4. Insert comment (auto-approved; admin gets a notification email
+    // and can delete via /admin/comments if it's bad-faith content).
     await sql`
       INSERT INTO comments (tape_id, author_name, author_email, content, approved)
-      VALUES (${tapeId}, ${name}, ${authorEmail || null}, ${text}, false)
+      VALUES (${tapeId}, ${name}, ${authorEmail || null}, ${text}, true)
     `;
+
+    // Best-effort notification — must not fail the request.
+    await sendCommentNotification({
+      tapeId,
+      authorName: name,
+      authorEmail: authorEmail || null,
+      content: text,
+    });
 
     return Response.json({
       success: true,
-      message: 'Comment pending approval'
+      message: 'Comment posted'
     });
 
   } catch (error) {

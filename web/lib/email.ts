@@ -1,9 +1,82 @@
-import { getCoverImageUrl } from '@/lib/data';
+import { Resend } from 'resend';
+import { getCoverImageUrl, getTapeById } from '@/lib/data';
 import type { Tape } from '@/types/tape';
 
 export const SITE_URL = 'https://simfonik.com';
 export const FROM = 'simfonik <mixtapes@io.simfonik.com>';
 export const REPLY_TO = 'mixes@simfonik.com';
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * Fire-and-forget admin notification when a new comment is submitted.
+ * Returns silently on missing config or send failure — comment submission
+ * must never fail because of an email problem.
+ */
+export async function sendCommentNotification(opts: {
+  tapeId: string;
+  authorName: string;
+  authorEmail: string | null;
+  content: string;
+}): Promise<void> {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!adminEmail || !apiKey) return;
+
+  const tape = getTapeById(opts.tapeId);
+  if (!tape) return;
+
+  const djName = tape.djs.map((dj) => dj.name).join(' & ');
+  const tapeUrl = `${SITE_URL}/tapes/${tape.id}`;
+  const adminUrl = `${SITE_URL}/admin/comments`;
+  const subject = `New comment on simfonik: ${djName} — ${tape.title}`;
+
+  const safeAuthor = escapeHtml(opts.authorName);
+  const safeContent = escapeHtml(opts.content).replace(/\n/g, '<br>');
+  const safeEmail = opts.authorEmail ? escapeHtml(opts.authorEmail) : '';
+
+  const html = `<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:24px;font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#0a0a0a;background:#f7f7f7;">
+  <table cellpadding="0" cellspacing="0" style="max-width:520px;margin:0 auto;">
+    <tr><td style="padding-bottom:8px;font-family:ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#6b7280;">New comment</td></tr>
+    <tr><td style="padding-bottom:16px;font-size:18px;line-height:1.3;">
+      <a href="${tapeUrl}" style="color:#0a0a0a;text-decoration:none;font-weight:600;">${escapeHtml(djName)} — ${escapeHtml(tape.title)}</a>
+    </td></tr>
+    <tr><td style="padding-bottom:8px;font-family:ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#6b7280;">
+      ${safeAuthor}${safeEmail ? ` &middot; ${safeEmail}` : ''}
+    </td></tr>
+    <tr><td style="padding:12px 16px;background:#fff;border-left:3px solid #0a0a0a;font-size:15px;line-height:1.6;color:#0a0a0a;">
+      ${safeContent}
+    </td></tr>
+    <tr><td style="padding-top:24px;font-family:ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;">
+      <a href="${adminUrl}" style="color:#0a0a0a;text-decoration:underline;">Moderate &rarr;</a>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  try {
+    const resend = new Resend(apiKey);
+    await resend.emails.send({
+      from: FROM,
+      to: adminEmail,
+      replyTo: REPLY_TO,
+      subject,
+      html,
+    });
+  } catch (err) {
+    // Notifications are best-effort; never propagate to the comment submit flow.
+    console.error('sendCommentNotification failed:', err);
+  }
+}
 
 export function tapeEmailData(tape: Tape, message = '') {
   const djName = tape.djs.map((dj) => dj.name).join(' & ');
