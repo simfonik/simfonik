@@ -9,7 +9,7 @@ const HERO_WIDTHS = [640, 1024, 1920];
 // fetch through Vercel/Cloudflare. Headers in next.config.ts mark
 // /optimized/ + /media/ + /generated/ as immutable for a year, so
 // without this bump cached responses persist past file updates.
-export const ASSET_CACHE_VERSION = 2;
+export const ASSET_CACHE_VERSION = 3;
 const V = `?v=${ASSET_CACHE_VERSION}`;
 
 export default function imageLoader({ src, width }: { src: string, width: number }) {

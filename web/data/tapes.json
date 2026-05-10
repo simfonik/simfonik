@@ -8507,7 +8507,7 @@
             "url": "https://audio.simfonik.com/tapes/mr-buzz-acid-hits-29/a.mp3"
           }
         ],
-        "image": "/media/tapes/mr-buzz-acid-hits-29/sides/a.jpg"
+        "image": "/media/tapes/mr-buzz-acid-hits-29/sides/a.png"
       },
       {
         "position": "B",
@@ -8516,7 +8516,7 @@
             "url": "https://audio.simfonik.com/tapes/mr-buzz-acid-hits-29/b.mp3"
           }
         ],
-        "image": "/media/tapes/mr-buzz-acid-hits-29/sides/b.jpg"
+        "image": "/media/tapes/mr-buzz-acid-hits-29/sides/b.png"
       }
     ],
     "source": "Josh McClintock",
@@ -8540,7 +8540,7 @@
             "url": "https://audio.simfonik.com/tapes/mr-buzz-acid-hits-16/a.mp3"
           }
         ],
-        "image": "/media/tapes/mr-buzz-acid-hits-16/sides/a.jpg"
+        "image": "/media/tapes/mr-buzz-acid-hits-16/sides/a.png"
       },
       {
         "position": "B",
@@ -8549,7 +8549,7 @@
             "url": "https://audio.simfonik.com/tapes/mr-buzz-acid-hits-16/b.mp3"
           }
         ],
-        "image": "/media/tapes/mr-buzz-acid-hits-16/sides/b.jpg"
+        "image": "/media/tapes/mr-buzz-acid-hits-16/sides/b.png"
       }
     ],
     "source": "Josh McClintock",
@@ -9273,7 +9273,7 @@
       }
     ],
     "images": {
-      "cover": "/media/tapes/american-thomas-the-garden/cover.jpg"
+      "cover": "/media/tapes/american-thomas-the-garden/cover.png"
     },
     "sides": [
       {
@@ -9283,7 +9283,7 @@
             "url": "https://audio.simfonik.com/tapes/american-thomas-the-garden/a.mp3"
           }
         ],
-        "image": "/media/tapes/american-thomas-the-garden/sides/a.jpg"
+        "image": "/media/tapes/american-thomas-the-garden/sides/a.png"
       },
       {
         "position": "B",
@@ -9292,7 +9292,7 @@
             "url": "https://audio.simfonik.com/tapes/american-thomas-the-garden/b.mp3"
           }
         ],
-        "image": "/media/tapes/american-thomas-the-garden/sides/b.jpg"
+        "image": "/media/tapes/american-thomas-the-garden/sides/b.png"
       }
     ]
   },
@@ -9389,7 +9389,7 @@
             "url": "https://audio.simfonik.com/tapes/mr-buzz-acid-hits-9/a.mp3"
           }
         ],
-        "image": "/media/tapes/mr-buzz-acid-hits-9/sides/a.jpg",
+        "image": "/media/tapes/mr-buzz-acid-hits-9/sides/a.png",
         "tracks": [
           {
             "artist": "Reggie Griffin & Technofunk",
@@ -9445,7 +9445,7 @@
             "url": "https://audio.simfonik.com/tapes/mr-buzz-acid-hits-9/b.mp3"
           }
         ],
-        "image": "/media/tapes/mr-buzz-acid-hits-9/sides/b.jpg",
+        "image": "/media/tapes/mr-buzz-acid-hits-9/sides/b.png",
         "tracks": [
           {
             "artist": "Kraftwerk",
@@ -9516,7 +9516,7 @@
             "url": "https://audio.simfonik.com/tapes/mr-buzz-acid-hits-10/a.mp3"
           }
         ],
-        "image": "/media/tapes/mr-buzz-acid-hits-10/sides/a.jpg",
+        "image": "/media/tapes/mr-buzz-acid-hits-10/sides/a.png",
         "tracks": [
           {
             "artist": "Bitin' Back",
@@ -9572,7 +9572,7 @@
             "url": "https://audio.simfonik.com/tapes/mr-buzz-acid-hits-10/b.mp3"
           }
         ],
-        "image": "/media/tapes/mr-buzz-acid-hits-10/sides/b.jpg",
+        "image": "/media/tapes/mr-buzz-acid-hits-10/sides/b.png",
         "tracks": [
           {
             "artist": "Big Baby",
