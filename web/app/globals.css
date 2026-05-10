@@ -13,7 +13,7 @@
   --accent-text: #1a1a1a;
   --on-accent: #ffffff;
   --bg-image: url("/media/site/textured-paper-light.png");
-  --bg-image-opacity: 0.4;
+  --bg-image-opacity: 0.2;
 }
 
 @theme inline {
