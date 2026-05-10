@@ -2,6 +2,8 @@ import { renderHook, act } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
 
+type HookProps = Parameters<typeof useAudioPlayer>[0];
+
 // Mock global fetch
 global.fetch = vi.fn(() => Promise.resolve(new Response(null, { status: 200 })));
 
@@ -30,12 +32,12 @@ describe('useAudioPlayer', () => {
   });
 
   // Helper to mount hook properly and trigger effects
-  const setupHook = (initialProps: any) => {
-    return renderHook((dynamicProps: any) => {
+  const setupHook = (initialProps: HookProps) => {
+    return renderHook((dynamicProps: HookProps) => {
       const result = useAudioPlayer(dynamicProps);
       // Assign the ref during render so effects fire immediately
       if (result.ref) {
-        (result.ref as any).current = audioNode;
+        (result.ref as React.MutableRefObject<HTMLAudioElement | null>).current = audioNode;
       }
       return result;
     }, { initialProps });

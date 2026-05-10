@@ -11,16 +11,16 @@ class AudioMock {
   readyState = 4; // HAVE_ENOUGH_DATA
   
   // Need to track listeners rigorously to verify cleanup in Spec 0019
-  public listeners: Record<string, Function[]> = {};
+  public listeners: Record<string, EventListener[]> = {};
 
-  addEventListener(event: string, callback: Function) {
+  addEventListener(event: string, callback: EventListener) {
     if (!this.listeners[event]) {
       this.listeners[event] = [];
     }
     this.listeners[event].push(callback);
   }
 
-  removeEventListener(event: string, callback: Function) {
+  removeEventListener(event: string, callback: EventListener) {
     if (!this.listeners[event]) return;
     this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
   }
@@ -45,5 +45,5 @@ class AudioMock {
 }
 
 // Apply the mock to the global window object provided by jsdom
-// @ts-ignore
+// @ts-expect-error — overriding the DOM constructor with a structural mock
 global.window.HTMLAudioElement = AudioMock;
