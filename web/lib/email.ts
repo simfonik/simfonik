@@ -13,6 +13,38 @@ export function tapeEmailData(tape: Tape, message = '') {
   return { djName, tapeUrl, coverImageUrl, message: message.trim(), previewText };
 }
 
+/**
+ * Build the email subject + matching broadcast name.
+ *
+ * Default form: `New Mix: <DJs> - <Title>`.
+ *
+ * Two heuristics keep the line readable:
+ *   - 3+ DJs (compilations) collapse to `Various` rather than listing
+ *     every name (which can blow past inbox subject truncation).
+ *   - 1–2 DJ tapes where the title already names every DJ (e.g. collab
+ *     titles like "R.A.W. & Mellinfunk II") drop the prefix entirely:
+ *     `New Mix: <Title>`. Match is case-insensitive substring with a
+ *     leading "DJ " stripped from each DJ name.
+ */
+export function formatTapeSubject(tape: Tape): string {
+  const djLabel =
+    tape.djs.length > 2
+      ? 'Various'
+      : tape.djs.map((dj) => dj.name).join(' & ');
+
+  const titleLower = tape.title.toLowerCase();
+  const allDjsInTitle =
+    tape.djs.length <= 2 &&
+    tape.djs.every((dj) => {
+      const normalized = dj.name.replace(/^DJ\s+/i, '').trim().toLowerCase();
+      return normalized.length > 0 && titleLower.includes(normalized);
+    });
+
+  return allDjsInTitle
+    ? `New Mix: ${tape.title}`
+    : `New Mix: ${djLabel} - ${tape.title}`;
+}
+
 export function buildEmailHtml(opts: {
   tapeTitle: string;
   djName: string;

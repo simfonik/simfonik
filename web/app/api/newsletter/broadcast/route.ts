@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 import { NextResponse } from 'next/server';
 import { getTapeById } from '@/lib/data';
-import { buildEmailHtml, tapeEmailData, FROM, REPLY_TO } from '@/lib/email';
+import { buildEmailHtml, tapeEmailData, formatTapeSubject, FROM, REPLY_TO } from '@/lib/email';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -76,10 +76,10 @@ export async function POST(request: Request) {
 
     const { djName, tapeUrl, coverImageUrl, previewText } = tapeEmailData(tape, message);
     const html = buildEmailHtml({ tapeTitle: tape.title, djName, tapeUrl, coverImageUrl, message: message.trim(), previewText });
-    const subject = `New mix: ${tape.title}`;
+    const subject = formatTapeSubject(tape);
 
     const { data, error } = await resend.broadcasts.create({
-      name: `${tape.title} — ${djName}`,
+      name: subject,
       segmentId,
       from: FROM,
       replyTo: REPLY_TO,
