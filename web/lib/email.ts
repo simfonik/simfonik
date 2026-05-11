@@ -158,6 +158,8 @@ export function buildEmailHtml(opts: {
         border-color: #0a0a0a !important;
       }
       .email-divider { background-color: #0a0a0a !important; }
+      .lockup-dark { display: none !important; }
+      .lockup-light { display: block !important; }
     }
   </style>
 </head>
@@ -170,24 +172,17 @@ export function buildEmailHtml(opts: {
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
 
           <tr>
-            <td style="padding:28px 32px 0 32px;">
-              <table role="presentation" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td style="vertical-align:middle;padding-right:6px;line-height:0;">
-                    <!-- Static PNG of the riso wordmark mark. Source is
-                         176×176 (4× the 44px display size) so it stays
-                         crisp on retina. PNG is the universally-compatible
-                         choice — Gmail strips inline SVG. Regenerate via
-                         scripts/generate-wordmark-png.mjs.
-                         2px down-shift mirrors site's translate-y-[2px] —
-                         optical centering against Anton's baseline. -->
-                    <img src="${SITE_URL}/media/site/wordmark-mark.png" alt="" width="44" height="44" style="display:block;transform:translateY(2px);" />
-                  </td>
-                  <td style="vertical-align:middle;">
-                    <p class="email-text" style="margin:0;font-family:'Anton',Impact,'Helvetica Neue',Arial,sans-serif;font-size:30px;font-weight:400;line-height:1;color:#f5f5f5;letter-spacing:-0.01em;">simfonik</p>
-                  </td>
-                </tr>
-              </table>
+            <td style="padding:28px 32px 0 32px;line-height:0;">
+              <!-- Static PNG of the brand lockup (CMY circles + simfonik
+                   wordmark, one image). Source is 594×176 (4× display)
+                   so it stays crisp on retina. PNG is the universal
+                   choice — Gmail strips inline SVG. Two variants stacked
+                   for theming: dark (white wordmark) shows by default,
+                   light (black wordmark) swaps in via the media query in
+                   <style> above. Regenerate via
+                   scripts/generate-lockup-pngs.mjs. -->
+              <img class="lockup-dark" src="${SITE_URL}/media/site/lockup-dark.png" alt="simfonik" width="149" height="44" style="display:block;" />
+              <img class="lockup-light" src="${SITE_URL}/media/site/lockup-light.png" alt="simfonik" width="149" height="44" style="display:none;" />
             </td>
           </tr>
 

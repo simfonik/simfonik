@@ -92,14 +92,11 @@ body::before {
   }
 }
 
-/* Wordmark mark: CMY circles with code-only riso-edge filter (see
-   Wordmark.tsx). Multiply blend produces secondary colors where the
-   visible colored circles overlap. The .wordmark-colors group scopes
-   the blend so it only applies to the visible circles, not the
-   white circles inside the SVG mask source. */
-.wordmark-mark {
-  display: inline-block;
-}
+/* Wordmark mark hooks (see SimfonikLockup.tsx). The .wordmark-colors
+   group scopes the multiply blend and rotation animation to the visible
+   colored circles, not the white circles inside the SVG mask source.
+   Layout/sizing is owned by the SVG itself and the inline-flex parent
+   link — no display rule needed here. */
 .wordmark-mark svg {
   display: block;
 }
@@ -111,7 +108,7 @@ body::before {
    and paused by default. Hover flips animation-play-state to running;
    mouseleave flips it back to paused, so the colors freeze at the
    current frame instead of snapping back to the resting CMY. Resting
-   keyframes (0%/100%) match Wordmark.tsx CIRCLES so a fresh load
+   keyframes (0%/100%) match SimfonikLockup.tsx CIRCLES so a fresh load
    starts at the canonical layout. */
 .wordmark-mark .wordmark-colors circle:nth-of-type(1) {
   animation: wordmark-rotate-pos-b 2.7s linear infinite paused;
@@ -126,19 +123,19 @@ body::before {
 /* Wordmark color rotation: on hover, circles stay in their positions
    but their fills rotate clockwise around the triangle. */
 
-/* Position B (cx=245, cy=220 — bottom-right): cyan → yellow → magenta → cyan */
+/* Position B (bottom-right): cyan → yellow → magenta → cyan */
 @keyframes wordmark-rotate-pos-b {
   0%, 100% { fill: #1A84C4; }
   33% { fill: #FDEB44; }
   66% { fill: #FB5FB6; }
 }
-/* Position C (cx=120, cy=220 — bottom-left): magenta → cyan → yellow → magenta */
+/* Position C (bottom-left): magenta → cyan → yellow → magenta */
 @keyframes wordmark-rotate-pos-c {
   0%, 100% { fill: #FB5FB6; }
   33% { fill: #1A84C4; }
   66% { fill: #FDEB44; }
 }
-/* Position A (cx=190, cy=120 — top): yellow → magenta → cyan → yellow */
+/* Position A (top): yellow → magenta → cyan → yellow */
 @keyframes wordmark-rotate-pos-a {
   0%, 100% { fill: #FDEB44; }
   33% { fill: #FB5FB6; }
