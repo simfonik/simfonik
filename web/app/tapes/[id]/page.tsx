@@ -8,6 +8,7 @@ import { getTapeById, getAllTapes, getCommentsForTape, getAllSeries } from "../.
 import { hasOptimizedImages, isOptimizableImagePath } from "../../../lib/image-utils";
 import { ASSET_CACHE_VERSION } from "../../../lib/imageLoader";
 import { TapeGallery } from "../../../components/TapeGallery";
+import { PlaceholderCassetteLive } from "../../../components/PlaceholderCassetteLive";
 import { AudioCoordinator } from "../../../components/AudioCoordinator";
 import { AudioPlayer } from "../../../components/AudioPlayer";
 import { PlaylistPlayer } from "../../../components/PlaylistPlayer";
@@ -258,9 +259,15 @@ export default async function Page({ params }: Props) {
       {/* Hero: Image Gallery with Players */}
       <div className="mb-12">
         <div className="grid lg:grid-cols-[1fr_500px] gap-8 items-start">
-          {/* Desktop Gallery - Hidden on mobile */}
+          {/* Desktop Gallery - Hidden on mobile. For tapes that have no
+              real cover, render a live SVG cassette whose reels rotate
+              while audio is playing instead of the static AVIF. */}
           <div className="hidden lg:block">
-            <TapeGallery allImages={allImages} />
+            {allImages.length === 1 && allImages[0].src.includes('/generated/placeholders/') ? (
+              <PlaceholderCassetteLive tapeId={tape.id} />
+            ) : (
+              <TapeGallery allImages={allImages} />
+            )}
           </div>
 
           {/* Right Column: Header + Audio Players */}
@@ -395,9 +402,13 @@ export default async function Page({ params }: Props) {
         </div>
       </div>
 
-      {/* Mobile Images - Stacked */}
+      {/* Mobile Images - Stacked. Same placeholder swap as desktop:
+          live cassette with spinning reels when this tape is a
+          placeholder-only one. */}
       <div className="mb-12 space-y-6 lg:hidden">
-        {allImages.map((img, idx) => {
+        {allImages.length === 1 && allImages[0].src.includes('/generated/placeholders/') ? (
+          <PlaceholderCassetteLive tapeId={tape.id} />
+        ) : allImages.map((img, idx) => {
           const isOptimized = img.tapeId && img.src.startsWith("/");
           let mobileSrc = img.src;
           let mobileSrcSet = undefined;

@@ -1,15 +1,8 @@
 'use client';
 
 import { createContext, useContext, useState } from 'react';
-import {
-  OUTER_BODY_D,
-  REEL_D,
-  buildRaisedPlate,
-  buildRaisedPlateBorder,
-  buildScrewPositions,
-  DRIVE_HOLES_D,
-  LABEL_CLIP_D,
-} from '../../../scripts/lib/cassette-svg.mjs';
+import { buildTapeRing, CASSETTE_DEFAULTS } from '../../../scripts/lib/cassette-svg.mjs';
+import { CassetteSvg as SharedCassetteSvg } from '../../../components/cassette/CassetteSvg';
 
 // Shared cassette mechanism params, controlled by sliders at the top
 // of the playground. Values cascade into every CassetteSvg instance
@@ -43,35 +36,10 @@ type CassetteParams = {
   artStrokeWidth: number;    // 0..3 — stroke width around the label/spool boundary
   artStrokeLightness: number; // 0..60 — brightness of the boundary stroke
 };
-const DEFAULT_CASSETTE_PARAMS: CassetteParams = {
-  circleRadius: 68,
-  reelSize: 25,
-  bodyLightness: 8,
-  grainStrength: 0.04,
-  vignetteStrength: 0.23,
-  recessStrength: 0.5,
-  circleColor: '#363535',
-  teethColor: '#363535',
-  leftReelX: 111,
-  leftReelY: 107,
-  rightReelX: 266,
-  rightReelY: 107,
-  plateWidth: 276,
-  plateHeight: 44,
-  plateLightness: 10,
-  plateBorderWidth: 2,
-  plateBorderLightness: 26,
-  screwSize: 13.5,
-  screwInsetX: 13,
-  screwTopY: 10,
-  screwBottomY: 224,
-  screwCenterX: 186.5,
-  screwCenterY: 204,
-  screwLightness: 21,
-  screwOuterLightness: 13,
-  artStrokeWidth: 1.5,
-  artStrokeLightness: 26,
-};
+// Initial slider values come from the shared CASSETTE_DEFAULTS in
+// cassette-svg.mjs — the same source of truth the bake script and live
+// placeholder component use. Tuning updates flow through one file.
+const DEFAULT_CASSETTE_PARAMS: CassetteParams = CASSETTE_DEFAULTS;
 const CassetteContext = createContext<CassetteParams>(DEFAULT_CASSETTE_PARAMS);
 
 const PLACEHOLDER_TAPES = [
@@ -223,6 +191,10 @@ function PlaceholderCassette({ id }: { id: string }) {
 }
 
 // ─── Cassette container ──────────────────────────────────────────────
+// Thin wrapper that reads slider params from context and delegates
+// the SVG markup to the shared CassetteSvg. The dev page only renders
+// the at-rest "full left, empty right" state — audio-driven dynamics
+// (spinning + tape transfer) live in PlaceholderCassetteLive.
 function CassetteSvg({
   uid,
   children,
@@ -230,265 +202,17 @@ function CassetteSvg({
   uid: string;
   children: React.ReactNode;
 }) {
-  const clipId = `clip-${uid}`;
-  const bodyClipId = `body-clip-${uid}`;
-  const grainId = `grain-${uid}`;
-  const recessId = `recess-${uid}`;
-  const formId = `form-${uid}`;
-  // Per-cassette seed so each tape's plastic grain pattern is unique
-  // but stays in the [0, 100] range that feTurbulence accepts well.
-  const grainSeed = hashString(uid) % 100;
-
-  // Big-circle ring behind the left reel. Outer = wound tape body,
-  // inner cutout = 105% of the reel size so the reel fits with margin.
-  // Path is a single subpath with even-odd fill rule (outer ring,
-  // counter-wound inner circle = hole).
-  const {
-    circleRadius,
-    reelSize,
-    bodyLightness,
-    grainStrength,
-    vignetteStrength,
-    recessStrength,
-    circleColor,
-    teethColor,
-    leftReelX,
-    leftReelY,
-    rightReelX,
-    rightReelY,
-    plateWidth,
-    plateHeight,
-    plateLightness,
-    plateBorderWidth,
-    plateBorderLightness,
-    screwSize,
-    screwInsetX,
-    screwTopY,
-    screwBottomY,
-    screwCenterX,
-    screwCenterY,
-    screwLightness,
-    screwOuterLightness,
-    artStrokeWidth,
-    artStrokeLightness,
-  } = useContext(CassetteContext);
-  const platePath = buildRaisedPlate(plateWidth, plateHeight);
-  const plateBorderPath = buildRaisedPlateBorder(plateWidth, plateHeight);
-  const screwPositions = buildScrewPositions({
-    insetX: screwInsetX,
-    topY: screwTopY,
-    bottomY: screwBottomY,
-    centerX: screwCenterX,
-    centerY: screwCenterY,
-  });
-  const teethMaskId = `teeth-${uid}`;
-  const bodyMaskId = `body-${uid}`;
-  const screwId = `screw-${uid}`;
-  // REEL_D has its bbox at (0,0)–(36,36). Subtract 18 from the reel
-  // center to translate the path so its center lands at (cx, cy).
-  const leftTx = leftReelX - 18;
-  const leftTy = leftReelY - 18;
-  const rightTx = rightReelX - 18;
-  const rightTy = rightReelY - 18;
-  const cx = leftReelX;
-  const cy = leftReelY;
-  const R = circleRadius;
-  const rIn = reelSize * 1.05;
-  const bodyFill = `rgb(${bodyLightness}, ${bodyLightness}, ${bodyLightness})`;
-  // Recess shadow opacities scale with the recess slider so a single
-  // knob controls the whole effect.
-  const rs = recessStrength;
-  const ringPath = [
-    `M ${cx - R} ${cy}`,
-    `A ${R} ${R} 0 1 0 ${cx + R} ${cy}`,
-    `A ${R} ${R} 0 1 0 ${cx - R} ${cy}`,
-    'Z',
-    `M ${cx - rIn} ${cy}`,
-    `A ${rIn} ${rIn} 0 1 0 ${cx + rIn} ${cy}`,
-    `A ${rIn} ${rIn} 0 1 0 ${cx - rIn} ${cy}`,
-    'Z',
-  ].join(' ');
+  const params = useContext(CassetteContext);
+  const hubR = params.reelSize * 1.05;
   return (
-    <svg
-      viewBox="0 0 373 233"
-      xmlns="http://www.w3.org/2000/svg"
-      className="block w-full h-auto"
+    <SharedCassetteSvg
+      params={params}
+      uid={uid}
+      grainSeed={hashString(uid) % 100}
+      leftRingPath={buildTapeRing(params.leftReelX, params.leftReelY, params.circleRadius, hubR)}
     >
-      <defs>
-        <clipPath id={clipId}>
-          <path d={LABEL_CLIP_D} />
-        </clipPath>
-        <clipPath id={bodyClipId}>
-          <path d={OUTER_BODY_D} />
-        </clipPath>
-        {/* Plastic grain: fractal noise added to whatever the body
-            color is. Low intensity (k3=0.06) = subtle highlight specks
-            on the dark cassette plastic. */}
-        <filter
-          id={grainId}
-          x="0%"
-          y="0%"
-          width="100%"
-          height="100%"
-        >
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="1.6"
-            numOctaves="2"
-            seed={grainSeed}
-            result="noise"
-          />
-          <feComposite
-            in="SourceGraphic"
-            in2="noise"
-            operator="arithmetic"
-            k1="0"
-            k2="1"
-            k3={grainStrength}
-            k4="0"
-            result="grained"
-          />
-          {/* Clip the grain-tinted output to SourceGraphic alpha.
-              Without this, feComposite arithmetic leaves a faint
-              k3·noise tint in transparent pixels, producing a
-              rectangular halo around the cassette on dark bg. */}
-          <feComposite in="grained" in2="SourceGraphic" operator="in" />
-        </filter>
-        {/* Recess shadow: dark gradient at the top edge (overhang
-            shadow) and a softer one at the bottom (lower lip). Multiply
-            blend over the label content sells the "sits in a recess"
-            illusion without needing 3D. */}
-        <linearGradient id={recessId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="black" stopOpacity={Math.min(1, 0.55 * rs)} />
-          <stop offset="0.06" stopColor="black" stopOpacity={Math.min(1, 0.18 * rs)} />
-          <stop offset="0.14" stopColor="black" stopOpacity="0" />
-          <stop offset="0.86" stopColor="black" stopOpacity="0" />
-          <stop offset="0.95" stopColor="black" stopOpacity={Math.min(1, 0.10 * rs)} />
-          <stop offset="1" stopColor="black" stopOpacity={Math.min(1, 0.22 * rs)} />
-        </linearGradient>
-        {/* Form-light vignette: subtle highlight in the middle, soft
-            darken on all four edges. Radial so no single edge gets
-            preferential treatment — avoids the "curved top" misread
-            of a top-to-bottom gradient. */}
-        <radialGradient id={formId} cx="50%" cy="50%" r="75%">
-          <stop offset="0" stopColor="white" stopOpacity={vignetteStrength * 0.2} />
-          <stop offset="0.65" stopColor="black" stopOpacity="0" />
-          <stop offset="1" stopColor="black" stopOpacity={vignetteStrength} />
-        </radialGradient>
-        {/* Teeth mask: white inside each reel's bounding circle (r=20),
-            minus the gear-shape interior. Result = the triangular tabs
-            that project from the body into the reel cutout (the "teeth"). */}
-        <mask id={teethMaskId}>
-          <circle cx={leftReelX} cy={leftReelY} r="20" fill="white" />
-          <circle cx={rightReelX} cy={rightReelY} r="20" fill="white" />
-          <path d={REEL_D} fill="black" transform={`translate(${leftTx}, ${leftTy})`} />
-          <path d={REEL_D} fill="black" transform={`translate(${rightTx}, ${rightTy})`} />
-        </mask>
-        {/* Body mask: white everywhere, with black cutouts for the
-            (movable) reel gears and the tape window rect. Replaces the
-            even-odd cutouts in TAPE_BODY_D so the gears can take SVG
-            transforms. Drive holes stay in the body path itself. */}
-        <mask id={bodyMaskId}>
-          <rect x="0" y="0" width="373" height="233" fill="white" />
-          <path d={REEL_D} fill="black" transform={`translate(${leftTx}, ${leftTy})`} />
-          <path d={REEL_D} fill="black" transform={`translate(${rightTx}, ${rightTy})`} />
-          <rect x="152" y="96.5" width="75" height="21" fill="black" />
-        </mask>
-        {/* Phillips screw: instanced via <use> at four corners + plate
-            center. Kept in defs so the per-cassette uid scopes the id. */}
-        <symbol id={screwId} viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="12" fill={`rgb(${screwOuterLightness}, ${screwOuterLightness}, ${screwOuterLightness})`} />
-          <circle cx="12" cy="12" r="10" fill={`rgb(${screwLightness}, ${screwLightness}, ${screwLightness})`} />
-          <path d="M12 5V19" stroke="black" strokeWidth="2" strokeLinecap="round" />
-          <line x1="5" y1="12" x2="19" y2="12" stroke="black" strokeWidth="2" strokeLinecap="round" />
-        </symbol>
-      </defs>
-      {/* Big circle ring behind the reel, with center cutout sized
-          at 105% of the reel size. */}
-      <path d={ringPath} fill={circleColor} fillRule="evenodd" />
-      {/* Tape body — with the tape window rect as a cutout subpath
-          in the body path itself (even-odd fill rule). Where the rect
-          was, the body is transparent and the tape ribbon below
-          shows through. Body color comes from the bodyLightness slider. */}
-      <g mask={`url(#${bodyMaskId})`}>
-        <path
-          d={`${OUTER_BODY_D}${DRIVE_HOLES_D}`}
-          fill={bodyFill}
-          fillRule="evenodd"
-          filter={`url(#${grainId})`}
-        />
-        <path
-          d={`${OUTER_BODY_D}${DRIVE_HOLES_D}`}
-          fill={`url(#${formId})`}
-          fillRule="evenodd"
-        />
-      </g>
-      {/* Teeth-color overlay: a teethColor rect on top of the body,
-          masked to ONLY the teeth tabs. Body color elsewhere stays
-          unchanged; only the projecting reel teeth pick up this color. */}
-      {/* Raised plate over the bottom drive-hole region. Slightly
-          lighter than the body so it reads as a plateau catching
-          ambient light; drive holes punch through via evenodd;
-          clipped to the body so corners follow the rounded shell. */}
-      <path
-        d={`${platePath}${DRIVE_HOLES_D}`}
-        fill={`rgb(${plateLightness}, ${plateLightness}, ${plateLightness})`}
-        fillRule="evenodd"
-        filter={`url(#${grainId})`}
-        clipPath={`url(#${bodyClipId})`}
-      />
-      {/* Border along the plate's left/top/right edges (no bottom) for
-          tunable shadow/highlight depth. */}
-      <path
-        d={plateBorderPath}
-        fill="none"
-        stroke={`rgb(${plateBorderLightness}, ${plateBorderLightness}, ${plateBorderLightness})`}
-        strokeWidth={plateBorderWidth}
-        strokeLinejoin="miter"
-        clipPath={`url(#${bodyClipId})`}
-      />
-      <rect
-        x="0"
-        y="0"
-        width="373"
-        height="233"
-        fill={teethColor}
-        filter={`url(#${grainId})`}
-        mask={`url(#${teethMaskId})`}
-      />
-      <g clipPath={`url(#${clipId})`}>
-        {children}
-        {/* Inner shadow on top of the label content — makes the
-            sticker read as recessed into the cassette shell. */}
-        <rect
-          x="18"
-          y="14"
-          width="337"
-          height="161"
-          fill={`url(#${recessId})`}
-          style={{ mixBlendMode: 'multiply' }}
-        />
-      </g>
-      {/* Outline around the label area + spool window for inset depth. */}
-      <path
-        d={LABEL_CLIP_D}
-        fill="none"
-        stroke={`rgb(${artStrokeLightness}, ${artStrokeLightness}, ${artStrokeLightness})`}
-        strokeWidth={artStrokeWidth}
-        fillRule="evenodd"
-      />
-      {/* Phillips screws (four corners + center of the raised plate). */}
-      {screwPositions.map((p, i) => (
-        <use
-          key={i}
-          href={`#${screwId}`}
-          x={p.x - screwSize / 2}
-          y={p.y - screwSize / 2}
-          width={screwSize}
-          height={screwSize}
-        />
-      ))}
-    </svg>
+      {children}
+    </SharedCassetteSvg>
   );
 }
 

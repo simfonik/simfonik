@@ -12,6 +12,10 @@
 //                    holes; mimics the raised plastic on real
 //                    cassettes. Combine with DRIVE_HOLES_D using
 //                    evenodd so the holes still punch through.
+//   buildTapeRing(cx, cy, outerR, hubR) — annulus path for a reel's
+//                    wound-tape pancake. Outer/inner radii are inputs
+//                    so the live cassette can animate them as the
+//                    track plays (left shrinks, right grows).
 //   buildRaisedPlateBorder(w, h) — open polyline along the plate's
 //                    left/top/right edges, for stroking a tunable
 //                    shadow/highlight.
@@ -24,6 +28,41 @@
 //   LABEL_CLIP_D   — rounded label rect with the spool window cut out
 //
 // Natural viewBox: 0 0 373 233 (for body + drive holes + label clip).
+//
+// CASSETTE_DEFAULTS — single source of truth for the values the bake
+// script, the live placeholder component, and the dev playground all
+// use. Tuned interactively in /dev/placeholders; when those defaults
+// are updated, every consumer picks them up.
+
+export const CASSETTE_DEFAULTS = {
+  circleRadius: 68,
+  reelSize: 25,
+  bodyLightness: 8,
+  grainStrength: 0.04,
+  vignetteStrength: 0.23,
+  recessStrength: 0.5,
+  circleColor: '#303030',
+  teethColor: '#303030',
+  leftReelX: 111,
+  leftReelY: 107,
+  rightReelX: 266,
+  rightReelY: 107,
+  plateLightness: 10,
+  plateWidth: 276,
+  plateHeight: 44,
+  plateBorderWidth: 2,
+  plateBorderLightness: 26,
+  screwSize: 13.5,
+  screwInsetX: 13,
+  screwTopY: 10,
+  screwBottomY: 224,
+  screwCenterX: 186.5,
+  screwCenterY: 204,
+  screwLightness: 21,
+  screwOuterLightness: 13,
+  artStrokeWidth: 1.5,
+  artStrokeLightness: 26,
+};
 
 export const OUTER_BODY_D =
   'M370.507 152.092V9.9323C370.507 4.44728 366.043 0 360.538 0H12.4608C6.95557 0 2.49188 4.44728 2.49188 9.9323V152.092L0 154.575V213.756L2.49188 215.839V223.068C2.49188 228.553 6.95557 233 12.4608 233H360.538C366.043 233 370.507 228.553 370.507 223.068V215.839L372.999 213.756L373 154.575L370.507 152.092Z';
@@ -47,6 +86,22 @@ export const PLATE_DEFAULTS = {
   cx: 190,              // horizontal centerline (matches plate.svg's center)
   bottomY: 233.5,       // bottom edge y (clipped to body bottom)
 };
+
+// Annulus for one reel's wound tape — outer circle minus inner hub
+// circle, even-odd fill. The bake script renders the static start
+// state (full left reel); the live placeholder animates outerR.
+export function buildTapeRing(cx, cy, outerR, hubR) {
+  return [
+    `M ${cx - outerR} ${cy}`,
+    `A ${outerR} ${outerR} 0 1 0 ${cx + outerR} ${cy}`,
+    `A ${outerR} ${outerR} 0 1 0 ${cx - outerR} ${cy}`,
+    'Z',
+    `M ${cx - hubR} ${cy}`,
+    `A ${hubR} ${hubR} 0 1 0 ${cx + hubR} ${cy}`,
+    `A ${hubR} ${hubR} 0 1 0 ${cx - hubR} ${cy}`,
+    'Z',
+  ].join(' ');
+}
 
 export function buildRaisedPlate(width = PLATE_DEFAULTS.width, height = PLATE_DEFAULTS.height) {
   const { taper, cx, bottomY } = PLATE_DEFAULTS;

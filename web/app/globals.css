@@ -92,6 +92,29 @@ body::before {
   }
 }
 
+/* Placeholder cassette reel spin — used by PlaceholderCassetteLive
+   when any audio on the page is playing. Two separate classes because
+   real cassette reels rotate at different speeds depending on how much
+   tape is wound on each. Left = 2s per revolution, right = 2.5s per
+   revolution. transform-box: fill-box + transform-origin: center make
+   the rotation pivot around the path's own bbox center, which lands
+   at (cx, cy) because each reel path is wrapped in a translated <g>. */
+.cassette-reel-spin-left,
+.cassette-reel-spin-right {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cassette-spin linear infinite;
+}
+.cassette-reel-spin-left { animation-duration: 2.5s; }
+.cassette-reel-spin-right { animation-duration: 2s; }
+@keyframes cassette-spin {
+  to { transform: rotate(-360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cassette-reel-spin-left,
+  .cassette-reel-spin-right { animation: none; }
+}
+
 /* Wordmark mark hooks (see SimfonikLockup.tsx). The .wordmark-colors
    group scopes the multiply blend and rotation animation to the visible
    colored circles, not the white circles inside the SVG mask source.

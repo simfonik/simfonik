@@ -34,7 +34,9 @@ import {
   buildRaisedPlateBorder,
   buildScrewInner,
   buildScrewPositions,
+  buildTapeRing,
   LABEL_CLIP_D,
+  CASSETTE_DEFAULTS,
 } from './lib/cassette-svg.mjs';
 import { mergeIntoManifest, shortHash } from './lib/asset-manifest.mjs';
 
@@ -69,54 +71,20 @@ const variantPool = [
   { name: 'ascii',  paramsFn: asciiParamsFromSeed, renderFn: renderAsciiShader },
 ];
 
-// Defaults from DEFAULT_CASSETTE_PARAMS in _placeholders-mock.tsx.
-// Reels stay at their natural positions (111, 107) / (266, 107), so no
-// SVG transforms are needed and the body/teeth masks simplify.
-const CASSETTE = {
-  circleRadius: 68,
-  reelSize: 25,
-  bodyLightness: 8,
-  grainStrength: 0.04,
-  vignetteStrength: 0.23,
-  recessStrength: 0.5,
-  circleColor: '#363535',
-  teethColor: '#363535',
-  leftReelX: 111,
-  leftReelY: 107,
-  rightReelX: 266,
-  rightReelY: 107,
-  plateLightness: 10,
-  plateWidth: 276,
-  plateHeight: 44,
-  plateBorderWidth: 2,
-  plateBorderLightness: 26,
-  screwSize: 13.5,
-  screwInsetX: 13,
-  screwTopY: 10,
-  screwBottomY: 224,
-  screwCenterX: 186.5,
-  screwCenterY: 204,
-  screwLightness: 21,
-  screwOuterLightness: 13,
-  artStrokeWidth: 1.5,
-  artStrokeLightness: 26,
-};
+// Cassette mechanism params — single source of truth in cassette-svg.mjs
+// so the bake script, the dev playground, and the live placeholder
+// component all stay in sync.
+const CASSETTE = CASSETTE_DEFAULTS;
 
 function buildCassetteSvg(shaderDataUri, grainSeed) {
   const c = CASSETTE;
-  const cx = c.leftReelX, cy = c.leftReelY, R = c.circleRadius, rIn = c.reelSize * 1.05;
+  const hubR = c.reelSize * 1.05;
   const bodyFill = `rgb(${c.bodyLightness}, ${c.bodyLightness}, ${c.bodyLightness})`;
   const rs = c.recessStrength;
-  const ringPath = [
-    `M ${cx - R} ${cy}`,
-    `A ${R} ${R} 0 1 0 ${cx + R} ${cy}`,
-    `A ${R} ${R} 0 1 0 ${cx - R} ${cy}`,
-    'Z',
-    `M ${cx - rIn} ${cy}`,
-    `A ${rIn} ${rIn} 0 1 0 ${cx + rIn} ${cy}`,
-    `A ${rIn} ${rIn} 0 1 0 ${cx - rIn} ${cy}`,
-    'Z',
-  ].join(' ');
+  // Bake the at-rest state: left reel full, right reel empty (matches
+  // a cassette before the tape starts playing). The live placeholder
+  // on tape pages animates these radii via track time.
+  const ringPath = buildTapeRing(c.leftReelX, c.leftReelY, c.circleRadius, hubR);
   const recessStops = `
     <stop offset="0" stop-color="black" stop-opacity="${Math.min(1, 0.55 * rs)}"/>
     <stop offset="0.06" stop-color="black" stop-opacity="${Math.min(1, 0.18 * rs)}"/>
