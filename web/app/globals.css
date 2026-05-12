@@ -106,7 +106,7 @@ body::before {
   animation: cassette-spin linear infinite;
 }
 .cassette-reel-spin-left { animation-duration: 2.5s; }
-.cassette-reel-spin-right { animation-duration: 2s; }
+.cassette-reel-spin-right { animation-duration: 2.2s; }
 @keyframes cassette-spin {
   to { transform: rotate(-360deg); }
 }
