@@ -203,14 +203,18 @@ for (let i = 0; i < TAPES.length; i++) {
   ]);
   writeFileSync(`${basePath}.avif`, avifBuffer);
   writeFileSync(`${basePath}.png`, pngBuffer);
-  // Also write the bare shader artwork (no cassette frame) so the dev
-  // page can wrap a live CassetteSvg around just the label content
-  // without producing a duplicate set of reels.
-  writeFileSync(`${basePath}-label.png`, shaderPng);
+  // Bare shader artwork (no cassette frame) for the live placeholder
+  // and dev playground. AVIF (not PNG) so the tape page can inline it
+  // as a base64 data URI inside the SVG without bloating the HTML —
+  // shader output is noisy and PNG compresses noise poorly.
+  const labelAvif = await sharp(Buffer.from(rgba.buffer), {
+    raw: { width: SHADER_W, height: SHADER_H, channels: 4 },
+  }).avif({ quality: 65, effort: 2 }).toBuffer();
+  writeFileSync(`${basePath}-label.avif`, labelAvif);
   // Hash of the AVIF bytes — that's what the loader cache-busts on.
   manifestEntries[`generated/placeholders/${tapeId}`] = shortHash(avifBuffer);
   const elapsed = Date.now() - start;
-  console.log(`  ✓ ${tapeId}.{avif,png,-label.png}  [${variant.name}]  (${elapsed}ms)`);
+  console.log(`  ✓ ${tapeId}.{avif,png,-label.avif}  [${variant.name}]  (${elapsed}ms)`);
 }
 
 mergeIntoManifest(manifestEntries);

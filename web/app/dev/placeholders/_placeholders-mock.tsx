@@ -173,13 +173,13 @@ function TwoToneCassette({ id }: { id: string }) {
 function PlaceholderCassette({ id }: { id: string }) {
   // Live cassette frame (controlled by the dev page's sliders) with
   // the bare shader artwork inside its label area. The artwork-only
-  // PNG is emitted alongside the full-cassette AVIF by
+  // AVIF is emitted alongside the full-cassette AVIF by
   // scripts/generate-placeholder-shaders.mjs so the dev page doesn't
   // double up on reels.
   return (
     <CassetteSvg uid={`p-${id}`}>
       <image
-        href={`/generated/placeholders/${id}-label.png`}
+        href={`/generated/placeholders/${id}-label.avif`}
         x="18"
         y="14"
         width="337"

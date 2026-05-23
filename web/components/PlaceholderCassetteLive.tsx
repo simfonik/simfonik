@@ -21,6 +21,10 @@ import { useCurrentTrackTime } from '../hooks/useCurrentTrackTime';
 
 interface PlaceholderCassetteLiveProps {
   tapeId: string;
+  // Inlined base64 data URI for the shader label. Passed from the page
+  // server component so the label renders atomically with the SVG
+  // housing — no second HTTP request, no pop-in.
+  labelDataUri: string;
   className?: string;
 }
 
@@ -52,6 +56,7 @@ function hashTapeId(tapeId: string): number {
 
 export function PlaceholderCassetteLive({
   tapeId,
+  labelDataUri,
   className,
 }: PlaceholderCassetteLiveProps) {
   const uid = useId().replace(/:/g, '');
@@ -78,7 +83,7 @@ export function PlaceholderCassetteLive({
       className={className}
     >
       <image
-        href={`/generated/placeholders/${tapeId}-label.png`}
+        href={labelDataUri}
         x="18"
         y="14"
         width="337"

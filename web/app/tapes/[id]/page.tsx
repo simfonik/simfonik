@@ -175,12 +175,25 @@ export default async function Page({ params }: Props) {
 
   // If no images found, add the placeholder
   if (allImages.length === 0) {
-    allImages.push({ 
-      src: "/media/site/blank-tape.svg", 
+    allImages.push({
+      src: "/media/site/blank-tape.svg",
       label: "Blank cassette tape placeholder",
       isCover: true
     });
   }
+
+  // For placeholder-only tapes, inline the baked AVIF shader label as a
+  // base64 data URI so PlaceholderCassetteLive can render the label
+  // atomically with the SVG housing (no second HTTP request, no pop-in).
+  const usesPlaceholder =
+    allImages.length === 1 && allImages[0].src.includes('/generated/placeholders/');
+  const labelDataUri = usesPlaceholder
+    ? `data:image/avif;base64,${fs
+        .readFileSync(
+          path.join(process.cwd(), 'public', 'generated', 'placeholders', `${tape.id}-label.avif`)
+        )
+        .toString('base64')}`
+    : '';
 
   return (
     <main className="min-h-screen">
@@ -263,8 +276,8 @@ export default async function Page({ params }: Props) {
               real cover, render a live SVG cassette whose reels rotate
               while audio is playing instead of the static AVIF. */}
           <div className="hidden lg:block">
-            {allImages.length === 1 && allImages[0].src.includes('/generated/placeholders/') ? (
-              <PlaceholderCassetteLive tapeId={tape.id} />
+            {usesPlaceholder ? (
+              <PlaceholderCassetteLive tapeId={tape.id} labelDataUri={labelDataUri} />
             ) : (
               <TapeGallery allImages={allImages} />
             )}
@@ -406,8 +419,8 @@ export default async function Page({ params }: Props) {
           live cassette with spinning reels when this tape is a
           placeholder-only one. */}
       <div className="mb-12 space-y-6 lg:hidden">
-        {allImages.length === 1 && allImages[0].src.includes('/generated/placeholders/') ? (
-          <PlaceholderCassetteLive tapeId={tape.id} />
+        {usesPlaceholder ? (
+          <PlaceholderCassetteLive tapeId={tape.id} labelDataUri={labelDataUri} />
         ) : allImages.map((img, idx) => {
           const isOptimized = img.tapeId && img.src.startsWith("/");
           let mobileSrc = img.src;
