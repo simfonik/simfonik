@@ -9922,5 +9922,25 @@
         "image": "/media/tapes/chris-flores-work-3/sides/b.png"
       }
     ]
+  },
+  {
+    "id": "barry-weaver-flammable-liquid-9-24-2011",
+    "title": "Flammable Liquid Reunion",
+    "released": "2011",
+    "created_date": "2026-05-24T11:15:00",
+    "source": "Barry Weaver",
+    "djs": [
+      { "name": "Barry Weaver", "slug": "barry-weaver" }
+    ],
+    "images": {
+      "cover": "/media/tapes/barry-weaver-flammable-liquid-9-24-2011/cover.jpg"
+    },
+    "sides": [
+      {
+        "position": "A",
+        "title": "09-24-2011",
+        "audio_links": [{ "url": "https://audio.simfonik.com/tapes/barry-weaver-flammable-liquid-9-24-2011/a.mp3" }]
+      }
+    ]
   }
 ]
