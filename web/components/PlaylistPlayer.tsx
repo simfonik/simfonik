@@ -69,6 +69,28 @@ export function PlaylistPlayer({ tracks, tapeId }: PlaylistPlayerProps) {
     <div className="space-y-4">
       <audio ref={ref} src={currentTrack.url} preload="none" playsInline />
 
+      {/*
+        Detection-only audio elements for the non-active sides. Brave's Playlist
+        feature enumerates the page's <audio> elements one by one; because the
+        controlled player above swaps a single element's src, Brave could only
+        ever see (and save) the currently-selected side. Exposing each side as
+        its own element lets Brave save every side individually. These are inert:
+        no `controls` (invisible), `preload="none"` (fetch nothing — no impact on
+        Safari/Chrome), and never driven by the player hook.
+      */}
+      {tracks.map((track, index) =>
+        index === currentTrackIndex ? null : (
+          <audio
+            key={track.position}
+            src={track.url}
+            preload="none"
+            playsInline
+            aria-hidden="true"
+            tabIndex={-1}
+          />
+        )
+      )}
+
       <PlayerControls
         isPlaying={state.isPlaying}
         currentTime={state.currentTime}
