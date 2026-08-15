@@ -9983,5 +9983,39 @@
         ]
       }
     ]
+  },
+  {
+    "id": "steve-loria-velvet-crush-02-1994",
+    "title": "Velvet Crush",
+    "released": "1994",
+    "created_date": "2026-08-15T00:00:00",
+    "source": "Tef Foo",
+    "djs": [
+      {
+        "name": "Steve Loria",
+        "slug": "steve-loria"
+      }
+    ],
+    "images": {
+      "cover": "/media/tapes/steve-loria-velvet-crush-02-1994/cover.jpg"
+    },
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/steve-loria-velvet-crush-02-1994/a.mp3"
+          }
+        ]
+      },
+      {
+        "position": "B",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/steve-loria-velvet-crush-02-1994/b.mp3"
+          }
+        ]
+      }
+    ]
   }
 ]
