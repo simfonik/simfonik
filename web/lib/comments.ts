@@ -1,5 +1,21 @@
+import { unstable_cache } from 'next/cache';
 import { sql } from './db';
 import { getTapeById } from './data';
+
+export const COMMENTS_CACHE_TAG = 'comments';
+
+// Comments are rare, so cached reads only refresh when a comment is written
+// (the submit and admin routes call revalidateTag) or once a day. Keeping the
+// database idle between writes is what lets Neon scale to zero.
+const cacheOptions = { tags: [COMMENTS_CACHE_TAG], revalidate: 60 * 60 * 24 };
+
+export type TapeComment = {
+  id: number;
+  tape_id: string;
+  author_name: string;
+  content: string;
+  created_at: string;
+};
 
 export type RecentComment = {
   id: number;
@@ -21,8 +37,22 @@ export type PaginatedComment = {
   tape_year: string;
 };
 
-export async function getRecentComments(limit = 10): Promise<RecentComment[]> {
-  try {
+export const getTapeComments = unstable_cache(
+  async (tapeId: string): Promise<TapeComment[]> => {
+    const { rows } = await sql`
+      SELECT id, tape_id, author_name, content, created_at
+      FROM comments
+      WHERE tape_id = ${tapeId} AND approved = true
+      ORDER BY created_at ASC
+    `;
+    return rows as TapeComment[];
+  },
+  ['comments-by-tape'],
+  cacheOptions
+);
+
+const fetchRecentRows = unstable_cache(
+  async (limit: number) => {
     const { rows } = await sql`
       SELECT id, tape_id, author_name, created_at
       FROM comments
@@ -30,6 +60,41 @@ export async function getRecentComments(limit = 10): Promise<RecentComment[]> {
       ORDER BY created_at DESC
       LIMIT ${limit}
     `;
+    return rows as Omit<TapeComment, 'content'>[];
+  },
+  ['recent-comments'],
+  cacheOptions
+);
+
+const fetchPaginatedRows = unstable_cache(
+  async (page: number, perPage: number) => {
+    const offset = (page - 1) * perPage;
+
+    const { rows: countRows } = await sql`
+      SELECT COUNT(*) as count
+      FROM comments
+      WHERE approved = true
+    `;
+    const total = parseInt(countRows[0].count);
+
+    const { rows } = await sql`
+      SELECT id, tape_id, author_name, content, created_at
+      FROM comments
+      WHERE approved = true
+      ORDER BY created_at DESC
+      LIMIT ${perPage}
+      OFFSET ${offset}
+    `;
+
+    return { rows: rows as TapeComment[], total };
+  },
+  ['paginated-comments'],
+  cacheOptions
+);
+
+export async function getRecentComments(limit = 10): Promise<RecentComment[]> {
+  try {
+    const rows = await fetchRecentRows(limit);
 
     // Enrich with tape data
     const enrichedComments = rows.map((comment) => {
@@ -63,26 +128,8 @@ export async function getRecentComments(limit = 10): Promise<RecentComment[]> {
 
 export async function getPaginatedComments(page = 1, perPage = 30) {
   try {
-    const offset = (page - 1) * perPage;
-    
-    // Get total count
-    const { rows: countRows } = await sql`
-      SELECT COUNT(*) as count
-      FROM comments
-      WHERE approved = true
-    `;
-    const total = parseInt(countRows[0].count);
+    const { rows, total } = await fetchPaginatedRows(page, perPage);
     const totalPages = Math.ceil(total / perPage);
-
-    // Get paginated comments
-    const { rows } = await sql`
-      SELECT id, tape_id, author_name, content, created_at
-      FROM comments
-      WHERE approved = true
-      ORDER BY created_at DESC
-      LIMIT ${perPage}
-      OFFSET ${offset}
-    `;
 
     // Enrich with tape data
     const enrichedComments = rows.map((comment) => {

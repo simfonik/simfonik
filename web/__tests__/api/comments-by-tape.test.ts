@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const { sqlMock } = vi.hoisted(() => ({ sqlMock: vi.fn() }));
 vi.mock('@/lib/db', () => ({ sql: sqlMock }));
+// unstable_cache needs Next's incremental cache; pass the reader straight through here.
+vi.mock('next/cache', () => ({ unstable_cache: (fn: unknown) => fn }));
 
 import { GET } from '@/app/api/comments/[tapeId]/route';
 import type { NextRequest } from 'next/server';

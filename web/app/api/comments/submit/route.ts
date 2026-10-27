@@ -1,4 +1,6 @@
 import { sql } from '@/lib/db';
+import { COMMENTS_CACHE_TAG } from '@/lib/comments';
+import { revalidateTag } from 'next/cache';
 import { sendCommentNotification } from '@/lib/email';
 import { createHash } from 'crypto';
 
@@ -74,6 +76,8 @@ export async function POST(request: Request) {
       INSERT INTO comments (tape_id, author_name, author_email, content, approved)
       VALUES (${tapeId}, ${name}, ${authorEmail || null}, ${text}, true)
     `;
+
+    revalidateTag(COMMENTS_CACHE_TAG);
 
     // Best-effort notification — must not fail the request. The
     // implementation in lib/email.ts already swallows its own errors,

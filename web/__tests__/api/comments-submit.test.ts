@@ -3,12 +3,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // Mocks must be set up before importing the route handler. vi.mock is
 // hoisted above the file, so top-level consts in the factory aren't
 // initialized yet — vi.hoisted is the canonical workaround.
-const { sqlMock, sendCommentNotificationMock } = vi.hoisted(() => ({
+const { sqlMock, sendCommentNotificationMock, revalidateTagMock } = vi.hoisted(() => ({
   sqlMock: vi.fn(),
+  revalidateTagMock: vi.fn(),
   sendCommentNotificationMock: vi.fn(),
 }));
 
 vi.mock('@/lib/db', () => ({ sql: sqlMock }));
+vi.mock('next/cache', () => ({ revalidateTag: revalidateTagMock, unstable_cache: (fn: unknown) => fn }));
 vi.mock('@/lib/email', () => ({ sendCommentNotification: sendCommentNotificationMock }));
 
 import { POST } from '@/app/api/comments/submit/route';
@@ -23,6 +25,7 @@ function makeRequest(body: unknown, headers: Record<string, string> = {}) {
 
 beforeEach(() => {
   sqlMock.mockReset();
+  revalidateTagMock.mockReset();
   sendCommentNotificationMock.mockReset();
   sendCommentNotificationMock.mockResolvedValue(undefined);
   // Default: no existing rate-limit row, all subsequent writes succeed.
@@ -44,6 +47,7 @@ describe('POST /api/comments/submit', () => {
     const json = await res.json();
     expect(json).toEqual({ success: true, message: 'Comment posted' });
     expect(sendCommentNotificationMock).toHaveBeenCalledOnce();
+    expect(revalidateTagMock).toHaveBeenCalledWith('comments');
   });
 
   it('rejects when the honeypot field is filled (bot signal)', async () => {
@@ -80,6 +84,7 @@ describe('POST /api/comments/submit', () => {
     const res = await POST(makeRequest(validBody));
     expect(res.status).toBe(429);
     expect(sendCommentNotificationMock).not.toHaveBeenCalled();
+    expect(revalidateTagMock).not.toHaveBeenCalled();
   });
 
   it('still succeeds (200) if the notification email throws', async () => {

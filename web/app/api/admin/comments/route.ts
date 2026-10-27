@@ -1,4 +1,6 @@
 import { sql } from '@/lib/db';
+import { COMMENTS_CACHE_TAG } from '@/lib/comments';
+import { revalidateTag } from 'next/cache';
 import { timingSafeEqual } from 'crypto';
 
 function checkAuth(authHeader: string | null): boolean {
@@ -89,6 +91,8 @@ export async function POST(request: Request) {
     } else {
       return Response.json({ error: 'Invalid action' }, { status: 400 });
     }
+
+    revalidateTag(COMMENTS_CACHE_TAG);
 
     return Response.json({ success: true });
   } catch (error) {

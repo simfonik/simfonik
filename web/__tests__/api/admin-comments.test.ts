@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-const { sqlMock } = vi.hoisted(() => ({ sqlMock: vi.fn() }));
+const { sqlMock, revalidateTagMock } = vi.hoisted(() => ({ sqlMock: vi.fn(), revalidateTagMock: vi.fn() }));
 vi.mock('@/lib/db', () => ({ sql: sqlMock }));
+vi.mock('next/cache', () => ({ revalidateTag: revalidateTagMock, unstable_cache: (fn: unknown) => fn }));
 
 import { GET, POST } from '@/app/api/admin/comments/route';
 
@@ -27,6 +28,7 @@ function makePost(body: unknown, headers: Record<string, string> = {}) {
 beforeEach(() => {
   vi.stubEnv('ADMIN_PASSWORD', ADMIN_PW);
   sqlMock.mockReset();
+  revalidateTagMock.mockReset();
   sqlMock.mockResolvedValue({ rows: [] });
 });
 
@@ -76,12 +78,14 @@ describe('POST /api/admin/comments', () => {
     const res = await POST(makePost({ action: 'delete', commentId: 42 }, authHeader(ADMIN_PW)));
     expect(res.status).toBe(200);
     expect(sqlMock).toHaveBeenCalledOnce();
+    expect(revalidateTagMock).toHaveBeenCalledWith('comments');
   });
 
   it('rejects an unknown action', async () => {
     const res = await POST(makePost({ action: 'nuke', commentId: 42 }, authHeader(ADMIN_PW)));
     expect(res.status).toBe(400);
     expect(sqlMock).not.toHaveBeenCalled();
+    expect(revalidateTagMock).not.toHaveBeenCalled();
   });
 
   it('rejects when commentId is missing', async () => {
