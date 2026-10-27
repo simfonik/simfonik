@@ -9,6 +9,7 @@ type Comment = {
   author_name: string;
   content: string;
   created_at: string;
+  approved: boolean;
 };
 
 type CommentsData = {
@@ -94,11 +95,11 @@ export default function AdminCommentsPage() {
         {loading ? (
           <div className="text-[var(--muted)]">Loading...</div>
         ) : data && data.comments.length === 0 ? (
-          <div className="text-[var(--muted)]">No pending comments</div>
+          <div className="text-[var(--muted)]">No comments</div>
         ) : data ? (
           <>
             <div className="mb-4 text-[var(--muted)]">
-              {data.total} pending comment{data.total !== 1 ? 's' : ''}
+              {data.total} comment{data.total !== 1 ? 's' : ''}
             </div>
 
             <div className="space-y-4">
@@ -118,15 +119,17 @@ export default function AdminCommentsPage() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => handleAction(comment.id, 'approve')}
-                        className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-sm rounded-md transition-colors"
-                      >
-                        Approve
-                      </button>
+                      {!comment.approved && (
+                        <button
+                          onClick={() => handleAction(comment.id, 'approve')}
+                          className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-sm rounded-md transition-colors cursor-pointer"
+                        >
+                          Approve
+                        </button>
+                      )}
                       <button
                         onClick={() => handleAction(comment.id, 'delete')}
-                        className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm rounded-md transition-colors"
+                        className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm rounded-md transition-colors cursor-pointer"
                       >
                         Delete
                       </button>

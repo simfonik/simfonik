@@ -41,18 +41,17 @@ export async function GET(request: Request) {
     const limit = 50;
     const offset = (page - 1) * limit;
 
-    // Get pending comments
+    // Comments are auto-approved on submit, so the moderation list has to show
+    // everything, newest first, for the admin to be able to delete bad ones.
     const { rows } = await sql`
-      SELECT id, tape_id, author_name, content, created_at
+      SELECT id, tape_id, author_name, content, created_at, approved
       FROM comments
-      WHERE approved = false
       ORDER BY created_at DESC
       LIMIT ${limit} OFFSET ${offset}
     `;
 
-    // Get total count
     const { rows: [{ count }] } = await sql`
-      SELECT COUNT(*) as count FROM comments WHERE approved = false
+      SELECT COUNT(*) as count FROM comments
     `;
 
     return Response.json({

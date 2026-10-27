@@ -50,15 +50,20 @@ describe('GET /api/admin/comments', () => {
     expect(res.status).toBe(401);
   });
 
-  it('returns pending comments + total when authed', async () => {
+  it('returns all comments (approved included) + total when authed', async () => {
     sqlMock
-      .mockResolvedValueOnce({ rows: [{ id: 1, tape_id: 't', author_name: 'A', content: 'x', created_at: 'd' }] })
+      .mockResolvedValueOnce({ rows: [{ id: 1, tape_id: 't', author_name: 'A', content: 'x', created_at: 'd', approved: true }] })
       .mockResolvedValueOnce({ rows: [{ count: '7' }] });
     const res = await GET(makeGet(authHeader(ADMIN_PW)));
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.comments).toHaveLength(1);
+    expect(json.comments[0].approved).toBe(true);
     expect(json.total).toBe(7);
+    // Neither query may filter on approval status, or auto-approved comments vanish from moderation.
+    for (const call of sqlMock.mock.calls) {
+      expect(call[0].join('')).not.toMatch(/approved\s*=/);
+    }
   });
 });
 
