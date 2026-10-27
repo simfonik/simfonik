@@ -4,6 +4,8 @@ const { sqlMock } = vi.hoisted(() => ({ sqlMock: vi.fn() }));
 vi.mock('@/lib/db', () => ({ sql: sqlMock }));
 // unstable_cache needs Next's incremental cache; pass the reader straight through here.
 vi.mock('next/cache', () => ({ unstable_cache: (fn: unknown) => fn }));
+// Only tapes in the archive may be queried; 'some-tape' stands in for a real one.
+vi.mock('@/lib/data', () => ({ getTapeById: (id: string) => (id === 'some-tape' ? { id } : undefined) }));
 
 import { GET } from '@/app/api/comments/[tapeId]/route';
 import type { NextRequest } from 'next/server';
@@ -25,6 +27,12 @@ describe('GET /api/comments/[tapeId]', () => {
     const res = await GET(makeRequest(), ctx('some-tape'));
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual(rows);
+  });
+
+  it('returns 404 for a tape not in the archive without touching the DB', async () => {
+    const res = await GET(makeRequest(), ctx('no-such-tape'));
+    expect(res.status).toBe(404);
+    expect(sqlMock).not.toHaveBeenCalled();
   });
 
   it('returns 500 when the DB throws', async () => {

@@ -66,17 +66,22 @@ const fetchRecentRows = unstable_cache(
   cacheOptions
 );
 
-const fetchPaginatedRows = unstable_cache(
-  async (page: number, perPage: number) => {
-    const offset = (page - 1) * perPage;
-
-    const { rows: countRows } = await sql`
+const fetchApprovedCount = unstable_cache(
+  async () => {
+    const { rows } = await sql`
       SELECT COUNT(*) as count
       FROM comments
       WHERE approved = true
     `;
-    const total = parseInt(countRows[0].count);
+    return parseInt(rows[0].count);
+  },
+  ['approved-comment-count'],
+  cacheOptions
+);
 
+const fetchPaginatedRows = unstable_cache(
+  async (page: number, perPage: number) => {
+    const offset = (page - 1) * perPage;
     const { rows } = await sql`
       SELECT id, tape_id, author_name, content, created_at
       FROM comments
@@ -85,8 +90,7 @@ const fetchPaginatedRows = unstable_cache(
       LIMIT ${perPage}
       OFFSET ${offset}
     `;
-
-    return { rows: rows as TapeComment[], total };
+    return rows as TapeComment[];
   },
   ['paginated-comments'],
   cacheOptions
@@ -128,8 +132,12 @@ export async function getRecentComments(limit = 10): Promise<RecentComment[]> {
 
 export async function getPaginatedComments(page = 1, perPage = 30) {
   try {
-    const { rows, total } = await fetchPaginatedRows(page, perPage);
+    const total = await fetchApprovedCount();
     const totalPages = Math.ceil(total / perPage);
+
+    // Pages past the end are a cache key per request; answer them from the
+    // (single, cached) count instead of running a query for each.
+    const rows = page > totalPages ? [] : await fetchPaginatedRows(page, perPage);
 
     // Enrich with tape data
     const enrichedComments = rows.map((comment) => {

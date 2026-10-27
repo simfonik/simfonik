@@ -1,4 +1,5 @@
 import { getTapeComments } from '@/lib/comments';
+import { getTapeById } from '@/lib/data';
 import { NextRequest } from 'next/server';
 
 export async function GET(
@@ -7,6 +8,13 @@ export async function GET(
 ) {
   try {
     const { tapeId } = await params;
+
+    // Unknown tapes never reach the database (or the cache): each distinct key
+    // would otherwise cost a query, so made-up IDs could keep Neon awake.
+    if (!getTapeById(tapeId)) {
+      return Response.json({ error: 'Unknown tape' }, { status: 404 });
+    }
+
     return Response.json(await getTapeComments(tapeId));
   } catch (error) {
     console.error('Error fetching comments:', error);
