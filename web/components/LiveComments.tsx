@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { CommentBody } from './CommentBody';
 
 type Comment = {
   id: number;
@@ -13,18 +14,6 @@ type Comment = {
 type LiveCommentsProps = {
   tapeId: string;
 };
-
-function sanitizeContent(text: string): string {
-  const escaped = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-
-  return escaped.replace(
-    /(https?:\/\/(?:www\.)?discogs\.com\/[^\s]+)/gi,
-    '<a href="$1" target="_blank" rel="nofollow noopener noreferrer" class="text-[var(--accent-text)] hover:underline break-all">$1</a>'
-  );
-}
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
@@ -82,10 +71,7 @@ export function LiveComments({ tapeId }: LiveCommentsProps) {
               {formatDate(comment.created_at)}
             </div>
           </div>
-          <div
-            className="text-[var(--text)] whitespace-pre-wrap leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: sanitizeContent(comment.content) }}
-          />
+          <CommentBody content={comment.content} />
         </div>
       ))}
     </div>

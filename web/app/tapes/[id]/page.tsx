@@ -14,6 +14,7 @@ import { AudioPlayer } from "../../../components/AudioPlayer";
 import { PlaylistPlayer } from "../../../components/PlaylistPlayer";
 import { CommentForm } from "../../../components/CommentForm";
 import { LiveComments } from "../../../components/LiveComments";
+import { CommentBody } from "../../../components/CommentBody";
 import { RotatingWord } from "../../../components/RotatingWord";
 import { JsonLd } from "../../../components/JsonLd";
 import { generateTapeSchema } from "../../../lib/structured-data";
@@ -99,31 +100,6 @@ function formatDate(dateString: string): string {
     month: 'long',
     day: 'numeric'
   });
-}
-
-// Process comment content to linkify Discogs URLs
-function processCommentForDisplay(content: string) {
-  const discogsPattern = /(https?:\/\/(?:www\.)?discogs\.com\/[^\s]+)/gi;
-  const parts: Array<{ type: 'text' | 'link'; content: string }> = [];
-  let lastIndex = 0;
-  let match;
-
-  while ((match = discogsPattern.exec(content)) !== null) {
-    // Add text before the link
-    if (match.index > lastIndex) {
-      parts.push({ type: 'text', content: content.slice(lastIndex, match.index) });
-    }
-    // Add the link
-    parts.push({ type: 'link', content: match[1] });
-    lastIndex = match.index + match[1].length;
-  }
-
-  // Add remaining text
-  if (lastIndex < content.length) {
-    parts.push({ type: 'text', content: content.slice(lastIndex) });
-  }
-
-  return parts.length > 0 ? parts : [{ type: 'text', content }];
 }
 
 export default async function Page({ params }: Props) {
@@ -578,24 +554,7 @@ export default async function Page({ params }: Props) {
                             {formatDate(comment.date)}
                           </div>
                         </div>
-                        <div className="text-[var(--text)] whitespace-pre-wrap leading-relaxed">
-                          {processCommentForDisplay(comment.content).map((part, partIdx) => {
-                            if (part.type === 'link') {
-                              return (
-                                <a
-                                  key={partIdx}
-                                  href={part.content}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-[var(--accent-text)] hover:underline break-all"
-                                >
-                                  {part.content}
-                                </a>
-                              );
-                            }
-                            return <span key={partIdx}>{part.content}</span>;
-                          })}
-                        </div>
+                        <CommentBody content={comment.content} />
                       </div>
                     ))}
                   </div>
@@ -630,24 +589,7 @@ export default async function Page({ params }: Props) {
                                 {formatDate(comment.date)}
                               </div>
                             </div>
-                            <div className="text-[var(--text)] whitespace-pre-wrap leading-relaxed">
-                              {processCommentForDisplay(comment.content).map((part, partIdx) => {
-                                if (part.type === 'link') {
-                                  return (
-                                    <a
-                                      key={partIdx}
-                                      href={part.content}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-[var(--accent-text)] hover:underline break-all"
-                                    >
-                                      {part.content}
-                                    </a>
-                                  );
-                                }
-                                return <span key={partIdx}>{part.content}</span>;
-                              })}
-                            </div>
+                            <CommentBody content={comment.content} />
                           </div>
                         ))}
                       </div>
