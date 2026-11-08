@@ -33,6 +33,7 @@ Otherwise, file issues directly under the team.
 ## Guardrails
 - Do not add auth/admin features unless explicitly requested.
 - Do not introduce extra services unless explicitly requested.
+- Keep pages static. Never call `headers()`, `cookies()`, or other request APIs in `app/layout.tsx` or in a page that should prerender: the root layout wraps every route, so one such call makes the whole site render per request and burns Vercel's Fluid Active CPU allowance. Read the path on the client with `usePathname()` instead. After a change to layouts or data loading, confirm `next build` still lists `/`, `/tapes/[id]`, and `/djs/[slug]` as static (○ or ●), not ƒ.
 
 ## UI conventions
 - All interactive elements (`<button>`, clickable icons, links styled as buttons) must use `cursor-pointer`.
