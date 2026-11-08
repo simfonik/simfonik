@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Anton } from "next/font/google";
 import "./globals.css";
-import Link from "next/link";
-import { headers } from 'next/headers';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
 import { Header } from '../components/Header';
-import { NewsletterFooter } from '../components/NewsletterSignup';
+import { SiteFooter } from '../components/SiteFooter';
 import { themeInitScript } from '../components/ThemeToggle';
 
 const geistMono = Geist_Mono({
@@ -49,13 +47,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const pathname = (await headers()).get('x-pathname') ?? '';
-  const isAdmin = pathname.startsWith('/admin');
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -72,25 +68,7 @@ export default async function RootLayout({
         <Header />
         {children}
         <Analytics />
-        {!isAdmin && (
-          <footer className="mt-16 sm:mt-24">
-            <div className="border-t-[1.5px] border-[var(--border)]">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
-                <NewsletterFooter />
-              </div>
-            </div>
-            <div className="border-t-[1.5px] border-[var(--border)]">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
-                <p>© respective artists &amp; rights holders · non-commercial</p>
-                <div className="flex gap-6">
-                  <Link href="/about" className="hover:text-[var(--accent-text)] transition-colors">About</Link>
-                  <Link href="/contribute" className="hover:text-[var(--accent-text)] transition-colors">Contribute</Link>
-                  <Link href="/rights" className="hover:text-[var(--accent-text)] transition-colors">Rights &amp; Takedown</Link>
-                </div>
-              </div>
-            </div>
-          </footer>
-        )}
+        <SiteFooter />
         {process.env.VERCEL_ENV === 'production' && <SpeedInsights />}
       </body>
     </html>

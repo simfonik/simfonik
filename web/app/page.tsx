@@ -13,8 +13,9 @@ export const metadata: Metadata = {
   description: "Curated archive of 90s rave DJ mixes from the early Los Angeles underground scene.",
 };
 
-// ISR: Revalidate every 60 seconds
-export const revalidate = 60;
+// ISR. A new comment purges this page through the comments cache tag, so the
+// interval only refreshes the relative timestamps in Recent Comments.
+export const revalidate = 3600;
 
 export default async function Home() {
   const tapes = getAllTapes();

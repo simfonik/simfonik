@@ -13,9 +13,6 @@ export const metadata: Metadata = {
   },
 };
 
-// ISR: Revalidate every 60 seconds (same as homepage)
-export const revalidate = 60;
-
 type Props = {
   searchParams: Promise<{ page?: string }>;
 };
