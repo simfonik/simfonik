@@ -37,7 +37,7 @@ function CuePart({ value, ...props }: { value: string } & React.ComponentProps<"
 
 /** A plain-language line for one history entry, worked out from what changed in the list. */
 function describe(e: HistoryEntry): string {
-  const who = e.source === "agent" ? "Agent" : "You";
+  const who = e.source === "agent" ? "Fill-in" : "You";
   const before = (Array.isArray(e.previous) ? e.previous : []) as Cue[];
   const after = (Array.isArray(e.value) ? e.value : []) as Cue[];
   const added = after.filter((c) => !before.some((b) => b.id === c.id));
@@ -233,7 +233,7 @@ export function Trainspotter({ tape, sightings, others }: { tape: TapeProp; sigh
       if (result.ok) done++;
       await sleep(60);
     }
-    setNote(`Agent marked ${done} ${done === 1 ? "track" : "tracks"} from ${new Set(pending.map((p) => p.author)).size} commenters.`);
+    setNote(`Filled in ${done} ${done === 1 ? "track" : "tracks"} from ${new Set(pending.map((p) => p.author)).size} commenters.`);
     setRunning(false);
     busyRef.current = false;
   };
@@ -264,7 +264,7 @@ export function Trainspotter({ tape, sightings, others }: { tape: TapeProp; sigh
   const agentEntries = entries.filter((e) => e.source === "agent" && !e.reverted).length;
   const undoAgent = async () => {
     await historyRef.current?.undoSource("agent");
-    setNote("Undid everything the agent did. Your own edits are untouched.");
+    setNote("Took the fill-in back out. Your own marks are untouched.");
   };
 
   // ── Timeline geometry ──
@@ -292,7 +292,56 @@ export function Trainspotter({ tape, sightings, others }: { tape: TapeProp; sigh
     }
   };
 
+  // The track under the playhead on the side that's playing.
+  const playingCue = useMemo(
+    () =>
+      cues
+        .filter((c) => c.track === sides[active] && c.start <= now && now < c.end)
+        .sort((a, b) => b.start - a.start)[0] ?? null,
+    [cues, sides, active, now],
+  );
+
+  // "A new track starts here": mark it at the playhead and put the cursor in the name field.
+  const wantName = useRef(false);
+  const focusName = () => requestAnimationFrame(() => (document.getElementById("ts-artist") as HTMLInputElement | null)?.focus());
+  const markHere = useCallback(() => {
+    const a = audios.current[activeRef.current];
+    wantName.current = true;
+    api.markAt(sides[activeRef.current], Math.floor(a?.currentTime ?? 0));
+  }, [api, sides]);
+  useEffect(() => {
+    if (selected && wantName.current) {
+      wantName.current = false;
+      focusName();
+    }
+  }, [selected]);
+
+  // M marks, Space plays and pauses, unless the keys belong to a field or a control.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement;
+      if (e.metaKey || e.ctrlKey || e.altKey || t.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(t.tagName) || t.closest("[role=slider],[role=option],.ts-cue")) return;
+      if (e.key === "m" || e.key === "M") {
+        e.preventDefault();
+        markHere();
+      } else if (e.key === " ") {
+        e.preventDefault();
+        const a = audios.current[activeRef.current];
+        if (a?.paused) a.play().catch(() => {});
+        else a?.pause();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [markHere]);
+
   const sel = cues.find((c) => c.id === selected) ?? null;
+  // What else commenters said about the selected track's moment.
+  const opinions = useMemo(() => {
+    if (!sel) return [];
+    const side = sides.indexOf(sel.track);
+    return proposals.find((p) => p.side === side && Math.abs(p.start - sel.start) <= 20)?.also ?? [];
+  }, [sel, sides, proposals]);
   const [draftName, setDraftName] = useState({ artist: "", title: "" });
   useEffect(() => {
     setDraftName({ artist: sel?.artist ?? "", title: sel?.title ?? "" });
@@ -356,14 +405,8 @@ export function Trainspotter({ tape, sightings, others }: { tape: TapeProp; sigh
                       >
                         <span className="ts-edge" data-span-edge="start" aria-hidden />
                         <span className="ts-cue-text">
-                          {c.known ? (
-                            <>
-                              <b>{c.artist || c.title}</b>
-                              {c.artist && c.title ? ` ${c.title}` : ""}
-                            </>
-                          ) : (
-                            <>ID? {c.title}</>
-                          )}
+                          <b>{c.known ? c.artist || c.title : "ID wanted"}</b>
+                          <i>{c.known ? (c.artist ? c.title : "") : c.title}</i>
                         </span>
                         <span className="ts-edge" data-span-edge="end" aria-hidden />
                       </CuePart>
@@ -438,9 +481,6 @@ export function Trainspotter({ tape, sightings, others }: { tape: TapeProp; sigh
         <p className="font-mono text-sm tabular-nums text-[var(--text)]" aria-live="off">
           Side {sides[active]} · {clock(now)} <span className="text-[var(--muted)]">/ {clock(lengths[active])}</span>
         </p>
-        <button type="button" onClick={() => api.addCue({ track: sides[active], start: Math.floor(now), end: Math.floor(now) + 180 })} className="poster-btn min-h-11">
-          Mark a track here
-        </button>
         <div className="flex w-full flex-wrap items-center gap-3 sm:ml-auto sm:w-auto" data-proto-keys>
           <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]" id="ts-zoom">
             Zoom
@@ -461,12 +501,106 @@ export function Trainspotter({ tape, sightings, others }: { tape: TapeProp; sigh
         </div>
       </div>
 
-      <div className="mt-4">{root}</div>
-      <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)]">
-        Drag on a side to mark a track · drag a range to move it, an end to trim it · arrows move, Shift-arrows trim, Delete removes · double-click to hear it
-      </p>
+      <div className="mt-5 flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
+        <div className="min-w-0 flex-1 basis-80" aria-live="polite">
+          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">{playing ? "Now playing" : "At the playhead"}</p>
+          <p className="mt-1 truncate font-display text-3xl leading-tight text-[var(--text)] sm:text-4xl">
+            {playingCue ? (playingCue.known ? cueLabel(playingCue) : "ID wanted") : "Unmarked tape"}
+          </p>
+          <p className="mt-1 min-h-[1.25rem] truncate text-sm text-[var(--muted)]">
+            {playingCue
+              ? playingCue.known
+                ? playingCue.by
+                  ? `Identified by ${playingCue.by}`
+                  : "Marked by you"
+                : playingCue.title
+                  ? `Nobody has named it yet. Someone heard: “${playingCue.title}”`
+                  : "Nobody has named this one yet."
+              : "Nothing is marked here. Press the button when a track comes in."}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {playingCue && !playingCue.known && (
+            <button
+              type="button"
+              onClick={() => {
+                setSelected(playingCue.id);
+                focusName();
+              }}
+              className="poster-btn min-h-11"
+            >
+              I know this one
+            </button>
+          )}
+          <button type="button" onClick={markHere} className="poster-btn min-h-11 !bg-[var(--text)] !text-[var(--bg)]" aria-keyshortcuts="M">
+            A new track starts here
+          </button>
+        </div>
+      </div>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-3">
+      <div className="mt-4">{root}</div>
+
+      {/* Naming sits directly under the timeline, where the hands already are. */}
+      <div className="ts-namebar">
+        {sel ? (
+          <>
+            <p className="flex-none font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] tabular-nums">
+              Side {sel.track} · {clock(sel.start)}–{clock(sel.end)}
+            </p>
+            <Field className="min-w-0 flex-1 basis-40">
+              <FieldLabel className="sr-only">Artist</FieldLabel>
+              <Input id="ts-artist" placeholder="Artist" value={draftName.artist} onValueChange={(v: string) => setDraftName((d) => ({ ...d, artist: v }))} onBlur={commitName} onKeyDown={(e: React.KeyboardEvent) => e.key === "Enter" && commitName()} autoComplete="off" className="ts-input" />
+            </Field>
+            <Field className="min-w-0 flex-[1.4] basis-48">
+              <FieldLabel className="sr-only">Title</FieldLabel>
+              <Input placeholder="Title" value={draftName.title} onValueChange={(v: string) => setDraftName((d) => ({ ...d, title: v }))} onBlur={commitName} onKeyDown={(e: React.KeyboardEvent) => e.key === "Enter" && commitName()} autoComplete="off" className="ts-input" />
+            </Field>
+            <button type="button" onClick={() => seek(sides.indexOf(sel.track), sel.start, true)} className="poster-btn min-h-11 flex-none">
+              Hear it
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                api.removeCue(sel.id);
+                setSelected(null);
+              }}
+              className="poster-btn min-h-11 flex-none"
+            >
+              Remove
+            </button>
+            {(sel.by || opinions.length > 0) && (
+              <p className="w-full text-sm text-[var(--muted)]">
+                {sel.by ? `Identified by ${sel.by}.` : ""}
+                {opinions.map((o, i) => (
+                  <span key={i}>
+                    {" "}
+                    {o.known ? (
+                      <>
+                        {o.author} said{" "}
+                        <button type="button" onClick={() => api.renameCue(sel.id, o.artist, o.title)} className="cursor-pointer text-[var(--text)] underline underline-offset-4">
+                          {[o.artist, o.title].filter(Boolean).join(" — ")}
+                        </button>{" "}
+                        ({o.date.slice(0, 4)}).
+                      </>
+                    ) : (
+                      <>
+                        {o.author} heard “{o.title}”.
+                      </>
+                    )}
+                  </span>
+                ))}
+              </p>
+            )}
+          </>
+        ) : (
+          <p className="text-sm text-[var(--muted)]">
+            <span className="ts-fine">Drag on a side to mark a track, drag a range to move it or an end to trim it, double-click to hear it. With the keyboard: M marks at the playhead, Space plays, arrows move a range, Shift-arrows trim it, Delete removes it.</span>
+            <span className="ts-coarse">Play the tape and press “A new track starts here” when one comes in. Tap a range to name it.</span>
+          </p>
+        )}
+      </div>
+
+      <div className="mt-8 grid gap-8 lg:grid-cols-2">
         {/* The crowd and the agent */}
         <div className="min-w-0">
           <h2 className="font-display text-2xl leading-none text-[var(--text)]">What the crowd said</h2>
@@ -487,7 +621,7 @@ export function Trainspotter({ tape, sightings, others }: { tape: TapeProp; sigh
           ) : (
             <div className="mt-4 flex flex-wrap gap-2">
               <button type="button" onClick={running ? () => (stop.current = true) : runAgent} disabled={!running && !pending.length} className="poster-btn min-h-11 min-w-[15.5rem] !bg-[var(--text)] !text-[var(--bg)]">
-                {running ? "Stop the agent" : "Let the agent mark them"}
+                {running ? "Stop" : "Fill in from the comments"}
               </button>
               <button type="button" onClick={previewAll} disabled={running || !pending.length} className="poster-btn min-h-11">
                 Preview first
@@ -521,7 +655,7 @@ export function Trainspotter({ tape, sightings, others }: { tape: TapeProp; sigh
         <div className="min-w-0">
           <h2 className="font-display text-2xl leading-none text-[var(--text)]">Who changed what</h2>
           <p className="mt-2 text-[15px] text-[var(--muted)]">
-            {entries.length ? `${entries.length} changes recorded. Step back through them, or take back only the agent's.` : "Every change to the timeline is recorded here with who made it."}
+            {entries.length ? `${entries.length} changes recorded. Step back through them, or take back only what was filled in for you.` : "Every change to the timeline is recorded here, yours and the fill-in's, so either can be undone on its own."}
           </p>
           <div className="mt-2" data-proto-keys>
             <Slider value={position} onValueChange={(v) => historyRef.current?.seek(v as number)} min={0} max={Math.max(1, entries.length)} step={1} disabled={!entries.length}>
@@ -534,7 +668,7 @@ export function Trainspotter({ tape, sightings, others }: { tape: TapeProp; sigh
             </Slider>
           </div>
           <button type="button" onClick={undoAgent} disabled={!agentEntries} className="poster-btn min-h-11">
-            Undo the agent’s work{agentEntries ? ` (${agentEntries})` : ""}
+            Undo the fill-in{agentEntries ? ` (${agentEntries})` : ""}
           </button>
           <ol className="ts-list mt-4">
             {[...entries].reverse().map((e, i) => {
@@ -542,57 +676,19 @@ export function Trainspotter({ tape, sightings, others }: { tape: TapeProp; sigh
               return (
                 <li key={e.id} className="ts-history-row" data-undone={index > position || e.reverted ? "" : undefined}>
                   <span className="ts-source" data-source={e.source === "agent" ? "agent" : "you"}>
-                    {e.source === "agent" ? "Agent" : "You"}
+                    {e.source === "agent" ? "Fill-in" : "You"}
                   </span>
-                  <span className="min-w-0 flex-1">{describe(e).replace(/^(Agent|You) /, "")}</span>
+                  <span className="min-w-0 flex-1">{describe(e).replace(/^(Fill-in|You) /, "")}</span>
                 </li>
               );
             })}
           </ol>
         </div>
-
-        {/* Inspector */}
-        <div className="min-w-0">
-          <h2 className="font-display text-2xl leading-none text-[var(--text)]">This track</h2>
-          {sel ? (
-            <div className="mt-3">
-              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)] tabular-nums">
-                Side {sel.track} · {clock(sel.start)}–{clock(sel.end)}
-                {sel.by ? ` · identified by ${sel.by}` : ""}
-              </p>
-              <Field className="mt-4 block">
-                <FieldLabel className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">Artist</FieldLabel>
-                <Input value={draftName.artist} onValueChange={(v: string) => setDraftName((d) => ({ ...d, artist: v }))} onBlur={commitName} onKeyDown={(e: React.KeyboardEvent) => e.key === "Enter" && commitName()} autoComplete="off" className="ts-input" />
-              </Field>
-              <Field className="mt-3 block">
-                <FieldLabel className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">Title</FieldLabel>
-                <Input value={draftName.title} onValueChange={(v: string) => setDraftName((d) => ({ ...d, title: v }))} onBlur={commitName} onKeyDown={(e: React.KeyboardEvent) => e.key === "Enter" && commitName()} autoComplete="off" className="ts-input" />
-              </Field>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <button type="button" onClick={() => seek(sides.indexOf(sel.track), sel.start, true)} className="poster-btn min-h-11">
-                  Hear it
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    api.removeCue(sel.id);
-                    setSelected(null);
-                  }}
-                  className="poster-btn min-h-11"
-                >
-                  Remove this track
-                </button>
-              </div>
-            </div>
-          ) : (
-            <p className="mt-2 text-[15px] text-[var(--muted)]">Select a range on the timeline to name it, hear it, or remove it.</p>
-          )}
-          <p className="mt-8 border-t border-[var(--border)] pt-4 font-mono text-[11px] uppercase leading-relaxed tracking-[0.14em] text-[var(--muted)]">
-            Built on the UI SDK. The timeline is one primitive; the agent uses its bridge.{" "}
-            {webmcp === null ? "" : webmcp ? "This browser's own agent can use it too (WebMCP)." : "This browser has no WebMCP, so its built-in agent can't see the page yet."}
-          </p>
-        </div>
       </div>
+      <p className="mt-10 border-t border-[var(--border)] pt-4 font-mono text-[11px] uppercase leading-relaxed tracking-[0.14em] text-[var(--muted)]">
+            Built on the UI SDK. The timeline is one primitive, and the fill-in works through its agent bridge.{" "}
+            {webmcp === null ? "" : webmcp ? "This browser's own agent can use it too (WebMCP)." : "This browser has no WebMCP, so its built-in agent can't see the page yet."}
+      </p>
     </section>
   );
 }

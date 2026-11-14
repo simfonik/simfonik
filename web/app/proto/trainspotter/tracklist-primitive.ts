@@ -82,6 +82,20 @@ export const tracklist = definePrimitive({
         const next = tidy(cue);
         return next ? change("value", [...current(), next], { reason: "imperative" }) : false;
       },
+      /** "A new track starts here": marks one at `time` and ends whatever was playing before it. */
+      markAt: (track: string, time: number) => {
+        const t = sides().includes(String(track)) ? String(track) : sides()[0];
+        const start = Math.max(0, Math.min(length() - 5, Math.round(Number(time))));
+        if (!Number.isFinite(start)) return false;
+        const next = current()
+          .filter((c) => c.track === t && c.start > start + 5)
+          .sort((a, b) => a.start - b.start)[0];
+        const end = Math.max(start + 5, Math.min(next?.start ?? start + 240, length()));
+        const before = current()
+          .map((c) => (c.track === t && c.start < start && c.end > start ? { ...c, end: start } : c))
+          .filter((c) => c.end - c.start >= 5 && !(c.track === t && Math.abs(c.start - start) < 5));
+        return change("value", [...before, { id: newId(), track: t, start, end, artist: "", title: "", known: false }], { reason: "imperative" });
+      },
       /** Names a marked track. */
       renameCue: (id: string, artist: string, title: string) =>
         change(
@@ -135,5 +149,5 @@ export const tracklist = definePrimitive({
       bind: (el, part) => part.api.spans.bindSpan(el, part.key),
     }),
   }),
-  agent: { actions: ["setValue", "addCue", "renameCue", "removeCue", "clear"] },
+  agent: { actions: ["setValue", "addCue", "markAt", "renameCue", "removeCue", "clear"] },
 });

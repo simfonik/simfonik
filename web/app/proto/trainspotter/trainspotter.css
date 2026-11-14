@@ -95,8 +95,11 @@
 .ts-cue[data-selected] { z-index: 2; box-shadow: inset 0 0 0 1.5px var(--bg), 0 0 0 2.5px var(--text); }
 .ts-cue:focus-visible { z-index: 2; box-shadow: inset 0 0 0 1.5px var(--bg), 0 0 0 2.5px var(--text), 0 0 0 5px var(--bg), 0 0 0 6.5px var(--text); }
 .ts-cue[data-dragging], .ts-cue[data-resizing], .ts-cue[data-drawing] { cursor: grabbing; z-index: 2; opacity: 0.85; }
-.ts-cue-text { min-width: 0; flex: 1; overflow: hidden; padding-inline: 2px; white-space: nowrap; text-overflow: ellipsis; pointer-events: none; }
+.ts-cue-text { display: flex; min-width: 0; flex: 1; flex-direction: column; justify-content: center; overflow: hidden; padding-inline: 2px; pointer-events: none; }
+.ts-cue-text b, .ts-cue-text i { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-style: normal; }
 .ts-cue-text b { font-weight: 600; }
+.ts-cue-text i { opacity: 0.75; }
+.ts-cue-text i:empty { display: none; }
 .ts-edge { flex: none; align-self: stretch; width: 7px; cursor: ew-resize; }
 .ts-playhead {
   position: absolute;
@@ -140,3 +143,20 @@
   text-transform: uppercase;
 }
 .ts-source[data-source="agent"] { background: var(--text); color: var(--bg); padding: 2px 4px; text-align: center; text-decoration: none; }
+
+.ts-namebar {
+  display: flex;
+  min-height: 4.25rem;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding-block: 0.75rem;
+  border-bottom: 1.5px solid var(--text);
+}
+.ts-input::placeholder { color: var(--muted); }
+.ts-coarse { display: none; }
+@media (pointer: coarse) {
+  .ts-fine { display: none; }
+  .ts-coarse { display: inline; }
+}
+.ts-source[data-source="agent"] { width: 3.9rem; }
