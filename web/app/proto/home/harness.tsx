@@ -5,7 +5,6 @@ import type { ProtoTape } from "./shared";
 import { Wall } from "./variants/wall";
 import { Atlas } from "./variants/atlas";
 import { Crate } from "./variants/crate";
-import { Mixer } from "./variants/mixer";
 import { Flyer } from "./variants/flyer";
 
 type VariantProps = { tapes: ProtoTape[] };
@@ -13,7 +12,6 @@ const VARIANTS: { name: string; Component: React.ComponentType<VariantProps> }[]
   { name: "Wall", Component: Wall },
   { name: "Atlas", Component: Atlas },
   { name: "Crate", Component: Crate },
-  { name: "Mixer", Component: Mixer },
   { name: "Flyer", Component: Flyer },
 ];
 

@@ -20,7 +20,6 @@ export default function ProtoHome() {
     images: tape.images,
     coverImage: getCoverImageWithFallback(tape),
     catalogNumber: String(total - i).padStart(3, "0"),
-    audio: tape.sides[0]?.audio_links[0]?.url ?? null,
   }));
   return <Harness tapes={data} />;
 }
