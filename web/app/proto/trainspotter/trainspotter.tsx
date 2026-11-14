@@ -858,12 +858,12 @@ export function Trainspotter({
               .filter((c) => !c.known)
               .sort((a, b) => a.track.localeCompare(b.track) || a.start - b.start)
               .map((c) => (
-                <li key={c.id} className="flex items-center gap-2">
+                <li key={c.id}>
                   <button type="button" onClick={() => seek(sides.indexOf(c.track), c.start, true)} className="ts-list-row" aria-label={`Hear side ${c.track} from ${clock(c.start)}`}>
                     <span className="flex-none font-mono text-[11px] tabular-nums text-[var(--muted)]">
                       {c.track} {clock(c.start)}
                     </span>
-                    <span className="min-w-0 flex-1 truncate">{c.title ? `Someone heard “${c.title}”` : "No clues yet"}</span>
+                    <span className="min-w-0 flex-1 truncate">{c.title ? `Clue: “${c.title}”` : "No clues yet"}</span>
                     <span className="flex-none text-[12px] text-[var(--muted)]">Hear it</span>
                   </button>
                   <button type="button" onClick={() => nameIt(c.id)} className="ts-chip flex-none">

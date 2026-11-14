@@ -346,4 +346,8 @@
 .ts-page .ts-root, .ts-page .poster-btn, .ts-page .ts-chip, .ts-bar-btn, .ts-list-row { touch-action: manipulation; }
 .ts-page .poster-btn, .ts-bar-btn, .ts-chip { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .ts-unknowns { max-height: none; }
-.ts-unknowns li { padding-right: 0.25rem; }
+/* The row gives way to its button, never the other way round: the text column can shrink to nothing,
+   the button column is as wide as the button. */
+.ts-unknowns li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0.5rem; padding-right: 0.25rem; }
+.ts-unknowns .ts-list-row { min-width: 0; overflow: hidden; }
+.ts-unknowns .ts-chip { white-space: nowrap; }
