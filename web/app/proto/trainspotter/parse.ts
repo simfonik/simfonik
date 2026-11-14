@@ -152,3 +152,51 @@ export function reconcile(sightings: Sighting[], lengths: number[]): Proposal[] 
   });
   return out;
 }
+
+// ── Running orders: tracklists people posted in order but without times ──
+
+export type Listed = { side: number; n: number; artist: string; title: string; known: boolean; author: string; date: string };
+
+/** Numbered lines with a name and no time, e.g. "6. Moby - Go" under a "Side 1" heading. */
+export function parseListing(content: string, author: string, date: string): Listed[] {
+  const out: Listed[] = [];
+  let side = 0;
+  for (const raw of content.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line) continue;
+    const heading = line.match(SIDE);
+    if (heading && line.length < 60 && !/^\d/.test(line)) {
+      side = sideIndex(heading[1]);
+      continue;
+    }
+    if (new RegExp(TIME).test(line)) continue; // timed lines are sightings, handled above
+    const m = line.match(/^(\d{1,2})\s*[.)]\s+(.+)$/);
+    if (!m) continue;
+    const parts = split(m[2]);
+    if (!parts || (parts.known && !parts.artist)) continue;
+    out.push({ side, n: Number(m[1]), ...parts, author, date });
+  }
+  return out;
+}
+
+/** The fullest, newest running order for each side. */
+export function runningOrders(listed: Listed[], sides: number): Listed[][] {
+  return Array.from({ length: sides }, (_, side) => {
+    // One list per run of rising numbers. Someone who posts a corrected list the same day starts again at 1,
+    // and that is a second list, not more of the first.
+    const lists: Listed[][] = [];
+    for (const l of listed.filter((x) => x.side === side)) {
+      const run = lists[lists.length - 1];
+      const last = run?.[run.length - 1];
+      if (run && last.author === l.author && last.date === l.date && l.n > last.n) run.push(l);
+      else lists.push([l]);
+    }
+    const best = lists.filter((l) => l.length >= 3).sort((a, b) => b.length - a.length || b[0].date.localeCompare(a[0].date))[0];
+    return best ? [...best].sort((a, b) => a.n - b.n) : [];
+  });
+}
+
+/** True when a marked track already carries this listed name. */
+export const isSameRecord = (a: { artist: string; title: string }, b: { artist: string; title: string }) =>
+  sameTrack({ ...a, known: true } as Sighting, { ...b, known: true } as Sighting);
+

@@ -13,7 +13,7 @@ import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack } from
 import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxLabel, ComboboxList } from "@ui-sdk/react/combobox";
 import { Field, FieldLabel } from "@ui-sdk/react/field";
 import { Input } from "@ui-sdk/react/input";
-import { reconcile, type Proposal, type Sighting } from "./parse";
+import { isSameRecord, reconcile, runningOrders, type Listed, type Proposal, type Sighting } from "./parse";
 import { cueLabel, tracklist, type Cue } from "./tracklist-primitive";
 
 type TapeProp = { id: string; title: string; djs: string; released: string; sides: { key: string; title: string; audio: string | null }[] };
@@ -59,7 +59,19 @@ function describe(e: HistoryEntry): string {
   return `${who} changed the tracklist: ${after.length} ${after.length === 1 ? "track" : "tracks"}`;
 }
 
-export function Trainspotter({ tape, sightings, others }: { tape: TapeProp; sightings: Sighting[]; others: { id: string; label: string; count: number }[] }) {
+export function Trainspotter({
+  tape,
+  sightings,
+  listed,
+  sources,
+  others,
+}: {
+  tape: TapeProp;
+  sightings: Sighting[];
+  listed: Listed[];
+  sources: { archived: number; live: number };
+  others: { id: string; label: string; count: number }[];
+}) {
   const router = useRouter();
   const sides = useMemo(() => tape.sides.map((s) => s.key), [tape.sides]);
   const storageKey = `simfonik:trainspotter:${tape.id}`;
@@ -335,7 +347,27 @@ export function Trainspotter({ tape, sightings, others }: { tape: TapeProp; sigh
     return () => document.removeEventListener("keydown", onKey);
   }, [markHere]);
 
+  // Running orders: names people posted in order, without times. Marking by ear supplies the times.
+  const orders = useMemo(() => runningOrders(listed, sides.length), [listed, sides.length]);
+  const waiting = useMemo(
+    () => orders.map((order, side) => order.filter((l) => l.known && !cues.some((c) => c.track === sides[side] && c.known && isSameRecord(c, l)))),
+    [orders, cues, sides],
+  );
+
   const sel = cues.find((c) => c.id === selected) ?? null;
+  // For an unnamed track, the names most likely to belong to it: the ones nearest its place in the order.
+  const nextNames = useMemo(() => {
+    if (!sel || sel.known) return [];
+    const side = sides.indexOf(sel.track);
+    const order = orders[side] ?? [];
+    const place = cues.filter((c) => c.track === sel.track && c.start < sel.start).length; // 0-based position on this side
+    return (waiting[side] ?? [])
+      .map((l) => ({ l, d: Math.abs(order.indexOf(l) - place) }))
+      .sort((a, b) => a.d - b.d)
+      .slice(0, 3)
+      .map((x) => x.l)
+      .sort((a, b) => a.n - b.n);
+  }, [sel, sides, orders, waiting, cues]);
   // What else commenters said about the selected track's moment.
   const opinions = useMemo(() => {
     if (!sel) return [];
@@ -568,6 +600,22 @@ export function Trainspotter({ tape, sightings, others }: { tape: TapeProp; sigh
             >
               Remove
             </button>
+            {nextNames.length > 0 && (
+              <p className="flex w-full flex-wrap items-center gap-x-2 gap-y-2 text-sm text-[var(--muted)]">
+                <span>From {nextNames[0].author}’s running order:</span>
+                {nextNames.map((l) => (
+                  <button
+                    key={`${l.side}-${l.n}`}
+                    type="button"
+                    onClick={() => api.renameCue(sel.id, l.artist, l.title)}
+                    className="ts-chip"
+                    aria-label={`Name it ${l.artist} — ${l.title}, number ${l.n} in the running order`}
+                  >
+                    <span className="font-mono text-[10px] tabular-nums opacity-70">{l.n}</span> {l.artist} — {l.title}
+                  </button>
+                ))}
+              </p>
+            )}
             {(sel.by || opinions.length > 0) && (
               <p className="w-full text-sm text-[var(--muted)]">
                 {sel.by ? `Identified by ${sel.by}.` : ""}
@@ -606,9 +654,18 @@ export function Trainspotter({ tape, sightings, others }: { tape: TapeProp; sigh
           <h2 className="font-display text-2xl leading-none text-[var(--text)]">What the crowd said</h2>
           <p className="mt-2 text-[15px] text-[var(--muted)]">
             {sightings.length
-              ? `${sightings.length} timed IDs in the comments, from ${new Set(sightings.map((s) => s.author)).size} people. Reconciled to ${proposals.length} moments; ${pending.length} not on the timeline yet.`
-              : "Nobody has left a timed ID on this tape yet. Mark tracks by hand above."}
+              ? `${sightings.length} timed IDs across ${sources.archived + sources.live} comments (${sources.live} posted since 2023), from ${new Set(sightings.map((s) => s.author)).size === 1 ? "one person" : `${new Set(sightings.map((s) => s.author)).size} people`}. Reconciled to ${proposals.length} moments; ${pending.length} not on the timeline yet.`
+              : "Nobody has left a timed ID on this tape yet."}
           </p>
+          {orders.some((o) => o.length > 0) && (
+            <p className="mt-2 text-[15px] text-[var(--muted)]">
+              {orders
+                .map((o, i) => (o.length ? `${o[0].author} posted a running order for side ${sides[i]} without times: ${o.filter((l) => l.known).length} names, ${waiting[i].length} still waiting for one.` : ""))
+                .filter(Boolean)
+                .join(" ")}{" "}
+              Play the tape and mark each track as it comes in; the names are offered in order.
+            </p>
+          )}
           {staged ? (
             <div className="mt-4 flex flex-wrap gap-2">
               <button type="button" onClick={keepStaged} className="poster-btn min-h-11 !bg-[var(--text)] !text-[var(--bg)]">

@@ -160,3 +160,17 @@
   .ts-coarse { display: inline; }
 }
 .ts-source[data-source="agent"] { width: 3.9rem; }
+.ts-chip {
+  display: inline-flex;
+  min-height: 2.75rem;
+  max-width: 100%;
+  cursor: pointer;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1.5px solid var(--text);
+  padding: 0 0.7rem;
+  color: var(--text);
+  text-align: left;
+}
+@media (hover: hover) { .ts-chip:hover { background: var(--text); color: var(--bg); } }
+.ts-chip:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
