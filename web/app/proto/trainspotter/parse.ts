@@ -8,6 +8,8 @@ export type Sighting = {
   artist: string;
   title: string; // for an unidentified track, whatever hint the commenter gave
   known: boolean;
+  /** Written with a leading "+": a record brought in over the one already playing. */
+  layer?: boolean;
   author: string;
   date: string;
 };
@@ -22,6 +24,18 @@ const sideIndex = (s: string) => ({ a: 0, "1": 0, one: 0, b: 1, "2": 1, two: 1, 
 const TIME = String.raw`\d{1,2}:\d{2}(?::\d{2})?`;
 const DASH = String.raw`[-–—]`;
 const CHATTER = /\b(anyone|anybody|someone|know|knows|remember|omg|wtf|what|who|which|track|tune|song|please|pls|help|love|amazing)\b/i;
+// Only real tag names, so "A/B>C" in a title is left alone.
+const TAGS = "li|ul|ol|p|br|b|i|u|em|strong|a|div|span|blockquote|code|cite|q|del|strike|abbr|acronym";
+const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", ndash: "–", mdash: "—", hellip: "…", laquo: "«", raquo: "»", lsquo: "‘", rsquo: "’", ldquo: "“", rdquo: "”" };
+/** Comments arrive as whatever people pasted: old WordPress markup, entities, and broken tag ends like "Song/li>". */
+export const plain = (s: string) =>
+  s
+    .replace(/<\/?[a-z][a-z0-9]*\b[^>]*>/gi, " ") // whole tags
+    .replace(new RegExp(String.raw`\/(?:${TAGS})>`, "gi"), " ") // the tail of a closing tag that lost its "<"
+    .replace(new RegExp(String.raw`<\/?(?:${TAGS})\s*$`, "gim"), " ") // the head of a tag that lost its ">"
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
+    .replace(/&([a-z]+);/gi, (m, name) => ENTITIES[name.toLowerCase()] ?? m);
 const clean = (s: string) =>
   s
     .replace(/https?:\/\/\S+/g, "")
@@ -49,9 +63,13 @@ export function parseComment(content: string, author: string, date: string): Sig
     if (loose && (!parts.known || !parts.artist || CHATTER.test(text))) return;
     out.push({ side: s, start, end, ...parts, author, date });
   };
-  for (const raw of content.split(/\r?\n/)) {
-    const line = raw.trim();
+  for (const raw of plain(content).split(/\r?\n/)) {
+    let line = raw.trim();
     if (!line) continue;
+    // "+ [11:56] Tangerine Dream - Love On A Real Train": layered over the track before it.
+    const layer = /^\+\s*\[?\d/.test(line);
+    if (layer) line = line.replace(/^\+\s*/, "");
+    const before = out.length;
 
     // A heading on its own switches side for the list that follows.
     const heading = line.match(SIDE);
@@ -61,8 +79,12 @@ export function parseComment(content: string, author: string, date: string): Sig
     }
 
     let m: RegExpMatchArray | null;
+    // "The track playing from [10:20] - [16:37] is Artist - Title"
+    if ((m = line.match(new RegExp(String.raw`\[?(${TIME})\]?\s*(?:${DASH}|to)\s*\[?(${TIME})\]?\s+is\s+(.+)$`, "i")))) {
+      push(side, seconds(m[1]), m[3], seconds(m[2]));
+    }
     // "Side A - 5:30 - 13:20 - Artist - Title"
-    if ((m = line.match(new RegExp(String.raw`^${SIDE.source}\s*${DASH}?\s*(${TIME})\s*${DASH}\s*(${TIME})\s*${DASH}?\s*(.+)$`, "i")))) {
+    else if ((m = line.match(new RegExp(String.raw`^${SIDE.source}\s*${DASH}?\s*(${TIME})\s*${DASH}\s*(${TIME})\s*${DASH}?\s*(.+)$`, "i")))) {
       push(sideIndex(m[1]), seconds(m[2]), m[4], seconds(m[3]));
     }
     // "Side B @ 26:30 - Artist - Title"
@@ -92,6 +114,7 @@ export function parseComment(content: string, author: string, date: string): Sig
       const s = line.match(SIDE);
       push(s ? sideIndex(s[1]) : side, seconds(m[2]), m[1], undefined, true);
     }
+    if (layer) for (let i = before; i < out.length; i++) out[i].layer = true;
   }
   return out;
 }
@@ -128,7 +151,11 @@ export function reconcile(sightings: Sighting[], lengths: number[]): Proposal[] 
     groups.forEach((g, i) => {
       const known = g.filter((s) => s.known && (s.artist || s.title));
       const best = (known.length ? known : g).reduce((a, b) => (b.date >= a.date ? b : a));
-      const next = groups[i + 1]?.[0].start ?? Math.min(length, best.start + 240);
+      // A layered record runs to whatever starts next; the record under it runs on to the next one that isn't a layer.
+      const isLayer = (grp?: Sighting[]) => Boolean(grp?.length && grp.every((x) => x.layer));
+      let j = i + 1;
+      if (!isLayer(g)) while (isLayer(groups[j])) j++;
+      const next = groups[j]?.[0].start ?? Math.min(length, best.start + 240);
       const end = best.end && best.end > best.start ? Math.min(best.end, length) : next;
       // "Reach Up To Mars at 30:24" a minute into a track already named that is the same track, not a new one.
       const prev = out[out.length - 1];
@@ -161,7 +188,7 @@ export type Listed = { side: number; n: number; artist: string; title: string; k
 export function parseListing(content: string, author: string, date: string): Listed[] {
   const out: Listed[] = [];
   let side = 0;
-  for (const raw of content.split(/\r?\n/)) {
+  for (const raw of plain(content).split(/\r?\n/)) {
     const line = raw.trim();
     if (!line) continue;
     const heading = line.match(SIDE);
