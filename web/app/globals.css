@@ -201,6 +201,27 @@ body::before {
   box-shadow: none;
 }
 
+/* Collapsed tracklist — fade the last rows into whatever is behind them.
+   Mask (not an overlay) so the paper texture shows through; eased stops so it doesn't band. */
+.tracklist-fade {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    black calc(100% - 7rem),
+    rgb(0 0 0 / 0.87) calc(100% - 5.25rem),
+    rgb(0 0 0 / 0.5) calc(100% - 3.5rem),
+    rgb(0 0 0 / 0.13) calc(100% - 1.75rem),
+    transparent 100%
+  );
+          mask-image: linear-gradient(
+    to bottom,
+    black calc(100% - 7rem),
+    rgb(0 0 0 / 0.87) calc(100% - 5.25rem),
+    rgb(0 0 0 / 0.5) calc(100% - 3.5rem),
+    rgb(0 0 0 / 0.13) calc(100% - 1.75rem),
+    transparent 100%
+  );
+}
+
 /* Oscilloscope hero — color via currentColor, edges fade so wave never touches walls */
 .oscilloscope-hero {
   color: var(--text);

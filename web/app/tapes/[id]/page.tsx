@@ -17,6 +17,7 @@ import { LiveComments } from "../../../components/LiveComments";
 import { CommentBody } from "../../../components/CommentBody";
 import { RotatingWord } from "../../../components/RotatingWord";
 import { JsonLd } from "../../../components/JsonLd";
+import { Tracklist } from "../../../components/Tracklist";
 import { generateTapeSchema } from "../../../lib/structured-data";
 
 type Props = {
@@ -456,54 +457,7 @@ export default async function Page({ params }: Props) {
                   <h3 className="font-display text-xl leading-tight text-[var(--text)] mb-4">
                     {side.title ?? `Side ${side.position}`}
                   </h3>
-                  <div className="space-y-0 leading-snug text-sm">
-                    {side.tracks.map((track, trackIdx) => (
-                      <div key={trackIdx} className="flex gap-3 text-[var(--text)] hover:bg-[var(--bg-hover)] transition-colors py-2 px-2 group">
-                        <span className="font-mono text-[var(--muted)] tabular-nums flex-shrink-0">
-                          {String(trackIdx + 1).padStart(2, '0')}
-                        </span>
-                        {track.discogs_url ? (
-                          <a
-                            href={track.discogs_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="cursor-pointer flex-1 flex items-center gap-2 group-hover:text-[var(--accent-text)] transition-colors"
-                          >
-                            <span className="flex-1">
-                              <span className="font-medium">{track.artist}</span>
-                              <span className="text-[var(--muted)]"> — </span>
-                              <span>{track.title}</span>
-                              {track.duration && (
-                                <span className="ml-2 font-mono text-[var(--muted)] text-xs">
-                                  ({track.duration})
-                                </span>
-                              )}
-                            </span>
-                            <svg
-                              className="w-3.5 h-3.5 text-[var(--muted)] flex-shrink-0 opacity-40 group-hover:opacity-100 transition-opacity"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                              strokeWidth={2}
-                            >
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                          </a>
-                        ) : (
-                          <span className="flex-1">
-                            <span className="font-medium">{track.artist}</span>
-                            <span className="text-[var(--muted)]"> — </span>
-                            <span>{track.title}</span>
-                            {track.duration && (
-                              <span className="ml-2 font-mono text-[var(--muted)] text-xs">
-                                ({track.duration})
-                              </span>
-                            )}
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                  <Tracklist tracks={side.tracks} />
                 </div>
               );
             })}
