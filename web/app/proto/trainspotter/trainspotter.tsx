@@ -12,7 +12,7 @@ import { createPointerKind } from "@ui-sdk/core";
 import { usePart, usePrimitive } from "@ui-sdk/react/primitive";
 import { usePreference } from "@ui-sdk/react/preferences";
 import { createAgent, registerTools } from "@ui-sdk/react/agent";
-import { createHistory, stageChanges, type HistoryEntry } from "@ui-sdk/react/history";
+import { createHistory, type HistoryEntry } from "@ui-sdk/react/history";
 import { useShortcut, useShortcutHint } from "@ui-sdk/react/shortcuts";
 import { Slider, SliderControl, SliderThumb, SliderTrack } from "@ui-sdk/react/slider";
 import { Toast, ToastAction, ToastClose, ToastDescription, ToastRegion, ToastTitle, createToaster } from "@ui-sdk/react/toast";
@@ -190,8 +190,6 @@ export function Trainspotter({
   const seen = useRef<Set<string>>(new Set());
   const seedSeen = useRef(false);
   const [seenTick, setSeenTick] = useState(0);
-  // Suggestions on the timeline that haven't been kept or dismissed yet. They are never saved.
-  const [stagedIds, setStagedIds] = useState<Set<string>>(new Set());
   useEffect(() => {
     let found = false;
     try {
@@ -212,11 +210,11 @@ export function Trainspotter({
   useEffect(() => {
     if (restored === "pending") return;
     try {
-      window.localStorage.setItem(storageKey, JSON.stringify(cues.filter((c) => !stagedIds.has(c.id))));
+      window.localStorage.setItem(storageKey, JSON.stringify(cues));
     } catch {
       /* storage is unavailable; the page still works */
     }
-  }, [cues, stagedIds, restored, storageKey]);
+  }, [cues, restored, storageKey]);
   const markSeen = useCallback(
     (sigs: string[]) => {
       sigs.forEach((x) => seen.current.add(x));
@@ -234,7 +232,6 @@ export function Trainspotter({
   const [sheet, setSheet] = useState(false); // the naming sheet, on phones
   const quiet = useRef(false); // true while the page itself is writing, so it doesn't select what it adds
   const wantName = useRef(false);
-  const touched = useRef(false); // has anything changed since suggestions were put on the timeline
   const focusName = useCallback(() => {
     if (touch) setSheet(true);
     else requestAnimationFrame(() => (document.getElementById("ts-artist") as HTMLInputElement | null)?.focus());
@@ -246,7 +243,6 @@ export function Trainspotter({
       // A track a person has just marked is the one they want to name next.
       const added = v.filter((c) => !cuesRef.current.some((b) => b.id === c.id));
       if (added.length === 1 && details?.source !== "agent" && !quiet.current) setSelected(added[0].id);
-      if (!quiet.current) touched.current = true;
       setCues(v);
     },
     sides,
@@ -310,8 +306,6 @@ export function Trainspotter({
       quiet.current = true;
       await agent.act({ steps: [{ ref, action: "setValue", args: [proposals.map(toCue)] }] });
       quiet.current = false;
-      staged.current = null;
-      setStagedIds(new Set());
       markSeen(proposals.map(sig));
       if (mode === "open") setFloor(historyRef.current?.position() ?? 0);
       else toaster("Back to what listeners identified.", { action: { label: "Undo", onAction: () => void step(-1) } });
@@ -320,78 +314,39 @@ export function Trainspotter({
     [proposals, toCue, markSeen],
   );
 
-  // ── Suggestions: what listeners have posted since this visitor was last here ──
-  // They go onto the real timeline as a staged change, so each one can be heard, moved or trimmed before
-  // it is kept, and the whole set can be put back exactly as it was.
-  const staged = useRef<Awaited<ReturnType<typeof stageChanges>> | null>(null);
-  const stagedInfo = useRef<Map<string, { sig: string; replaces?: string; by: string; year: string }>>(new Map());
-  const stagingStarted = useRef(false);
+  // ── Return visit: whatever listeners have posted since is simply added. Nobody approves it. ──
+  // A newer name replaces an older one from listeners, the way a later comment corrects an earlier one.
+  // A track this visitor named or marked themselves is left alone.
+  const merged = useRef(false);
   useEffect(() => {
-    if (restored !== "saved" || !measured || !fresh.length || stagingStarted.current) return;
+    if (restored !== "saved" || !measured || !fresh.length || merged.current) return;
     const ref = target();
     if (!agent || !ref) return;
-    stagingStarted.current = true;
-    const add = fresh.map((p): Cue => {
-      // Unique every time: the same moment can be suggested again later, with a different name.
-      const cue = { ...toCue(p), id: `new-${p.side}-${p.start}-${Date.now().toString(36)}` };
-      // A new name for a moment that is already on the timeline replaces it if kept.
-      const old = cuesRef.current.find((c) => c.track === cue.track && Math.abs(c.start - cue.start) <= 20);
-      stagedInfo.current.set(cue.id, { sig: sig(p), replaces: old?.id, by: p.author, year: p.date.slice(0, 4) });
-      return cue;
-    });
+    merged.current = true;
+    let added = 0;
+    let corrected = 0;
+    let next = [...cuesRef.current];
+    for (const p of fresh) {
+      const cue = { ...toCue(p), id: `crowd-${p.side}-${p.start}-${Date.now().toString(36)}` };
+      const old = next.find((c) => c.track === cue.track && Math.abs(c.start - cue.start) <= 20);
+      if (!old) {
+        next.push(cue);
+        added++;
+      } else if (old.by) {
+        next = next.map((c) => (c === old ? { ...cue, start: old.start, end: old.end } : c));
+        corrected++;
+      }
+    }
+    markSeen(fresh.map(sig));
+    if (!added && !corrected) return;
     quiet.current = true;
-    void stageChanges(agent, [{ ref, value: [...cuesRef.current, ...add] }]).then((s) => {
+    void agent.act({ steps: [{ ref, action: "setValue", args: [next] }] }).then(() => {
       quiet.current = false;
-      touched.current = false;
-      staged.current = s;
-      setStagedIds(new Set(add.map((c) => c.id)));
-      setFloor(historyRef.current?.position() ?? 0);
+      const parts = [added ? `added ${added} ${added === 1 ? "track" : "tracks"}` : "", corrected ? `corrected ${corrected}` : ""].filter(Boolean).join(" and ");
+      toaster(`Since you were last here, listeners ${parts}.`, { action: { label: "Undo", onAction: () => void step(-1) } });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restored, measured, fresh.length]);
-
-  const settle = (ids: string[], keep: boolean) => {
-    quiet.current = true;
-    for (const id of ids) {
-      const info = stagedInfo.current.get(id);
-      if (keep && info?.replaces) api.removeCue(info.replaces);
-      if (!keep) api.removeCue(id);
-    }
-    quiet.current = false;
-    touched.current = true;
-    markSeen(ids.map((id) => stagedInfo.current.get(id)?.sig ?? "").filter(Boolean));
-    const left = new Set([...stagedIds].filter((id) => !ids.includes(id)));
-    setStagedIds(left);
-    return left;
-  };
-  const decide = (id: string, keep: boolean) => {
-    const left = settle([id], keep);
-    // On to the next suggestion, if there is one.
-    const next = cuesRef.current.filter((c) => left.has(c.id)).sort((a, b) => a.track.localeCompare(b.track) || a.start - b.start)[0];
-    setSelected(next?.id ?? (keep ? id : null));
-    if (next) seek(sides.indexOf(next.track), next.start);
-  };
-  const decideAll = async (keep: boolean) => {
-    const ids = [...stagedIds];
-    if (!keep && !touched.current && staged.current) {
-      // Nothing has been touched since they appeared: put the timeline back exactly as it was.
-      quiet.current = true;
-      await staged.current.revert();
-      quiet.current = false;
-      markSeen(ids.map((id) => stagedInfo.current.get(id)?.sig ?? "").filter(Boolean));
-      setStagedIds(new Set());
-      setFloor(historyRef.current?.position() ?? 0);
-    } else settle(ids, keep);
-    staged.current = null;
-    setSelected(null);
-    toaster(keep ? `Kept ${ids.length} ${ids.length === 1 ? "suggestion" : "suggestions"}.` : `Dismissed ${ids.length} ${ids.length === 1 ? "suggestion" : "suggestions"}.`);
-  };
-  const reviewFirst = () => {
-    const first = cuesRef.current.filter((c) => stagedIds.has(c.id)).sort((a, b) => a.track.localeCompare(b.track) || a.start - b.start)[0];
-    if (!first) return;
-    setSelected(first.id);
-    seek(sides.indexOf(first.track), first.start);
-  };
 
   // First visit to a tape: open with what is already known, instead of an empty timeline.
   const opened = useRef(false);
@@ -416,9 +371,9 @@ export function Trainspotter({
   const playingCue = useMemo(
     () =>
       cues
-        .filter((c) => !stagedIds.has(c.id) && c.track === sides[active] && c.start <= now && now < c.end)
+        .filter((c) => c.track === sides[active] && c.start <= now && now < c.end)
         .sort((a, b) => b.start - a.start)[0] ?? null,
-    [cues, stagedIds, sides, active, now],
+    [cues, sides, active, now],
   );
 
   // "A new track starts here": mark it at the playhead and go straight to naming it.
@@ -555,56 +510,11 @@ export function Trainspotter({
     }
   };
 
-  const settled = cues.filter((c) => !stagedIds.has(c.id));
-  const knownCount = settled.filter((c) => c.known).length;
-  const unknownCount = settled.length - knownCount;
-  // Who the names on the timeline are credited to, most first.
-  const credits = [...settled.reduce((m, c) => (c.by ? m.set(c.by, (m.get(c.by) ?? 0) + 1) : m), new Map<string, number>())].sort((a, b) => b[1] - a[1]);
-  const takeOut = (name: string, count: number) => {
-    quiet.current = true;
-    api.removeBy(name);
-    quiet.current = false;
-    setSelected(null);
-    toaster(`Took out ${count} ${count === 1 ? "track" : "tracks"} credited to ${name}.`, { action: { label: "Undo", onAction: () => void step(-1) } });
-  };
+  const knownCount = cues.filter((c) => c.known).length;
+  const unknownCount = cues.length - knownCount;
 
   // The naming form: inline under the timeline with a mouse, in a sheet above the keyboard on a phone.
-  const selInfo = sel && stagedIds.has(sel.id) ? stagedInfo.current.get(sel.id) : undefined;
-  const nameForm = sel && selInfo ? (
-    <div className="ts-nameform">
-      <p className="min-w-0 flex-1 basis-64 text-[15px] text-[var(--text)]">
-        <b className="font-medium">{cueLabel(sel)}</b>
-        <span className="block text-sm text-[var(--muted)]">
-          {selInfo.by} posted this in {selInfo.year}.{selInfo.replaces ? ` Keeping it replaces “${cueLabel(cues.find((c) => c.id === selInfo.replaces) ?? sel)}”.` : ""}
-        </span>
-      </p>
-      <div className="flex flex-none flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => {
-            decide(sel.id, true);
-            setSheet(false);
-          }}
-          className="poster-btn min-h-11 !bg-[var(--text)] !text-[var(--bg)]"
-        >
-          Keep
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            decide(sel.id, false);
-            setSheet(false);
-          }}
-          className="poster-btn min-h-11"
-        >
-          Dismiss
-        </button>
-        <button type="button" onClick={() => seek(sides.indexOf(sel.track), sel.start, true)} className="poster-btn min-h-11">
-          Hear it
-        </button>
-      </div>
-    </div>
-  ) : sel && (
+  const nameForm = sel && (
     <form
       className="ts-nameform"
       onSubmit={(e) => {
@@ -718,7 +628,6 @@ export function Trainspotter({
                         value={c.id}
                         className="ts-cue"
                         data-selected={c.id === selected ? "" : undefined}
-                        data-staged={stagedIds.has(c.id) ? "" : undefined}
                         onClick={(e: React.MouseEvent) => {
                           if (wasClick(e)) setSelected(c.id);
                         }}
@@ -732,10 +641,7 @@ export function Trainspotter({
                       >
                         <span className="ts-edge" data-span-edge="start" aria-hidden />
                         <span className="ts-cue-text">
-                          <b>
-                            {stagedIds.has(c.id) ? "New: " : ""}
-                            {c.known ? c.artist || c.title : "Unknown"}
-                          </b>
+                          <b>{c.known ? c.artist || c.title : "Unknown"}</b>
                           <i>{c.known ? (c.artist ? c.title : "") : c.title || "Know it?"}</i>
                         </span>
                         <span className="ts-edge" data-span-edge="end" aria-hidden />
@@ -777,10 +683,10 @@ export function Trainspotter({
         {tape.djs} <span className="text-[var(--muted)]">{tape.title}</span>
       </h1>
       <p className="mt-3 max-w-[60ch] text-[17px] text-[var(--text)]">
-        {settled.length
+        {cues.length
           ? unknownCount
-            ? `${knownCount} of ${settled.length} ID’d. ${unknownCount} still unknown. Press play and help ID the unknowns.`
-            : `All ${settled.length} ID’d. Press play, and if one is wrong or missing, fix it.`
+            ? `${knownCount} of ${cues.length} ID’d. ${unknownCount} still unknown. Press play and help ID the unknowns.`
+            : `All ${cues.length} ID’d. Press play, and if one is wrong or missing, fix it.`
           : waiting.some((w) => w.length)
             ? "We know what’s on this tape, but not when each track comes in. Press play, and press the button each time a new one starts."
             : "Nothing ID’d on this tape yet. Press play and be the first to ID one."}
@@ -831,28 +737,6 @@ export function Trainspotter({
         </div>
       </div>
 
-      {stagedIds.size > 0 && (
-        <div className="ts-suggest" role="status">
-          <p className="min-w-0 flex-1 basis-64 text-[15px] text-[var(--text)]">
-            <b className="font-medium">
-              Listeners have posted {stagedIds.size} new {stagedIds.size === 1 ? "track name" : "track names"} since you were last here.
-            </b>{" "}
-            <span className="text-[var(--muted)]">They are on the timeline with a dashed edge, and aren’t part of your tracklist until you keep them.</span>
-          </p>
-          <div className="flex flex-none flex-wrap gap-2">
-            <button type="button" onClick={reviewFirst} className="poster-btn min-h-11 !bg-[var(--text)] !text-[var(--bg)]">
-              Go through them
-            </button>
-            <button type="button" onClick={() => void decideAll(true)} className="poster-btn min-h-11">
-              Keep all
-            </button>
-            <button type="button" onClick={() => void decideAll(false)} className="poster-btn min-h-11">
-              Dismiss all
-            </button>
-          </div>
-        </div>
-      )}
-
       <div className="ts-root mt-4">
         <div className="ts-scroller" ref={scrollerRef} data-proto-keys>
           <div className="ts-canvas" style={{ width: width + 56 }}>
@@ -882,13 +766,13 @@ export function Trainspotter({
         {sel ? (
           <>
             <p className="w-full font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] tabular-nums">
-              Side {sel.track} · {clock(sel.start)} to {clock(sel.end)} · {selInfo ? "a listener’s suggestion" : sel.known ? "what should this be called?" : "what is this track?"}
+              Side {sel.track} · {clock(sel.start)} to {clock(sel.end)} · {sel.known ? "what should this be called?" : "what is this track?"}
             </p>
             {touch ? (
               <div className="flex w-full items-center gap-3">
                 <p className="min-w-0 flex-1 truncate text-[15px] font-medium text-[var(--text)]">{cueLabel(sel)}</p>
                 <button type="button" onClick={() => setSheet(true)} className="poster-btn min-h-11 flex-none !bg-[var(--text)] !text-[var(--bg)]">
-                  {selInfo ? "Review" : sel.known ? "Fix name" : "Name it"}
+                  {sel.known ? "Fix name" : "Name it"}
                 </button>
               </div>
             ) : (
@@ -911,7 +795,7 @@ export function Trainspotter({
           {sel && (
             <>
               <div className="flex items-start justify-between gap-3">
-                <DrawerTitle className="font-display text-2xl leading-tight text-[var(--text)]">{selInfo ? "A listener’s suggestion" : sel.known ? "Fix this name" : "What is this track?"}</DrawerTitle>
+                <DrawerTitle className="font-display text-2xl leading-tight text-[var(--text)]">{sel.known ? "Fix this name" : "What is this track?"}</DrawerTitle>
                 <DrawerClose className="poster-btn min-h-11 flex-none">Close</DrawerClose>
               </div>
               <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] tabular-nums">
@@ -951,20 +835,6 @@ export function Trainspotter({
               <span className="font-mono text-[11px] tabular-nums text-[var(--muted)]">{proposals.length}</span>
             </CollapsibleTrigger>
             <CollapsiblePanel className="ts-fold-panel">
-              {credits.length > 0 && (
-                <ul className="ts-credits">
-                  {credits.map(([name, count]) => (
-                    <li key={name}>
-                      <span className="min-w-0 flex-1 truncate">
-                        <b className="font-medium">{name}</b> · {count} on the timeline
-                      </span>
-                      <button type="button" onClick={() => takeOut(name, count)} className="ts-link" aria-label={`Take out the ${count} tracks credited to ${name}`}>
-                        Take these out
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
               {proposals.length ? (
                 <ul className="ts-list">
                   {proposals.map((p) => (
