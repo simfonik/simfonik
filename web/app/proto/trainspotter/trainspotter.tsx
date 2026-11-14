@@ -506,7 +506,7 @@ export function Trainspotter({
       )}
       {(sel.by || opinions.length > 0) && (
         <p className="w-full text-sm text-[var(--muted)]">
-          {sel.by ? `Named by ${sel.by}.` : ""}
+          {sel.by ? (sel.known ? `Named by ${sel.by}.` : `${sel.by} marked this one as unknown.`) : ""}
           {opinions.map((o, i) => (
             <span key={i}>
               {" "}
