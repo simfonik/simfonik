@@ -114,6 +114,11 @@ export const tracklist = definePrimitive({
         return spans.update(String(id), { artist: a, title: t, known: Boolean(a || t), by: undefined });
       },
       removeCue: (id: string) => spans.remove(String(id)),
+      /** Takes out every track credited to one commenter, as a single change. */
+      removeBy: (name: string) => {
+        const next = current().filter((c) => c.by !== String(name));
+        return next.length === current().length ? false : change("value", next, { reason: "imperative" });
+      },
       clear: () => change("value", [], { reason: "imperative" }),
       /** Keyboard beyond what ranges give for free: Alt-arrows jump ten seconds, Page keys walk between tracks. */
       keydown(event: KeyboardEvent, id: string, el: HTMLElement | null) {
@@ -188,5 +193,5 @@ export const tracklist = definePrimitive({
       bind: (el, part) => part.api.spans.bindSpan(el, part.key),
     }),
   }),
-  agent: { actions: ["setValue", "addCue", "markAt", "renameCue", "removeCue", "clear"] },
+  agent: { actions: ["setValue", "addCue", "markAt", "renameCue", "removeCue", "removeBy", "clear"] },
 });
