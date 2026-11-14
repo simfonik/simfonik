@@ -14,6 +14,7 @@ import { usePreference } from "@ui-sdk/react/preferences";
 import { createAgent, registerTools } from "@ui-sdk/react/agent";
 import { createHistory, type HistoryEntry } from "@ui-sdk/react/history";
 import { useShortcut, useShortcutHint } from "@ui-sdk/react/shortcuts";
+import { Slider, SliderControl, SliderThumb, SliderTrack } from "@ui-sdk/react/slider";
 import { Toast, ToastAction, ToastClose, ToastDescription, ToastRegion, ToastTitle, createToaster } from "@ui-sdk/react/toast";
 import { Drawer, DrawerBackdrop, DrawerClose, DrawerContent, DrawerTitle } from "@ui-sdk/react/drawer";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@ui-sdk/react/collapsible";
@@ -416,6 +417,11 @@ export function Trainspotter({
   const width = fit >= (length / 60) * MIN_FIT_PPM ? fit : Math.round((length / 60) * PHONE_PPM);
   const minutes = Math.ceil(length / 60);
 
+  // Scrubbing: the ruler's slider sets the position. On a phone it works within the stretch of tape on
+  // screen; swiping the sides brings more into view. (Scrolling mid-drag would pull the marker out from
+  // under the finger, because the slider measures its track when the drag starts.)
+  const scrub = (v: number | number[]) => seek(activeRef.current, Math.min(v as number, lengths[activeRef.current]));
+
   // A press that didn't travel is a click: it moves the playhead. A drag is the SDK's to handle.
   const down = useRef<{ x: number; y: number } | null>(null);
   const wasClick = (e: React.MouseEvent) => {
@@ -531,25 +537,9 @@ export function Trainspotter({
     {
       ref: rootRef,
       "aria-label": "Tracklist timeline",
-      className: "ts-root",
+      className: "ts-rows",
       children: ({ cues: live }: { cues: Cue[] }) => (
-        <div className="ts-scroller" ref={scrollerRef} data-proto-keys>
-          <div className="ts-canvas" style={{ width: width + 56 }}>
-            <div
-              className="ts-ruler"
-              style={{ marginLeft: 56, width }}
-              onClick={(e) => {
-                const r = e.currentTarget.getBoundingClientRect();
-                seek(active, ((e.clientX - r.left) / r.width) * length);
-              }}
-              aria-hidden
-            >
-              {Array.from({ length: Math.floor(minutes / 5) + 1 }, (_, i) => (
-                <span key={i} style={{ left: `${((i * 300) / length) * 100}%` }}>
-                  {i * 5}:00
-                </span>
-              ))}
-            </div>
+        <>
             {tape.sides.map((side, i) => (
               <div key={side.key} className="ts-row" data-active={i === active ? "" : undefined}>
                 <button type="button" className="ts-side" onClick={() => seek(i, i === active ? now : 0)} aria-pressed={i === active} aria-label={`Listen to side ${side.key}`}>
@@ -606,8 +596,7 @@ export function Trainspotter({
                 </Track>
               </div>
             ))}
-          </div>
-        </div>
+        </>
       ),
     },
     "div",
@@ -686,7 +675,29 @@ export function Trainspotter({
         </div>
       </div>
 
-      <div className="mt-4">{root}</div>
+      <div className="ts-root mt-4">
+        <div className="ts-scroller" ref={scrollerRef} data-proto-keys>
+          <div className="ts-canvas" style={{ width: width + 56 }}>
+            {/* The ruler is the scrubber: a slider the width of the tape. It sits outside the tracklist
+                so that moving through the audio is never recorded as a change to the tracklist. */}
+            <div className="ts-ruler" style={{ marginLeft: 56, width }}>
+              <Slider value={Math.min(now, length)} onValueChange={scrub} min={0} max={length} step={1} largeStep={15} format={(v: number) => clock(v)}>
+                <SliderControl className="ts-scrub">
+                  <SliderTrack className="ts-scrub-track">
+                    {Array.from({ length: Math.floor(minutes / 5) + 1 }, (_, i) => (
+                      <span key={i} className="ts-tick" style={{ left: `${((i * 300) / length) * 100}%` }} aria-hidden>
+                        {i * 5}:00
+                      </span>
+                    ))}
+                    <SliderThumb className="ts-scrub-thumb" aria-label={`Position in side ${sides[active]}`} />
+                  </SliderTrack>
+                </SliderControl>
+              </Slider>
+            </div>
+            {root}
+          </div>
+        </div>
+      </div>
 
       {/* With a mouse the name fields sit under the timeline. On a phone they open in a sheet that stays above the keyboard. */}
       <div className="ts-namebar">
@@ -709,9 +720,9 @@ export function Trainspotter({
         ) : (
           <p className="text-sm text-[var(--muted)]">
             <span className="ts-fine">
-              Click anywhere on the tape to go there. Click a track to name it. Drag a track to move it, or an end to trim it. Keys: Space plays, M marks a new track, {undoHint.text} undoes.
+              Drag the marker along the top to scrub, or click anywhere on the tape to go there. Click a track to name it. Drag a track to move it, or an end to trim it. Keys: Space plays, M marks a new track, {undoHint.text} undoes.
             </span>
-            <span className="ts-coarse">Tap anywhere on the tape to go there. Tap a track to name it.</span>
+            <span className="ts-coarse">Slide the marker along the top to scrub, or tap anywhere on the tape to go there. Tap a track to name it.</span>
           </p>
         )}
       </div>

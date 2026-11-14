@@ -25,20 +25,49 @@
 /* ── Timeline ── */
 .ts-root { border-block: 1.5px solid var(--text); }
 .ts-scroller { overflow-x: auto; overscroll-behavior-x: contain; }
-.ts-canvas { position: relative; padding-block: 6px 10px; }
-.ts-ruler { position: relative; height: 26px; cursor: pointer; }
-.ts-ruler span {
+.ts-canvas { position: relative; padding-block: 2px 10px; }
+/* The ruler doubles as the scrubber. The slider places its own thumb; this gives it a size and a handle. */
+.ts-ruler { position: relative; height: 44px; }
+.ts-scrub { display: block; height: 44px; cursor: pointer; user-select: none; -webkit-user-select: none; }
+.ts-scrub-track { height: 44px; border-bottom: 1.5px solid var(--text); }
+.ts-tick {
   position: absolute;
-  top: 0;
+  bottom: 0;
+  height: 16px;
   padding-left: 5px;
   border-left: 1px solid var(--muted);
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 10px;
-  line-height: 26px;
+  line-height: 16px;
   font-variant-numeric: tabular-nums;
   color: var(--muted);
   pointer-events: none;
 }
+.ts-scrub-thumb { z-index: 5; width: 44px; height: 44px; cursor: grab; touch-action: none; }
+.ts-scrub-thumb[data-dragging] { cursor: grabbing; }
+/* A flag on a pole: the pole lines up with the playhead line running down through the sides. */
+.ts-scrub-thumb::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 4px;
+  width: 16px;
+  height: 20px;
+  margin-left: -8px;
+  background: var(--text);
+  clip-path: polygon(0 0, 100% 0, 100% 62%, 50% 100%, 0 62%);
+}
+.ts-scrub-thumb::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 22px;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--text);
+}
+.ts-scrub-thumb:has(:focus-visible)::before { outline: 2px solid var(--text); outline-offset: 3px; clip-path: none; border-radius: 1px; }
 .ts-row { display: flex; align-items: stretch; margin-top: 6px; }
 .ts-side {
   position: sticky;
