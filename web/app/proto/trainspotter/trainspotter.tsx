@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createPointerKind } from "@ui-sdk/core";
+import { createPointerKind, inputHints } from "@ui-sdk/core";
 import { usePart, usePrimitive } from "@ui-sdk/react/primitive";
 import { usePreference } from "@ui-sdk/react/preferences";
 import { createAgent, registerTools } from "@ui-sdk/react/agent";
@@ -17,6 +17,13 @@ import { useShortcut, useShortcutHint } from "@ui-sdk/react/shortcuts";
 import { Slider, SliderControl, SliderThumb, SliderTrack } from "@ui-sdk/react/slider";
 import { Toast, ToastAction, ToastClose, ToastDescription, ToastRegion, ToastTitle, createToaster } from "@ui-sdk/react/toast";
 import { Drawer, DrawerBackdrop, DrawerClose, DrawerContent, DrawerTitle } from "@ui-sdk/react/drawer";
+
+// Keyboard hints for typing a proper name: capitalised words, no autocorrect mangling "Sasha" into "Sash".
+// The SDK's hint for a name, minus its autofill: this is a record's artist, not the visitor's own name.
+const nameHints = (enter: "next" | "done") => {
+  const h = inputHints("name", { enter }) as Record<string, string>;
+  return { autoCapitalize: h.autoCapitalize, autoCorrect: h.autoCorrect, spellCheck: h.spellCheck === "true", enterKeyHint: enter, autoComplete: "off" } as const;
+};
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@ui-sdk/react/collapsible";
 import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxLabel, ComboboxList } from "@ui-sdk/react/combobox";
 import { Field, FieldLabel } from "@ui-sdk/react/field";
@@ -232,10 +239,23 @@ export function Trainspotter({
   const [sheet, setSheet] = useState(false); // the naming sheet, on phones
   const quiet = useRef(false); // true while the page itself is writing, so it doesn't select what it adds
   const wantName = useRef(false);
-  const focusName = useCallback(() => {
-    if (touch) setSheet(true);
-    else requestAnimationFrame(() => (document.getElementById("ts-artist") as HTMLInputElement | null)?.focus());
-  }, [touch]);
+  const openSheet = useCallback((id?: string | null) => {
+    // Put the timeline at the top of the screen and the track in the middle of it, then open the sheet
+    // below. Otherwise the sheet covers the very thing being named.
+    const frame = document.querySelector(".ts-root") as HTMLElement | null;
+    if (frame) window.scrollTo({ top: frame.getBoundingClientRect().top + window.scrollY - 8 });
+    const sc = scrollerRef.current;
+    const el = id ? (sc?.querySelector(`[data-span-id="${CSS.escape(id)}"]`) as HTMLElement | null) : null;
+    if (sc && el) sc.scrollLeft = Math.max(0, el.offsetLeft + el.offsetWidth / 2 - sc.clientWidth / 2 + 28);
+    setSheet(true);
+  }, []);
+  const focusName = useCallback(
+    (id?: string | null) => {
+      if (touch) requestAnimationFrame(() => openSheet(id));
+      else requestAnimationFrame(() => (document.getElementById("ts-artist") as HTMLInputElement | null)?.focus());
+    },
+    [touch, openSheet],
+  );
 
   const handle = usePrimitive(tracklist, {
     value: cues,
@@ -379,18 +399,26 @@ export function Trainspotter({
   // "A new track starts here": mark it at the playhead and go straight to naming it.
   const markHere = useCallback(() => {
     const a = audios.current[activeRef.current];
+    const t = Math.floor(a?.currentTime ?? 0);
+    // A second press within a few seconds means "this one", not "another one on top of it".
+    const same = cuesRef.current.find((c) => c.track === sides[activeRef.current] && Math.abs(c.start - t) < 5);
+    if (same) {
+      setSelected(same.id);
+      focusName(same.id);
+      return;
+    }
     wantName.current = true;
-    api.markAt(sides[activeRef.current], Math.floor(a?.currentTime ?? 0));
-  }, [api, sides]);
+    api.markAt(sides[activeRef.current], t);
+  }, [api, sides, focusName]);
   useEffect(() => {
     if (selected && wantName.current) {
       wantName.current = false;
-      focusName();
+      focusName(selected);
     }
   }, [selected, focusName]);
   const nameIt = (id: string) => {
     setSelected(id);
-    focusName();
+    focusName(id);
   };
 
   // M marks and Space plays, unless the key belongs to a field or a control.
@@ -529,11 +557,24 @@ export function Trainspotter({
     >
       <Field className="min-w-0 flex-1 basis-40">
         <FieldLabel className="ts-label">Artist</FieldLabel>
-        <Input id={touch ? "ts-artist-sheet" : "ts-artist"} value={draftName.artist} onValueChange={(v: string) => setDraftName((d) => ({ ...d, artist: v }))} autoComplete="off" autoCapitalize="words" enterKeyHint="next" className="ts-input" />
+        <Input
+          id={touch ? "ts-artist-sheet" : "ts-artist"}
+          value={draftName.artist}
+          onValueChange={(v: string) => setDraftName((d) => ({ ...d, artist: v }))}
+          // The keyboard's Next key sends Enter. It should go to Title, not save half a name.
+          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+            if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+              e.preventDefault();
+              (e.currentTarget.form?.querySelector("[data-title]") as HTMLInputElement | null)?.focus();
+            }
+          }}
+          {...nameHints("next")}
+          className="ts-input"
+        />
       </Field>
       <Field className="min-w-0 flex-[1.4] basis-48">
         <FieldLabel className="ts-label">Title</FieldLabel>
-        <Input value={draftName.title} onValueChange={(v: string) => setDraftName((d) => ({ ...d, title: v }))} autoComplete="off" autoCapitalize="words" enterKeyHint="done" className="ts-input" />
+        <Input data-title value={draftName.title} onValueChange={(v: string) => setDraftName((d) => ({ ...d, title: v }))} {...nameHints("done")} className="ts-input" />
       </Field>
       <div className="flex flex-none flex-wrap items-end gap-2">
         <button type="submit" className="poster-btn min-h-11 !bg-[var(--text)] !text-[var(--bg)]">
@@ -575,7 +616,7 @@ export function Trainspotter({
               {o.known ? (
                 <>
                   {o.author} thought it was{" "}
-                  <button type="button" onClick={() => saveName(o.artist, o.title)} className="cursor-pointer text-[var(--text)] underline underline-offset-4">
+                  <button type="button" onClick={() => saveName(o.artist, o.title)} className="inline-flex min-h-11 cursor-pointer items-center text-[var(--text)] underline underline-offset-4">
                     {[o.artist, o.title].filter(Boolean).join(" — ")}
                   </button>
                   .
@@ -665,7 +706,7 @@ export function Trainspotter({
   );
 
   return (
-    <section className="mx-auto max-w-7xl px-4 pb-24 pt-8 sm:px-6 sm:pt-12" aria-label="Help name the tracks on this tape">
+    <section className="ts-page mx-auto max-w-7xl px-4 pb-24 pt-8 sm:px-6 sm:pt-12" aria-label="Help name the tracks on this tape">
       {tape.sides.map((s, i) => (
         <audio
           key={s.key}
@@ -693,10 +734,10 @@ export function Trainspotter({
       </p>
 
       <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 border-t-[1.5px] border-[var(--text)] pt-4">
-        <button type="button" onClick={toggle} className="poster-btn min-h-11 min-w-[6rem] !bg-[var(--text)] !text-[var(--bg)]" aria-keyshortcuts="Space">
+        <button type="button" onClick={toggle} className="ts-fine-only poster-btn min-h-11 min-w-[6rem] !bg-[var(--text)] !text-[var(--bg)]" aria-keyshortcuts="Space">
           {playing ? "Pause" : "Play"}
         </button>
-        <p className="font-mono text-sm tabular-nums text-[var(--text)]">
+        <p className="ts-fine-only font-mono text-sm tabular-nums text-[var(--text)]">
           Side {sides[active]} · {clock(now)} <span className="text-[var(--muted)]">/ {clock(lengths[active])}</span>
         </p>
         <div className="ml-auto flex gap-2">
@@ -725,7 +766,7 @@ export function Trainspotter({
               : "If a track is playing here, press the button and name it."}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="ts-fine-only flex flex-wrap gap-2">
           {playingCue && (
             <button type="button" onClick={() => nameIt(playingCue.id)} className={`poster-btn min-h-11 ${playingCue.known ? "" : "!bg-[var(--text)] !text-[var(--bg)]"}`}>
               {playingCue.known ? "Fix this name" : "I know this one"}
@@ -771,7 +812,7 @@ export function Trainspotter({
             {touch ? (
               <div className="flex w-full items-center gap-3">
                 <p className="min-w-0 flex-1 truncate text-[15px] font-medium text-[var(--text)]">{cueLabel(sel)}</p>
-                <button type="button" onClick={() => setSheet(true)} className="poster-btn min-h-11 flex-none !bg-[var(--text)] !text-[var(--bg)]">
+                <button type="button" onClick={() => openSheet(sel.id)} className="poster-btn min-h-11 flex-none !bg-[var(--text)] !text-[var(--bg)]">
                   {sel.known ? "Fix name" : "Name it"}
                 </button>
               </div>
@@ -792,6 +833,7 @@ export function Trainspotter({
       <Drawer open={sheet && Boolean(sel) && touch} onOpenChange={(open: boolean) => setSheet(open)}>
         <DrawerBackdrop className="ts-backdrop" />
         <DrawerContent className="ts-sheet">
+          <div data-slot="grip" className="ts-grip" aria-hidden />
           {sel && (
             <>
               <div className="flex items-start justify-between gap-3">
@@ -806,6 +848,32 @@ export function Trainspotter({
           )}
         </DrawerContent>
       </Drawer>
+
+      {/* The job, as a list: every track nobody has named. Easier to hit than a narrow block on the timeline. */}
+      {unknownCount > 0 && (
+        <div className="mt-8">
+          <h2 className="font-display text-2xl leading-none text-[var(--text)]">Still unknown</h2>
+          <ul className="ts-list ts-unknowns mt-3">
+            {cues
+              .filter((c) => !c.known)
+              .sort((a, b) => a.track.localeCompare(b.track) || a.start - b.start)
+              .map((c) => (
+                <li key={c.id} className="flex items-center gap-2">
+                  <button type="button" onClick={() => seek(sides.indexOf(c.track), c.start, true)} className="ts-list-row" aria-label={`Hear side ${c.track} from ${clock(c.start)}`}>
+                    <span className="flex-none font-mono text-[11px] tabular-nums text-[var(--muted)]">
+                      {c.track} {clock(c.start)}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate">{c.title ? `Someone heard “${c.title}”` : "No clues yet"}</span>
+                    <span className="flex-none text-[12px] text-[var(--muted)]">Hear it</span>
+                  </button>
+                  <button type="button" onClick={() => nameIt(c.id)} className="ts-chip flex-none">
+                    I know it
+                  </button>
+                </li>
+              ))}
+          </ul>
+        </div>
+      )}
 
       <div className="mt-10 grid gap-x-12 gap-y-8 lg:grid-cols-2">
         <div className="min-w-0">
@@ -903,7 +971,29 @@ export function Trainspotter({
         </Combobox>
       </div>
 
-      <ToastRegion toaster={toaster} className="ts-toasts">
+      {/* Phone: play, the clock and the two naming actions stay under the thumb wherever the page is scrolled. */}
+      <div className="ts-bar" aria-label="Player">
+        <p className="ts-bar-now">
+          <span className="min-w-0 flex-1 truncate">{playingCue ? (playingCue.known ? cueLabel(playingCue) : "Unknown track") : "Nothing named here yet"}</span>
+          <span className="flex-none font-mono text-[12px] tabular-nums text-[var(--muted)]">
+            {sides[active]} {clock(now)}
+          </span>
+        </p>
+        <div className="ts-bar-row">
+          <button type="button" onClick={toggle} className="ts-bar-btn ts-bar-primary">
+            {playing ? "Pause" : "Play"}
+          </button>
+          {/* Always here, so the button beside it never moves under the thumb. */}
+          <button type="button" onClick={() => playingCue && nameIt(playingCue.id)} disabled={!playingCue} className="ts-bar-btn">
+            {playingCue?.known ? "Fix name" : "I know it"}
+          </button>
+          <button type="button" onClick={markHere} className="ts-bar-btn">
+            New track
+          </button>
+        </div>
+      </div>
+
+      <ToastRegion toaster={toaster} side="bottom" align="center" className="ts-toasts">
         {() => (
           <Toast className="ts-toast">
             <div className="min-w-0 flex-1">

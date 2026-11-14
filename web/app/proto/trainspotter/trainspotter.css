@@ -189,7 +189,11 @@
 .ts-chip:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 
 /* The sheet: the drawer positions and moves it; this gives it a surface and a size. */
-.ts-backdrop { background: rgb(0 0 0 / 0.45); }
+/* The backdrop needs a box of its own; the drawer only manages its opacity. Kept light, because the
+   track being named sits behind it and should stay readable. */
+.ts-backdrop { position: fixed; inset: 0; z-index: 40; background: rgb(0 0 0 / 0.3); }
+.ts-sheet { z-index: 41; }
+.ts-grip { width: 36px; height: 4px; margin: -0.25rem auto 0.75rem; border-radius: 2px; background: var(--border); }
 .ts-sheet {
   width: 100%;
   max-height: 85dvh;
@@ -250,10 +254,24 @@
 }
 
 /* ── Toasts ── */
-.ts-toasts { z-index: 60; }
+/* The SDK centres the region along the bottom edge itself; this only sets its width and lifts it off the edge. */
+.ts-toasts {
+  z-index: 60;
+  width: min(26rem, calc(100vw - 2rem));
+  margin: 0;
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+  border: 0;
+  background: transparent;
+  padding: 0;
+  overflow: visible;
+}
+@media (pointer: coarse) {
+  /* Clear of the pinned player bar. */
+  .ts-toasts { bottom: calc(7.25rem + env(safe-area-inset-bottom)); }
+}
 .ts-toast {
   display: flex;
-  width: min(26rem, calc(100vw - 2rem));
+  width: 100%;
   align-items: center;
   gap: 0.75rem;
   border: 1.5px solid var(--bg);
@@ -284,3 +302,48 @@
 .ts-toast-btn:focus-visible { outline: 2px solid var(--bg); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .ts-toast { transition: none; } }
 
+
+/* ── Phone: the pinned player bar ── */
+.ts-bar { display: none; }
+@media (pointer: coarse) {
+  .ts-fine-only { display: none !important; }
+  .ts-bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 30;
+    display: block;
+    margin: 2rem -1rem -6rem;
+    border-top: 1.5px solid var(--text);
+    background: var(--bg);
+    padding: 0.6rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+  }
+  .ts-bar-now { display: flex; align-items: baseline; gap: 0.75rem; font-size: 14px; font-weight: 500; color: var(--text); }
+  .ts-bar-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem; }
+  .ts-bar-btn {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--text);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-geist-mono), ui-monospace, monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .ts-bar-btn:active { transform: scale(0.97); }
+  .ts-bar-btn:disabled { border-color: var(--border); color: var(--border); }
+  .ts-bar-primary { background: var(--text); color: var(--bg); }
+  .ts-bar-btn:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+  /* The site's poster buttons lift on hover, and on a phone that sticks after a tap. Not on this page. */
+  .ts-page .poster-btn:hover { transform: none; box-shadow: none; }
+}
+/* No double-tap zoom on the things that get tapped twice in quick succession; no text selection on a long press. */
+.ts-page .ts-root, .ts-page .poster-btn, .ts-page .ts-chip, .ts-bar-btn, .ts-list-row { touch-action: manipulation; }
+.ts-page .poster-btn, .ts-bar-btn, .ts-chip { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.ts-unknowns { max-height: none; }
+.ts-unknowns li { padding-right: 0.25rem; }
