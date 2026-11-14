@@ -779,11 +779,11 @@ export function Trainspotter({
       <p className="mt-3 max-w-[60ch] text-[17px] text-[var(--text)]">
         {settled.length
           ? unknownCount
-            ? `${knownCount} of the ${settled.length} tracks marked on this tape have a name. ${unknownCount} are still unknown. Press play, and if you recognise one, tell us what it is.`
-            : `All ${settled.length} tracks marked on this tape have a name. Press play, and if one is wrong or missing, fix it.`
+            ? `${knownCount} of ${settled.length} ID’d. ${unknownCount} still unknown. Press play and help ID the unknowns.`
+            : `All ${settled.length} ID’d. Press play, and if one is wrong or missing, fix it.`
           : waiting.some((w) => w.length)
             ? "We know what’s on this tape, but not when each track comes in. Press play, and press the button each time a new one starts."
-            : "Nobody has named a track on this tape yet. Press play, and when you hear one you know, be the first."}
+            : "Nothing ID’d on this tape yet. Press play and be the first to ID one."}
       </p>
 
       <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 border-t-[1.5px] border-[var(--text)] pt-4">
