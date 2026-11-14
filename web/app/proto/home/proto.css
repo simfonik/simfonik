@@ -202,3 +202,19 @@
 @media (prefers-reduced-motion: reduce) {
   .shelf-spine-body, .dial-cover { transition: none; }
 }
+
+/* Atlas */
+.atlas-frame[data-zoom="far"] .atlas-caption { visibility: hidden; }
+.atlas-card { transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1); transform-origin: 50% 40%; }
+.atlas-card-img { box-shadow: 0 1px 2px rgb(0 0 0 / 0.12), 0 6px 14px -6px rgb(0 0 0 / 0.25); }
+.atlas-card[data-focused] .atlas-card-img { outline: 4px solid var(--text); outline-offset: 5px; }
+.atlas-option[data-highlighted] { background: var(--text); color: var(--bg); }
+.atlas-option[data-highlighted] span { color: inherit; }
+.atlas-year:hover { background: var(--bg-hover); }
+.atlas-year:focus-visible { outline: 2px solid var(--text); outline-offset: -4px; }
+@media (prefers-reduced-motion: reduce) { .atlas-card { transition: none; } }
+
+/* Crate */
+.crate-stage { perspective: 1300px; perspective-origin: 50% 30%; }
+.crate-stage:focus-visible { outline: 2px solid var(--text); outline-offset: 6px; }
+.crate-card { backface-visibility: hidden; }

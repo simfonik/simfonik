@@ -4,19 +4,9 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { usePart, usePrimitive } from "@ui-sdk/react/primitive";
-import { chronological, cover, djLine, type ProtoTape } from "../shared";
+import { cover, djLine, type ProtoTape } from "../shared";
+import { CARD_H, CARD_W, IMG_H, layoutWall } from "./wall-layout";
 import { wall } from "./wall-primitive";
-
-const ROWS = 4;
-const CARD_W = 240;
-const IMG_H = 160;
-const CARD_H = 212;
-const GAP = 20;
-const LABEL_H = 230;
-const BLOCK_MIN_W = 440;
-const BLOCK_GAP = 110;
-const SHELF_GAP = 130;
-const MAX_W = 8000;
 
 function World({ children, ...props }: React.ComponentProps<"div">) {
   return usePart(wall, "world", {}, { ...props, children }, "div");
@@ -25,37 +15,7 @@ function World({ children, ...props }: React.ComponentProps<"div">) {
 export function Wall({ tapes }: { tapes: ProtoTape[] }) {
   const router = useRouter();
 
-  // Each year is a block four covers tall; blocks flow left to right and wrap like words in a paragraph.
-  const { bands, cards, width, height } = useMemo(() => {
-    const sorted = chronological(tapes);
-    const years = [...new Set(sorted.map((t) => t.released ?? ""))];
-    const bands: { year: string; count: number; x: number; y: number }[] = [];
-    const cards: { tape: ProtoTape; x: number; y: number }[] = [];
-    const shelfH = LABEL_H + ROWS * CARD_H + (ROWS - 1) * GAP;
-    let x = 0;
-    let y = 0;
-    let width = 0;
-    for (const year of years) {
-      const group = sorted.filter((t) => (t.released ?? "") === year);
-      const cols = Math.ceil(group.length / ROWS);
-      const w = Math.max(cols * (CARD_W + GAP) - GAP, BLOCK_MIN_W);
-      if (x > 0 && x + w > MAX_W) {
-        x = 0;
-        y += shelfH + SHELF_GAP;
-      }
-      bands.push({ year, count: group.length, x, y });
-      group.forEach((tape, i) => {
-        cards.push({
-          tape,
-          x: x + Math.floor(i / ROWS) * (CARD_W + GAP),
-          y: y + LABEL_H + (i % ROWS) * (CARD_H + GAP),
-        });
-      });
-      width = Math.max(width, x + w);
-      x += w + BLOCK_GAP;
-    }
-    return { bands, cards, width, height: y + shelfH };
-  }, [tapes]);
+  const { bands, cards, width, height } = useMemo(() => layoutWall(tapes), [tapes]);
 
   const handle = usePrimitive(wall, {});
   const api = handle.api;

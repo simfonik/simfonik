@@ -2,22 +2,18 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ProtoTape } from "./shared";
-import { Current } from "./variants/current";
-import { Dial } from "./variants/dial";
-import { Shelf } from "./variants/shelf";
-import { Catalogue } from "./variants/catalogue";
 import { Wall } from "./variants/wall";
+import { Atlas } from "./variants/atlas";
+import { Crate } from "./variants/crate";
 
-type VariantProps = { tapes: ProtoTape[]; recent: React.ReactNode };
+type VariantProps = { tapes: ProtoTape[] };
 const VARIANTS: { name: string; Component: React.ComponentType<VariantProps> }[] = [
-  { name: "Current", Component: Current },
-  { name: "Dial", Component: Dial },
-  { name: "Shelf", Component: Shelf },
-  { name: "Index", Component: Catalogue },
   { name: "Wall", Component: Wall },
+  { name: "Atlas", Component: Atlas },
+  { name: "Crate", Component: Crate },
 ];
 
-export function Harness({ tapes, recent }: { tapes: ProtoTape[]; recent: React.ReactNode }) {
+export function Harness({ tapes }: { tapes: ProtoTape[] }) {
   const [current, setCurrent] = useState(0);
   const [ready, setReady] = useState(false);
   const pickerRef = useRef<HTMLElement>(null);
@@ -75,7 +71,7 @@ export function Harness({ tapes, recent }: { tapes: ProtoTape[]; recent: React.R
   return (
     <>
       <div className="pb-24">
-        <Active key={current} tapes={tapes} recent={recent} />
+        <Active key={current} tapes={tapes} />
       </div>
       <nav ref={pickerRef} className="proto-picker" aria-label="Prototype variants" data-ready={ready ? "" : undefined}>
         <span ref={highlightRef} className="proto-picker-highlight" aria-hidden="true" />

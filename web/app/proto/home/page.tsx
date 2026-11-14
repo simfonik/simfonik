@@ -1,7 +1,6 @@
 // PROTOTYPE — throwaway exploration surface (SIM-37). Nothing in production imports from here.
 import type { Metadata } from "next";
 import { getAllTapes, getCoverImageWithFallback } from "../../../lib/data";
-import { RecentActivity } from "../../../components/RecentActivity";
 import { Harness } from "./harness";
 import "./proto.css";
 
@@ -22,5 +21,5 @@ export default function ProtoHome() {
     coverImage: getCoverImageWithFallback(tape),
     catalogNumber: String(total - i).padStart(3, "0"),
   }));
-  return <Harness tapes={data} recent={<RecentActivity />} />;
+  return <Harness tapes={data} />;
 }
