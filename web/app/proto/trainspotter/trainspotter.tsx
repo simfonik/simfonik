@@ -115,8 +115,11 @@ export function Trainspotter({
         setLengths((l) => l.map((v, j) => (j === i && Number.isFinite(a.duration) ? Math.round(a.duration) : v)));
         if (++seen >= audios.current.filter(Boolean).length) setMeasured(true);
       };
-      const play = () => i === activeRef.current && setPlaying(true);
-      const pause = () => i === activeRef.current && setPlaying(false);
+      // Whichever side's event this is, the button reflects the side that is active now. The side being
+      // left pauses a moment after the switch, and must not leave the button stuck on "Pause".
+      const sync = () => setPlaying(Boolean(audios.current[activeRef.current] && !audios.current[activeRef.current]!.paused));
+      const play = sync;
+      const pause = sync;
       if (a.readyState >= 1) meta();
       a.addEventListener("loadedmetadata", meta);
       a.addEventListener("play", play);
@@ -171,9 +174,10 @@ export function Trainspotter({
   }, []);
 
   const seek = useCallback((side: number, t: number, play?: boolean) => {
+    // Read this before silencing the other side: changing sides mid-play should keep playing.
+    const wasPlaying = audios.current.some((x) => x && !x.paused);
     audios.current.forEach((a, i) => i !== side && a?.pause());
     const a = audios.current[side];
-    const wasPlaying = audios.current.some((x) => x && !x.paused) || Boolean(a && !a.paused);
     setActive(side);
     activeRef.current = side;
     if (!a) return;
@@ -645,7 +649,7 @@ export function Trainspotter({
         <>
             {tape.sides.map((side, i) => (
               <div key={side.key} className="ts-row" data-active={i === active ? "" : undefined}>
-                <button type="button" className="ts-side" onClick={() => seek(i, i === active ? now : 0)} aria-pressed={i === active} aria-label={`Listen to side ${side.key}`}>
+                <button type="button" className="ts-side" onClick={() => seek(i, audios.current[i]?.currentTime ?? 0)} aria-pressed={i === active} aria-label={`Listen to side ${side.key}`}>
                   {side.key}
                 </button>
                 <Track
