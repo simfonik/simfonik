@@ -10017,5 +10017,31 @@
         ]
       }
     ]
+  },
+  {
+    "id": "dj-greg-j-1992-rave-jams",
+    "title": "1992 Rave Jams",
+    "released": "2026",
+    "created_date": "2026-11-14T10:12:00",
+    "djs": [
+      {
+        "name": "DJ Greg J",
+        "slug": "dj-greg-j"
+      }
+    ],
+    "images": {
+      "cover": "/media/tapes/dj-greg-j-1992-rave-jams/cover.jpg"
+    },
+    "sides": [
+      {
+        "position": "A",
+        "audio_links": [
+          {
+            "url": "https://audio.simfonik.com/tapes/dj-greg-j-1992-rave-jams/a.mp3"
+          }
+        ]
+      }
+    ],
+    "series": ["90s-retrospective"]
   }
 ]
