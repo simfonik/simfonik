@@ -1,7 +1,7 @@
 import imageLoader from "../../../lib/imageLoader";
 import type { TapeListSubset } from "../../../types/tape";
 
-export type ProtoTape = TapeListSubset & { coverImage: string; catalogNumber: string };
+export type ProtoTape = TapeListSubset & { coverImage: string; catalogNumber: string; audio: string | null };
 
 export const djLine = (t: ProtoTape) => t.djs.map((d) => d.name).join(", ");
 export const cover = (t: ProtoTape, width: 400 | 800 | 1200) => imageLoader({ src: t.coverImage, width });

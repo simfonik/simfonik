@@ -218,3 +218,74 @@
 .crate-stage { perspective: 1300px; perspective-origin: 50% 30%; }
 .crate-stage:focus-visible { outline: 2px solid var(--text); outline-offset: 6px; }
 .crate-card { backface-visibility: hidden; }
+
+/* Mixer */
+.mixer-well { transition: box-shadow 150ms ease-out; }
+.mixer-well[data-over] { box-shadow: inset 0 0 0 4px var(--text); }
+.mixer-arm[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+.mixer-ghost {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 2147483000;
+  width: 168px;
+  pointer-events: none;
+  box-shadow: 0 2px 4px rgb(0 0 0 / 0.2), 0 14px 28px -8px rgb(0 0 0 / 0.45);
+  will-change: transform;
+}
+.mixer-thumb { width: 44px; height: 44px; cursor: grab; touch-action: none; }
+.mixer-thumb::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  background: var(--text);
+}
+.mixer-thumb-tall::after { width: 10px; height: 28px; margin: -14px 0 0 -5px; }
+.mixer-thumb:has(:focus-visible), .mixer-fader-thumb:has(:focus-visible) { outline: 2px solid var(--text); outline-offset: -6px; }
+/* A notch at zero on the pitch track and at the centre of the crossfader. */
+.mixer-pitch-track::before, .mixer-fader-track::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -7px;
+  width: 2px;
+  height: 16px;
+  margin-left: -1px;
+  background: var(--text);
+}
+.mixer-fader-track::before { top: -10px; height: 24px; }
+.mixer-fader-thumb { width: 60px; height: 56px; cursor: grab; touch-action: none; }
+.mixer-fader-thumb::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 26px;
+  height: 44px;
+  margin: -22px 0 0 -13px;
+  background: var(--bg);
+  box-shadow: inset 0 0 0 1.5px var(--text), inset 12px 0 0 -10.5px var(--text), inset -12px 0 0 -10.5px var(--text);
+  border-left: 0;
+}
+.mixer-rack-item:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+/* Flyer */
+.flyer-row { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; outline: none; }
+.flyer-row:focus-visible { box-shadow: inset 0 0 0 2px var(--text); }
+.flyer-row[data-grabbed] {
+  transform: translate(var(--drag-x, 0), var(--drag-y, 0));
+  position: relative;
+  z-index: 1;
+  cursor: grabbing;
+  box-shadow: 0 0 0 1.5px var(--text), 4px 4px 0 var(--text);
+}
+.flyer-stock:has(:checked) { background: var(--text); color: var(--bg); }
+.flyer-stock:has(:focus-visible) { outline: 2px solid var(--text); outline-offset: 2px; }
+.flyer-sheet { box-shadow: 0 1px 2px rgb(0 0 0 / 0.1), 0 18px 40px -18px rgb(0 0 0 / 0.45); }
+.flyer-name { text-decoration: none; }
+@media (hover: hover) { .flyer-name:hover { text-decoration: underline; text-decoration-thickness: 0.06em; text-underline-offset: 0.08em; } }
+.flyer-name:focus-visible { outline: 0.5cqw solid currentColor; outline-offset: 0.5cqw; }
