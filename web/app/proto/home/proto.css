@@ -1,0 +1,204 @@
+/* PROTOTYPE (SIM-37). The picker block is the emil-prototype spec, verbatim. */
+.proto-picker {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(10, 10, 10, 0.82);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 8px 24px rgba(0, 0, 0, 0.24),
+    0 2px 6px rgba(0, 0, 0, 0.12);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.proto-picker-highlight {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  will-change: transform;
+}
+
+/* The slide is enabled only after first paint (data-ready), so load doesn't animate. */
+.proto-picker[data-ready] .proto-picker-highlight {
+  transition:
+    transform 250ms cubic-bezier(0.23, 1, 0.32, 1),
+    width 250ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .proto-picker[data-ready] .proto-picker-highlight { transition: none; }
+}
+
+.proto-picker-item {
+  position: relative; /* sits above the highlight */
+  display: flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font: inherit;
+  cursor: pointer;
+  transition: color 150ms ease-out;
+}
+
+.proto-picker-item:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.proto-picker-item:active {
+  transform: scale(0.97);
+}
+
+.proto-picker-item:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.4);
+  outline-offset: 2px;
+}
+
+.proto-picker-item[data-active] {
+  color: #fff;
+}
+
+.proto-picker-divider {
+  width: 1px;
+  height: 16px;
+  margin: 0 4px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.proto-picker-replay {
+  padding: 0 10px;
+  font-size: 14px;
+}
+
+.proto-picker[data-position="top"] {
+  bottom: auto;
+  top: 24px;
+}
+
+/* ── Variant styles (prototype only) ─────────────────────────────── */
+
+/* Dial */
+.dial-ticks {
+  background-image: repeating-linear-gradient(to right, var(--muted) 0 1px, transparent 1px 100%);
+  background-size: calc((100% - 1px) / var(--dial-steps)) 100%;
+  opacity: 0.55;
+}
+/* On a phone one tick per tape would smear into a grey block, so mark every fourth. */
+@media (max-width: 639px) {
+  .dial-ticks { background-size: calc((100% - 1px) / (var(--dial-steps) / 4)) 100%; }
+}
+/* The SDK places and centers the thumb itself; this only gives it a size and a needle. */
+.dial-thumb {
+  width: 44px;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+}
+.dial-thumb::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 50%;
+  width: 3px;
+  margin-left: -1.5px;
+  background: var(--text);
+}
+.dial-thumb::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -7px;
+  width: 13px;
+  height: 13px;
+  margin-left: -6.5px;
+  background: var(--text);
+  transform: rotate(45deg);
+}
+.dial-thumb[data-dragging] { cursor: grabbing; }
+.dial-thumb:has(:focus-visible) {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+.dial-cover { transition: opacity 150ms ease-out; }
+.dial-cover[data-tuning] { opacity: 0.35; }
+
+/* Shelf */
+.shelf-spine {
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.shelf-spine-body {
+  transition: transform 150ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+@media (hover: hover) {
+  .shelf-spine:hover .shelf-spine-body { transform: translateY(-6px); }
+}
+.shelf-spine[data-selected] .shelf-spine-body { transform: translateY(-16px); }
+.shelf-spine[data-highlighted]:focus-visible .shelf-spine-body {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+.shelf-spine-text {
+  writing-mode: vertical-rl;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Index */
+.index-row { cursor: pointer; outline: none; }
+.index-row[data-selected] { background: var(--text); color: var(--bg); }
+.index-row[data-selected] .index-muted { color: inherit; opacity: 0.7; }
+@media (hover: hover) {
+  .index-row:not([data-selected]):hover { background: var(--bg-hover); }
+}
+.index-list:focus-within .index-row[data-highlighted]:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: -2px;
+}
+.index-handle {
+  position: relative;
+  flex: none;
+  background: var(--border);
+  transition: background-color 150ms ease-out;
+}
+.index-handle[data-orientation="horizontal"] { width: 1.5px; cursor: col-resize; }
+.index-handle[data-orientation="vertical"] { height: 1.5px; cursor: row-resize; }
+.index-handle[data-hovering], .index-handle[data-dragging], .index-handle:focus-visible {
+  background: var(--text);
+  outline: none;
+}
+
+/* Wall */
+.wall-frame { cursor: grab; outline: none; }
+.wall-frame:active { cursor: grabbing; }
+.wall-frame:focus-visible { box-shadow: inset 0 0 0 2px var(--text); }
+.wall-card { outline: none; }
+.wall-card:focus-visible .wall-card-img { outline: 6px solid var(--text); outline-offset: 4px; }
+@media (hover: hover) {
+  .wall-card:hover .wall-card-img { outline: 3px solid var(--text); outline-offset: 3px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shelf-spine-body, .dial-cover { transition: none; }
+}
