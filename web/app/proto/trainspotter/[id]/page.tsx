@@ -32,15 +32,21 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
   const mine = said(id);
   const sightings = mine.flatMap((c) => parseComment(c.content, c.author, c.date));
   const listed = mine.flatMap((c) => parseListing(c.content, c.author, c.date));
+  // The tracklist already published on the site: names in order with no times, the most trusted order there is.
+  const official = tape.sides.map((side, i) =>
+    (side.tracks ?? []).map((t, n) => ({ side: i, n: n + 1, artist: t.artist, title: t.title, known: true, author: "simfonik", date: "" })),
+  );
 
   // Other tapes worth opening: the ones with timed IDs or a running order to place.
   const others = getAllTapes()
     .map((t) => {
       const all = said(t.id);
       const timed = all.reduce((n, c) => n + parseComment(c.content, c.author, c.date).length, 0);
-      const named = runningOrders(all.flatMap((c) => parseListing(c.content, c.author, c.date)), t.sides.length)
-        .flat()
-        .filter((l) => l.known).length;
+      const named =
+        t.sides.reduce((n, side) => n + (side.tracks?.length ?? 0), 0) ||
+        runningOrders(all.flatMap((c) => parseListing(c.content, c.author, c.date)), t.sides.length)
+          .flat()
+          .filter((l) => l.known).length;
       return { id: t.id, label: `${t.djs.map((d) => d.name).join(", ")} — ${t.title}`, count: timed + named };
     })
     .filter((t) => t.count > 0)
@@ -57,7 +63,7 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
       }}
       sightings={sightings}
       listed={listed}
-      sources={{ archived: getCommentsForTape(id).length, live: mine.length - getCommentsForTape(id).length }}
+      official={official}
       others={others}
     />
   );
