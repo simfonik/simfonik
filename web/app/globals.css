@@ -124,15 +124,26 @@ body::before {
   display: grid;
   place-items: center;
 }
-.newsletter-dialog::backdrop {
+/* The page when something is open over it: dimmed and blurred. One look, for the Subscribe window and for the
+   phone menu. */
+.newsletter-dialog::backdrop,
+.menu-scrim {
   background: rgb(0 0 0 / 0.6);
   -webkit-backdrop-filter: blur(8px);
           backdrop-filter: blur(8px);
 }
-/* The page behind stays where it is while the window is open, and keeps its scrollbar's room so nothing jumps. */
+.menu-scrim { touch-action: pinch-zoom; }
+/* The page behind stays where it is meanwhile, and keeps its scrollbar's room so nothing jumps. The phone
+   menu exists below the width at which the header shows its links in a row. */
 html:has(.newsletter-dialog[open]) {
   overflow: hidden;
   scrollbar-gutter: stable;
+}
+@media (width < 48rem) {
+  html:has(.menu-scrim) {
+    overflow: hidden;
+    scrollbar-gutter: stable;
+  }
 }
 
 /* Placeholder cassette reel spin — used by PlaceholderCassetteLive
