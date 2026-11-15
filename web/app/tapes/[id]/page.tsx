@@ -116,6 +116,9 @@ export default async function Page({ params }: Props) {
   // How loud each side is along its length, where it has been measured (scripts/measure-waveforms.mjs).
   // The player draws its scrub bar in that shape; a tape without the file keeps the plain line.
   const lengths = (sideLengths as Record<string, (number | null)[]>)[tape.id];
+  // A tape that is one recording, with no name for it, gets no "Side A" label: there is no other side to
+  // tell it from.
+  const unlabelled = tape.sides.length === 1 && !tape.sides[0].title;
   const waves = await import(`../../../data/waveforms/${tape.id}.json`).then(
     (file) => file.default as (number[] | null)[],
     () => null,
@@ -361,14 +364,16 @@ export default async function Page({ params }: Props) {
                 return <PlaylistPlayer tracks={playlist} tapeId={tape.id} />;
               }
 
-              // Individual players for 1-2 sides
+              // One playable side: a player of its own.
               return (
                 <div className="space-y-3">
                   {playlist.map((track) => (
                     <div key={track.position}>
-                      <h2 className="font-display text-xl leading-tight text-[var(--text)] mb-2">
-                        {track.title}
-                      </h2>
+                      {!unlabelled && (
+                        <h2 className="font-display text-xl leading-tight text-[var(--text)] mb-2">
+                          {track.title}
+                        </h2>
+                      )}
                       {track.djs && track.djs.length > 0 && (
                         <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mb-3">
                           By{" "}
@@ -394,7 +399,7 @@ export default async function Page({ params }: Props) {
                       )}
                       <AudioPlayer
                         src={track.url}
-                        title={track.title}
+                        title={unlabelled ? undefined : track.title}
                         tapeId={tape.id}
                         sidePosition={track.position}
                         wave={track.wave}
@@ -471,9 +476,11 @@ export default async function Page({ params }: Props) {
 
               return (
                 <div key={idx}>
-                  <h3 className="font-display text-xl leading-tight text-[var(--text)] mb-4">
-                    {side.title ?? `Side ${side.position}`}
-                  </h3>
+                  {!unlabelled && (
+                    <h3 className="font-display text-xl leading-tight text-[var(--text)] mb-4">
+                      {side.title ?? `Side ${side.position}`}
+                    </h3>
+                  )}
                   <Tracklist tracks={side.tracks} />
                 </div>
               );
