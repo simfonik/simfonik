@@ -33,7 +33,7 @@ const nameHints = (enter: "next" | "done") => {
   return { autoCapitalize: h.autoCapitalize, autoCorrect: h.autoCorrect, spellCheck: h.spellCheck === "true", enterKeyHint: enter, autoComplete: "off" } as const;
 };
 
-export function UndoRedo({ canUndo, canRedo, onStep }: { canUndo: boolean; canRedo: boolean; onStep: (by: number) => void }) {
+export function UndoRedo({ canUndo, canRedo, onStep }: { canUndo: boolean; canRedo: boolean; onStep: (by: -1 | 1) => void }) {
   const undo = useShortcutHint("mod+z");
   const redo = useShortcutHint("mod+shift+z");
   return (

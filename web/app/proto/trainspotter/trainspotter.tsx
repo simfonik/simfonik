@@ -21,7 +21,7 @@ import { reconcile, type Listed, type Proposal, type Sighting } from "./parse";
 import { DEFAULT_LENGTH, clock, cueLabel, tracklist, type Cue } from "./tracklist-primitive";
 import { ordersFor, placeNames, suggestNames } from "./names";
 import { ChangesFold, CommentsFold, NamesFold, SendItIn, StillUnknown } from "./below-the-tape";
-import { describe, madeBy } from "./changes";
+import { describe, madeBy, stepFrom } from "./changes";
 import { IdBar, IdSheetForm, Shortcuts, UndoRedo, type IdDraft } from "./id-form";
 import { awayFrom } from "./keys";
 import { PhoneBar, Player } from "./player";
@@ -255,10 +255,10 @@ export function Trainspotter({
     };
   }, [confirmWithUndo]);
 
-  const step = useCallback(async (by: number) => {
+  const step = useCallback(async (by: -1 | 1) => {
     const h = historyRef.current;
     if (!h) return;
-    await h.seek(Math.max(floorRef.current, h.position() + by));
+    await h.seek(Math.max(floorRef.current, stepFrom(h.entries(), h.position(), by)));
   }, []);
   // The timeline as the bridge lists it. A timeline that has left the page (the tape before this one) can
   // still be listed, marked as gone, and can't be written to.

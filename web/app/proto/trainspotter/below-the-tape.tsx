@@ -8,7 +8,7 @@ import Link from "next/link";
 import type { HistoryEntry } from "@ui-sdk/react/history";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@ui-sdk/react/collapsible";
 import type { Listed, Proposal } from "./parse";
-import { describe, madeBy } from "./changes";
+import { describe, madeBy, steps } from "./changes";
 import { clock, cueLabel, type Cue } from "./tracklist-primitive";
 
 /** The job, as a list: every track nobody has ID'd. Easier to hit than a narrow block on the timeline. */
@@ -202,28 +202,25 @@ export function CommentsFold({ proposals, sides, onHear }: { proposals: Proposal
 
 /** This visitor's changes, newest first. It is the undo stack, read out. */
 export function ChangesFold({ entries, floor, position }: { entries: HistoryEntry[]; /** How many entries were the page's own setting up, not the visitor's. */ floor: number; position: number }) {
+  const made = steps(entries).filter((s) => s.end > floor);
   return (
     <Collapsible className="ts-fold">
       <CollapsibleTrigger className="ts-fold-trigger">
         <span>What you’ve changed</span>
-        <span className="font-mono text-xs tabular-nums text-[var(--muted)]">{Math.max(0, entries.length - floor)}</span>
+        <span className="font-mono text-xs tabular-nums text-[var(--muted)]">{made.length}</span>
       </CollapsibleTrigger>
       <CollapsiblePanel className="ts-fold-panel">
-        {entries.length > floor ? (
+        {made.length ? (
           <ol className="ts-list">
-            {entries
-              .map((e, i) => ({ e, n: i + 1 }))
-              .filter((x) => x.n > floor)
-              .reverse()
-              .map(({ e, n }) => (
-                <li key={e.id} className="ts-history-row" data-undone={n > position || e.reverted ? "" : undefined}>
-                  <span className="ts-source">{madeBy(e)}</span>
-                  <span className="min-w-0 flex-1">
-                    {describe(e)}
-                    {n > position || e.reverted ? " (undone)" : ""}
-                  </span>
-                </li>
-              ))}
+            {made.reverse().map(({ entry, end }) => (
+              <li key={entry.id} className="ts-history-row" data-undone={end > position || entry.reverted ? "" : undefined}>
+                <span className="ts-source">{madeBy(entry)}</span>
+                <span className="min-w-0 flex-1">
+                  {describe(entry)}
+                  {end > position || entry.reverted ? " (undone)" : ""}
+                </span>
+              </li>
+            ))}
           </ol>
         ) : (
           <p className="py-3 text-sm text-[var(--muted)]">Nothing yet.</p>
