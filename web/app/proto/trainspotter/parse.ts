@@ -152,11 +152,14 @@ export function parseComment(content: string, author: string, date: string): Sig
       push(sideIndex(m[2]), seconds(m[1]), m[3]);
     }
     // "3. [05:15] – Artist – Title"   "3 - 5:15 - Artist - Title"   "19 - 47 - ?? hint"
-    else if ((m = line.match(new RegExp(String.raw`^(?:\d{1,2}|-{2,3})\s*[.)${"\\-"}–]\s*\[?\s*(${TIME}|\d{1,2})\s*(?:${DASH}\s*)?\]?\s*${DASH}?\s*(.*)$`)))) {
+    // A bare number only counts as a minute when a dash follows it. Otherwise "21. 2 Unlimited - Get Ready
+    // for This" reads as track 21 at minute 2 by "Unlimited", and "1st Project" loses its 1.
+    else if ((m = line.match(new RegExp(String.raw`^(?:\d{1,2}|-{2,3})\s*[.)${"\\-"}–]\s*\[?\s*(${TIME}|\d{1,2}(?=\s*\]?\s*${DASH}\s))\s*(?:${DASH}\s*)?\]?\s*${DASH}?\s*(.*)$`)))) {
       push(side, seconds(m[1]), m[2]);
     }
     // "[05:15] Artist – Title"   "11:00 Artist - Title"
-    else if ((m = line.match(new RegExp(String.raw`^\[(${TIME})\]\s*${DASH}?\s*(.+)$`)))) {
+    // An optional track number may come first, including one squeezed in later: "1.5 [00:00] Artist – Title".
+    else if ((m = line.match(new RegExp(String.raw`^(?:\d{1,2}(?:\.\d)?\s+)?\[(${TIME})\]\s*${DASH}?\s*(.+)$`)))) {
       push(side, seconds(m[1]), m[2]);
     } else if ((m = line.match(new RegExp(String.raw`^@?\s*(${TIME})\s*(?:${DASH}|=)?\s*(?:on\s+[\w'’.]+(?:\s+side)?\s+)?(?:is\s*:?\s*)?(.+)$`, "i")))) {
       push(sideHere ?? side, seconds(m[1]), m[2], undefined, !list, list);
