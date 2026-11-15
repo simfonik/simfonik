@@ -31,10 +31,14 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
   ];
 
   // A sighting read from a sentence that didn't say which side is only used where there is one side.
-  const timed = (comments: Said[], sideCount: number) => comments.flatMap((c) => parseComment(c.content, c.author, c.date)).filter((s) => !s.unsure || sideCount === 1);
+  // The parser is given each side's own title, so "the Planet Earth side" lands on the side the site calls that.
+  type Sided = { sides: { title?: string }[] };
+  const titles = (t: Sided) => t.sides.map((s) => s.title ?? "");
+  const timed = (comments: Said[], t: Sided) =>
+    comments.flatMap((c) => parseComment(c.content, c.author, c.date, titles(t))).filter((s) => !s.unsure || t.sides.length === 1);
   const mine = said(id);
-  const sightings = timed(mine, tape.sides.length);
-  const listed = mine.flatMap((c) => parseListing(c.content, c.author, c.date));
+  const sightings = timed(mine, tape);
+  const listed = mine.flatMap((c) => parseListing(c.content, c.author, c.date, titles(tape)));
   // The tracklist already published on the site: names in order with no times, the most trusted order there is.
   const official = tape.sides.map((side, i) =>
     (side.tracks ?? []).map((t, n) => ({ side: i, n: n + 1, artist: t.artist, title: t.title, known: true, author: "simfonik", date: "" })),
@@ -46,7 +50,7 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
   const others = getAllTapes()
     .map((t) => {
       const all = said(t.id);
-      const marked = reconcile(timed(all, t.sides.length), t.sides.map(() => Infinity));
+      const marked = reconcile(timed(all, t), t.sides.map(() => Infinity));
       const known = marked.filter((m) => m.known).length;
       const unknown = marked.length - known;
       // Two different things, and only one of them is a tracklist. The site's own list is the tape's full
@@ -55,7 +59,7 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
       const official = t.sides.reduce((n, side) => n + (side.tracks?.length ?? 0), 0);
       const namedInComments = official
         ? 0
-        : runningOrders(all.flatMap((c) => parseListing(c.content, c.author, c.date)), t.sides.length)
+        : runningOrders(all.flatMap((c) => parseListing(c.content, c.author, c.date, titles(t))), t.sides.length)
             .flat()
             .filter((l) => l.known).length;
       // A compilation's eight names would fill the row; its title says more.

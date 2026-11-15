@@ -21,16 +21,74 @@ const seconds = (t: string) => {
   return p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p.length === 2 ? p[0] * 60 + p[1] : p[0] * 60;
 };
 
-const SIDE = /\b(?:side|part)[\s-]*(a|b|c|d|1|2|3|4|one|two)\b/i;
-const sideIndex = (s: string) => ({ a: 0, "1": 0, one: 0, b: 1, "2": 1, two: 1, c: 2, "3": 2, d: 3, "4": 3 })[s.toLowerCase()] ?? 0;
+// "Side A", "side-b", "Part 2", and "Side.A" (a dot only when nothing follows it, so "that side. A friend" is not a side).
+const SIDE = /\b(?:side|part)(?:[\s-]*|\.)(a|b|c|d|1|2|3|4|one|two)\b/i;
+const sideIndex = (s: string) =>
+  ({ a: 0, "1": 0, "1st": 0, first: 0, one: 0, b: 1, "2": 1, "2nd": 1, second: 1, two: 1, c: 2, "3": 2, "3rd": 2, third: 2, d: 3, "4": 3, "4th": 3, fourth: 3 })[s.toLowerCase()] ?? 0;
+// "the second side", "1st side"
+const SIDE_ORD = /\b(1st|2nd|3rd|4th|first|second|third|fourth)[\s-]+side\b/i;
+const squash = (s: string) => s.toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, " ").trim();
+// The name of a side as people write it: "Technology Has Its Subliminal Side" is "Technology Has Its Subliminal".
+const stem = (s: string) => squash(s).replace(/ side$/, "");
+/** Same words up to a typo or two: "Full Moon Maddness" is "Full Moon Madness". */
+const alike = (a: string, b: string) => {
+  if (a === b) return true;
+  if (Math.min(a.length, b.length) < 8) return false;
+  const row = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    let diag = row[0];
+    row[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const up = row[j];
+      row[j] = Math.min(row[j] + 1, row[j - 1] + 1, diag + (a[i - 1] === b[j - 1] ? 0 : 1));
+      diag = up;
+    }
+  }
+  return row[b.length] <= Math.max(1, Math.floor(b.length / 12));
+};
+/**
+ * Which side a piece of text names by the side's own title: "on the Cookie side", "Planet Earth", "Side 1 - Technology
+ * Has Its Subliminal". The title wins over a letter or number beside it: commenters number the sides in the order
+ * they played them, and "Side 1" is not always the tape's A. A bare title only counts as a heading (a line that is
+ * nothing else); inside a sentence it must be followed or preceded by the word "side", so a DJ's name in a track
+ * credit is left alone.
+ */
+export function sideNamed(text: string, titles: string[], heading = false): number | null {
+  const n = squash(text);
+  const bare = n.replace(/^(?:side \w+ |on )?(?:the )?/, "").replace(/ side$/, "");
+  const found = new Set<number>();
+  let best = 0;
+  titles.forEach((title, i) => {
+    const t = stem(title);
+    if (t.length < 3 || /^side\b/.test(t)) return;
+    const hit = ` ${n} `.includes(` ${t} side `) || ` ${n} `.includes(` side ${t} `) || (heading && (alike(bare, t) || (bare.includes(" ") && t.startsWith(`${bare} `))));
+    if (!hit) return;
+    if (t.length > best) found.clear();
+    if (t.length >= best) {
+      best = t.length;
+      found.add(i);
+    }
+  });
+  return found.size === 1 ? [...found][0] : null;
+}
 const TIME = String.raw`\d{1,2}:\d{2}(?::\d{2})?`;
 const DASH = String.raw`[-–—]`;
 // Not "love": it is in half the titles of the era.
 const CHATTER = /\b(anyone|anybody|someone|know|knows|remember|omg|wtf|what|who|which|track|tune|song|please|pls|help|amazing)\b/i;
 // "the b side", "A-side": the other way round from SIDE.
 const SIDE_ALT = /\b([abcd])[\s-]*side\b/i;
-const whichSide = (line: string): number | null => {
-  const m = line.match(SIDE) ?? line.match(SIDE_ALT);
+const whichSide = (line: string, titles: string[] = []): number | null => {
+  const named = sideNamed(line, titles);
+  if (named !== null) return named;
+  const m = line.match(SIDE) ?? line.match(SIDE_ALT) ?? line.match(SIDE_ORD);
+  return m ? sideIndex(m[1]) : null;
+};
+/** A line that is only a side: "Side B", "Side 1 - Technology Has Its Subliminal", "Planet Earth", "the second side". */
+const headingSide = (line: string, titles: string[]): number | null => {
+  if (line.length >= 60 || new RegExp(TIME).test(line)) return null;
+  const named = sideNamed(line, titles, true);
+  if (named !== null) return named;
+  const m = line.match(SIDE) ?? line.match(/^\W*(?:the\s+)?(1st|2nd|3rd|4th|first|second|third|fourth)[\s-]+side\W*$/i);
   return m ? sideIndex(m[1]) : null;
 };
 // Someone asking what a track is. The time they give marks a track nobody has ID'd.
@@ -83,7 +141,7 @@ function split(text: string, prose = false): { artist: string; title: string; kn
   return { artist: "", title: t, known: true };
 }
 
-export function parseComment(content: string, author: string, date: string): Sighting[] {
+export function parseComment(content: string, author: string, date: string, titles: string[] = []): Sighting[] {
   const out: Sighting[] = [];
   let side = 0;
   let sideGiven = false;
@@ -119,16 +177,16 @@ export function parseComment(content: string, author: string, date: string): Sig
     const before = out.length;
 
     // A heading on its own switches side for the list that follows.
-    const heading = line.match(SIDE);
-    if (heading && !new RegExp(TIME).test(line) && line.length < 60) {
-      side = sideIndex(heading[1]);
+    const heading = headingSide(line, titles);
+    if (heading !== null) {
+      side = heading;
       sideGiven = true;
       continue;
     }
 
     let m: RegExpMatchArray | null;
     // The side is known if this line names it, or a heading above it did.
-    const sideHere = whichSide(line);
+    const sideHere = whichSide(line, titles);
     const unsure = sideHere === null && !sideGiven ? true : undefined;
     // "The track playing from [10:20] - [16:37] is Artist - Title"
     if ((m = line.match(new RegExp(String.raw`\[?(${TIME})\]?\s*(?:${DASH}|to)\s*\[?(${TIME})\]?\s+is\s+(.+)$`, "i")))) {
@@ -258,15 +316,15 @@ export function reconcile(sightings: Sighting[], lengths: number[]): Proposal[] 
 export type Listed = { side: number; n: number; artist: string; title: string; known: boolean; author: string; date: string };
 
 /** Numbered lines with a name and no time, e.g. "6. Moby - Go" under a "Side 1" heading. */
-export function parseListing(content: string, author: string, date: string): Listed[] {
+export function parseListing(content: string, author: string, date: string, titles: string[] = []): Listed[] {
   const out: Listed[] = [];
   let side = 0;
   for (const raw of plain(content).split(/\r?\n/)) {
     const line = raw.trim();
     if (!line) continue;
-    const heading = line.match(SIDE);
-    if (heading && line.length < 60 && !/^\d/.test(line)) {
-      side = sideIndex(heading[1]);
+    const heading = /^\d/.test(line) ? null : headingSide(line, titles);
+    if (heading !== null) {
+      side = heading;
       continue;
     }
     if (new RegExp(TIME).test(line)) continue; // timed lines are sightings, handled above
