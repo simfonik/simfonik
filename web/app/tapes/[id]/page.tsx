@@ -6,8 +6,6 @@ import fs from "fs";
 import path from "path";
 import sharp from "sharp";
 import { getTapeById, getAllTapes, getCommentsForTape, getAllSeries } from "../../../lib/data";
-import { hasOptimizedImages, isOptimizableImagePath } from "../../../lib/image-utils";
-import { ASSET_CACHE_VERSION } from "../../../lib/imageLoader";
 import { TapeImages } from "../../../components/TapeImages";
 import { PlaceholderCassetteLive } from "../../../components/PlaceholderCassetteLive";
 import { AudioCoordinator } from "../../../components/AudioCoordinator";
@@ -136,42 +134,20 @@ export default async function Page({ params }: Props) {
   );
 
   // Collect all images: cover + side images
-  const allImages: Array<{
-    src: string;
-    label: string;
-    isCover: boolean;
-    tapeId?: string;
-    sidePosition?: string;
-  }> = [];
+  const allImages: Array<{ src: string; label: string }> = [];
   if (tape.images?.cover) {
     const djList = tape.djs.map(dj => dj.name).join(', ');
-    allImages.push({ 
-      src: tape.images.cover, 
-      label: `${tape.title} mixtape by ${djList}`,
-      isCover: true,
-      tapeId: hasOptimizedImages(tape) ? tape.id : undefined
-    });
+    allImages.push({ src: tape.images.cover, label: `${tape.title} mixtape by ${djList}` });
   }
   tape.sides.forEach((side) => {
     if (side.image) {
-      const isSideOptimizable = isOptimizableImagePath(side.image);
-      allImages.push({
-        src: side.image,
-        label: `${tape.title} – ${side.title ?? `Side ${side.position}`} image`,
-        isCover: false,
-        tapeId: isSideOptimizable ? tape.id : undefined,
-        sidePosition: isSideOptimizable ? side.position.toLowerCase() : undefined
-      });
+      allImages.push({ src: side.image, label: `${tape.title} – ${side.title ?? `Side ${side.position}`} image` });
     }
   });
 
   // If no images found, add the placeholder
   if (allImages.length === 0) {
-    allImages.push({
-      src: "/media/site/blank-tape.svg",
-      label: "Blank cassette tape placeholder",
-      isCover: true
-    });
+    allImages.push({ src: "/media/site/blank-tape.svg", label: "Blank cassette tape placeholder" });
   }
 
   // For placeholder-only tapes, inline the baked AVIF shader label as a
@@ -277,8 +253,8 @@ export default async function Page({ params }: Props) {
       <div className="mb-12">
         {/* Five parts image to seven parts words: 500px and 700px at the page's full width. */}
         <div className="grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-8 items-start">
-          {/* The picture, on a wide screen only (a phone has every image stacked, further down). For tapes
-              that have no real cover, render a live SVG cassette whose reels rotate while audio is playing
+          {/* The picture, on a wide screen (a phone has it under the player, further down). For tapes that
+              have no real cover, render a live SVG cassette whose reels rotate while audio is playing
               instead of the static AVIF. */}
           <div className="hidden lg:block">
             {usesPlaceholder ? (
@@ -433,53 +409,13 @@ export default async function Page({ params }: Props) {
         </div>
       </div>
 
-      {/* Mobile Images - Stacked. Same placeholder swap as desktop:
-          live cassette with spinning reels when this tape is a
-          placeholder-only one. */}
-      <div className="mb-12 space-y-6 lg:hidden">
+      {/* The picture on a phone: the same one, under the player, where a wide screen has it beside the words. */}
+      <div className="mb-12 lg:hidden">
         {usesPlaceholder ? (
           <PlaceholderCassetteLive tapeId={tape.id} labelDataUri={labelDataUri} />
-        ) : allImages.map((img, idx) => {
-          const isOptimized = img.tapeId && img.src.startsWith("/");
-          let mobileSrc = img.src;
-          let mobileSrcSet = undefined;
-          
-          if (isOptimized) {
-            const v = `?v=${ASSET_CACHE_VERSION}`;
-            if (img.sidePosition) {
-              const base = `/optimized/${img.tapeId}/sides/${img.sidePosition}`;
-              mobileSrc = `${base}/800.avif${v}`;
-              mobileSrcSet = `${base}/400.avif${v} 400w, ${base}/800.avif${v} 800w, ${base}/1200.avif${v} 1200w`;
-            } else {
-              const base = `/optimized/${img.tapeId}`;
-              mobileSrc = `${base}/800.avif${v}`;
-              mobileSrcSet = `${base}/400.avif${v} 400w, ${base}/800.avif${v} 800w, ${base}/1200.avif${v} 1200w`;
-            }
-          }
-          
-          return (
-            <div key={idx}>
-              {isOptimized ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={mobileSrc}
-                  srcSet={mobileSrcSet}
-                  sizes="100vw"
-                  alt={img.label}
-                  className="block w-full h-auto max-h-[650px] object-contain"
-                  loading="lazy"
-                />
-              ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={img.src}
-                  alt={img.label}
-                  className={`block w-full h-auto max-h-[650px] object-contain ${img.src.includes('/generated/placeholders/') ? 'scale-90' : ''}`}
-                />
-              )}
-            </div>
-          );
-        })}
+        ) : (
+          <TapeImages images={pictures} />
+        )}
       </div>
 
       {/* Tracklist */}

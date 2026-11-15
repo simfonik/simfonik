@@ -474,7 +474,7 @@ body::before {
 .comment-time::before { content: ""; position: absolute; inset: -12px -6px; }
 .comment-time:active { opacity: 0.6; }
 .comment-time:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
-/* The tape's picture on a wide screen: in the middle of its column when it is narrower, pressed to see every
+/* The tape's picture: in the middle of its column when it is narrower, pressed to see every
    image larger. Where there are more, their count sits in its corner. */
 .tape-picture { position: relative; display: block; margin-inline: auto; cursor: zoom-in; }
 .tape-picture-count {
@@ -534,9 +534,14 @@ html:has(.image-viewer[open]) { overflow: hidden; scrollbar-gutter: stable; }
   scroll-snap-stop: always;
   cursor: zoom-out;
 }
-/* As wide as the component makes it and no wider. Where the window is too short for it, the picture is fitted
-   inside. */
-.image-viewer-picture { position: relative; max-height: 100%; cursor: default; }
+/* As wide as the component says (`--shown`) and no wider. Where the window is too short for it, the picture is
+   fitted inside. */
+.image-viewer-picture { position: relative; width: min(100%, var(--shown)); max-height: 100%; cursor: default; }
+/* On a phone the picture has the whole width of the screen, edge to edge. */
+@media (max-width: 39.99rem) {
+  .image-viewer-slide { padding: 4rem 0; }
+  .image-viewer-picture { width: 100%; }
+}
 .image-viewer-button {
   position: absolute;
   display: grid;

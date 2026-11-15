@@ -17,19 +17,20 @@ const TALLEST = 460;
 /** The widest file the site makes of an image. One that was scanned smaller is kept at its own size. */
 const WIDEST = 1200;
 /**
- * How large the viewer shows an image, against the size it was scanned at. Half: on a screen with two pixels
- * to the point, which is what the scans are mostly looked at on, that is one pixel of scan to one of screen.
- * At its full size each pixel of a scan is spread over four of the screen's, and the picture looks soft.
+ * How large the viewer shows an image on a wide screen, against the size it was scanned at. Half: on a
+ * screen with two pixels to the point, which is what the scans are mostly looked at on, that is one pixel of
+ * scan to one of screen. At its full size each pixel of a scan is spread over four of the screen's, and the
+ * picture looks soft. A phone is narrower than that, and there the picture has the screen's whole width.
  */
 const SHOWN = 0.5;
 
 /** How wide the picture on the page may be, in pixels, before its column holds it narrower. */
 export const widthOnPage = ({ width, height }: TapeImage) => TALLEST * (width / height);
-/** How wide the viewer shows an image, in pixels, where the window has room for it. */
+/** How wide the viewer shows an image on a wide screen, in pixels, where the window has room for it. */
 export const widthInViewer = ({ width }: TapeImage) => Math.min(width, WIDEST) * SHOWN;
 
 /**
- * A tape's images on a wide screen: the first of them, as wide as its column and as tall as its own shape
+ * A tape's images: the first of them, as wide as its column (or the phone) and as tall as its own shape
  * makes it, up to TALLEST. One held to that height is narrower than the column and sits in the middle of it;
  * its top is always the top of the column, level with the tape's name. The size comes from the image's own
  * measurements, so the picture's place is settled before it has loaded. A count in its corner says there are
@@ -57,9 +58,10 @@ export function TapeImages({ images }: { images: TapeImage[] }) {
 }
 
 /**
- * Every image of the tape, one to a screen, at the size it is sharp at (see SHOWN) and never stretched to
- * fill the window. Stepped through with the arrows on screen or on the keyboard, or swiped. The browser's own
- * modal dialog, so Escape shuts it and the keyboard goes back to the picture.
+ * Every image of the tape, one to a screen. On a wide screen each is at the size it is sharp at (see SHOWN)
+ * and never stretched to fill the window; on a phone each fills the screen's width (globals.css). Stepped
+ * through with the arrows on screen or on the keyboard, or swiped. The browser's own modal dialog, so Escape
+ * shuts it and the keyboard goes back to the picture.
  */
 function ImageViewer({ images, onClose }: { images: TapeImage[]; onClose: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -95,7 +97,8 @@ function ImageViewer({ images, onClose }: { images: TapeImage[]; onClose: () => 
         {images.map((img, i) => (
           // A press beside the picture, on what is left of the page, shuts the viewer.
           <figure key={img.src} className="image-viewer-slide" onClick={(e) => e.target === e.currentTarget && dialog.current?.close()}>
-            <div className="image-viewer-picture" style={{ width: `min(100%, ${widthInViewer(img)}px)`, aspectRatio: `${img.width} / ${img.height}` }}>
+            {/* The width is handed to the stylesheet as a variable, which React's style type has no word for. */}
+            <div className="image-viewer-picture" style={{ '--shown': `${widthInViewer(img)}px`, aspectRatio: `${img.width} / ${img.height}` } as React.CSSProperties}>
               <Image loader={imageLoader} src={img.src} alt={img.label} fill sizes="100vw" priority={i === 0} className="object-contain" />
             </div>
           </figure>
