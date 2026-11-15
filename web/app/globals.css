@@ -471,7 +471,9 @@ body::before {
   max-width: none;
   max-height: calc(var(--keyboard, 0px) + var(--seen, 100dvh) - 1rem);
   margin: 0;
-  padding: 0 1rem calc(0.75rem + var(--keyboard, 0px));
+  /* Room under the last row. An iPhone floats its address pill across the foot of what it reports as left
+     to see, about 15px into it, and the row shouldn't sit against that. */
+  padding: 0 1rem calc(1.75rem + var(--keyboard, 0px));
   overflow-y: auto;
   overscroll-behavior: contain;
   border: 0;
@@ -503,18 +505,20 @@ html:has(.id-sheet[open]) { overflow: hidden; }
 /* Post, in that row, where the keyboard never covers it. A small button in a full-size place to press. */
 .id-sheet-post { position: relative; height: 2.25rem; padding-block: 0; }
 .id-sheet-post::before { content: ""; position: absolute; inset: -4px 0; }
-/* The small words in the sheet: what it is for, and what each blank is. */
+/* The small words in the sheet: what it is for, and who is posting. The size of the tape's own small print
+   ("Released · 1993"), a step up from the 10px of the page's quietest labels: these are read at arm's length
+   over a keyboard. */
 .id-sheet-label {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 10px;
-  line-height: 14px;
+  font-size: 11px;
+  line-height: 16px;
   text-transform: uppercase;
   letter-spacing: 0.22em;
   color: var(--muted);
 }
 .id-sheet-where {
   margin-left: 0.75em;
-  font-size: 12px;
+  font-size: 13px;
   text-transform: none;
   letter-spacing: 0;
   font-variant-numeric: tabular-nums;

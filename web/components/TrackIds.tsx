@@ -357,8 +357,10 @@ export function TrackIds({ tapeId, position, ids, time, order = null, length = n
         >
           <form onSubmit={post} noValidate onTouchEndCapture={tapped}>
             {/* Cancel, what the sheet is for, and Post, in the one row the keyboard never covers. */}
-            <div className="id-sheet-bar flex h-13 items-center gap-1">
-              <button type="button" onClick={leave} aria-label="Cancel" className="track-ids-shut -ml-3.5">
+            <div className="id-sheet-bar mb-1 flex h-14 items-center gap-1">
+              {/* The cross is drawn 12px wide in a 44px place to press: pulled left by the 16px between them,
+                  so its edge is the edge the blanks start on. */}
+              <button type="button" onClick={leave} aria-label="Cancel" className="track-ids-shut -ml-4">
                 {cross}
               </button>
               <p className="id-sheet-label min-w-0 flex-1 truncate">
@@ -370,7 +372,7 @@ export function TrackIds({ tapeId, position, ids, time, order = null, length = n
             </div>
             {/* What can be answered with one press comes before what needs typing. */}
             {offers.length > 0 && (
-              <div role="group" aria-label={from} className="mb-2">
+              <div role="group" aria-label={from} className="mb-3">
                 <p className="id-sheet-label" aria-hidden>
                   {from}
                 </p>
@@ -382,13 +384,17 @@ export function TrackIds({ tapeId, position, ids, time, order = null, length = n
                 ))}
               </div>
             )}
-            {/* A phone's keyboard would put "Altern 8" right and offer words for "Orbital": neither helps. */}
-            <input ref={artistField} value={artist} onChange={typed(setArtist)} onKeyDown={onward(titleField)} placeholder="Artist" aria-label="Artist" aria-describedby={message ? messageId : undefined} autoComplete="off" autoCapitalize="words" autoCorrect="off" spellCheck={false} enterKeyHint="next" className="track-ids-field" />
-            <input ref={titleField} value={title} onChange={typed(setTitle)} onKeyDown={askName && !name.trim() ? onward(nameField) : undefined} placeholder="Title" aria-label="Title" autoComplete="off" autoCapitalize="words" autoCorrect="off" spellCheck={false} enterKeyHint={askName && !name.trim() ? 'next' : 'send'} className="track-ids-field" />
-            {askName ? (
-              <input ref={nameField} value={name} onChange={typed(setName)} placeholder="Your name" aria-label="Your name" aria-describedby={message ? messageId : undefined} autoComplete="name" autoCapitalize="words" autoCorrect="off" spellCheck={false} maxLength={100} enterKeyHint="send" className="track-ids-field" />
-            ) : (
-              <p className="id-sheet-label flex min-h-11 items-center">
+            {/* A phone's keyboard would put "Altern 8" right and offer words for "Orbital": neither helps. The
+                blanks stand a little apart, so each reads as a line of its own. */}
+            <div className="grid gap-2">
+              <input ref={artistField} value={artist} onChange={typed(setArtist)} onKeyDown={onward(titleField)} placeholder="Artist" aria-label="Artist" aria-describedby={message ? messageId : undefined} autoComplete="off" autoCapitalize="words" autoCorrect="off" spellCheck={false} enterKeyHint="next" className="track-ids-field" />
+              <input ref={titleField} value={title} onChange={typed(setTitle)} onKeyDown={askName && !name.trim() ? onward(nameField) : undefined} placeholder="Title" aria-label="Title" autoComplete="off" autoCapitalize="words" autoCorrect="off" spellCheck={false} enterKeyHint={askName && !name.trim() ? 'next' : 'send'} className="track-ids-field" />
+              {askName && (
+                <input ref={nameField} value={name} onChange={typed(setName)} placeholder="Your name" aria-label="Your name" aria-describedby={message ? messageId : undefined} autoComplete="name" autoCapitalize="words" autoCorrect="off" spellCheck={false} maxLength={100} enterKeyHint="send" className="track-ids-field" />
+              )}
+            </div>
+            {!askName && (
+              <p className="id-sheet-label mt-2 flex min-h-11 items-center">
                 Posting as <span className="id-sheet-where">{name}</span>
                 <button type="button" onClick={wantName} className="track-ids-post ml-auto">
                   Change
