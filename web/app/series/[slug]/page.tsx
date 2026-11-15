@@ -5,7 +5,7 @@ import { getAllSeries, getSeriesBySlug, getTapesBySeries, getCoverImageWithFallb
 import { isOptimizableImagePath } from "../../../lib/image-utils";
 import { ASSET_CACHE_VERSION } from "../../../lib/imageLoader";
 
-const DJ_BADGE_CLASS = "dj-pill";
+const DJ_LINK_CLASS = "dj-link";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -113,7 +113,7 @@ export default async function SeriesPage({ params }: Props) {
                         <Link
                           key={dj.slug}
                           href={`/djs/${dj.slug}`}
-                          className={DJ_BADGE_CLASS}
+                          className={DJ_LINK_CLASS}
                         >
                           {dj.name}
                         </Link>
@@ -122,7 +122,7 @@ export default async function SeriesPage({ params }: Props) {
                     return (
                       <span
                         key={dj.slug}
-                        className="dj-pill cursor-default"
+                        className="dj-link cursor-default"
                       >
                         {dj.name}
                       </span>

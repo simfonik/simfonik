@@ -10,7 +10,7 @@ import { isOptimizableImagePath } from "../../../lib/image-utils";
 import { ASSET_CACHE_VERSION } from "../../../lib/imageLoader";
 
 // Shared DJ pill class — same hover-reveal outline as home grid
-const DJ_BADGE_CLASS = "dj-pill";
+const DJ_LINK_CLASS = "dj-link";
 
 // Helper to extract domain from URL
 function extractDomain(url: string): string {
@@ -84,7 +84,7 @@ export default async function DJPage({ params }: Props) {
                 <Link
                   key={alias.slug}
                   href={`/djs/${alias.slug}`}
-                  className={DJ_BADGE_CLASS}
+                  className={DJ_LINK_CLASS}
                 >
                   {alias.name}
                 </Link>
@@ -172,7 +172,7 @@ export default async function DJPage({ params }: Props) {
                         <Link
                           key={tdj.slug}
                           href={`/djs/${tdj.slug}`}
-                          className="dj-pill"
+                          className="dj-link"
                         >
                           {tdj.name}
                         </Link>
@@ -181,7 +181,7 @@ export default async function DJPage({ params }: Props) {
                     return (
                       <span
                         key={tdj.slug}
-                        className="dj-pill cursor-default"
+                        className="dj-link cursor-default"
                       >
                         {tdj.name}
                       </span>

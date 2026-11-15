@@ -141,7 +141,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
                       <Link
                         key={dj.slug}
                         href={`/djs/${dj.slug}`}
-                        className="dj-pill"
+                        className="dj-link"
                       >
                         {dj.name}
                       </Link>
@@ -150,7 +150,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
                   return (
                     <span
                       key={dj.slug}
-                      className="dj-pill cursor-default"
+                      className="dj-link cursor-default"
                     >
                       {dj.name}
                     </span>
