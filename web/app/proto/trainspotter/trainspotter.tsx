@@ -717,49 +717,53 @@ export function Trainspotter({
   const namesWaiting = waiting.reduce((n, w) => n + w.length, 0);
 
   const sel = cues.find((c) => c.id === selected) ?? null;
+  // The track the ID fields are about: the one picked, or failing that the one under the playhead. So the
+  // fields are always there and always about something: press play, hear a track you know, and type. Putting
+  // the cursor in a field picks that track, so it stays put while the tape plays on to the next one.
+  const subject = sel ?? playingCue;
   // For an unknown track, the names most likely to belong to it: the ones nearest its place in the order.
   const nextNames = useMemo(() => {
-    if (!sel || sel.known) return [];
-    const side = sides.indexOf(sel.track);
+    if (!subject || subject.known) return [];
+    const side = sides.indexOf(subject.track);
     const order = orders[side] ?? [];
-    const place = cues.filter((c) => c.track === sel.track && c.start < sel.start).length;
+    const place = cues.filter((c) => c.track === subject.track && c.start < subject.start).length;
     return (waiting[side] ?? [])
       .map((l) => ({ l, d: Math.abs(order.indexOf(l) - place) }))
       .sort((a, b) => a.d - b.d)
       .slice(0, 3)
       .map((x) => x.l)
       .sort((a, b) => a.n - b.n);
-  }, [sel, sides, orders, waiting, cues]);
-  // What else listeners said about the selected track's moment.
+  }, [subject, sides, orders, waiting, cues]);
+  // What else people said about that track's moment.
   const opinions = useMemo(() => {
-    if (!sel) return [];
-    const side = sides.indexOf(sel.track);
-    return proposals.find((p) => p.side === side && Math.abs(p.start - sel.start) <= 20)?.also ?? [];
-  }, [sel, sides, proposals]);
+    if (!subject) return [];
+    const side = sides.indexOf(subject.track);
+    return proposals.find((p) => p.side === side && Math.abs(p.start - subject.start) <= 20)?.also ?? [];
+  }, [subject, sides, proposals]);
 
   // An unknown track's "title" is only a listener's clue ("you can't run"), so it never pre-fills the field.
-  const shownTitle = sel?.known ? sel.title : "";
+  const shownTitle = subject?.known ? subject.title : "";
   const [draft, setDraft] = useState({ artist: "", title: "" });
   useEffect(() => {
-    setDraft({ artist: sel?.artist ?? "", title: shownTitle });
-  }, [sel?.id, sel?.artist, shownTitle]);
+    setDraft({ artist: subject?.artist ?? "", title: shownTitle });
+  }, [subject?.id, subject?.artist, shownTitle]);
   const saveId = (artist = draft.artist, title = draft.title) => {
     const a = artist.trim();
     const t = title.trim();
-    if (!sel || (a === sel.artist && t === shownTitle)) return false;
+    if (!subject || (a === subject.artist && t === shownTitle)) return false;
     if (!a && !t) {
       // Both fields emptied on an ID'd track: that is how it goes back to unknown. On an unknown one there
       // is nothing to save.
-      if (!sel.known) return false;
-      api.renameCue(sel.id, "", "");
+      if (!subject.known) return false;
+      api.renameCue(subject.id, "", "");
       confirmWithUndo("Set back to unknown.");
       return true;
     }
-    api.renameCue(sel.id, a, t);
+    api.renameCue(subject.id, a, t);
     confirmWithUndo(`ID’d: ${[a, t].filter(Boolean).join(" — ")}`, "Saved on this device.");
     return true;
   };
-  const remove = (cue: Cue | null = sel) => {
+  const remove = (cue: Cue | null = subject) => {
     if (!cue) return;
     // Keep the keyboard somewhere useful: the next track on that side, or the one before.
     const row = cuesRef.current.filter((c) => c.track === cue.track).sort((a, b) => a.start - b.start);
@@ -933,61 +937,54 @@ export function Trainspotter({
         : "Press play and mark the first track you know.";
 
   // The ID form: inline under the timeline with a mouse, in a sheet above the keyboard on a phone.
-  const chips = nextNames.length > 0 && (
-    <div className="w-full">
-      <p className="ts-label">{fromSite ? "Is it one of these, from the tape’s tracklist?" : `Is it one of these, from ${nextNames[0].author}’s list?`}</p>
-      <div className="flex flex-wrap gap-2">
-        {nextNames.map((l) => (
-          <button
-            key={`${l.side}-${l.n}`}
-            type="button"
-            onClick={() => {
-              saveId(l.artist, l.title);
-              if (touch) closeSheet();
-              else requestAnimationFrame(() => (scrollerRef.current?.querySelector("[data-selected]") as HTMLElement | null)?.focus());
-            }}
-            className="ts-chip"
-          >
-            <span className="font-mono text-xs tabular-nums opacity-70">{l.n}</span> {l.artist} — {l.title}
-          </button>
-        ))}
-      </div>
-    </div>
+  const undoRedo = (
+    <>
+      <button type="button" onClick={() => void step(-1)} disabled={!canUndo} className="ts-link" aria-keyshortcuts={undoHint.ariaKeyshortcuts} title={`Undo (${undoHint.text})`}>
+        Undo
+      </button>
+      <button type="button" onClick={() => void step(1)} disabled={!canRedo} className="ts-link" aria-keyshortcuts={redoHint.ariaKeyshortcuts} title={`Redo (${redoHint.text})`}>
+        Redo
+      </button>
+    </>
   );
-  const clueNote = Boolean(sel && !sel.known && sel.title && !touch && sel.id !== playingCue?.id);
-  const idForm = sel && (
-    <form
-      className="ts-nameform"
-      onSubmit={(e) => {
-        e.preventDefault();
-        saveId();
-        if (touch) closeSheet();
-      }}
-      // With a mouse, leaving the form saves. Moving between its two fields does not.
-      onBlur={(e) => {
-        if (!touch && !e.currentTarget.contains(e.relatedTarget as Node | null)) saveId();
-      }}
-      // Escape abandons what was typed.
-      onKeyDown={(e) => {
-        if (e.key === "Escape" && !touch) {
-          setDraft({ artist: sel.artist, title: shownTitle });
-          (scrollerRef.current?.querySelector("[data-selected]") as HTMLElement | null)?.focus();
-        }
-      }}
-    >
-      {/* One-tap answers come before the fields that need typing. */}
-      {chips}
-      {/* On a phone the sheet covers the player, so the clue is repeated here. With a mouse the player already
-          shows it for the track that is playing; see the note under the fields for one that isn't. */}
-      {touch && !sel.known && sel.title && (
-        <p className="w-full text-[15px] text-[var(--text)]">
-          Clue from {sel.by ?? "a comment"}: “{sel.title}”
-        </p>
-      )}
-      <Field className="min-w-0 flex-1 basis-40">
+
+  // Everything else the page can do is shown where it happens: the time under the pointer, the grips on a
+  // track. The keys are a click away for whoever wants them.
+  const shortcuts = (
+    <Popover>
+      <PopoverTrigger className="ts-link ts-fine-only">Keyboard shortcuts</PopoverTrigger>
+      <PopoverContent side="top" align="end" sideOffset={6} className="ts-keys">
+        <PopoverTitle className="font-mono text-xs uppercase tracking-[0.14em] text-[var(--muted)]">Keyboard shortcuts</PopoverTitle>
+        <dl>
+          {[
+            ["Space", "Play or pause"],
+            ["← →", "Previous or next track"],
+            ["M", "Mark new track"],
+            // Keys are named the way they are printed on the keyboard in front of the visitor.
+            [onMac ? "Return" : "Enter", "ID the selected track"],
+            ["Delete", "Remove it"],
+            [onMac ? "⌥ ← →" : "Alt ← →", "Move it a second"],
+            [onMac ? "⌥ ⇧ ← →" : "Alt Shift ← →", "Trim where it ends"],
+            [undoHint.text, "Undo"],
+            [redoHint.text, "Redo"],
+          ].map(([key, what]) => (
+            <div key={key} className="contents">
+              <dt>{key}</dt>
+              <dd>{what}</dd>
+            </div>
+          ))}
+        </dl>
+      </PopoverContent>
+    </Popover>
+  );
+
+  // The two fields, shared by the bar under the timeline (mouse) and the sheet (phone).
+  const fields = (artistId: string) => (
+    <>
+      <Field className="min-w-0 flex-1 basis-40" disabled={!subject}>
         <FieldLabel className="ts-label">Artist</FieldLabel>
         <Input
-          id={touch ? "ts-artist-sheet" : "ts-artist"}
+          id={artistId}
           value={draft.artist}
           onValueChange={(v: string) => setDraft((d) => ({ ...d, artist: v }))}
           // The keyboard's Next key sends Enter. It should go to Title, not save half an ID.
@@ -1001,63 +998,169 @@ export function Trainspotter({
           className="ts-input"
         />
       </Field>
-      <Field className="min-w-0 flex-[1.4] basis-48">
+      <Field className="min-w-0 flex-[1.4] basis-48" disabled={!subject}>
         <FieldLabel className="ts-label">Title</FieldLabel>
         <Input data-title value={draft.title} onValueChange={(v: string) => setDraft((d) => ({ ...d, title: v }))} {...nameHints("done")} className="ts-input" />
       </Field>
+    </>
+  );
+  const pickedBlock = () => scrollerRef.current?.querySelector("[data-selected]") as HTMLElement | null;
+  const otherIds = opinions.map((o, i) => (
+    <span key={i}>
+      {i > 0 ? " " : ""}
+      {o.known ? (
+        <>
+          {o.author} thought it was{" "}
+          <button type="button" onClick={() => saveId(o.artist, o.title)} className="ts-inline-link text-[var(--text)]">
+            {[o.artist, o.title].filter(Boolean).join(" — ")}
+          </button>
+          .
+        </>
+      ) : (
+        <>
+          {o.author} heard “{o.title}”.
+        </>
+      )}
+    </span>
+  ));
+
+  // With a mouse: the ID bar under the timeline. It is always there and always the same height, whatever is
+  // picked or playing: two fields and their buttons, then one line that holds whichever applies (what to do,
+  // likely names from the tracklist, other people's IDs, a clue) beside undo, redo and the keys. Built to
+  // appear only once a track was picked, it pushed the rest of the page down on the first click, again when
+  // a clue turned up mid-typing, and again when suggestions did.
+  const barForm = (
+    <form
+      className="ts-idbar"
+      onSubmit={(e) => {
+        e.preventDefault();
+        saveId();
+      }}
+      // Leaving the bar saves. Moving between its fields and buttons does not.
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) saveId();
+      }}
+      // Escape abandons what was typed.
+      onKeyDown={(e) => {
+        if (e.key !== "Escape" || !subject) return;
+        setDraft({ artist: subject.artist, title: shownTitle });
+        pickedBlock()?.focus();
+      }}
+    >
+      <div
+        className="ts-idbar-fields"
+        // Typing about the track under the playhead picks it, so the fields don't move on when the tape does.
+        onFocus={() => {
+          if (!sel && playingCue) setSelected(playingCue.id);
+        }}
+      >
+        {fields("ts-artist")}
+        <div className="flex flex-none items-center gap-2">
+          <button type="submit" disabled={!subject} className="ts-btn ts-btn-solid">
+            Save
+          </button>
+          <button type="button" disabled={!subject} onClick={() => remove()} className="ts-link" data-agent-confirm="Remove this track from the tracklist?">
+            Remove
+          </button>
+        </div>
+      </div>
+      <div className="ts-idbar-foot">
+        <div className="ts-idbar-context">
+          {!subject ? (
+            "Click a track to play it and ID it."
+          ) : nextNames.length > 0 ? (
+            <>
+              <span className="flex-none">{fromSite ? "From the tracklist:" : `From ${nextNames[0].author}’s list:`}</span>
+              {nextNames.map((l) => (
+                <button
+                  key={`${l.side}-${l.n}`}
+                  type="button"
+                  onClick={() => {
+                    saveId(l.artist, l.title);
+                    requestAnimationFrame(() => pickedBlock()?.focus());
+                  }}
+                  className="ts-chip ts-chip-inline"
+                  title={`${l.artist} — ${l.title}`}
+                >
+                  <span className="font-mono text-xs tabular-nums opacity-70">{l.n}</span>
+                  <span className="truncate">
+                    {l.artist} — {l.title}
+                  </span>
+                </button>
+              ))}
+            </>
+          ) : opinions.length > 0 ? (
+            <span className="truncate">{otherIds}</span>
+          ) : !subject.known && subject.title && subject.id !== playingCue?.id ? (
+            // The player already shows the clue of the track that is playing; this is for one that isn't.
+            <span className="truncate">
+              Clue from {subject.by ?? "a comment"}: “{subject.title}”
+            </span>
+          ) : null}
+        </div>
+        <div className="-mr-2.5 flex flex-none items-center gap-1">
+          {undoRedo}
+          {shortcuts}
+        </div>
+      </div>
+    </form>
+  );
+
+  // On a phone the same job is a sheet that stays above the keyboard. Height is free there, so the likely
+  // names and the clue get lines of their own.
+  const sheetForm = sel && (
+    <form
+      className="ts-nameform"
+      onSubmit={(e) => {
+        e.preventDefault();
+        saveId();
+        closeSheet();
+      }}
+    >
+      {/* One-tap answers come before the fields that need typing. */}
+      {nextNames.length > 0 && (
+        <div className="w-full">
+          <p className="ts-label">{fromSite ? "Is it one of these, from the tape’s tracklist?" : `Is it one of these, from ${nextNames[0].author}’s list?`}</p>
+          <div className="flex flex-wrap gap-2">
+            {nextNames.map((l) => (
+              <button
+                key={`${l.side}-${l.n}`}
+                type="button"
+                onClick={() => {
+                  saveId(l.artist, l.title);
+                  closeSheet();
+                }}
+                className="ts-chip"
+              >
+                <span className="font-mono text-xs tabular-nums opacity-70">{l.n}</span> {l.artist} — {l.title}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {/* The sheet covers the player, so the clue is said here. */}
+      {!sel.known && sel.title && (
+        <p className="w-full text-[15px] text-[var(--text)]">
+          Clue from {sel.by ?? "a comment"}: “{sel.title}”
+        </p>
+      )}
+      {fields("ts-artist-sheet")}
       <div className="flex flex-none flex-wrap items-end gap-2">
         <button type="submit" className="ts-btn ts-btn-solid">
           Save
         </button>
-        {/* With a mouse, clicking the track plays it, so a button for that would say what is already
-            happening. The phone's sheet covers the timeline, so there it stays, as a way to hear it again. */}
-        {touch && (
-          <button type="button" onClick={() => seek(sides.indexOf(sel.track), sel.start, true)} className="ts-link">
-            Replay
-          </button>
-        )}
+        {/* The sheet covers the timeline, so this is the way to hear the track again from here. */}
+        <button type="button" onClick={() => seek(sides.indexOf(sel.track), sel.start, true)} className="ts-link">
+          Replay
+        </button>
         <button type="button" onClick={() => remove()} className="ts-link" data-agent-confirm="Remove this track from the tracklist?">
           Remove
         </button>
       </div>
-      {/* Only what can't be read anywhere else: a clue for a picked track that isn't the one playing (the
-          player shows the playing one's), and other IDs people gave for this spot, one click to take. */}
-      {(clueNote || opinions.length > 0) && (
-        <p className="w-full text-sm text-[var(--muted)]">
-          {clueNote ? `Clue from ${sel.by ?? "a comment"}: “${sel.title}”` : ""}
-          {opinions.map((o, i) => (
-            <span key={i}>
-              {" "}
-              {o.known ? (
-                <>
-                  {o.author} thought it was{" "}
-                  <button type="button" onClick={() => saveId(o.artist, o.title)} className="ts-inline-link text-[var(--text)]">
-                    {[o.artist, o.title].filter(Boolean).join(" — ")}
-                  </button>
-                  .
-                </>
-              ) : (
-                <>
-                  {o.author} heard “{o.title}”.
-                </>
-              )}
-            </span>
-          ))}
-        </p>
-      )}
+      {opinions.length > 0 && <p className="w-full text-sm text-[var(--muted)]">{otherIds}</p>}
     </form>
   );
 
-  const undoRedo = (
-    <>
-      <button type="button" onClick={() => void step(-1)} disabled={!canUndo} className="ts-link" aria-keyshortcuts={undoHint.ariaKeyshortcuts} title={`Undo (${undoHint.text})`}>
-        Undo
-      </button>
-      <button type="button" onClick={() => void step(1)} disabled={!canRedo} className="ts-link" aria-keyshortcuts={redoHint.ariaKeyshortcuts} title={`Redo (${redoHint.text})`}>
-        Redo
-      </button>
-    </>
-  );
 
   const root = usePart(
     handle,
@@ -1394,67 +1497,31 @@ export function Trainspotter({
         )}
       </div>
 
-      {/* With a mouse the ID fields sit under the timeline. On a phone they open in a sheet that stays above the keyboard. */}
+      {/* Under the timeline. Both layouts are in the page and the stylesheet shows the one that fits the
+          pointer, so a phone never paints the mouse layout first and then swaps it. Each keeps one height in
+          every state. */}
       <div className="ts-namebar">
-        {/* Always here, so undo is never hidden behind the ID form: what is picked (or what to do) on the left,
-            undo, redo and the keys on the right. */}
-        <div className="flex w-full flex-wrap items-center justify-between gap-x-6 text-sm text-[var(--muted)]">
-          {/* With a track picked there is nothing to add here: where it sits is on the timeline above. */}
-          <div>
-            {!sel && (
-              <>
-                <p className="ts-fine">Click a track to play it and ID it.</p>
-                <p className="ts-coarse">Tap a track to play it, then “ID it”.</p>
-              </>
-            )}
-          </div>
-          <div className="-mr-2.5 flex items-center gap-1">
-            {(!touch || canUndo || canRedo) && undoRedo}
-            {/* Everything else the page can do is shown where it happens: the time under the pointer, the grips
-                on a track. The keys are a click away for whoever wants them. */}
-            <Popover>
-              <PopoverTrigger className="ts-link ts-fine-only">Keyboard shortcuts</PopoverTrigger>
-              <PopoverContent side="top" align="end" sideOffset={6} className="ts-keys">
-                <PopoverTitle className="font-mono text-xs uppercase tracking-[0.14em] text-[var(--muted)]">Keyboard shortcuts</PopoverTitle>
-                <dl>
-                  {[
-                    ["Space", "Play or pause"],
-                    ["← →", "Previous or next track"],
-                    ["M", "Mark new track"],
-                    // Keys are named the way they are printed on the keyboard in front of the visitor.
-                    [onMac ? "Return" : "Enter", "ID the selected track"],
-                    ["Delete", "Remove it"],
-                    [onMac ? "⌥ ← →" : "Alt ← →", "Move it a second"],
-                    [onMac ? "⌥ ⇧ ← →" : "Alt Shift ← →", "Trim where it ends"],
-                    [undoHint.text, "Undo"],
-                    [redoHint.text, "Redo"],
-                  ].map(([key, what]) => (
-                    <div key={key} className="contents">
-                      <dt>{key}</dt>
-                      <dd>{what}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-        {sel &&
-          (touch ? (
-            <div className="flex w-full items-center gap-3">
-              {/* Artist and title each get a line of their own, and the title may take two: side by side on one
-                  line a name was cut off after a couple of words. */}
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[15px] font-medium text-[var(--text)]">{sel.known ? sel.artist || sel.title : "Unknown track"}</p>
-                <p className="line-clamp-3 text-sm text-[var(--muted)]">{sel.known ? (sel.artist ? sel.title : "") : sel.title ? `Clue: “${sel.title}”` : "Nobody has ID’d it yet"}</p>
-              </div>
-              <button type="button" onClick={() => openSheet(sel.id)} className="ts-btn ts-btn-solid flex-none">
-                {sel.known ? "Fix ID" : "ID it"}
-              </button>
+        <div className="ts-fine-only">{barForm}</div>
+        <div className="ts-coarse-only">
+          <div className="ts-idrow">
+            {/* Artist and title each get a line of their own, and the title may take two: side by side on one
+                line a name was cut off after a couple of words. The row is as tall as that in every state. */}
+            <div className="min-w-0 flex-1">
+              {subject ? (
+                <>
+                  <p className="truncate text-[15px] font-medium text-[var(--text)]">{subject.known ? subject.artist || subject.title : "Unknown track"}</p>
+                  <p className="line-clamp-2 text-sm text-[var(--muted)]">{subject.known ? (subject.artist ? subject.title : "") : subject.title ? `Clue: “${subject.title}”` : "Nobody has ID’d it yet"}</p>
+                </>
+              ) : (
+                <p className="text-sm text-[var(--muted)]">Tap a track to play it, then “ID track”.</p>
+              )}
             </div>
-          ) : (
-            idForm
-          ))}
+            <button type="button" onClick={() => subject && idIt(subject.id)} disabled={!subject} className="ts-btn ts-btn-solid flex-none">
+              {subject?.known ? "Fix ID" : "ID track"}
+            </button>
+          </div>
+          <div className="-mr-2.5 flex h-11 items-center justify-end gap-1">{undoRedo}</div>
+        </div>
       </div>
 
       <Drawer open={sheet && Boolean(sel) && touch} onOpenChange={(open: boolean) => (open ? setSheet(true) : closeSheet())}>
@@ -1470,7 +1537,7 @@ export function Trainspotter({
               <p className="mt-1 font-mono text-xs uppercase tracking-[0.14em] text-[var(--muted)] tabular-nums">
                 {sel.track} {clock(sel.start)}–{clock(sel.end)}
               </p>
-              <div className="mt-3">{idForm}</div>
+              <div className="mt-3">{sheetForm}</div>
             </>
           )}
         </DrawerContent>
