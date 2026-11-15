@@ -26,7 +26,9 @@ export function splitDiscogsLinks(content: string): Part[] {
 
 export function CommentBody({ content }: { content: string }) {
   return (
-    <div className="text-[var(--text)] whitespace-pre-wrap leading-relaxed">
+    // A web address or a held-down key ("shreddddddder!!!") has nowhere to break, and unbroken it is wider
+    // than a phone and takes the whole page with it. Such a run may break wherever the line ends.
+    <div className="text-[var(--text)] whitespace-pre-wrap leading-relaxed [overflow-wrap:anywhere]">
       {splitDiscogsLinks(content).map((part, idx) =>
         part.type === 'link' ? (
           <a
