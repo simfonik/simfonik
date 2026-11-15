@@ -15,6 +15,7 @@ interface Track {
   url: string;
   position: string;
   djs?: DJ[];
+  wave?: number[] | null;
 }
 
 interface PlaylistPlayerProps {
@@ -75,6 +76,7 @@ export function PlaylistPlayer({ tracks, tapeId }: PlaylistPlayerProps) {
         duration={state.duration}
         isLoading={state.isLoading}
         title={currentTrack.title}
+        wave={currentTrack.wave}
         onPlay={controls.play}
         onPause={controls.pause}
         onSeek={controls.seek}

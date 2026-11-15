@@ -8,9 +8,10 @@ interface AudioPlayerProps {
   title?: string;
   tapeId?: string;
   sidePosition?: string;
+  wave?: number[] | null;
 }
 
-export function AudioPlayer({ src, title, tapeId, sidePosition }: AudioPlayerProps) {
+export function AudioPlayer({ src, title, tapeId, sidePosition, wave }: AudioPlayerProps) {
   const { ref, state, controls } = useAudioPlayer({ 
     src, 
     tapeId, 
@@ -34,6 +35,7 @@ export function AudioPlayer({ src, title, tapeId, sidePosition }: AudioPlayerPro
         duration={state.duration}
         isLoading={state.isLoading}
         title={title}
+        wave={wave}
         onPlay={controls.play}
         onPause={controls.pause}
         onSeek={controls.seek}

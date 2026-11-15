@@ -16,7 +16,8 @@
     "validate:fix": "node scripts/validate-tapes.mjs --fix",
     "generate-icon": "node scripts/generate-icon.mjs",
     "generate-placeholders": "node scripts/generate-placeholder-shaders.mjs",
-    "optimize-images": "node scripts/optimize-images.mjs"
+    "optimize-images": "node scripts/optimize-images.mjs",
+    "measure-waveforms": "node scripts/measure-waveforms.mjs"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

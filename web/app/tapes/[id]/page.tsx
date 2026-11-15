@@ -19,6 +19,7 @@ import { RotatingWord } from "../../../components/RotatingWord";
 import { JsonLd } from "../../../components/JsonLd";
 import { Tracklist } from "../../../components/Tracklist";
 import { generateTapeSchema } from "../../../lib/structured-data";
+import { thin } from "../../../lib/waveform";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -110,6 +111,13 @@ export default async function Page({ params }: Props) {
   if (!tape) {
     notFound();
   }
+
+  // How loud each side is along its length, where it has been measured (scripts/measure-waveforms.mjs).
+  // The player draws its scrub bar in that shape; a tape without the file keeps the plain line.
+  const waves = await import(`../../../data/waveforms/${tape.id}.json`).then(
+    (file) => file.default as (number[] | null)[],
+    () => null,
+  );
 
   // Load archived comments from WordPress site
   const archivedComments = getCommentsForTape(id);
@@ -333,12 +341,15 @@ export default async function Page({ params }: Props) {
             {(() => {
               // Build playlist from sides with audio
               const playlist = tape.sides
-                .filter(side => side.audio_links[0] && isStreamable(side.audio_links[0].url))
-                .map(side => ({
+                .map((side, index) => ({ side, wave: waves?.[index] ?? null }))
+                .filter(({ side }) => side.audio_links[0] && isStreamable(side.audio_links[0].url))
+                .map(({ side, wave }) => ({
                   title: side.title ?? `Side ${side.position}`,
                   url: side.audio_links[0].url,
                   position: side.position,
-                  djs: side.djs
+                  djs: side.djs,
+                  // Half the measured detail: the bar is a few hundred pixels wide.
+                  wave: wave ? thin(wave, 300) : null
                 }));
 
               // Use playlist player for 2+ tracks, individual player for single side
@@ -382,6 +393,7 @@ export default async function Page({ params }: Props) {
                         title={track.title}
                         tapeId={tape.id}
                         sidePosition={track.position}
+                        wave={track.wave}
                       />
                     </div>
                   ))}
