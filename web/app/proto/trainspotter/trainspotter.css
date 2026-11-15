@@ -143,7 +143,12 @@
 }
 @media (prefers-color-scheme: dark) { :root:not(.theme-light) .ts-tapes { --pop-shadow: 0 0 0 1px rgb(255 255 255 / 0.14); } }
 .theme-dark .ts-tapes { --pop-shadow: 0 0 0 1px rgb(255 255 255 / 0.14); }
-.ts-tapes[data-presentation="sheet"] { width: 100%; height: 80dvh; max-height: none; border-top: 1px solid var(--border); box-shadow: none; outline: none; }
+/* As a sheet it is never taller than the part of the screen you can see. The sheet's bottom edge follows the
+   keyboard, so at a fixed 80% the end of the list sat behind it, out of reach. */
+.ts-tapes[data-presentation="sheet"] { width: 100%; height: min(80dvh, var(--visual-viewport-height, 80dvh)); max-height: none; border-top: 1px solid var(--border); box-shadow: none; outline: none; }
+/* iOS draws its up/down/done bar over the page just above the keyboard. Room at the end of the list lets the
+   last tape scroll clear of it (the attribute is on the sheet's host, set by the SDK while a keyboard is up). */
+[data-keyboard] .ts-tapes-list { padding-bottom: min(4.5rem, 20dvh); }
 /* As a popover the search sits in a row of ours; as a sheet the combobox moves it into its own header.
    Either way it is a plain line to type on, ruled off from the list: the popup is already its box. */
 .ts-tapes-search, .ts-tapes [data-slot="combobox-header"] { flex: none; border-bottom: 1px solid var(--border); }
@@ -212,8 +217,9 @@
 .ts-scrub-thumb { z-index: 5; width: 44px; height: 44px; cursor: grab; touch-action: none; }
 .ts-scrub-thumb[data-dragging] { cursor: grabbing; }
 /* The handle has no look of its own: the marker you see belongs to the playhead (.ts-head), which sits
-   exactly over it. Keyboard focus is shown on the handle. */
-.ts-scrub-thumb:has(:focus-visible) { outline: 2px solid var(--text); outline-offset: -9px; }
+   exactly over it. Keyboard focus is shown on the handle; after a press it is silenced (data-quiet), since
+   browsers report a pressed slider as keyboard-focused. */
+.ts-scrub:not([data-quiet]) .ts-scrub-thumb:has(:focus-visible) { outline: 2px solid var(--text); outline-offset: -9px; }
 .ts-row { display: flex; align-items: stretch; margin-top: 6px; }
 /* The label stays put while the tape scrolls under it. Behind the label sits a patch of page the width of
    the label and its gap, and a little taller than the row: a track, its selection ring and the playhead all
@@ -617,7 +623,7 @@
    Shown only when the tape is wider than the screen. It is the rows above in miniature and uses their
    marks: grey for an ID'd track, hatching for an unknown, solid for the one playing. The part that is off
    screen is dimmed; the part on screen is framed and can be dragged. */
-.ts-map { position: relative; margin-top: 14px; cursor: grab; touch-action: none; -webkit-user-select: none; user-select: none; }
+.ts-map { position: relative; margin-top: 14px; cursor: grab; touch-action: pan-y; -webkit-user-select: none; user-select: none; }
 .ts-map:active { cursor: grabbing; }
 /* A strip this slim still needs a finger-sized target. */
 .ts-map::before { content: ""; position: absolute; inset: -11px 0; }

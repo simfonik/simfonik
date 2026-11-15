@@ -3,7 +3,7 @@
 // The tape switcher: step to the previous or next tape, or open the list of every tape in the archive.
 // It is its own component so that opening the list, typing in it and scrolling it re-render only this,
 // not the timeline beside it.
-import { memo, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -45,8 +45,18 @@ export const TapeSwitcher = memo(function TapeSwitcher({ tapes, currentId }: { t
   // The list holds every tape in the archive, so only the rows in view are built. Built in full, a tap on
   // "All tapes" waited about 400ms on a phone for 227 rows before anything appeared.
   const tapeItems = useMemo(() => tapes.map((o) => ({ value: o.id, label: o.label, group: o.group, meta: o.meta })), [tapes]);
-  const tapeScroller = useRef<HTMLDivElement>(null);
+  const tapeScroller = useRef<HTMLDivElement | null>(null);
+  const tapeScrollerSize = useRef<ResizeObserver | null>(null);
   const [tapeScroll, setTapeScroll] = useState({ top: 0, height: 448 });
+  // The scroller's height changes without a scroll (the list opens, the keyboard comes or goes, the screen
+  // turns), and the rows to build depend on it.
+  const setTapeScroller = useCallback((el: HTMLDivElement | null) => {
+    tapeScrollerSize.current?.disconnect();
+    tapeScroller.current = el;
+    if (!el) return;
+    tapeScrollerSize.current = new ResizeObserver(() => setTapeScroll((v) => (v.height === el.clientHeight ? v : { ...v, height: el.clientHeight })));
+    tapeScrollerSize.current.observe(el);
+  }, []);
   const tapeRows = useRef<TapeRow[]>([]);
   const place = tapes.findIndex((o) => o.id === currentId);
   const elsewhere = tapes.some((o) => o.id !== currentId);
@@ -118,7 +128,7 @@ export const TapeSwitcher = memo(function TapeSwitcher({ tapes, currentId }: { t
           </div>
           <ComboboxEmpty className="px-3 py-3 text-sm text-[var(--muted)]">No tape by that name has track IDs to work with yet.</ComboboxEmpty>
           <div
-            ref={tapeScroller}
+            ref={setTapeScroller}
             className="ts-tapes-list"
             onScroll={(e) => {
               const el = e.currentTarget;

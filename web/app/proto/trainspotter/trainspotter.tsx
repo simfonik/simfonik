@@ -785,6 +785,7 @@ export function Trainspotter({
       handsOff.current = performance.now() + 5000;
     };
     el.addEventListener("pointerdown", hold);
+    el.addEventListener("pointerup", hold); // counted from letting go: a long drag must not end in the view springing away
     el.addEventListener("wheel", hold, { passive: true });
     el.addEventListener("touchstart", hold, { passive: true });
     // The time under a mouse pointer, written straight to the element: no render per pixel moved.
@@ -816,6 +817,7 @@ export function Trainspotter({
       el.removeEventListener("pointerleave", unpoint);
       ro.disconnect();
       el.removeEventListener("pointerdown", hold);
+      el.removeEventListener("pointerup", hold);
       el.removeEventListener("wheel", hold);
       el.removeEventListener("touchstart", hold);
     };
@@ -846,13 +848,41 @@ export function Trainspotter({
     frame();
   }, [width, length, paint, frame, scrolls, active]);
   // Press or drag on the overview: bring that part of the tape to the middle of the screen.
-  const mapTo = (e: React.PointerEvent<HTMLDivElement>) => {
+  const mapTo = (e: React.PointerEvent<HTMLDivElement>, released = false) => {
     const sc = scrollerRef.current;
-    if (!sc || !(e.buttons & 1)) return;
+    if (!sc || !(released || e.buttons & 1)) return;
     const box = e.currentTarget.getBoundingClientRect();
     const at = Math.max(0, Math.min(1, (e.clientX - box.left) / box.width));
     handsOff.current = performance.now() + 5000; // the visitor is steering; don't snap back to the playhead
     sc.scrollLeft = at * (sc.scrollWidth - GUTTER) - (sc.clientWidth - GUTTER) / 2;
+  };
+  // A finger on the overview may be on its way down the page. The strip takes a sideways drag, or a tap (on
+  // release); a swipe up or down is the page's, and the browser tells us so by cancelling the touch.
+  const mapTouch = useRef<{ id: number; x: number; y: number; dragging: boolean } | null>(null);
+  const mapDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "touch") {
+      mapTouch.current = { id: e.pointerId, x: e.clientX, y: e.clientY, dragging: false };
+      return;
+    }
+    e.currentTarget.setPointerCapture(e.pointerId);
+    mapTo(e);
+  };
+  const mapMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== "touch") return mapTo(e);
+    const t = mapTouch.current;
+    if (!t || t.id !== e.pointerId) return;
+    if (!t.dragging) {
+      const dx = Math.abs(e.clientX - t.x);
+      if (dx < 6 || dx <= Math.abs(e.clientY - t.y)) return;
+      t.dragging = true;
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
+    mapTo(e);
+  };
+  const mapUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    const t = mapTouch.current;
+    mapTouch.current = null;
+    if (t && t.id === e.pointerId && !t.dragging && Math.hypot(e.clientX - t.x, e.clientY - t.y) < 6) mapTo(e, true);
   };
 
   // Scrubbing: the marker follows the finger at once; the audio follows a few times a second and settles on
@@ -874,6 +904,23 @@ export function Trainspotter({
     seek(activeRef.current, Math.min(v as number, sideLength(activeRef.current)));
     setScrubAt(null);
   };
+  // The slider only reports the end of a drag whose value changed. A drag that comes back to where it began
+  // would leave the playhead held at the drag's time with the audio running on, so every press on the ruler
+  // also ends the scrub on release, after the slider has had its turn.
+  const scrubEndRef = useRef(scrubEnd);
+  scrubEndRef.current = scrubEnd;
+  const rulerPress = useRef<AbortController | null>(null);
+  const rulerDown = () => {
+    rulerPress.current?.abort();
+    const press = (rulerPress.current = new AbortController());
+    const up = () => {
+      press.abort();
+      setTimeout(() => scrubT.current !== null && scrubEndRef.current(scrubT.current), 0);
+    };
+    window.addEventListener("pointerup", up, { signal: press.signal });
+    window.addEventListener("pointercancel", up, { signal: press.signal });
+  };
+  useEffect(() => () => rulerPress.current?.abort(), []);
 
   // A press that didn't travel is a click: on bare tape it moves the playhead. A drag is the SDK's to handle.
   const down = useRef<{ x: number; y: number } | null>(null);
@@ -907,6 +954,9 @@ export function Trainspotter({
   const counted = ready ? cues : proposals;
   const knownCount = counted.filter((c) => c.known).length;
   const unknownCount = counted.length - knownCount;
+  // What is on screen: the one part of a multi-part tape, else the whole tape. The intro and the lines shown
+  // when nothing is picked speak about this, so they never mention tracks that are on some other part.
+  const here = ready ? cues.filter((c) => !many || c.track === sides[active]) : proposals.filter((p) => !many || p.side === active);
   const audioFailed = failed[active];
 
   // The unknown list follows the timeline: every side of a two-sided tape, or the one part on screen.
@@ -925,8 +975,8 @@ export function Trainspotter({
       : // Names someone listed in a comment are a start, not the tracklist.
         namesWaiting > 0 && !counted.length
         ? "Some tracks are named in the comments, without times. Press play and mark where each one starts."
-        : counted.length
-        ? unknownCount
+        : here.length
+        ? here.some((c) => !c.known)
           ? "Press play and help ID the unknowns."
           : "Press play and mark any track that’s missing."
         : "Press play and mark the first track you know.";
@@ -1062,7 +1112,11 @@ export function Trainspotter({
       <div className="ts-idbar-foot">
         <div className="ts-idbar-context">
           {!subject ? (
-            "Click a track to play it and ID it."
+            here.length ? (
+              "Click a track to play it and ID it."
+            ) : (
+              "Nothing marked yet. Play, then “Mark new track”."
+            )
           ) : nextNames.length > 0 ? (
             <>
               <span className="flex-none">{fromSite ? "From the tracklist:" : `From ${nextNames[0].author}’s list:`}</span>
@@ -1345,9 +1399,17 @@ export function Trainspotter({
           <div className="ts-canvas" style={{ width: width + GUTTER }}>
             {/* The ruler is the scrubber: a slider the width of the tape. It sits outside the tracklist
                 so that moving through the audio is never recorded as a change to the tracklist. */}
-            <div className="ts-ruler" style={{ marginLeft: GUTTER, width }}>
+            <div className="ts-ruler" style={{ marginLeft: GUTTER, width }} onPointerDown={rulerDown}>
               <Slider value={Math.min(scrubAt ?? now, length)} onValueChange={scrub} onValueCommit={scrubEnd} min={0} max={length} step={1} largeStep={15} format={clock}>
-                <SliderControl className="ts-scrub">
+                <SliderControl
+                  className="ts-scrub"
+                  // A press focuses the handle, and browsers show a focus ring for it as if it were keyboard
+                  // focus (on a phone, a box around the marker for as long as it stays focused). The ring is
+                  // for the keyboard: a press silences it until a key is used or focus leaves.
+                  onPointerDownCapture={(e: React.PointerEvent<HTMLElement>) => e.currentTarget.setAttribute("data-quiet", "")}
+                  onKeyDownCapture={(e: React.KeyboardEvent<HTMLElement>) => e.currentTarget.removeAttribute("data-quiet")}
+                  onBlur={(e: React.FocusEvent<HTMLElement>) => e.currentTarget.removeAttribute("data-quiet")}
+                >
                   <SliderTrack className="ts-scrub-track">
                     {Array.from({ length: Math.floor(minutes / 5) + 1 }, (_, i) => (
                       <span key={i} className="ts-tick" style={{ left: `${((i * 300) / length) * 100}%` }} aria-hidden>
@@ -1385,7 +1447,7 @@ export function Trainspotter({
         </div>
         {/* The whole tape at a glance, when it doesn't all fit: the rows above in miniature, drawn the same way
             (grey for ID'd, hatched for unknown, solid for what's playing), with the part that is off screen
-            dimmed and a frame around what is on screen. Press or drag it to go there. It is a second
+            dimmed and a frame around what is on screen. Press or drag it to go there (a finger: tap, or drag sideways). It is a second
             way to scroll, so it stays out of the accessibility tree; the timeline itself scrolls for everyone. */}
         {scrolls && (
           <div
@@ -1393,11 +1455,12 @@ export function Trainspotter({
             className="ts-map"
             style={{ marginLeft: GUTTER }}
             aria-hidden
-            onPointerDown={(e) => {
-              e.currentTarget.setPointerCapture(e.pointerId);
-              mapTo(e);
+            onPointerDown={mapDown}
+            onPointerMove={mapMove}
+            onPointerUp={mapUp}
+            onPointerCancel={() => {
+              mapTouch.current = null;
             }}
-            onPointerMove={mapTo}
           >
             {/* Inside a clipped box of its own, so the frame can dim everything outside itself. */}
             <div className="ts-map-tape">
@@ -1436,12 +1499,15 @@ export function Trainspotter({
                   <p className="line-clamp-2 text-sm text-[var(--muted)]">{subject.known ? (subject.artist ? subject.title : "") : subject.title ? `Clue: “${subject.title}”` : "Nobody has ID’d it yet"}</p>
                 </>
               ) : (
-                <p className="text-sm text-[var(--muted)]">Tap a track to play it, then “ID track”.</p>
+                <p className="text-sm text-[var(--muted)]">{here.length ? "Tap a track to play it, then “ID track”." : "Nothing marked yet. Play, then tap “New track”."}</p>
               )}
             </div>
-            <button type="button" onClick={() => subject && idIt(subject.id)} disabled={!subject} className="ts-btn ts-btn-solid flex-none">
-              {subject?.known ? "Fix ID" : "ID track"}
-            </button>
+            {/* Only when there is a track for it to act on. With none, the bar pinned below already shows the button, disabled. */}
+            {subject && (
+              <button type="button" onClick={() => idIt(subject.id)} className="ts-btn ts-btn-solid flex-none">
+                {subject.known ? "Fix ID" : "ID track"}
+              </button>
+            )}
           </div>
           <div className="-mr-2.5 flex h-11 items-center justify-end gap-1">{undoRedo}</div>
         </div>
