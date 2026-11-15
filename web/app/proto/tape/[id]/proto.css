@@ -8,6 +8,100 @@
   .proto-wide .player-play { margin-top: 0; }
 }
 
+/* Direction 3, "Sides", on a set with many sides: a side that isn't loaded is drawn at the ordinary height. */
+.proto-wide .proto-small .player-wave { height: 2.75rem; }
+.proto-wide .proto-small .player-play { margin-top: 0; }
+
+/* The cover, where the words lead: one image that opens all of them. Its count sits in its corner. */
+.proto-cover { position: relative; display: block; width: 100%; cursor: zoom-in; }
+.proto-cover-count {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding: 0.375rem 0.625rem;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10px;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  transition: background-color 0.15s ease-out, color 0.15s ease-out;
+}
+@media (hover: hover) and (pointer: fine) {
+  .proto-cover:hover .proto-cover-count { background: var(--text); color: var(--bg); }
+}
+.proto-cover:active { opacity: 0.85; }
+.proto-cover:focus-visible { outline: 2px solid var(--text); outline-offset: 4px; }
+
+/* The viewer: every image, one to a screen, on the page's own colour. The images are a row that snaps, so a
+   finger swipes through them with the browser's own feel. */
+.proto-viewer {
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--bg);
+  color: var(--text);
+  overscroll-behavior: contain;
+}
+.proto-viewer::backdrop { background: var(--bg); }
+html:has(.proto-viewer[open]) { overflow: hidden; scrollbar-gutter: stable; }
+.proto-viewer-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.proto-viewer-track::-webkit-scrollbar { display: none; }
+.proto-viewer-slide { flex: 0 0 100%; height: 100%; padding: 4rem 1rem; scroll-snap-align: center; scroll-snap-stop: always; }
+@media (min-width: 64rem) {
+  .proto-viewer-slide { padding: 4rem 5rem; }
+}
+.proto-viewer-button {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--text);
+  cursor: pointer;
+  transition: opacity 0.15s ease-out;
+}
+.proto-viewer-button[data-place="close"] { top: 0.75rem; right: 0.75rem; }
+.proto-viewer-button[data-place="before"] { top: calc(50% - 1.375rem); left: 0.75rem; }
+.proto-viewer-button[data-place="after"] { top: calc(50% - 1.375rem); right: 0.75rem; }
+.proto-viewer-button[aria-disabled="true"] { opacity: 0.25; cursor: default; }
+.proto-viewer-button:not([aria-disabled="true"]):active { opacity: 0.6; }
+.proto-viewer-button:focus-visible { outline: 2px solid var(--text); outline-offset: -4px; }
+/* On a touch screen the images are swiped; the side arrows would only sit on top of them. */
+@media not ((hover: hover) and (pointer: fine)) {
+  .proto-viewer-button[data-place="before"], .proto-viewer-button[data-place="after"] { display: none; }
+}
+.proto-viewer-count {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 1.25rem;
+  text-align: center;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .proto-cover-count, .proto-viewer-button { transition: none; }
+}
+
 /* ---- The picker: harness chrome, copied from the prototype skill's spec. Not part of any direction. ---- */
 .proto-picker {
   position: fixed;
@@ -74,11 +168,19 @@
 /* A side, as a tab over the bar: the loaded one in full colour with a line under it. */
 .proto-tab {
   position: relative;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
   padding: 0.6875rem 0;
   color: var(--muted);
   cursor: pointer;
   text-align: left;
   transition: color 0.15s ease-out;
+}
+/* In a narrow cell the length goes under the name, not beside it. */
+@media (max-width: 39.99rem) {
+  .proto-tab { flex-direction: column; align-items: flex-start; gap: 0.125rem; }
 }
 .proto-tab[aria-pressed="true"] { color: var(--text); box-shadow: inset 0 -2px 0 var(--text); }
 @media (hover: hover) and (pointer: fine) {

@@ -7,7 +7,7 @@
 import { useEffect, useRef } from "react";
 import { PlayerControls, formatTime } from "../../../../components/PlayerControls";
 import { TrackIds } from "../../../../components/TrackIds";
-import { Pictures, Words, failed, useTapePlayer, type TapeView } from "./shared";
+import { Cover, Words, failed, useTapePlayer, type TapeView } from "./shared";
 
 export function Sides({ tape }: { tape: TapeView }) {
   const player = useTapePlayer(tape);
@@ -20,13 +20,16 @@ export function Sides({ tape }: { tape: TapeView }) {
 
   if (state.error) return failed(state.error);
   const started = state.isPlaying || state.isLoading || state.currentTime > 0;
+  // Eight full-height bars with a line under each is two screens. Past four sides, the ones not loaded are
+  // drawn shorter with no line of their own.
+  const many = tape.tracks.length > 4;
 
   return (
     <>
-      <div className="mb-8 lg:mb-10 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,36rem)] lg:gap-10">
+      <div className="mb-8 lg:mb-10 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,36rem)] lg:items-start lg:gap-10">
         <Words tape={tape} big />
         <div className="hidden lg:block">
-          <Pictures tape={tape} />
+          <Cover tape={tape} />
         </div>
       </div>
 
@@ -38,7 +41,7 @@ export function Sides({ tape }: { tape: TapeView }) {
           const known = ids.filter((id) => id.known).length;
           const length = on && state.duration > 0 ? state.duration : track.length;
           return (
-            <section key={track.position} aria-label={track.title}>
+            <section key={track.position} aria-label={track.title} className={many && !on ? "proto-small" : undefined}>
               <div className="mb-1 flex items-baseline justify-between gap-4 pl-14">
                 {tape.unlabelled ? (
                   <span />
@@ -56,6 +59,7 @@ export function Sides({ tape }: { tape: TapeView }) {
                       <span className="text-[var(--text)]">{formatTime(state.currentTime)}</span> /{" "}
                     </>
                   )}
+                  {many && !on && ids.length > 0 ? `${known} of ${ids.length} ID’d · ` : null}
                   {length ? formatTime(length) : null}
                 </span>
               </div>
@@ -82,7 +86,7 @@ export function Sides({ tape }: { tape: TapeView }) {
               >
                 {on ? (
                   <TrackIds tapeId={tape.id} position={tape.sideCount > 1 ? track.position : null} ids={ids} time={state.currentTime} onPosted={player.refresh} />
-                ) : (
+                ) : many ? null : (
                   // The same height as the track line, so nothing moves when another side takes it over.
                   <p className="mt-2 flex min-h-11 items-center font-mono text-[12px] text-[var(--muted)]">
                     {ids.length === 0 ? "No tracks ID’d yet" : `${known} of ${ids.length} marked tracks ID’d`}
@@ -95,7 +99,7 @@ export function Sides({ tape }: { tape: TapeView }) {
       </div>
 
       <div className="mb-12 lg:hidden">
-        <Pictures tape={tape} />
+        <Cover tape={tape} />
       </div>
     </>
   );

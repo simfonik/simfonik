@@ -7,7 +7,7 @@
 import { PlayerControls, formatTime } from "../../../../components/PlayerControls";
 import { TrackIds } from "../../../../components/TrackIds";
 import { clock, idAt, idLabel } from "../../../../lib/track-ids/compose";
-import { Pictures, Words, failed, useTapePlayer, type TapeView } from "./shared";
+import { Cover, Words, failed, useTapePlayer, type TapeView } from "./shared";
 
 export function Sheet({ tape }: { tape: TapeView }) {
   const player = useTapePlayer(tape);
@@ -18,21 +18,22 @@ export function Sheet({ tape }: { tape: TapeView }) {
 
   return (
     <>
-      <div className="mb-8 lg:mb-10 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,36rem)] lg:gap-10">
+      <div className="mb-8 lg:mb-10 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,36rem)] lg:items-start lg:gap-10">
         <Words tape={tape} big />
         <div className="hidden lg:block">
-          <Pictures tape={tape} />
+          <Cover tape={tape} />
         </div>
       </div>
 
       <div className="proto-wide mb-12">
         {player.audio}
         {tape.tracks.length > 1 && (
-          <div className="mb-3 flex flex-wrap gap-x-8 gap-y-1 pl-14">
+          // Up to four across, in even columns, so eight sides make two tidy rows and not a ragged wrap.
+          <div className="mb-3 grid grid-cols-2 gap-x-8 pl-14 lg:grid-cols-[repeat(var(--across),minmax(0,1fr))]" style={{ "--across": Math.min(tape.tracks.length, 4) } as React.CSSProperties}>
             {tape.tracks.map((t, i) => (
               <button key={t.position} type="button" onClick={() => i !== current && goTo(i, 0)} aria-pressed={i === current} className="proto-tab">
-                <span className="font-display text-xl leading-tight">{t.title}</span>
-                {t.length ? <span className="ml-2 font-mono text-[12px] tabular-nums text-[var(--muted)]">{formatTime(t.length)}</span> : null}
+                <span className="min-w-0 font-display text-xl leading-tight text-balance">{t.title}</span>
+                {t.length ? <span className="flex-none font-mono text-[12px] tabular-nums text-[var(--muted)]">{formatTime(t.length)}</span> : null}
               </button>
             ))}
           </div>
@@ -74,7 +75,7 @@ export function Sheet({ tape }: { tape: TapeView }) {
       </div>
 
       <div className="mb-12 lg:hidden">
-        <Pictures tape={tape} />
+        <Cover tape={tape} />
       </div>
     </>
   );
