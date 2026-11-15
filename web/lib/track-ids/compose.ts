@@ -39,18 +39,29 @@ export function composeId({ position, time, artist, title }: { position: string 
 const COMPOSED = /^\[(?:(\S+) )?(\d{1,3}):(\d{2})(?::(\d{2}))?\] (.+?) - (.+)$/;
 
 /**
- * Reads a comment written by `composeId`, or by hand in the same form. Null for anything else, and for a
- * side label the tape doesn't have: that comment is then read like any other.
+ * A comment in the form `composeId` writes, taken apart: the side's label as written (null if none), the
+ * time, and the names. Null for any other comment. Whether the tape has such a side is `readComposed`'s
+ * business.
  */
-export function readComposed(content: string, positions: string[]): { side: number; start: number; artist: string; title: string } | null {
+export function splitComposed(content: string): { position: string | null; time: number; artist: string; title: string } | null {
   const m = COMPOSED.exec(content.trim());
   if (!m) return null;
   const [, position, a, b, c, artist, title] = m;
-  const side = position ? positions.indexOf(position) : positions.length === 1 ? 0 : -1;
-  if (side < 0) return null;
-  const start = c === undefined ? Number(a) * 60 + Number(b) : Number(a) * 3600 + Number(b) * 60 + Number(c);
+  const time = c === undefined ? Number(a) * 60 + Number(b) : Number(a) * 3600 + Number(b) * 60 + Number(c);
   const name = (s: string) => (s.trim() === '?' ? '' : s.trim());
-  return { side, start, artist: name(artist), title: name(title) };
+  return { position: position ?? null, time, artist: name(artist), title: name(title) };
+}
+
+/**
+ * Reads a comment written by `composeId`, or by hand in the same form, as an ID on one of the tape's sides.
+ * Null for anything else, and for a side label the tape doesn't have: that comment is then read like any
+ * other.
+ */
+export function readComposed(content: string, positions: string[]): { side: number; start: number; artist: string; title: string } | null {
+  const id = splitComposed(content);
+  if (!id) return null;
+  const side = id.position ? positions.indexOf(id.position) : positions.length === 1 ? 0 : -1;
+  return side < 0 ? null : { side, start: id.time, artist: id.artist, title: id.title };
 }
 
 /** The ID playing at a time on a side, if there is one. `ids` in order of start. */

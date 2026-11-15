@@ -1,12 +1,15 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
+import { useTapeTrackIds } from './TapeTrackIds';
 
 type CommentFormProps = {
   tapeId: string;
 };
 
 export function CommentForm({ tapeId }: CommentFormProps) {
+  // A posted comment may be a track ID, and either way belongs in the list above: both are read again.
+  const { refresh } = useTapeTrackIds();
   const [authorName, setAuthorName] = useState('');
   const [authorEmail, setAuthorEmail] = useState('');
   const [content, setContent] = useState('');
@@ -39,6 +42,7 @@ export function CommentForm({ tapeId }: CommentFormProps) {
 
       if (response.ok) {
         setMessage({ type: 'success', text: data.message });
+        refresh();
         // Clear form
         setAuthorName('');
         setAuthorEmail('');

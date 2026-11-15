@@ -258,7 +258,19 @@ body::before {
   position: absolute;
   inset: 0;
   /* The part still to come is the bar a visitor aims at: at 45% it holds 3:1 against the page in both themes. */
-  background: linear-gradient(to right, var(--text) var(--played), color-mix(in srgb, var(--text) 45%, var(--bg)) var(--played));
+  --rest: color-mix(in srgb, var(--text) 45%, var(--bg));
+  --lit: color-mix(in srgb, var(--text) 72%, var(--bg));
+  /* Bright up to the playhead, dim after it; and between --lit-from and --lit-to, where they are set and lie
+     past the playhead, halfway between: the stretch of the track under the pointer. */
+  background: linear-gradient(
+    to right,
+    var(--text) var(--played),
+    var(--rest) var(--played),
+    var(--rest) max(var(--lit-from, 0%), var(--played)),
+    var(--lit) max(var(--lit-from, 0%), var(--played)),
+    var(--lit) max(var(--lit-to, 0%), var(--played)),
+    var(--rest) max(var(--lit-to, 0%), var(--played))
+  );
   -webkit-mask-size: 100% 100%;
           mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat;
@@ -315,6 +327,8 @@ body::before {
   text-overflow: ellipsis;
 }
 .player-wave-ghost span:empty { display: none; }
+/* Who ID'd the track under the pointer, said more quietly after its name. */
+.player-wave-ghost span[data-by]:not([data-by=""])::after { content: " · " attr(data-by); opacity: 0.65; }
 @media (hover: hover) and (pointer: fine) {
   .player-wave-ghost[data-on] { opacity: 1; }
 }
@@ -340,30 +354,64 @@ body::before {
   .player-wave input::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 1px; height: 2.75rem; }
   .player-wave input::-moz-range-thumb { width: 1px; height: 2.75rem; border: 0; }
 }
-/* Track IDs under the bar: the plain-text buttons that open and shut the form. Small type, a full-size place
-   to press. */
-.track-ids-open {
-  position: relative;
-  flex: none;
+/* Track IDs under the bar. The line is one button: the track playing now, or the question where nobody has
+   ID'd it. Pressed, it gives way to the fields. */
+.track-ids-line {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  /* A long name is cut short and never widens the page. */
+  contain: inline-size;
+  flex: 1;
+  padding: 13px 0;
   font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: left;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+.track-ids-cue {
+  margin-left: 0.5em;
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.22em;
   color: var(--text);
-  text-underline-offset: 4px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.track-ids-open::before {
-  content: "";
-  position: absolute;
-  inset: -15px -8px;
 }
 @media (hover: hover) and (pointer: fine) {
-  .track-ids-open:hover { text-decoration: underline; }
+  .track-ids-line:hover { text-decoration: underline; }
 }
-.track-ids-open:active { opacity: 0.6; }
-.track-ids-open:focus-visible { outline: 2px solid var(--text); outline-offset: 4px; }
+.track-ids-line:active { opacity: 0.6; }
+.track-ids-line:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+/* The cross that shuts the fields: a small mark in a full-size place to press. */
+.track-ids-shut {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+@media (hover: hover) and (pointer: fine) {
+  .track-ids-shut:hover { color: var(--text); }
+}
+.track-ids-shut:active { opacity: 0.6; }
+.track-ids-shut:focus-visible { outline: 2px solid var(--text); outline-offset: -4px; }
+/* A time in a comment that can be pressed to hear that moment. */
+.comment-time {
+  position: relative;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+.comment-time::before { content: ""; position: absolute; inset: -12px -6px; }
+.comment-time:active { opacity: 0.6; }
+.comment-time:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 /* Where the keyboard is: the bar, the play button, a side's row. */
 .player-wave:has(input:focus-visible) { outline: 2px solid var(--text); outline-offset: 4px; }
 .player-play:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }

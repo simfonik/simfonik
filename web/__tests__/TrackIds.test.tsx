@@ -10,7 +10,7 @@ const ids: TrackId[] = [
   { start: 300, end: 420, artist: '', title: '', known: false, by: 'Josh' },
 ];
 
-describe('track IDs under the player', () => {
+describe('the track line under the player', () => {
   let fetchMock: ReturnType<typeof vi.fn>;
   let posted: ReturnType<typeof vi.fn<() => void>>;
 
@@ -26,91 +26,104 @@ describe('track IDs under the player', () => {
     vi.restoreAllMocks();
   });
 
-  const body = () => JSON.parse(fetchMock.mock.calls[0][1].body);
+  const body = (call = 0) => JSON.parse(fetchMock.mock.calls[call][1].body);
+  const artist = () => screen.getByRole('textbox', { name: 'Artist' });
+  const title = () => screen.getByRole('textbox', { name: 'Title' });
+  const yourName = () => screen.getByRole('textbox', { name: 'Your name' });
 
-  it('says what is playing, who ID’d it, and what can be done about it', () => {
+  it('says the track playing now, and asks where nobody has ID’d it', () => {
     const { rerender } = render(<TrackIds tapeId="tape-1" position="A" ids={ids} time={60} onPosted={posted} />);
-    expect(screen.getByText('Moby — Go')).toBeInTheDocument();
-    expect(screen.getByText('ID by Rents')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Correct this ID' })).toBeInTheDocument();
+    const line = screen.getByRole('button', { name: 'Now playing: Moby — Go. Correct this ID' });
+    expect(line).toHaveAttribute('title', 'ID by Rents. Press to correct it.');
 
     rerender(<TrackIds tapeId="tape-1" position="A" ids={ids} time={200} onPosted={posted} />);
-    expect(screen.getByText('No ID here yet')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'ID this track' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Know this track? ID it' })).toBeInTheDocument();
 
     rerender(<TrackIds tapeId="tape-1" position="A" ids={ids} time={310} onPosted={posted} />);
-    expect(screen.getByText('Unknown track')).toBeInTheDocument();
-    expect(screen.getByText('Marked by Josh')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Unknown track. Know it? ID it' })).toBeInTheDocument();
   });
 
-  it('posts an ID as a comment that carries the side and the moment the form was opened', async () => {
+  it('turns into two fields, asks a first-time visitor’s name as a second step, and posts a comment carrying the side and the moment it was opened', async () => {
     const user = userEvent.setup();
     const { rerender } = render(<TrackIds tapeId="tape-1" position="B" ids={ids} time={754.6} onPosted={posted} />);
 
-    await user.click(screen.getByRole('button', { name: 'ID this track' }));
-    expect(screen.getByRole('textbox', { name: 'Artist' })).toHaveFocus();
-    // The tape plays on; the form stays on the moment it was opened for.
+    await user.click(screen.getByRole('button', { name: 'Know this track? ID it' }));
+    expect(artist()).toHaveFocus();
+    // The tape plays on; the fields stay on the moment they were opened for.
     rerender(<TrackIds tapeId="tape-1" position="B" ids={ids} time={790} onPosted={posted} />);
 
-    await user.type(screen.getByRole('textbox', { name: 'Artist' }), '808 State');
-    await user.type(screen.getByRole('textbox', { name: 'Title' }), 'Cubik');
-    await user.type(screen.getByRole('textbox', { name: 'Your name' }), 'Tester{Enter}');
+    await user.type(artist(), '808 State');
+    await user.type(title(), 'Cubik{Enter}');
+
+    // Nothing is posted yet: the line now asks who is saying so.
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(yourName()).toHaveFocus();
+    await user.type(yourName(), 'Tester{Enter}');
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0][0]).toBe('/api/comments/submit');
     expect(body()).toEqual({ tapeId: 'tape-1', authorName: 'Tester', authorEmail: '', content: '[B 12:34] 808 State - Cubik', website: '' });
     expect(posted).toHaveBeenCalledTimes(1);
 
-    // The form has shut, the button has the keyboard again, and the name is offered next time.
+    // The fields have gone, the line has the keyboard again, and the thanks is said.
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'ID this track' })).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Know this track? ID it' })).toHaveFocus();
     expect(screen.getByRole('status')).toHaveTextContent('Posted. Thanks.');
-    await user.click(screen.getByRole('button', { name: 'ID this track' }));
-    expect(screen.getByRole('textbox', { name: 'Your name' })).toHaveValue('Tester');
+
+    // Next time the name is remembered: two fields and one Enter.
+    await user.click(screen.getByRole('button', { name: 'Know this track? ID it' }));
+    await user.type(title(), 'Pacific State{Enter}');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(body(1)).toMatchObject({ authorName: 'Tester', content: '[B 13:10] ? - Pacific State' });
   });
 
-  it('puts a known ID right at the time that track starts, and writes no side on a tape that is one recording', async () => {
+  it('puts a known ID right from what it says, at the time that track starts, with no side on a tape that is one recording', async () => {
     const user = userEvent.setup();
+    window.localStorage.setItem('simfonik:id-name', 'Tester');
     render(<TrackIds tapeId="tape-1" position={null} ids={ids} time={95} onPosted={posted} />);
 
-    await user.click(screen.getByRole('button', { name: 'Correct this ID' }));
-    await user.type(screen.getByRole('textbox', { name: 'Title' }), 'Go (Woodtick Mix)');
-    await user.type(screen.getByRole('textbox', { name: 'Your name' }), 'Tester{Enter}');
+    await user.click(screen.getByRole('button', { name: /Correct this ID/ }));
+    expect(artist()).toHaveValue('Moby');
+    expect(title()).toHaveValue('Go');
+    await user.type(title(), ' (Woodtick Mix){Enter}');
 
-    expect(body().content).toBe('[0:00] ? - Go (Woodtick Mix)');
+    expect(body().content).toBe('[0:00] Moby - Go (Woodtick Mix)');
   });
 
-  it('asks for what is missing on its own line and posts nothing until it has it', async () => {
+  it('asks for what is missing on its own line, drops the complaint once it is being put right, and shuts on Escape', async () => {
     const user = userEvent.setup();
     render(<TrackIds tapeId="tape-1" position="A" ids={ids} time={200} onPosted={posted} />);
 
-    await user.click(screen.getByRole('button', { name: 'ID this track' }));
-    await user.click(screen.getByRole('button', { name: /post id/i }));
+    await user.click(screen.getByRole('button', { name: 'Know this track? ID it' }));
+    await user.click(screen.getByRole('button', { name: /post/i }));
     expect(screen.getByRole('alert')).toHaveTextContent('Enter the artist or the title.');
-    expect(screen.getByRole('textbox', { name: 'Artist' })).toHaveFocus();
+    expect(artist()).toHaveFocus();
 
-    await user.type(screen.getByRole('textbox', { name: 'Artist' }), 'Moby');
-    await user.click(screen.getByRole('button', { name: /post id/i }));
+    await user.type(artist(), 'Moby');
+    expect(screen.getByRole('alert')).toBeEmptyDOMElement();
+    await user.keyboard('{Enter}');
+    await user.keyboard('{Enter}');
     expect(screen.getByRole('alert')).toHaveTextContent('Enter your name.');
-    expect(screen.getByRole('textbox', { name: 'Your name' })).toHaveFocus();
+    expect(yourName()).toHaveFocus();
     expect(fetchMock).not.toHaveBeenCalled();
 
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'ID this track' })).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Know this track? ID it' })).toHaveFocus();
   });
 
   it('says what the server said when it refuses, and keeps what was typed', async () => {
     const user = userEvent.setup();
+    window.localStorage.setItem('simfonik:id-name', 'Tester');
     fetchMock.mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ error: 'Too many requests. Please try again later.' }), { status: 429 })));
     render(<TrackIds tapeId="tape-1" position="A" ids={ids} time={200} onPosted={posted} />);
 
-    await user.click(screen.getByRole('button', { name: 'ID this track' }));
-    await user.type(screen.getByRole('textbox', { name: 'Artist' }), 'Moby');
-    await user.type(screen.getByRole('textbox', { name: 'Your name' }), 'Tester{Enter}');
+    await user.click(screen.getByRole('button', { name: 'Know this track? ID it' }));
+    await user.type(artist(), 'Moby{Enter}');
 
     expect(screen.getByRole('alert')).toHaveTextContent('Too many requests. Please try again later.');
-    expect(screen.getByRole('textbox', { name: 'Artist' })).toHaveValue('Moby');
+    expect(artist()).toHaveValue('Moby');
+    expect(artist()).toHaveFocus();
     expect(posted).not.toHaveBeenCalled();
   });
 });

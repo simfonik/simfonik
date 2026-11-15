@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
-import { useTrackIds } from '../hooks/useTrackIds';
 import { PlayerControls, formatTime } from './PlayerControls';
+import { useTapeTrackIds } from './TapeTrackIds';
 import { TrackIds } from './TrackIds';
 
 interface DJ {
@@ -47,8 +47,34 @@ export function PlaylistPlayer({ tracks, tapeId, sideCount }: PlaylistPlayerProp
     onEnded: currentTrackIndex < tracks.length - 1 ? handleNextTrack : undefined
   });
 
-  const trackIds = useTrackIds(tapeId);
+  const trackIds = useTapeTrackIds();
   const ids = trackIds.sides[currentTrack.index] ?? [];
+
+  // A time pressed in a comment takes the tape there and plays it. If it is on another side, that side is
+  // loaded first, and the place is gone to once it is the one loaded: loading a side starts it from zero.
+  const { play, seek } = controls;
+  const { isPlaying } = state;
+  const { setPlayer } = trackIds;
+  const wanted = useRef<number | null>(null);
+  useEffect(() => {
+    if (wanted.current === null) return;
+    seek(wanted.current);
+    wanted.current = null;
+  }, [currentTrackIndex, seek]);
+  useEffect(() => {
+    setPlayer((position, time) => {
+      const index = position === null ? currentTrackIndex : tracks.findIndex((track) => track.position === position);
+      if (index < 0) return;
+      if (index === currentTrackIndex) seek(time);
+      else {
+        wanted.current = time;
+        setCurrentTrackIndex(index);
+      }
+      // A tape already playing carries on by itself, into the new side too.
+      if (!isPlaying) play();
+    });
+    return () => setPlayer(null);
+  }, [setPlayer, tracks, currentTrackIndex, isPlaying, play, seek]);
 
   const selectTrack = (index: number) => {
     if (index === currentTrackIndex) {

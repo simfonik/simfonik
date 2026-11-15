@@ -1,8 +1,9 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
-import { useTrackIds } from '../hooks/useTrackIds';
 import { PlayerControls } from './PlayerControls';
+import { useTapeTrackIds } from './TapeTrackIds';
 import { TrackIds } from './TrackIds';
 
 interface AudioPlayerProps {
@@ -18,13 +19,25 @@ interface AudioPlayerProps {
 }
 
 export function AudioPlayer({ src, title, tapeId, sidePosition, wave, length, sideIndex = 0, sideCount = 1 }: AudioPlayerProps) {
-  const trackIds = useTrackIds(tapeId);
+  const trackIds = useTapeTrackIds();
   const ids = trackIds.sides[sideIndex] ?? [];
   const { ref, state, controls } = useAudioPlayer({ 
     src, 
     tapeId, 
     sidePosition 
   });
+
+  // A time pressed in a comment takes the tape there and plays it.
+  const { play, seek } = controls;
+  const { isPlaying } = state;
+  const { setPlayer } = trackIds;
+  useEffect(() => {
+    setPlayer((_position, time) => {
+      seek(time);
+      if (!isPlaying) play();
+    });
+    return () => setPlayer(null);
+  }, [setPlayer, isPlaying, play, seek]);
 
   if (state.error) {
     return (

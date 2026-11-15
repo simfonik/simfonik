@@ -87,14 +87,27 @@ export function PlayerControls({
     if (!el) return;
     const at = Math.max(0, Math.min(bar.width, x - bar.left));
     el.style.setProperty('--at', `${at}px`);
-    // The time there and, where the comments have ID'd it, the track playing there.
+    // The time there and, where the comments have ID'd it, the track playing there and who said so. That
+    // track's whole stretch of the bar lights up, so the cuts read as tracks.
     const time = timeAt(x, bar);
     const id = time !== null && ids ? idAt(ids, time) : null;
     const label = el.firstElementChild as HTMLElement;
     label.textContent = time === null ? '' : `${formatTime(time)}${id ? ` · ${idLabel(id)}` : ''}`;
+    label.dataset.by = id ? `${id.known ? 'ID' : 'marked'} by ${id.by}` : '';
     // The label stays inside the bar's ends, however long the name makes it.
     const half = label.offsetWidth / 2;
     el.style.setProperty('--label', `${Math.max(half, Math.min(bar.width - half, at))}px`);
+    const wave = el.parentElement as HTMLElement;
+    wave.style.setProperty('--lit-from', id ? `${(id.start / whole) * 100}%` : '0%');
+    wave.style.setProperty('--lit-to', id ? `${(Math.min(id.end, whole) / whole) * 100}%` : '0%');
+  };
+  /** The pointer has gone: the line, the label and the lit stretch go with it. */
+  const unpoint = (attribute: 'data-on' | 'data-drag') => {
+    const el = ghost.current;
+    if (!el) return;
+    el.removeAttribute(attribute);
+    el.parentElement?.style.removeProperty('--lit-from');
+    el.parentElement?.style.removeProperty('--lit-to');
   };
   const preview = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== 'mouse') return;
@@ -104,7 +117,7 @@ export function PlayerControls({
   const endTouch = () => {
     press.current = null;
     lifted.current = performance.now();
-    ghost.current?.removeAttribute('data-drag');
+    unpoint('data-drag');
   };
 
   return (
@@ -142,7 +155,7 @@ export function PlayerControls({
           className="player-wave"
           style={{ '--played': `${played}%` } as React.CSSProperties}
           onPointerMove={preview}
-          onPointerLeave={() => ghost.current?.removeAttribute('data-on')}
+          onPointerLeave={() => unpoint('data-on')}
         >
           {shape ? (
             <div className="player-wave-shape" style={{ maskImage: shape, WebkitMaskImage: shape }} />

@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { clock, splitComposed } from '../lib/track-ids/compose';
 import { CommentBody } from './CommentBody';
+import { useTapeTrackIds } from './TapeTrackIds';
 
 type Comment = {
   id: number;
@@ -24,9 +26,29 @@ function formatDate(dateString: string): string {
   });
 }
 
+/**
+ * A comment's text. One that is a track ID in the site's own form (`[B 12:34] Moby - Go`) is shown as what
+ * it is: the time, which can be pressed to hear that moment, and the track.
+ */
+function CommentText({ content, goTo }: { content: string; goTo: (position: string | null, time: number) => void }) {
+  const id = splitComposed(content);
+  if (!id) return <CommentBody content={content} />;
+  const where = `${id.position ? `${id.position} · ` : ''}${clock(id.time)}`;
+  return (
+    <p className="text-[var(--text)] leading-relaxed">
+      <button type="button" onClick={() => goTo(id.position, id.time)} className="comment-time" aria-label={`Play from ${where}`}>
+        {where}
+      </button>{' '}
+      {[id.artist, id.title].filter(Boolean).join(' — ')}
+    </p>
+  );
+}
+
 export function LiveComments({ tapeId }: LiveCommentsProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
+  // Read again whenever a comment is posted from this page, so it shows without a reload.
+  const { changed, goTo } = useTapeTrackIds();
 
   useEffect(() => {
     fetch(`/api/comments/${tapeId}`)
@@ -45,7 +67,7 @@ export function LiveComments({ tapeId }: LiveCommentsProps) {
         setComments([]);
       })
       .finally(() => setLoading(false));
-  }, [tapeId]);
+  }, [tapeId, changed]);
 
   if (loading) {
     return (
@@ -71,7 +93,7 @@ export function LiveComments({ tapeId }: LiveCommentsProps) {
               {formatDate(comment.created_at)}
             </div>
           </div>
-          <CommentBody content={comment.content} />
+          <CommentText content={comment.content} goTo={goTo} />
         </div>
       ))}
     </div>

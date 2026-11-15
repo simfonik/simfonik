@@ -4,11 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { PlaylistPlayer } from '../components/PlaylistPlayer';
 
-// Mock our fetch API globally to prevent unhandled rejection spam if track-play fires. The player also asks
-// for the tape's track IDs; it is told there are none.
-global.fetch = vi.fn((url: RequestInfo | URL) =>
-  Promise.resolve(new Response(String(url).includes('/api/track-ids/') ? JSON.stringify({ sides: [[], []], complete: true }) : null, { status: 200 })),
-);
+// Mock our fetch API globally to prevent unhandled rejection spam if track-play fires
+global.fetch = vi.fn(() => Promise.resolve(new Response(null, { status: 200 })));
 
 const mockTracks = [
   { title: 'Track 1', url: 'track1.mp3', position: 'A', index: 0 },

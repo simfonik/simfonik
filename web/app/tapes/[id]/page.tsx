@@ -14,6 +14,7 @@ import { AudioPlayer } from "../../../components/AudioPlayer";
 import { PlaylistPlayer } from "../../../components/PlaylistPlayer";
 import { CommentForm } from "../../../components/CommentForm";
 import { LiveComments } from "../../../components/LiveComments";
+import { TapeTrackIdsProvider } from "../../../components/TapeTrackIds";
 import { CommentBody } from "../../../components/CommentBody";
 import { RotatingWord } from "../../../components/RotatingWord";
 import { JsonLd } from "../../../components/JsonLd";
@@ -190,6 +191,7 @@ export default async function Page({ params }: Props) {
       <JsonLd data={generateTapeSchema(tape)} />
       
       <AudioCoordinator />
+      <TapeTrackIdsProvider tapeId={tape.id}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       
       {/* Mobile-only Header */}
@@ -584,6 +586,7 @@ export default async function Page({ params }: Props) {
         </section>
       )}
       </div>
+      </TapeTrackIdsProvider>
     </main>
   );
 }

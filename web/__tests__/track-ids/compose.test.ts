@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import tapes from '@/data/tapes.json';
-import { clock, composeId, idAt, idLabel, readComposed, type TrackId } from '@/lib/track-ids/compose';
+import { clock, composeId, idAt, idLabel, readComposed, splitComposed, type TrackId } from '@/lib/track-ids/compose';
 
 type Tape = { id: string; sides: { position: string }[] };
 
@@ -32,6 +32,12 @@ describe('IDs the site writes', () => {
         }
       });
     }
+  });
+
+  it('takes its own form apart without knowing the tape, for showing in the comments', () => {
+    expect(splitComposed('[1B 1:02:03] ? - Go')).toEqual({ position: '1B', time: 3723, artist: '', title: 'Go' });
+    expect(splitComposed('[0:05] Moby - Go')).toEqual({ position: null, time: 5, artist: 'Moby', title: 'Go' });
+    expect(splitComposed('I think [0:05] Moby - Go')).toBeNull();
   });
 
   it('leaves anything else to the reader of prose', () => {
