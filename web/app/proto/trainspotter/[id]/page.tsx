@@ -49,11 +49,15 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
       const marked = reconcile(timed(all, t.sides.length), t.sides.map(() => Infinity));
       const known = marked.filter((m) => m.known).length;
       const unknown = marked.length - known;
-      const names =
-        t.sides.reduce((n, side) => n + (side.tracks?.length ?? 0), 0) ||
-        runningOrders(all.flatMap((c) => parseListing(c.content, c.author, c.date)), t.sides.length)
-          .flat()
-          .filter((l) => l.known).length;
+      // Two different things, and only one of them is a tracklist. The site's own list is the tape's full
+      // running order. A numbered list in a comment is whatever one person remembered, often a handful of
+      // tracks with gaps in the numbering, so it never earns "tracklist known".
+      const official = t.sides.reduce((n, side) => n + (side.tracks?.length ?? 0), 0);
+      const namedInComments = official
+        ? 0
+        : runningOrders(all.flatMap((c) => parseListing(c.content, c.author, c.date)), t.sides.length)
+            .flat()
+            .filter((l) => l.known).length;
       // A compilation's eight names would fill the row; its title says more.
       const label = t.djs.length > 3 ? `${t.title} — ${t.djs.length} DJs` : `${t.djs.map((d) => d.name).join(", ")} — ${t.title}`;
       // Counts say only what is so: how many tracks have a name, and how many spots someone has marked or
@@ -61,9 +65,10 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
       // "x of y" and no progress bar.
       const idd = known ? `${known} ID’d` : "";
       const open = unknown ? `${unknown} marked unknown` : "";
+      const untimed = namedInComments > known ? `${namedInComments} named, no times` : "";
       if (unknown) return { id: t.id, label, group: "Tracks marked unknown", meta: [idd, open].filter(Boolean).join(" · "), rank: unknown };
-      if (names > known) return { id: t.id, label, group: "Tracklist known, times needed", meta: `${plural(names, "track")} to place`, rank: names };
-      if (known) return { id: t.id, label, group: "Started in the comments", meta: idd, rank: known };
+      if (official > known) return { id: t.id, label, group: "Tracklist known, times needed", meta: `${plural(official, "track")} to place`, rank: official };
+      if (known || untimed) return { id: t.id, label, group: "Started in the comments", meta: [idd, untimed].filter(Boolean).join(" · "), rank: known + namedInComments };
       // Every tape is here, including the ones nobody has said anything about: those are the blank ones.
       return { id: t.id, label, group: "Nothing marked yet", meta: "", rank: 0 };
     })

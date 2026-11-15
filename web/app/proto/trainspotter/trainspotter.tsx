@@ -928,9 +928,12 @@ export function Trainspotter({
   // What to do, in one line, always the same shape: press play and do one thing. The counts are in the list
   // of tapes and the lists below.
   const intro =
-    namesWaiting > 0
+    namesWaiting > 0 && fromSite
       ? "We know the tracklist but not the times. Press play and mark where each track starts."
-      : counted.length
+      : // Names someone listed in a comment are a start, not the tracklist.
+        namesWaiting > 0 && !counted.length
+        ? "A few tracks are named in the comments, without times. Press play and mark where each one starts."
+        : counted.length
         ? unknownCount
           ? "Press play and help ID the unknowns."
           : "Press play and mark any track that’s missing."
@@ -1602,7 +1605,7 @@ export function Trainspotter({
           {namesTotal > 0 && (
             <Collapsible className="ts-fold" defaultOpen={namesWaiting === namesTotal}>
               <CollapsibleTrigger className="ts-fold-trigger">
-                <span>{fromSite ? "The tape’s tracklist" : "A tracklist from the comments, in order"}</span>
+                <span>{fromSite ? "The tape’s tracklist" : "Named in the comments, without times"}</span>
                 <span className="font-mono text-xs tabular-nums text-[var(--muted)]">{namesWaiting} without a time</span>
               </CollapsibleTrigger>
               <CollapsiblePanel className="ts-fold-panel">
