@@ -664,7 +664,7 @@ export function digest(comments: Said[], titles: string[] = []): { sightings: Si
 
   const sightings: Sighting[] = [];
   const listed: Listed[] = [];
-  const inferred: Sighting[] = [];
+  const inferred: { s: Sighting; once: boolean }[] = [];
   for (const { c, list } of read) {
     const rows = heads.get(c);
     // A running list is read here, row by row, so that its sides are the ones its headings were found to
@@ -688,12 +688,12 @@ export function digest(comments: Said[], titles: string[] = []): { sightings: Si
       }
       else if (!r.known) return;
       // A time handed down from an earlier version of the list: the keeper's own, but worked out from where
-      // the line sits, so it gives way if anyone timed this record on this side outright.
-      else if (r.start !== undefined) inferred.push({ ...said, start: r.start });
+      // the line sits (see the end of this function for what it gives way to).
+      else if (r.start !== undefined) inferred.push({ s: { ...said, start: r.start }, once: rows.filter((x) => x.side === r.side && x.known && sameRow(x, r)).length === 1 });
       // The first track listed on a side starts the side (a keeper writes "0:00 ??" when it opens on something
       // else). First means first: under a side heading, and numbered 1 or carrying on from the side before.
       else if (rows.findIndex((x) => x.side === r.side) === k && (list!.headed || titles.length === 1) && (!r.numbered || r.n === 1 || (k > 0 && rows[k - 1].numbered && rows[k - 1].n === r.n - 1)))
-        inferred.push({ ...said, start: 0, weak: true });
+        inferred.push({ s: { ...said, start: 0, weak: true }, once: true });
     });
   }
   // "23:38 is The Slippers - Tribal Hen", in reply to a keeper whose list has "23:38 ???" under Side 2: the
@@ -709,6 +709,12 @@ export function digest(comments: Said[], titles: string[] = []): { sightings: Si
       if (sides.size === 1) s.side = [...sides][0];
     }
   }
-  for (const s of inferred) if (s.weak || !sightings.some((x) => x.side === s.side && x.known && sameTrack(x, s))) sightings.push(s);
+  // A time worked out from an earlier version gives way to one somebody stated for the same record: a
+  // keeper's "22:15 ??" and a reply's "21:15 is…" are one track, and where the two are far apart it is the
+  // working-out that slipped. Unless the list has the record more than once: played three times on a side it
+  // is three tracks, and then only a stated time close by is the same one.
+  const stated = [...sightings];
+  for (const { s, once } of inferred)
+    if (s.weak || !stated.some((x) => x.side === s.side && x.known && sameTrack(x, s) && (once || Math.abs(x.start - s.start) <= 120))) sightings.push(s);
   return { sightings, listed };
 }

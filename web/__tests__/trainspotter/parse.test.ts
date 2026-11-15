@@ -87,6 +87,24 @@ describe('a keeper’s running tracklist, posted again each time a track is ID�
     expect(lines.filter((l) => l.includes('Foxtrot') && l.startsWith('side'))).toHaveLength(1);
   });
 
+  it('keeps every playing of a record that is played more than once', () => {
+    const before = say(['Side 1', '0:00 ?? (ambient)', '3:00 ??', 'Alpha - One', '7:10 ?? (ambient)', '12:00 ??', 'Bravo - Two', '30:15 ?? (ambient)'].join('\n'), 'Keeper', '2026-02-01');
+    const after = say(['Side 1', 'Kilo - Theme', '3:00 ??', 'Alpha - One', 'Kilo - Theme', '12:00 ??', 'Bravo - Two', 'Kilo - Theme'].join('\n'), 'Keeper', '2026-03-01');
+    const lines = shown([before, after], ['']);
+    expect(lines.filter((l) => l.startsWith('side') && l.includes('Kilo'))).toEqual(['side 0 0:00:00 Kilo — Theme [Keeper]', 'side 0 0:07:10 Kilo — Theme [Keeper]', 'side 0 0:30:15 Kilo — Theme [Keeper]']);
+  });
+
+  it('drops a worked-out time for a record somebody timed elsewhere on the side', () => {
+    // The keeper's list missed a track, so its lines sit one slot off; a reply had already timed Lima.
+    const before = say(['Side 1', 'Alpha - One', '3:14 ??', '5:30 ??', 'Bravo - Two', 'Charlie - Three'].join('\n'), 'Keeper', '2026-02-01');
+    const reply = say(['Side 1', '3:14 Lima - Eleven', '5:30 Mike - Twelve'].join('\n'), 'Someone', '2026-02-10');
+    const after = say(['Side 1', 'Alpha - One', 'November - Thirteen', 'Lima - Eleven', 'Bravo - Two', 'Charlie - Three'].join('\n'), 'Keeper', '2026-03-01');
+    const lines = shown([before, reply, after], ['']);
+    // By the list's slots Lima would be at 5:30. The reply put it at 3:14, so the slot is not believed, and
+    // what the reply put at 5:30 stays there.
+    expect(lines.filter((l) => l.startsWith('side') && l.includes('0:05:30'))).toEqual(['side 0 0:05:30 Mike — Twelve [Someone]']);
+  });
+
   it('puts a reply that gives no side on the side where the keeper’s list has that time', () => {
     const reply = say('0:23 is Juliet - Ten', 'Someone', '2026-02-15');
     expect(shown([first, reply], AB)).toContain('side 1 0:00:23 Juliet — Ten [Someone]');
