@@ -17,6 +17,11 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
   if (!tape) notFound();
 
   const [{ sightings, listed, complete }, others] = await Promise.all([readTape(tape), tapeIndex()]);
+  // How loud each side is along its length, for the tapes where that has been measured. The overview draws it.
+  const waves = await import(`../../../../data/waveforms/${tape.id}.json`).then(
+    (file) => file.default as number[][],
+    () => null,
+  );
   // The tracklist already published on the site: names in order with no times, the most trusted order there is.
   const official = tape.sides.map((side, i) =>
     (side.tracks ?? []).map((t, n) => ({ side: i, n: n + 1, artist: t.artist, title: t.title, known: true, author: "simfonik", date: "" })),
@@ -39,6 +44,7 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
       listed={listed}
       official={official}
       others={others}
+      waves={waves}
     />
   );
 }

@@ -679,6 +679,10 @@
 .ts-map::before { content: ""; position: absolute; inset: -11px 0; }
 .ts-map-tape { position: relative; display: grid; gap: 2px; overflow: hidden; padding-block: 3px; }
 .ts-map-lane { position: relative; height: 9px; box-shadow: 0 1px 0 color-mix(in oklch, var(--text) 16%, transparent); }
+/* With the side's sound measured, the lane is cut to its shape (the mask is set on the element) and is tall
+   enough to show it. The untimed stretches show too, faintly: the tape is there whether or not anyone has
+   ID'd it. No line under the lane; a mask would cut it off, and the shape is its own edge. */
+.ts-map-lane[data-wave] { height: 22px; box-shadow: none; background: color-mix(in oklch, var(--text) 13%, transparent); -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
 .ts-map-lane i { position: absolute; inset-block: 0; min-width: 2px; border-inline: 0.5px solid transparent; background-clip: padding-box; background-image: repeating-linear-gradient(135deg, transparent 0 2px, color-mix(in oklch, var(--text) 55%, transparent) 2px 3px); }
 .ts-map-lane i[data-known] { background-color: color-mix(in oklch, var(--text) 26%, var(--bg)); background-image: none; }
 .ts-map-lane i[data-playing] { background-color: var(--text); background-image: none; }

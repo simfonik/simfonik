@@ -24,6 +24,7 @@ import { IdBar, IdSheetForm, Shortcuts, UndoRedo, type IdDraft } from "./id-form
 import { awayFrom } from "./keys";
 import { PhoneBar, Player } from "./player";
 import { useChanges } from "./use-changes";
+import { outline } from "./waveform";
 import { useTapeAudio } from "./use-tape-audio";
 import { GUTTER, useTimeline } from "./use-timeline";
 import { followComments, near, origin, readSaved, toCue as cueFrom, type Saved, type Spot } from "./saved";
@@ -50,6 +51,7 @@ export function Trainspotter({
   listed,
   official,
   others,
+  waves,
 }: {
   tape: TapeProp;
   sightings: Sighting[];
@@ -59,6 +61,8 @@ export function Trainspotter({
   official: Listed[][];
   /** Every tape with something to work on, in the order the switcher lists them. */
   others: TapeEntry[];
+  /** Each side's loudness along its length, where it has been measured (see `outline`). */
+  waves: number[][] | null;
 }) {
   const sides = useMemo(() => tape.sides.map((s) => s.key), [tape.sides]);
   // A set of several tapes (eight DJs, eight recordings) shows one part at a time, chosen from a row of parts.
@@ -132,6 +136,8 @@ export function Trainspotter({
     return Math.max(60, unmeasured, ...measured.map((d) => d ?? 0), ...ends);
   }, [lengths, cues, proposals, many, active, sides]);
   const sideLength = (i: number) => lengths[i] ?? length;
+  // Where a side's sound has been measured, the overview's lane takes its shape.
+  const outlines = useMemo(() => (waves ?? []).map(outline), [waves]);
   const [sheet, setSheet] = useState(false); // the ID sheet, on phones
   const timeline = useTimeline({ audio, length, many, rows: sides.length, sheet });
   const { scrollerRef, headRef, ghostRef, mapRef, mapWindowRef, mapHeadRef, minutes, snapUntil, scrubAt, scrub, scrubEnd, rulerDown, mapDown, mapMove, mapUp, mapCancel } = timeline;
@@ -717,7 +723,12 @@ export function Trainspotter({
             <div className="ts-map-tape">
               {tape.sides.map((side, i) =>
                 many && i !== active ? null : (
-                  <div key={side.key} className="ts-map-lane">
+                  <div
+                    key={side.key}
+                    className="ts-map-lane"
+                    data-wave={outlines[i] ? "" : undefined}
+                    style={outlines[i] ? { maskImage: outlines[i], WebkitMaskImage: outlines[i], maskSize: `${((lengths[i] ?? length) / length) * 100}% 100%`, WebkitMaskSize: `${((lengths[i] ?? length) / length) * 100}% 100%` } : undefined}
+                  >
                     {lengths[i] !== null && lengths[i]! < length && <span style={{ left: `${(lengths[i]! / length) * 100}%` }} />}
                     {cues
                       .filter((c) => c.track === side.key)
