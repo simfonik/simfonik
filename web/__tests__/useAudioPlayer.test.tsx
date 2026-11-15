@@ -159,6 +159,22 @@ describe('useAudioPlayer', () => {
     expect(result.current.state.isPlaying).toBe(true);
   });
 
+  it('goes back to rest, without an error, when the browser wants a tap before any sound', async () => {
+    const { result } = setupHook({ src: 'test.mp3' });
+    audioNode.play = vi.fn().mockRejectedValue({ name: 'NotAllowedError' });
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    await act(async () => {
+      result.current.controls.play();
+    });
+
+    expect(result.current.state.error).toBeNull();
+    expect(result.current.state.isPlaying).toBe(false);
+    expect(result.current.state.isLoading).toBe(false);
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+    consoleErrorSpy.mockRestore();
+  });
+
   it('cleans up event listeners on unmount', () => {
     const { unmount } = setupHook({ src: 'test.mp3' });
 

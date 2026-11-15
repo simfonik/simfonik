@@ -45,9 +45,12 @@ export function PlayerControls({
   }, [wanted, duration, onSeek]);
   // A phone lets audio start only from inside a finished tap, click or key press. The slider reports its new
   // value the moment a finger lands, which is too early: started from there, an iPhone refuses to play. So
-  // the value is only noted when it changes, and the tape is started when the press ends.
-  const begin = () => {
-    if (wanted !== null && !duration && !isPlaying && !isLoading) onPlay();
+  // before the audio has loaded, the tape is started when the press ends, at the place pressed.
+  const press = useRef<{ x: number; y: number } | null>(null);
+  const startAt = (x: number, bar: DOMRect) => {
+    if (duration || isPlaying || isLoading) return;
+    setWanted(wanted ?? Math.max(0, Math.min(1, (x - bar.left) / bar.width)));
+    onPlay();
   };
   const played = wanted !== null ? wanted * 100 : duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
 
@@ -123,10 +126,24 @@ export function PlayerControls({
               if (duration) return onSeek(value);
               setWanted(value);
             }}
-            onPointerUp={begin}
-            onTouchEnd={begin}
-            onClick={begin}
-            onKeyUp={begin}
+            onTouchStart={(e) => {
+              press.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }}
+            onTouchEnd={(e) => {
+              const from = press.current;
+              const to = e.changedTouches[0];
+              press.current = null;
+              if (!from || !to) return;
+              // A finger that travelled up or down was scrolling the page past the bar, not pressing it.
+              const across = Math.abs(to.clientX - from.x);
+              const down = Math.abs(to.clientY - from.y);
+              if (down > 10 && down > across) return setWanted(null);
+              startAt(to.clientX, e.currentTarget.getBoundingClientRect());
+            }}
+            onClick={(e) => startAt(e.clientX, e.currentTarget.getBoundingClientRect())}
+            onKeyUp={() => {
+              if (wanted !== null && !duration && !isPlaying && !isLoading) onPlay();
+            }}
             aria-label={`Seek audio${title ? `: ${title}` : ''}`}
             aria-valuetext={duration ? `${formatTime(currentTime)} of ${formatTime(duration)}` : 'Not loaded yet'}
           />

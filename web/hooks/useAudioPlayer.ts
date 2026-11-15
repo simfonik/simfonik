@@ -134,7 +134,11 @@ export function useAudioPlayer({ src, tapeId, sidePosition, onEnded }: UseAudioP
     audio.play()
       .then(() => setIsLoading(false))
       .catch((err) => {
-        if (err.name !== 'AbortError') {
+        if (err.name === 'NotAllowedError') {
+          // The browser wants a tap first (a phone does, for any sound). Nothing is broken: the controls
+          // stay, back at rest, and the next press of play is that tap.
+          setIsPlaying(false);
+        } else if (err.name !== 'AbortError') {
           console.error('Playback failed:', err);
           setError('Playback failed. Please try again.');
           setIsPlaying(false);
