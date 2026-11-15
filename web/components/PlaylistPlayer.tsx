@@ -82,48 +82,35 @@ export function PlaylistPlayer({ tracks, tapeId }: PlaylistPlayerProps) {
         onSeek={controls.seek}
       />
 
-      {/* Track List */}
-      <div className="border-t-[1.5px] border-[var(--border)] pt-3">
-        <div className="space-y-0">
-          {tracks.map((track, index) => {
-            const isCurrent = index === currentTrackIndex;
-            return (
-              <button
-                key={track.position}
-                onClick={() => selectTrack(index)}
-                className={`w-full text-left px-3 py-2.5 transition-colors cursor-pointer player-side flex items-center gap-3 text-[var(--text)] ${
-                  isCurrent ? 'bg-[var(--bg-hover)]' : 'hover:bg-[var(--bg-hover)]'
-                }`}
-              >
-                <span className="flex-shrink-0 text-[var(--text)]">
-                  {isCurrent && state.isPlaying ? (
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-                    </svg>
-                  ) : (
-                    <svg
-                      className={`w-3.5 h-3.5 ${isCurrent ? '' : 'text-[var(--muted)]'}`}
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  )}
-                </span>
-                <span className="flex-1 min-w-0">
-                  <span className="font-display text-base leading-tight">
-                    {track.title}
+      {/* The sides. Each row keeps to the player's two edges: its glyph under the play button, on the content's
+          left edge, and its name under the start of the bar. The side that is loaded is the one in full
+          colour; the others wait in grey. */}
+      <div className="border-t border-[var(--border)]">
+        {tracks.map((track, index) => {
+          const isCurrent = index === currentTrackIndex;
+          return (
+            <button
+              key={track.position}
+              onClick={() => selectTrack(index)}
+              aria-current={isCurrent ? 'true' : undefined}
+              className={`player-side grid w-full grid-cols-[2.75rem_1fr] items-center gap-x-3 border-b border-[var(--border)] py-3 text-left cursor-pointer ${
+                isCurrent ? 'text-[var(--text)]' : 'text-[var(--muted)]'
+              }`}
+            >
+              <svg className="h-3.5 w-3" viewBox="0 0 12 14" fill="currentColor" aria-hidden>
+                {isCurrent && state.isPlaying ? <path d="M0 0h4v14H0zM8 0h4v14H8z" /> : <path d="M0 0v14l11-7z" />}
+              </svg>
+              <span className="min-w-0">
+                <span className="font-display text-base leading-tight">{track.title}</span>
+                {track.djs && track.djs.length > 0 && (
+                  <span className="block font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mt-0.5">
+                    {track.djs.map((dj) => dj.name).join(', ')}
                   </span>
-                  {track.djs && track.djs.length > 0 && (
-                    <span className="block font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mt-0.5">
-                      {track.djs.map((dj) => dj.name).join(', ')}
-                    </span>
-                  )}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+                )}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

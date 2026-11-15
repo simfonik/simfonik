@@ -278,9 +278,15 @@ body::before {
 /* Where the keyboard is: the bar, the play button, a side's row. */
 .player-wave:has(input:focus-visible) { outline: 2px solid var(--text); outline-offset: 4px; }
 .player-play:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
-.player-side:focus-visible { outline: 2px solid var(--text); outline-offset: -2px; }
+.player-side:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+/* A side that isn't the one loaded comes up to full colour under a mouse, and gives a little under a press. */
+.player-side { transition: color 0.15s ease-out; }
+@media (hover: hover) and (pointer: fine) {
+  .player-side:hover { color: var(--text); }
+}
+.player-side:active { opacity: 0.6; }
 @media (prefers-reduced-motion: reduce) {
-  .player-play { transition: none; }
+  .player-play, .player-side { transition: none; }
 }
 
 /* Collapsed tracklist — fade the last rows into whatever is behind them.
