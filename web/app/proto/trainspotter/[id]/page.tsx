@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 type Said = { author: string; date: string; content: string };
-const GROUPS = ["Tracks marked unknown", "Tracklist known, times needed", "Started in the comments"];
+const GROUPS = ["Tracks marked unknown", "Tracklist known, times needed", "Started in the comments", "Nothing marked yet"];
 
 export default async function TrainspotterPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -40,8 +40,8 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
     (side.tracks ?? []).map((t, n) => ({ side: i, n: n + 1, artist: t.artist, title: t.title, known: true, author: "simfonik", date: "" })),
   );
 
-  // Every tape with something to work on, in the order the switcher lists them: the ones with unknown tracks
-  // first, then the ones whose tracklist is known but not timed, then the ones listeners have only started.
+  // Every tape, in the order the switcher lists them: the ones with tracks marked unknown first, then the
+  // ones whose tracklist is known but not timed, then the ones with some IDs, then the untouched ones.
   const plural = (n: number, one: string) => `${n} ${n === 1 ? one : `${one}s`}`;
   const others = getAllTapes()
     .map((t) => {
@@ -64,9 +64,9 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
       if (unknown) return { id: t.id, label, group: "Tracks marked unknown", meta: [idd, open].filter(Boolean).join(" · "), rank: unknown };
       if (names > known) return { id: t.id, label, group: "Tracklist known, times needed", meta: `${plural(names, "track")} to place`, rank: names };
       if (known) return { id: t.id, label, group: "Started in the comments", meta: idd, rank: known };
-      return null;
+      // Every tape is here, including the ones nobody has said anything about: those are the blank ones.
+      return { id: t.id, label, group: "Nothing marked yet", meta: "", rank: 0 };
     })
-    .filter((t) => t !== null)
     .sort((a, b) => GROUPS.indexOf(a.group) - GROUPS.indexOf(b.group) || b.rank - a.rank || a.label.localeCompare(b.label))
     .map(({ id, label, group, meta }) => ({ id, label, group, meta }));
 

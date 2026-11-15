@@ -897,17 +897,16 @@ export function Trainspotter({
   const compactTitle = tape.djCount > 3;
   const partTitle = (i: number) => (tape.sides[i]?.title && !/^side\b/i.test(tape.sides[i].title) ? tape.sides[i].title : null);
   const partName = partTitle(active);
-  const markLabel = touch ? "New track" : "Mark new track";
-  // What to do, in one line. The counts are in the list of tapes and the lists below; here they were a
-  // sentence of numbers in front of the instruction.
+  // What to do, in one line, always the same shape: press play and do one thing. The counts are in the list
+  // of tapes and the lists below.
   const intro =
     namesWaiting > 0
-      ? `We know what’s on this tape, but not when each track comes in. Press play, and press “${markLabel}” each time one starts.`
+      ? "We know the tracklist but not the times. Press play and mark where each track starts."
       : counted.length
         ? unknownCount
           ? "Press play and help ID the unknowns."
-          : `Press play, and when you hear a track that isn’t marked, press “${markLabel}” and ID it.`
-        : `Nothing ID’d on this tape yet. Press play, and press “${markLabel}” when you hear a track you know.`;
+          : "Press play and mark any track that’s missing."
+        : "Press play and mark the first track you know.";
 
   // The ID form: inline under the timeline with a mouse, in a sheet above the keyboard on a phone.
   const chips = nextNames.length > 0 && (
@@ -1272,7 +1271,7 @@ export function Trainspotter({
                   : playingCue.title
                     ? `Nobody has ID’d it. Clue: “${playingCue.title}”`
                     : "Nobody has ID’d this one. Do you know it?"
-                : `If a track is playing here, press “${markLabel}” and ID it.`}
+                : "Know what’s playing? Mark it."}
           </p>
       </div>
 
