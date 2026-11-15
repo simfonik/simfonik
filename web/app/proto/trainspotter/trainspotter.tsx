@@ -794,6 +794,19 @@ export function Trainspotter({
   useEffect(() => {
     setDraft({ artist: subject?.artist ?? "", title: shownTitle });
   }, [subject?.id, subject?.artist, shownTitle]);
+  // The picked track is let go when the playhead leaves it, by the tape playing on or by being moved. From
+  // then on the fields, and the bar on a phone, are about what you are hearing, not what you tapped a minute
+  // ago. Not while you are IDing it: the sheet open, the cursor in a field, or something typed and not saved.
+  const heard = useRef<string | null>(null);
+  useEffect(() => {
+    const was = heard.current;
+    heard.current = playingCue?.id ?? null;
+    if (was === null || was === heard.current || selected !== was) return;
+    const typed = draft.artist.trim() !== (sel?.artist ?? "") || draft.title.trim() !== (sel?.known ? sel.title : "");
+    if (!sheetOpen.current && !document.activeElement?.closest(".ts-idbar-fields") && !typed) setSelected(null);
+    // Only when the track under the playhead changes; what was picked and typed is read as it stands then.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playingCue?.id]);
   const saveId = (artist = draft.artist, title = draft.title) => {
     const a = artist.trim();
     const t = title.trim();
