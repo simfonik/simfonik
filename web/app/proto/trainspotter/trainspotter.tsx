@@ -6,9 +6,7 @@
 // SDK's change pipeline, so one history gives undo and redo, and the page is operable by an agent through
 // the same bridge that loads the listeners' tracklist.
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { flushSync } from "react-dom";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { createPointerKind, inputHints } from "@ui-sdk/core";
 import { solveSpring } from "@ui-sdk/core/gesture";
 import { usePart, usePrimitive } from "@ui-sdk/react/primitive";
@@ -22,11 +20,11 @@ import { SegmentedControl, SegmentedControlItem } from "@ui-sdk/react/segmented-
 import { Toast, ToastAction, ToastClose, ToastDescription, ToastRegion, ToastTitle, createToaster } from "@ui-sdk/react/toast";
 import { Drawer, DrawerBackdrop, DrawerClose, DrawerContent, DrawerTitle } from "@ui-sdk/react/drawer";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@ui-sdk/react/collapsible";
-import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxGroup, ComboboxGroupLabel, ComboboxInput, ComboboxItem, ComboboxList, ComboboxTrigger } from "@ui-sdk/react/combobox";
 import { Field, FieldLabel } from "@ui-sdk/react/field";
 import { Input } from "@ui-sdk/react/input";
 import { isSameRecord, reconcile, runningOrders, type Listed, type Proposal, type Sighting } from "./parse";
 import { DEFAULT_LENGTH, clock, cueLabel, tracklist, type Cue } from "./tracklist-primitive";
+import { TapeSwitcher, type TapeEntry } from "./tape-switcher";
 
 type TapeProp = { id: string; title: string; djs: string; djCount: number; released: string; sides: { key: string; title: string; audio: string | null }[] };
 
@@ -105,22 +103,8 @@ export function Trainspotter({
   listed: Listed[];
   official: Listed[][];
   /** Every tape with something to work on, in the order the switcher lists them. */
-  others: { id: string; label: string; group: string; meta: string }[];
+  others: TapeEntry[];
 }) {
-  const router = useRouter();
-  // ── Changing tape: the title is the switcher, and the two links beside it step through the same list ──
-  const [switcher, setSwitcher] = useState<HTMLButtonElement | null>(null);
-  const [tapeNav, setTapeNav] = useState<HTMLElement | null>(null); // the list lines up with the page's edge, not the button's
-  const [tapeQuery, setTapeQuery] = useState("");
-  const [tapesOpen, setTapesOpen] = useState(false);
-  const tapesOpenRef = useRef(false);
-  tapesOpenRef.current = tapesOpen;
-  const tapClicked = useRef(false);
-  const tapeGroups = useMemo(() => [...new Set(others.map((o) => o.group))].map((group) => ({ group, tapes: others.filter((o) => o.group === group) })), [others]);
-  const place = others.findIndex((o) => o.id === tape.id);
-  const elsewhere = others.some((o) => o.id !== tape.id);
-  const prevTape = elsewhere ? others[(place <= 0 ? others.length : place) - 1] : null;
-  const nextTape = elsewhere ? others[(place + 1) % others.length] : null;
   const sides = useMemo(() => tape.sides.map((s) => s.key), [tape.sides]);
   // A set of several tapes (eight DJs, eight recordings) shows one part at a time, chosen from a row of parts.
   // Stacked, the rows would bury the one being listened to under seven that aren't.
@@ -1271,86 +1255,14 @@ export function Trainspotter({
       ))}
 
       <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-4">
-      {/* Getting around: step to the next tape, or open the whole list with each tape's progress. The list is a
-          combobox with its search inside the popup; on a phone it presents as a sheet. */}
-      <Combobox
-        value={tape.id}
-        onValueChange={(v: unknown) => {
-          if (typeof v === "string" && v !== tape.id) router.push(`/proto/trainspotter/${v}`);
-        }}
-        // The search text is ours so it can be emptied each time the list opens; left to itself the field would
-        // open holding the current tape's name. It is committed at once: the combobox picks which match to
-        // highlight straight after telling us, and a render later it would highlight a match for the letters
-        // before this one.
-        query={tapeQuery}
-        onQueryChange={(q: string) => flushSync(() => setTapeQuery(q))}
-        open={tapesOpen}
-        onOpenChange={(open: boolean) => {
-          setTapesOpen(open);
-          if (open) setTapeQuery("");
-        }}
-        onOpenChangeComplete={(open: boolean) => !open && switcher?.focus()}
-        presentation="auto"
-        autoHighlight
-      >
-        <nav aria-label="Tapes" className="ts-nav" ref={setTapeNav}>
-          {elsewhere && (
-            <Link href={`/proto/trainspotter/${prevTape!.id}`} className="ts-link" aria-label={`Previous tape: ${prevTape!.label}`}>
-              ‹ Prev
-            </Link>
-          )}
-          <ComboboxTrigger
-            ref={setSwitcher}
-            className="ts-link ts-nav-all"
-            // A finger tap normally arrives as a click and the combobox opens itself. In WebKit's touch
-            // emulation the click never comes, so if a tap ends and nothing followed, open it here.
-            onClick={() => {
-              tapClicked.current = true;
-            }}
-            onPointerUp={(e: React.PointerEvent) => {
-              if (e.pointerType !== "touch") return;
-              tapClicked.current = false;
-              const wasOpen = tapesOpenRef.current;
-              setTimeout(() => !tapClicked.current && tapesOpenRef.current === wasOpen && setTapesOpen(!wasOpen), 150);
-            }}
-          >
-            <span>All tapes</span>
-            <span className="tabular-nums opacity-60">{place >= 0 ? `${place + 1} of ${others.length}` : others.length}</span>
-            <span aria-hidden>▾</span>
-          </ComboboxTrigger>
-          {elsewhere && (
-            <Link href={`/proto/trainspotter/${nextTape!.id}`} className="ts-link" aria-label={`Next tape: ${nextTape!.label}`}>
-              Next ›
-            </Link>
-          )}
-        </nav>
-        <ComboboxContent anchor={tapeNav} align="start" alignOffset={10} sideOffset={4} className="ts-tapes">
-          <div className="ts-tapes-search">
-            <ComboboxInput autoFocus aria-label="Search tapes" placeholder="Search by DJ or tape" autoComplete="off" spellCheck={false} className="ts-input" />
-          </div>
-          <ComboboxEmpty className="px-3 py-3 text-sm text-[var(--muted)]">No tape by that name has track IDs to work with yet.</ComboboxEmpty>
-          <ComboboxList className="ts-tapes-list">
-            {tapeGroups.map(({ group, tapes }) => (
-              <ComboboxGroup key={group}>
-                <ComboboxGroupLabel className="ts-tapes-group">{group}</ComboboxGroupLabel>
-                {tapes.map((t) => (
-                  <ComboboxItem key={t.id} value={t.id} label={t.label} className="ts-option">
-                    <span className="min-w-0 flex-1 truncate" title={t.label}>{t.label}</span>
-                    <span className="flex-none font-mono text-xs tabular-nums opacity-70">{t.id === tape.id ? "You’re here" : t.meta}</span>
-                  </ComboboxItem>
-                ))}
-              </ComboboxGroup>
-            ))}
-          </ComboboxList>
-        </ComboboxContent>
-      </Combobox>
-      {/* Above the title: its tall letters reach up past their own line and would otherwise sit over this link. */}
-      <p className="relative z-[1] font-mono text-xs uppercase tracking-[0.14em] text-[var(--muted)]">
-        Released {tape.released} ·{" "}
-        <Link href={`/tapes/${tape.id}`} className="ts-inline-link">
-          Tape page
-        </Link>
-      </p>
+        <TapeSwitcher tapes={others} currentId={tape.id} />
+        {/* Above the title: its tall letters reach up past their own line and would otherwise sit over this link. */}
+        <p className="relative z-[1] font-mono text-xs uppercase tracking-[0.14em] text-[var(--muted)]">
+          Released {tape.released} ·{" "}
+          <Link href={`/tapes/${tape.id}`} className="ts-inline-link">
+            Tape page
+          </Link>
+        </p>
       </div>
       <h1 className="mt-5 font-display text-4xl leading-[0.95] text-[var(--text)] [text-wrap:balance] sm:text-6xl">
         {compactTitle ? (
