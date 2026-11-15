@@ -160,7 +160,7 @@ export function PlaylistPlayer({ tracks, tapeId, sideCount }: PlaylistPlayerProp
               key={track.position}
               onClick={() => selectTrack(index)}
               aria-current={isCurrent ? 'true' : undefined}
-              className={`player-side grid w-full grid-cols-[2.75rem_1fr_auto] items-center gap-x-3 border-b border-[var(--border)] py-3 text-left cursor-pointer ${
+              className={`player-side grid w-full grid-cols-[2.125rem_1fr_auto] items-center gap-x-3 border-b border-[var(--border)] py-3 text-left cursor-pointer ${
                 isCurrent ? 'text-[var(--text)]' : 'text-[var(--muted)]'
               }`}
             >

@@ -115,21 +115,22 @@ export function PlayerControls({
 
   return (
     <div className="flex items-start gap-3">
-      {/* Play/Pause. The glyph starts at the button's left edge, which is the content's left edge: the title,
-          the DJ and the side's name all start there. The tap area runs on to the right of it. */}
+      {/* Play/Pause. The glyph starts at the content's left edge, where the title and the DJ start. Its place
+          to press is 44px wide around a glyph of 24px, and the spare 10px on the left sits in the page's
+          margin, so that only 10px of it, and not 20px, stands between the glyph and the bar. */}
       <button
         onClick={isPlaying ? onPause : onPlay}
         disabled={isLoading}
         aria-label={isPlaying ? 'Pause' : 'Play'}
-        className="player-play flex-shrink-0 w-11 h-11 flex items-center justify-start text-[var(--text)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+        className="player-play -ml-2.5 flex-shrink-0 w-11 h-11 flex items-center justify-center text-[var(--text)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
       >
         {isLoading ? (
-          <svg className="w-8 h-8 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <svg className="w-6 h-6 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
         ) : isPlaying ? (
-          // Both glyphs are drawn from the left edge of their box, so the edge doesn't move between them.
+          // Both glyphs are drawn from the left edge of the same box, so the edge doesn't move between them.
           <svg className="h-7 w-6" viewBox="0 0 12 14" fill="currentColor" aria-hidden>
             <path d="M0 0h4v14H0zM8 0h4v14H8z" />
           </svg>

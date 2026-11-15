@@ -119,11 +119,11 @@ describe('the track line under the player', () => {
       // Nothing is marked at 3:20 on a side of 16 minutes: the first quarter is over, so the second track.
       render(<TrackIds tapeId="tape-1" position="A" ids={[]} time={200} order={order} length={960} onPosted={posted} />);
       await user.click(screen.getByRole('button', { name: 'Know this track? ID it' }));
-      expect(screen.getByText(/From Josh’s list/)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Orbital — Chime' })).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: 'Altern 8 — Infiltrate 202' })).not.toBeInTheDocument();
+      expect(screen.getByRole('group', { name: 'From Josh’s list' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '1 Orbital — Chime' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Altern 8/ })).not.toBeInTheDocument();
 
-      await user.click(screen.getByRole('button', { name: 'Joey Beltram — Energy Flash' }));
+      await user.click(screen.getByRole('button', { name: '2 Joey Beltram — Energy Flash' }));
       expect(artist()).toHaveValue('Joey Beltram');
       expect(title()).toHaveValue('Energy Flash');
       await user.type(title(), '{Enter}');
@@ -134,7 +134,7 @@ describe('the track line under the player', () => {
       const user = userEvent.setup();
       render(<TrackIds tapeId="tape-1" position="A" ids={ids} time={60} order={order} length={960} onPosted={posted} />);
       await user.click(screen.getByRole('button', { name: /Correct this ID/ }));
-      expect(screen.queryByText(/From Josh’s list/)).not.toBeInTheDocument();
+      expect(screen.queryByRole('group', { name: 'From Josh’s list' })).not.toBeInTheDocument();
     });
   });
 

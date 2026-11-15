@@ -29,7 +29,22 @@ function focus(field: HTMLInputElement | null, inPlace: boolean) {
   if (!inPlace) return field.focus();
   field.style.transform = 'translateY(-2000px)';
   field.focus({ preventScroll: true });
-  requestAnimationFrame(() => (field.style.transform = ''));
+  requestAnimationFrame(() => {
+    field.style.transform = '';
+    reveal(field);
+  });
+}
+
+/**
+ * On a small phone the sheet is taller than what the keyboard leaves of the screen, and scrolls. The blank
+ * being typed in is brought up clear of the keyboard, by scrolling the sheet and never the page.
+ */
+function reveal(field: Element | null) {
+  const sheet = field?.closest('dialog');
+  const view = window.visualViewport;
+  if (!field || !sheet || !view) return;
+  const hidden = field.getBoundingClientRect().bottom + 8 - (view.offsetTop + view.height);
+  if (hidden > 0) sheet.scrollTop += hidden;
 }
 
 /** Sends the sheet back down, then closes it. With no motion to wait for, it closes at once. */
@@ -129,14 +144,18 @@ export function TrackIds({ tapeId, position, ids, time, order = null, length = n
       const keyboard = Math.max(0, window.innerHeight - view.height - view.offsetTop);
       el.style.setProperty('--keyboard', `${keyboard}px`);
       el.style.setProperty('--seen', `${view.height}px`);
-      el.toggleAttribute('data-keyboard', keyboard > 0);
+      reveal(document.activeElement);
     };
+    // The sheet's contents glide up as the keyboard comes; where the blank ends up is known once they stop.
+    const settled = () => reveal(document.activeElement);
     follow();
     view.addEventListener('resize', follow);
     view.addEventListener('scroll', follow);
+    el.addEventListener('transitionend', settled);
     return () => {
       view.removeEventListener('resize', follow);
       view.removeEventListener('scroll', follow);
+      el.removeEventListener('transitionend', settled);
     };
   }, [at, sheet]);
 
@@ -296,14 +315,14 @@ export function TrackIds({ tapeId, position, ids, time, order = null, length = n
             </div>
           </div>
           {offers.length > 0 && !askName && (
-            <p className="track-ids-offers">
-              <span className="flex-none">{from}:</span>
+            <div role="group" aria-label={from} className="track-ids-offers">
               {offers.map((offer) => (
-                <button key={offer.n} type="button" onClick={() => take(offer)} className="track-ids-offer" title={`${offer.artist} — ${offer.title}`}>
+                <button key={offer.n} type="button" onClick={() => take(offer)} className="track-ids-offer" title={from}>
+                  <span>{offer.n}</span>
                   {offer.artist} — {offer.title}
                 </button>
               ))}
-            </p>
+            </div>
           )}
           {complaint}
         </form>
@@ -322,18 +341,24 @@ export function TrackIds({ tapeId, position, ids, time, order = null, length = n
           onClick={(e) => e.target === e.currentTarget && e.clientY < e.currentTarget.getBoundingClientRect().top && leave()}
         >
           <form onSubmit={post} noValidate onTouchEndCapture={tapped}>
-            <div className="flex h-11 items-center justify-between">
-              <p className="id-sheet-label">
+            {/* Cancel, what the sheet is for, and Post, in the one row the keyboard never covers. */}
+            <div className="id-sheet-bar flex h-13 items-center gap-1">
+              <button type="button" onClick={leave} aria-label="Cancel" className="track-ids-shut -ml-3.5">
+                {cross}
+              </button>
+              <p className="id-sheet-label min-w-0 flex-1 truncate">
                 ID this track <span className="id-sheet-where">{where}</span>
               </p>
-              <button type="button" onClick={leave} aria-label="Cancel" className="track-ids-shut -mr-3.5">
-                {cross}
+              <button type="submit" aria-disabled={sending} className="poster-btn id-sheet-post">
+                {posting}
               </button>
             </div>
             {/* What can be answered with one press comes before what needs typing. */}
             {offers.length > 0 && (
-              <div className="mb-4">
-                <p className="id-sheet-label">{from}</p>
+              <div role="group" aria-label={from} className="mb-2">
+                <p className="id-sheet-label" aria-hidden>
+                  {from}
+                </p>
                 {offers.map((offer) => (
                   <button key={offer.n} type="button" onClick={() => take(offer)} className="id-sheet-offer">
                     <span>{offer.n}</span>
@@ -342,21 +367,13 @@ export function TrackIds({ tapeId, position, ids, time, order = null, length = n
                 ))}
               </div>
             )}
-            <label className="block">
-              <span className="id-sheet-label">Artist</span>
-              <input ref={artistField} value={artist} onChange={typed(setArtist)} onKeyDown={onward(titleField)} aria-describedby={message ? messageId : undefined} autoComplete="off" autoCapitalize="words" enterKeyHint="next" className="track-ids-field" />
-            </label>
-            <label className="mt-2 block">
-              <span className="id-sheet-label">Title</span>
-              <input ref={titleField} value={title} onChange={typed(setTitle)} onKeyDown={askName && !name.trim() ? onward(nameField) : undefined} autoComplete="off" autoCapitalize="words" enterKeyHint={askName && !name.trim() ? 'next' : 'send'} className="track-ids-field" />
-            </label>
+            {/* A phone's keyboard would put "Altern 8" right and offer words for "Orbital": neither helps. */}
+            <input ref={artistField} value={artist} onChange={typed(setArtist)} onKeyDown={onward(titleField)} placeholder="Artist" aria-label="Artist" aria-describedby={message ? messageId : undefined} autoComplete="off" autoCapitalize="words" autoCorrect="off" spellCheck={false} enterKeyHint="next" className="track-ids-field" />
+            <input ref={titleField} value={title} onChange={typed(setTitle)} onKeyDown={askName && !name.trim() ? onward(nameField) : undefined} placeholder="Title" aria-label="Title" autoComplete="off" autoCapitalize="words" autoCorrect="off" spellCheck={false} enterKeyHint={askName && !name.trim() ? 'next' : 'send'} className="track-ids-field" />
             {askName ? (
-              <label className="mt-2 block">
-                <span className="id-sheet-label">Your name</span>
-                <input ref={nameField} value={name} onChange={typed(setName)} aria-describedby={message ? messageId : undefined} autoComplete="name" maxLength={100} enterKeyHint="send" className="track-ids-field" />
-              </label>
+              <input ref={nameField} value={name} onChange={typed(setName)} placeholder="Your name" aria-label="Your name" aria-describedby={message ? messageId : undefined} autoComplete="name" autoCapitalize="words" autoCorrect="off" spellCheck={false} maxLength={100} enterKeyHint="send" className="track-ids-field" />
             ) : (
-              <p className="id-sheet-label mt-4 flex min-h-11 items-center">
+              <p className="id-sheet-label flex min-h-11 items-center">
                 Posting as <span className="id-sheet-where">{name}</span>
                 <button type="button" onClick={wantName} className="track-ids-post ml-auto">
                   Change
@@ -364,9 +381,6 @@ export function TrackIds({ tapeId, position, ids, time, order = null, length = n
               </p>
             )}
             {complaint}
-            <button type="submit" aria-disabled={sending} className="poster-btn mt-4 h-12 w-full">
-              {posting}
-            </button>
           </form>
         </dialog>
       )}

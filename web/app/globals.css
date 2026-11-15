@@ -246,7 +246,8 @@ body::before {
 @media (hover: hover) and (pointer: fine) {
   .player-play:not(:disabled):hover { opacity: 0.7; }
 }
-.player-play { transition: opacity 0.15s ease-out, transform 0.12s ease-out; transform-origin: left center; }
+/* A press shrinks the button about the glyph's left edge (10px in from the button's own), so that edge holds. */
+.player-play { transition: opacity 0.15s ease-out, transform 0.12s ease-out; transform-origin: 10px center; }
 .player-play:not(:disabled):active { transform: scale(0.96); }
 .player-wave {
   position: relative;
@@ -433,57 +434,55 @@ body::before {
 }
 .track-ids-post:active { opacity: 0.6; }
 .track-ids-post:focus-visible { outline: 2px solid var(--text); outline-offset: -4px; }
-/* Names a list offers for the track, under the blanks: said quietly, each one pressed to write it in. They
-   keep to one line, and a long name is cut short to stay on it. */
+/* Names a list offers for the track, under the blanks: the two likeliest, each with its number in the list,
+   each pressed to write it in. Said whole: a pair too long for one line runs on to a second. */
 .track-ids-offers {
   display: flex;
-  align-items: baseline;
-  gap: 1.25rem;
-  white-space: nowrap;
+  flex-wrap: wrap;
+  gap: 0 1.5rem;
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 12px;
   line-height: 18px;
-  color: var(--muted);
 }
 .track-ids-offer {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
   padding: 6px 0;
   text-align: left;
-  text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--muted) 45%, transparent);
   text-underline-offset: 4px;
   color: var(--text);
   cursor: pointer;
 }
+.track-ids-offer span { margin-right: 0.75em; font-variant-numeric: tabular-nums; color: var(--muted); }
 @media (hover: hover) and (pointer: fine) {
-  .track-ids-offer:hover { text-decoration-color: currentColor; }
+  .track-ids-offer:hover { text-decoration: underline; }
 }
 .track-ids-offer:active { opacity: 0.6; }
 .track-ids-offer:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 
-/* ID'ing a track on a phone: a sheet that rises from the foot of the screen and sits on the keyboard, with a
-   row to itself for each blank. `--keyboard` and `--seen` are how much of the screen the keyboard has taken
-   and how much is left, which the component reads from the browser and keeps up to date. */
+/* ID'ing a track on a phone: a sheet that rises from the foot of the screen, with a row to itself for each
+   blank. It stays at the foot of the screen when the keyboard comes up, and its contents are padded up clear
+   of the keyboard (`--keyboard` is how much of the screen the keyboard and its bars have taken, `--seen` how
+   much is left; the component reads both from the browser and keeps them up to date). So its surface runs on
+   behind the keyboard, and what shows through the bars a phone floats over the page there is the sheet and
+   not a strip of the page. */
 .id-sheet {
   position: fixed;
-  inset: auto 0 var(--keyboard, 0px) 0;
+  inset: auto 0 0 0;
   width: 100%;
   max-width: none;
-  max-height: calc(var(--seen, 100dvh) - 1rem);
+  max-height: calc(var(--keyboard, 0px) + var(--seen, 100dvh) - 1rem);
   margin: 0;
-  padding: 0.25rem 1rem calc(1rem + env(safe-area-inset-bottom));
+  padding: 0 1rem calc(0.75rem + var(--keyboard, 0px));
   overflow-y: auto;
   overscroll-behavior: contain;
   border: 0;
   border-top: 1px solid var(--border);
   background: var(--bg-secondary);
   color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+  /* It comes up with the keyboard and goes back down with it. */
+  transition: padding-bottom 0.28s cubic-bezier(0.32, 0.72, 0, 1);
   animation: id-sheet-up 0.28s cubic-bezier(0.32, 0.72, 0, 1);
 }
-/* The keyboard covers the strip at the foot of the screen that the padding was keeping clear of. */
-.id-sheet[data-keyboard] { padding-bottom: 1rem; }
 .id-sheet::backdrop { background: rgb(0 0 0 / 0.6); animation: id-sheet-dim 0.2s ease-out; }
 .id-sheet[data-leaving] { animation: id-sheet-down 0.2s cubic-bezier(0.4, 0, 1, 1) forwards; }
 .id-sheet[data-leaving]::backdrop { animation: id-sheet-clear 0.2s ease-in forwards; }
@@ -492,9 +491,18 @@ body::before {
 @keyframes id-sheet-dim { from { opacity: 0; } }
 @keyframes id-sheet-clear { to { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
+  .id-sheet { transition: none; }
   .id-sheet, .id-sheet::backdrop, .id-sheet[data-leaving], .id-sheet[data-leaving]::backdrop { animation: none; }
 }
 html:has(.id-sheet[open]) { overflow: hidden; }
+/* What is pressed in the sheet answers at once, and a held finger doesn't select its words. */
+.id-sheet button, .id-sheet input { touch-action: manipulation; }
+.id-sheet button { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+/* The sheet's top row stays put when a small phone has to scroll the rest of the sheet. */
+.id-sheet-bar { position: sticky; top: 0; z-index: 1; background: var(--bg-secondary); }
+/* Post, in that row, where the keyboard never covers it. A small button in a full-size place to press. */
+.id-sheet-post { position: relative; height: 2.25rem; padding-block: 0; }
+.id-sheet-post::before { content: ""; position: absolute; inset: -4px 0; }
 /* The small words in the sheet: what it is for, and what each blank is. */
 .id-sheet-label {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
