@@ -130,11 +130,9 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
           const isAboveFold = index < 3;
           return (
             <article key={tape.id} className="relative cursor-pointer">
-              {/* The whole card is this link. The title answers to it, and not to the DJ names, which lie
-                  over it and go somewhere else. */}
               <Link
                 href={`/tapes/${tape.id}`}
-                className="peer absolute inset-0 z-10"
+                className="absolute inset-0 z-10"
                 aria-label={`View ${tape.title}`}
               />
               <div className="relative w-full aspect-[3/2] mb-5 overflow-hidden pointer-events-none">
@@ -158,7 +156,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
                   </span>
                 )}
               </div>
-              <h2 className="font-display text-2xl sm:text-3xl leading-[1.05] text-[var(--text)] mb-3 decoration-2 underline-offset-4 peer-hover:underline peer-focus-visible:underline pointer-events-none">
+              <h2 className="font-display text-2xl sm:text-3xl leading-[1.05] text-[var(--text)] mb-3 pointer-events-none">
                 {tape.title}
               </h2>
               <div className="flex flex-wrap gap-2 relative z-20">
