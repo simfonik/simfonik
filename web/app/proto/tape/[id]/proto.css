@@ -40,15 +40,32 @@
 @media (min-width: 64rem) {
   :root[data-proto-flip] .proto-today { grid-template-columns: minmax(0, 1fr) var(--image-column); }
   :root[data-proto-flip] .proto-today > :first-child { order: 2; }
-  :root[data-proto-flip] .proto-today > :first-child > .flex { flex-direction: row-reverse; }
+  :root[data-proto-flip]:not([data-proto-under]) .proto-today > :first-child > .flex { flex-direction: row-reverse; }
 }
 
-/* The panel for them. Harness chrome like the picker, sitting above it; only where the page has two columns. */
+/* "Today", thumbnails under: the picture takes the whole column and the thumbnails are a centred row beneath
+   it, on the same axis as a picture that is held to a height. In the column, a tape with more of them than
+   fit at full size (nine at 60px need 604px) has them all a little smaller, so the row never breaks. On a
+   phone they keep their size, which a finger needs, and run on to a second row. */
+:root[data-proto-under] .proto-gallery > .flex { flex-direction: column-reverse; align-items: stretch; }
+:root[data-proto-under] .proto-gallery > .flex > .flex-col {
+  flex-flow: row wrap;
+  justify-content: center;
+  max-height: none;
+  overflow: visible;
+  padding-right: 0;
+}
+:root[data-proto-under] .proto-gallery > .flex > .flex-col > button { flex: 0 1 var(--thumb); width: auto; min-width: 0; height: auto; aspect-ratio: 1; }
+@media (min-width: 64rem) {
+  :root[data-proto-under] .proto-gallery > .flex > .flex-col { flex-wrap: nowrap; }
+}
+
+/* The panel for them. Harness chrome like the picker, in the lower left of the window, above the framework's
+   own badge and clear of the picker; only where the page has two columns. */
 .proto-panel {
   position: fixed;
-  left: 50%;
-  bottom: 68px;
-  transform: translateX(-50%);
+  left: 16px;
+  bottom: 76px;
   z-index: 2147483647;
   display: none;
   grid-template-columns: auto 150px auto;

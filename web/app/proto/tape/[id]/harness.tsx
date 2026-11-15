@@ -26,7 +26,7 @@ const VARIANTS = [
     the tallest it lets a picture be. */
 const LIVE = { image: 708, thumb: 80, tall: 650 };
 /** Where the controls start: the settings chosen on 2026-11-15 to try on other tapes. proto.css has them too. */
-const CHOSEN = { image: 560, thumb: 60, tall: 500, flipped: false };
+const CHOSEN = { image: 560, thumb: 60, tall: 500, flipped: false, under: false };
 const KEPT = "simfonik:proto-today";
 
 /** The settings last used in this browser, so a change made on one tape is still there on the next. */
@@ -40,13 +40,14 @@ function kept(): typeof CHOSEN {
 }
 
 /**
- * "Today" has four things to settle: how wide the image column is, which side it is on, how big the gallery's
- * thumbnails are, and how tall a picture may be. The sliders write to CSS variables on the page and the
- * button sets an attribute on it, so the page is not rendered again as they change; proto.css does the rest.
- * The numbers are shown so the right ones can be kept.
+ * "Today" has five things to settle: how wide the image column is, which side it is on, how big the gallery's
+ * thumbnails are, whether they run down the side of the picture (as on the live page) or under it, and how
+ * tall a picture may be. The sliders write to CSS variables on the page and the buttons set attributes on it,
+ * so the page is not rendered again as they change; proto.css does the rest. The numbers are shown so the
+ * right ones can be kept.
  */
 function Split() {
-  const [{ image, thumb, tall, flipped }, setSettings] = useState(kept);
+  const [{ image, thumb, tall, flipped, under }, setSettings] = useState(kept);
   const change = (to: Partial<typeof CHOSEN>) => setSettings((now) => ({ ...now, ...to }));
   const [words, setWords] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
@@ -57,8 +58,9 @@ function Split() {
     page.style.setProperty("--thumb", `${thumb}px`);
     page.style.setProperty("--image-max", `${tall}px`);
     page.toggleAttribute("data-proto-flip", flipped);
+    page.toggleAttribute("data-proto-under", under);
     try {
-      localStorage.setItem(KEPT, JSON.stringify({ image, thumb, tall, flipped }));
+      localStorage.setItem(KEPT, JSON.stringify({ image, thumb, tall, flipped, under }));
     } catch {
       // As above: without storage the settings last until the page is left.
     }
@@ -69,7 +71,7 @@ function Split() {
       cancelAnimationFrame(frame);
       window.removeEventListener("resize", measure);
     };
-  }, [image, thumb, tall, flipped]);
+  }, [image, thumb, tall, flipped, under]);
   useEffect(() => {
     if (!copied) return;
     const timer = setTimeout(() => setCopied(false), 1500);
@@ -77,7 +79,7 @@ function Split() {
   }, [copied]);
 
   const live = (value: number, top: number) => `${value}px${value === top ? " (live)" : ""}`;
-  const summary = `image column ${image}px, on the ${flipped ? "right" : "left"} · words column ${words ?? "?"}px · thumbnails ${thumb}px · picture up to ${tall}px tall`;
+  const summary = `image column ${image}px, on the ${flipped ? "right" : "left"} · words column ${words ?? "?"}px · thumbnails ${thumb}px, ${under ? "under the picture" : "at the side"} · picture up to ${tall}px tall`;
   return (
     <div className="proto-panel">
       <label htmlFor="proto-split">Image column</label>
@@ -92,6 +94,9 @@ function Split() {
       <input id="proto-thumb" type="range" min={32} max={LIVE.thumb} step={4} value={thumb} onChange={(e) => change({ thumb: Number(e.target.value) })} />
       <output htmlFor="proto-thumb">{live(thumb, LIVE.thumb)}</output>
       <div>
+        <button type="button" aria-pressed={under} onClick={() => change({ under: !under })}>
+          Thumbnails under
+        </button>
         <button type="button" aria-pressed={flipped} onClick={() => change({ flipped: !flipped })}>
           Flip
         </button>

@@ -5,7 +5,8 @@
 // between the two columns is different. The live page gives the words 500px and the image the rest (about
 // 700px); here the image column's width is `--image-column`, and the panel in harness.tsx sets it. The panel
 // can also flip the two columns, which proto.css does by reordering them (a real flip would reorder the
-// markup), set the size of the gallery's thumbnails (`--thumb`; the live page's are 80px), and set how tall
+// markup), set the size of the gallery's thumbnails (`--thumb`; the live page's are 80px), put them under the
+// picture where the live page has them down its side (proto.css again, over the gallery's own layout), and set how tall
 // a picture may be (`--image-max`; 650px on the live page). A picture held to that height is centred in the
 // column by the gallery itself, as a tall one is on the live page today.
 import { AudioPlayer } from "../../../../components/AudioPlayer";
