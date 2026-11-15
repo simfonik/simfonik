@@ -216,7 +216,7 @@ body::before {
   background: transparent;
 }
 @media (hover: hover) and (pointer: fine) {
-  .poster-btn:not(:disabled):hover {
+  .poster-btn:not(:disabled):not([aria-disabled="true"]):hover {
     background: var(--text);
     color: var(--bg);
   }
@@ -226,10 +226,12 @@ body::before {
   background: var(--text);
   color: var(--bg);
 }
-.poster-btn:not(:disabled):active {
+.poster-btn:not(:disabled):not([aria-disabled="true"]):active {
   transform: scale(0.96);
 }
-.poster-btn:disabled {
+/* Busy buttons are marked disabled and not made so (see NewsletterForm), and look the same as disabled ones. */
+.poster-btn:disabled,
+.poster-btn[aria-disabled="true"] {
   opacity: 0.5;
   cursor: not-allowed;
 }
