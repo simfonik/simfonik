@@ -44,8 +44,18 @@ const PPM_TOUCH = 34;
 const GUTTER = 56; // the side label and its gap, to the left of every track
 const UNDO_TOAST = "undo"; // one undo toast at a time: a newer one replaces the older
 
-/** A proposal's signature: where it is and what it says. A later comment that corrects a name is a new one. */
-const sig = (p: Proposal) => `${p.side}|${p.start}|${p.known ? `${p.artist}|${p.title}`.toLowerCase() : "?"}`;
+/** A place on the tape, as the comments give it: which side, and the second a track starts. */
+type Spot = { side: number; start: number };
+/** The same track, give or take: comments rarely agree to the second. */
+const near = (a: Spot, b: Spot) => a.side === b.side && Math.abs(a.start - b.start) <= 20;
+/** Where the comments put a track that came from them (its id records it), or null for one the visitor
+    marked or ID'd themselves. Still right after the visitor drags the track somewhere else. */
+const origin = (c: Cue): Spot | null => {
+  const from = c.by ? c.id.match(/^crowd-(\d+)-(\d+)/) : null;
+  return from ? { side: Number(from[1]), start: Number(from[2]) } : null;
+};
+/** What is kept in this browser for a tape. */
+type Saved = { v: 2; cues: Cue[]; removed: Spot[] };
 
 /** The SDK's keyboard hints for a name, minus its autofill: this is a record's artist, not the visitor's own name. */
 const nameHints = (enter: "next" | "done") => {
@@ -147,38 +157,28 @@ export function Trainspotter({
   // Nothing is written to storage before that, so closing the tab mid-load can't save an empty tape.
   const [ready, setReady] = useState(false);
   const saveFailed = useRef(false);
-  // Which listener IDs this visitor has already been shown, so only new ones are merged in next time.
-  const seen = useRef<Set<string>>(new Set());
-  const [seenTick, setSeenTick] = useState(0);
-  const markSeen = useCallback(
-    (sigs: string[]) => {
-      sigs.forEach((x) => seen.current.add(x));
-      setSeenTick((n) => n + 1);
-      try {
-        window.localStorage.setItem(`${storageKey}:seen`, JSON.stringify([...seen.current]));
-      } catch {
-        /* storage is unavailable */
-      }
-    },
-    [storageKey],
-  );
-  const seedSeen = useRef(false);
+  // The comment tracks this visitor took off the timeline, by where the comments have them. This record is
+  // the only thing that keeps a comment's track away: on a return visit, a track the comments have and the
+  // timeline lacks is put back unless it is listed here. Before, the page only remembered which tracks it
+  // had once shown, so one that went missing for any other reason stayed missing for good.
+  const gone = useRef<Spot[]>([]);
   useEffect(() => {
     let saved: unknown = null;
-    let was: unknown = null;
+    let legacy = false;
     try {
       saved = JSON.parse(window.localStorage.getItem(storageKey) ?? "null");
-      was = JSON.parse(window.localStorage.getItem(`${storageKey}:seen`) ?? "null");
+      legacy = window.localStorage.getItem(`${storageKey}:seen`) !== null;
     } catch {
       /* nothing saved, or storage is unavailable */
     }
-    // An empty list with no record of what was shown is not saved work; it is a first visit that never finished.
-    const found = Array.isArray(saved) && (saved.length > 0 || Array.isArray(was));
+    // Two shapes: today's, and the bare list of tracks that earlier versions of this page saved. A bare
+    // empty list with no sign the page ever finished opening is a first visit that was cut short.
+    const current = saved && typeof saved === "object" && !Array.isArray(saved) && Array.isArray((saved as Saved).cues) ? (saved as Saved) : null;
+    const earlier = Array.isArray(saved) && (saved.length > 0 || legacy) ? (saved as Cue[]) : null;
+    const found = current ?? (earlier ? { cues: earlier, removed: [] } : null);
     if (found) {
-      setCues(saved as Cue[]);
-      if (Array.isArray(was)) seen.current = new Set(was as string[]);
-      // Work saved before this page kept track of what had been shown: assume all of it was.
-      else seedSeen.current = true;
+      setCues(found.cues);
+      gone.current = Array.isArray(found.removed) ? found.removed : [];
       setReady(true);
     }
     setRestored(found ? "saved" : "fresh");
@@ -186,7 +186,8 @@ export function Trainspotter({
   useEffect(() => {
     if (!ready) return;
     try {
-      window.localStorage.setItem(storageKey, JSON.stringify(cues));
+      window.localStorage.setItem(storageKey, JSON.stringify({ v: 2, cues, removed: gone.current } satisfies Saved));
+      window.localStorage.removeItem(`${storageKey}:seen`); // the earlier versions' bookkeeping
       saveFailed.current = false;
     } catch {
       saveFailed.current = true; // private mode, or storage is full; the toasts say so
@@ -502,6 +503,19 @@ export function Trainspotter({
     return true;
   }, []);
 
+  // The timeline registers with the bridge a moment after it mounts, so a write made as the page opens waits
+  // for it instead of being dropped.
+  const writeWhenReady = useCallback(
+    async (next: Cue[]) => {
+      for (let tries = 0; tries < 60; tries++) {
+        if (await writeAsListeners(next)) return true;
+        await new Promise((r) => setTimeout(r, 50));
+      }
+      return false;
+    },
+    [writeAsListeners],
+  );
+
   // First visit to a tape: open with what is already known. This doesn't wait for the audio.
   const opening = useRef(false);
   useEffect(() => {
@@ -509,23 +523,16 @@ export function Trainspotter({
     opening.current = true;
     void (async () => {
       if (proposals.length) {
-        // The timeline registers with the bridge a moment after it mounts. Wait for it: giving up here would
-        // show an empty tape and then save it as this visitor's work.
-        let written = false;
-        for (let tries = 0; tries < 60 && !written; tries++) {
-          written = await writeAsListeners(proposals.map(toCue));
-          if (!written) await new Promise((r) => setTimeout(r, 50));
-        }
-        if (!written) {
+        // Giving up here would show an empty tape and then save it as this visitor's work.
+        if (!(await writeWhenReady(proposals.map(toCue)))) {
           opening.current = false; // nothing saved; the next visit starts clean
           return;
         }
         setFloor(historyRef.current?.position() ?? 0);
       }
-      markSeen(proposals.map(sig));
       setReady(true);
     })();
-  }, [restored, proposals, toCue, writeAsListeners, markSeen]);
+  }, [restored, proposals, toCue, writeWhenReady]);
 
   // The tracks went in before the audio said how long each side is. Once it does, pull back any listener's
   // track that runs past the end of its side. Left alone once the visitor has started making changes.
@@ -541,31 +548,25 @@ export function Trainspotter({
     if (changed) void writeAsListeners(next).then((ok) => ok && setFloor(historyRef.current?.position() ?? 0));
   }, [durations, ready, sides, writeAsListeners]);
 
-  // Return visit: whatever listeners have posted since is simply added. Nobody approves it.
-  // A newer ID replaces an older one from listeners, the way a later comment corrects an earlier one.
-  // A track this visitor ID'd or marked themselves is left alone.
+  // Return visit: the timeline is brought back in line with the comments. Nobody approves any of it.
+  //  · A track that came from the comments follows the comments. If they no longer have anything there, it
+  //    goes; if they now say something else there, it takes that name. That is what clears a misreading once
+  //    the reader is fixed, instead of leaving it in every browser that saved it. It keeps its times, which
+  //    the visitor may have adjusted.
+  //  · A track the comments have and the timeline lacks is put back, unless the visitor removed it. That
+  //    covers what was posted since the last visit and anything that went missing for any other reason.
+  //  · A track the visitor marked or ID'd themselves is never touched.
   const merged = useRef(false);
   useEffect(() => {
     if (restored !== "saved" || merged.current) return;
     merged.current = true;
-    if (seedSeen.current) {
-      seedSeen.current = false;
-      markSeen(proposals.map(sig));
-      return;
-    }
-    const fresh = proposals.filter((p) => !seen.current.has(sig(p)));
-    // A track that came from the comments follows the comments. Its id records where they put it, so one
-    // the visitor has since dragged elsewhere is still recognised and keeps its new times. If the comments
-    // no longer have anything there it goes; if they now say something else there, it takes that name. This
-    // is what clears a misreading once the reader is fixed, instead of leaving it in every browser that
-    // saved it. A track the visitor ID'd themselves has no `by` and is never touched.
     let added = 0;
     let corrected = 0;
     let removed = 0;
     const next = cuesRef.current.flatMap((c) => {
-      const from = c.by ? c.id.match(/^crowd-(\d+)-(\d+)/) : null;
+      const from = origin(c);
       if (!from) return [c];
-      const p = proposals.find((x) => x.side === Number(from[1]) && Math.abs(x.start - Number(from[2])) <= 20);
+      const p = proposals.find((x) => near(x, from));
       if (!p) {
         removed++;
         return [];
@@ -574,26 +575,30 @@ export function Trainspotter({
       corrected++;
       return [{ ...c, artist: p.artist, title: p.title, known: p.known, by: p.author }];
     });
-    for (const p of fresh) {
-      const cue = { ...toCue(p), id: `crowd-${p.side}-${p.start}-${Date.now().toString(36)}` };
-      if (next.some((c) => c.track === cue.track && Math.abs(c.start - cue.start) <= 20)) continue;
-      next.push(cue);
+    for (const p of proposals) {
+      if (gone.current.some((spot) => near(spot, p))) continue;
+      // Already there: a track that came from this spot (wherever it has been dragged), or any track at it.
+      const there = next.some((c) => {
+        const from = origin(c);
+        return (from && near(from, p)) || near({ side: sides.indexOf(c.track), start: c.start }, p);
+      });
+      if (there) continue;
+      next.push({ ...toCue(p), id: `crowd-${p.side}-${p.start}-${Date.now().toString(36)}` });
       added++;
     }
-    markSeen(fresh.map(sig));
     if (!added && !corrected && !removed) return;
-    void writeAsListeners(next).then((ok) => {
+    void writeWhenReady(next).then((ok) => {
       if (!ok) return;
       const parts = [added ? `added ${added}` : "", corrected ? `corrected ${corrected}` : "", removed ? `removed ${removed} misread` : ""].filter(Boolean).join(", ");
       confirmWithUndo(`Updated from the comments: ${parts}.`);
     });
-    // Runs once, with the proposals as they are when saved work has been restored.
+    // Runs once, with the comments as they are when saved work has been restored.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restored, seenTick]);
+  }, [restored]);
 
   const startOver = async () => {
+    gone.current = []; // starting over forgets what was removed, too
     if (await writeAsListeners(proposals.map(toCue))) {
-      markSeen(proposals.map(sig));
       setSelected(null);
       confirmWithUndo("Back to the IDs from the comments.");
     }
@@ -769,6 +774,9 @@ export function Trainspotter({
     const row = cuesRef.current.filter((c) => c.track === cue.track).sort((a, b) => a.start - b.start);
     const i = row.findIndex((c) => c.id === cue.id);
     const neighbour = row[i + 1] ?? row[i - 1];
+    // Removing a track the comments supplied is remembered, so it doesn't come back on the next visit.
+    const from = origin(cue);
+    if (from) gone.current = [...gone.current.filter((spot) => !near(spot, from)), from];
     api.removeCue(cue.id);
     setSelected(null);
     if (sheet) closeSheet();
@@ -932,7 +940,7 @@ export function Trainspotter({
       ? "We know the tracklist but not the times. Press play and mark where each track starts."
       : // Names someone listed in a comment are a start, not the tracklist.
         namesWaiting > 0 && !counted.length
-        ? "A few tracks are named in the comments, without times. Press play and mark where each one starts."
+        ? "Some tracks are named in the comments, without times. Press play and mark where each one starts."
         : counted.length
         ? unknownCount
           ? "Press play and help ID the unknowns."
