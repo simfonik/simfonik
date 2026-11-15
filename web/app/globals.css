@@ -226,6 +226,45 @@ body::before {
   -webkit-mask-repeat: no-repeat;
           mask-repeat: no-repeat;
 }
+/* No measured sound for this side: the same bar as a plain line through its middle. */
+.player-wave-shape[data-flat] {
+  top: 50%;
+  bottom: auto;
+  height: 2px;
+  transform: translateY(-50%);
+}
+/* Under a mouse: where a click would land, and the time there. */
+.player-wave-ghost {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.player-wave-ghost::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--at, 0);
+  width: 1px;
+  background: var(--text);
+}
+.player-wave-ghost span {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: var(--label, 0);
+  transform: translateX(-50%);
+  padding: 2px 6px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.player-wave-ghost span:empty { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .player-wave-ghost[data-on] { opacity: 1; }
+}
 /* The slider itself, unseen, over the whole bar. */
 .player-wave input {
   position: absolute;
@@ -236,10 +275,9 @@ body::before {
   opacity: 0;
   cursor: pointer;
 }
-/* Where the keyboard is: the bar, the play button, the plain line that stands in for the bar, a side's row. */
+/* Where the keyboard is: the bar, the play button, a side's row. */
 .player-wave:has(input:focus-visible) { outline: 2px solid var(--text); outline-offset: 4px; }
 .player-play:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
-.player-line:focus-visible { outline: 2px solid var(--text); outline-offset: 8px; }
 .player-side:focus-visible { outline: 2px solid var(--text); outline-offset: -2px; }
 @media (prefers-reduced-motion: reduce) {
   .player-play { transition: none; }

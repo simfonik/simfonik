@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { outline } from '../lib/waveform';
 
 export interface PlayerControlsProps {
@@ -45,8 +45,23 @@ export function PlayerControls({
   }, [wanted, duration, onSeek]);
   const played = wanted !== null ? wanted * 100 : duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
 
+  // Under a mouse: a line where a click would land and, once the side's length is known, the time there.
+  // Written straight to the element; a pointer moves far more often than the page needs to re-render.
+  const ghost = useRef<HTMLDivElement>(null);
+  const preview = (e: React.PointerEvent<HTMLDivElement>) => {
+    const el = ghost.current;
+    if (!el || e.pointerType !== 'mouse') return;
+    const bar = e.currentTarget.getBoundingClientRect();
+    const x = Math.max(0, Math.min(bar.width, e.clientX - bar.left));
+    el.style.setProperty('--at', `${x}px`);
+    // The label stays inside the bar's ends.
+    el.style.setProperty('--label', `${Math.max(30, Math.min(bar.width - 30, x))}px`);
+    el.firstElementChild!.textContent = duration > 0 ? formatTime((x / bar.width) * duration) : '';
+    el.setAttribute('data-on', '');
+  };
+
   return (
-    <div className={`flex gap-3 ${shape ? 'items-start' : 'items-center'}`}>
+    <div className="flex items-start gap-3">
       {/* Play/Pause. The glyph starts at the button's left edge, which is the content's left edge: the title,
           the DJ and the side's name all start there. The tap area runs on to the right of it. */}
       <button
@@ -72,57 +87,46 @@ export function PlayerControls({
         )}
       </button>
 
-      {shape ? (
-        // The bar is the side's sound, as wide as the player allows: the part played is bright, the rest dim.
-        // The times sit under its two ends. Over the bar lies the same slider as before, unseen, so the mouse,
-        // a finger, the keyboard and a screen reader all still work it.
-        <div className="flex-1 min-w-0 font-mono text-[12px] tabular-nums text-[var(--muted)]">
-          <div className="player-wave" style={{ '--played': `${played}%` } as React.CSSProperties}>
+      {/* The bar. With the side's sound measured it is drawn as that sound; without, as a plain line. Either
+          way the part played is bright and the rest dim, the times sit under its two ends, and over it lies
+          an ordinary slider, unseen, so the mouse, a finger, the keyboard and a screen reader all work it. */}
+      <div className="flex-1 min-w-0 font-mono text-[12px] tabular-nums text-[var(--muted)]">
+        <div
+          className="player-wave"
+          style={{ '--played': `${played}%` } as React.CSSProperties}
+          onPointerMove={preview}
+          onPointerLeave={() => ghost.current?.removeAttribute('data-on')}
+        >
+          {shape ? (
             <div className="player-wave-shape" style={{ maskImage: shape, WebkitMaskImage: shape }} />
-            <input
-              type="range"
-              min="0"
-              max={duration || 1}
-              step={duration ? 1 : 0.001}
-              value={duration ? currentTime : wanted ?? 0}
-              onChange={(e) => {
-                const value = parseFloat(e.target.value);
-                if (duration) return onSeek(value);
-                setWanted(value);
-                if (!isPlaying) onPlay();
-              }}
-              aria-label={`Seek audio${title ? `: ${title}` : ''}`}
-              aria-valuetext={duration ? `${formatTime(currentTime)} of ${formatTime(duration)}` : 'Not loaded yet'}
-            />
+          ) : (
+            <div className="player-wave-shape" data-flat="" />
+          )}
+          {/* Where a click would land, and what time that is, under a mouse. */}
+          <div ref={ghost} className="player-wave-ghost" aria-hidden>
+            <span />
           </div>
-          <div className="mt-1 flex justify-between">
-            <span>{formatTime(currentTime)}</span>
-            <span>{duration > 0 ? formatTime(duration) : '--:--:--'}</span>
-          </div>
-        </div>
-      ) : (
-        // No measured sound for this side: the plain line, with the times beside it.
-        <div className="flex-1 flex items-center gap-3 min-w-0 font-mono text-[12px] tabular-nums text-[var(--muted)]">
-          <span className="tabular-nums flex-shrink-0">
-            {formatTime(currentTime)}
-          </span>
           <input
             type="range"
             min="0"
-            max={duration || 0}
-            value={currentTime}
-            onChange={(e) => onSeek(parseFloat(e.target.value))}
-            disabled={isLoading || !duration}
+            max={duration || 1}
+            step={duration ? 1 : 0.001}
+            value={duration ? currentTime : wanted ?? 0}
+            onChange={(e) => {
+              const value = parseFloat(e.target.value);
+              if (duration) return onSeek(value);
+              setWanted(value);
+              if (!isPlaying) onPlay();
+            }}
             aria-label={`Seek audio${title ? `: ${title}` : ''}`}
-            className="flex-1 h-[2px] bg-[var(--border)] appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed player-line
-              [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[var(--text)] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:rounded-none
-              [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:bg-[var(--text)] [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:rounded-none"
+            aria-valuetext={duration ? `${formatTime(currentTime)} of ${formatTime(duration)}` : 'Not loaded yet'}
           />
-          <span className="tabular-nums flex-shrink-0">
-            {duration > 0 ? formatTime(duration) : '--:--:--'}
-          </span>
         </div>
-      )}
+        <div className="mt-1 flex justify-between">
+          <span>{formatTime(currentTime)}</span>
+          <span>{duration > 0 ? formatTime(duration) : '--:--:--'}</span>
+        </div>
+      </div>
     </div>
   );
 }
