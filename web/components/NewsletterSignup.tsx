@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useLayoutEffect, useRef, FormEvent, Ref, useCallback } from 'react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { useState, FormEvent, Ref } from 'react';
 
 export function useNewsletterForm() {
   const [email, setEmail] = useState('');
@@ -85,77 +84,6 @@ function NewsletterForm({
   );
 }
 
-export function NewsletterModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const form = useNewsletterForm();
-  const { status } = form;
-  const dialog = useRef<HTMLDialogElement>(null);
-  const field = useRef<HTMLInputElement>(null);
-  const pressedOutside = useRef(false);
-
-  // The browser's own modal dialog: it keeps Tab inside, makes the page behind unreachable, closes on Escape
-  // and hands the keyboard back to whatever opened it. It is opened in a layout effect so that the field
-  // takes focus inside the press that asked for the window, which is what lets a phone bring its keyboard up.
-  useLayoutEffect(() => {
-    const el = dialog.current;
-    if (!el) return;
-    if (open && !el.open) {
-      el.showModal();
-      field.current?.focus();
-    } else if (!open && el.open) {
-      el.close();
-    }
-  }, [open]);
-
-  return (
-    <dialog
-      ref={dialog}
-      className="newsletter-dialog"
-      aria-labelledby="newsletter-dialog-title"
-      onClose={onClose}
-      // A press on the dimmed surround closes the window: one that both began and ended there, so dragging
-      // out of the field while selecting its text doesn't.
-      onPointerDown={(e) => {
-        pressedOutside.current = e.target === e.currentTarget;
-      }}
-      onClick={(e) => {
-        if (pressedOutside.current && e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div className="relative bg-[var(--bg)] border-[1.5px] border-[var(--text)] w-full max-w-2xl p-8 sm:p-10">
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute top-1 right-1 text-[var(--muted)] hover:text-[var(--text)] transition-colors cursor-pointer p-3"
-          aria-label="Close"
-        >
-          <XMarkIcon className="w-5 h-5" />
-        </button>
-
-        {status === 'success' ? (
-          <div className="text-center py-2">
-            <p id="newsletter-dialog-title" className="font-display text-3xl sm:text-4xl leading-[0.95] text-[var(--text)] mb-3">
-              You&apos;re now subscribed!
-            </p>
-            <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-[var(--muted)]">
-              We&apos;ll let you know when new tapes are added
-            </p>
-          </div>
-        ) : (
-          <>
-            <h2 id="newsletter-dialog-title" className="font-display text-3xl sm:text-4xl leading-[0.95] text-[var(--text)] mb-3">
-              Get notified when new tapes drop.
-            </h2>
-            <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-[var(--muted)] mb-6">
-              No spam. Just new recordings added to the archive.
-            </p>
-            <NewsletterForm form={form} fieldRef={field} className="flex flex-col sm:flex-row items-stretch gap-3" />
-          </>
-        )}
-      </div>
-    </dialog>
-  );
-}
-
 export function NewsletterFooter() {
   const form = useNewsletterForm();
 
@@ -184,11 +112,11 @@ export function NewsletterFooter() {
 }
 
 /**
- * The sign-up as the last part of the phone menu: one line of caption, then the field and the button side by
- * side. The header holds its state, so what was typed, or the thanks, is still there if the menu is shut and
- * opened again.
+ * The sign-up as the header has it: one line of caption, then the field and the button side by side. It is the
+ * last part of the phone menu, and the panel under the Subscribe button on wider screens. The header holds its
+ * state, so what was typed, or the thanks, is still there when it is shut and opened again.
  */
-export function NewsletterMenu({ form }: { form: NewsletterFormState }) {
+export function NewsletterInline({ form, fieldRef }: { form: NewsletterFormState; fieldRef?: Ref<HTMLInputElement> }) {
   if (form.status === 'success') {
     return (
       <p role="status" className="font-mono text-[11px] uppercase leading-relaxed tracking-[0.2em] text-[var(--text)]">
@@ -202,14 +130,7 @@ export function NewsletterMenu({ form }: { form: NewsletterFormState }) {
       <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mb-3">
         Get notified when new tapes drop
       </p>
-      <NewsletterForm form={form} className="flex items-stretch gap-3" messageClassName="text-left" />
+      <NewsletterForm form={form} fieldRef={fieldRef} className="flex items-stretch gap-3" messageClassName="text-left" />
     </>
   );
-}
-
-export function useNewsletterModal() {
-  const [open, setOpen] = useState(false);
-  const onClose = useCallback(() => setOpen(false), []);
-  const onOpen = useCallback(() => setOpen(true), []);
-  return { open, onOpen, onClose };
 }

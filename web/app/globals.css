@@ -104,40 +104,14 @@ body::before {
   .search-field, .search-field svg { transition: none; }
 }
 
-/* The Subscribe window: the browser's modal dialog, stretched over the whole page so that its dimmed surround
-   is one thing to press, with the panel centred in it. */
-.newsletter-dialog {
-  width: 100%;
-  height: 100%;
-  max-width: none;
-  max-height: none;
-  margin: 0;
-  padding: 0 1rem;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  /* A finger on the window pinches to zoom but doesn't drag the page behind it. */
-  touch-action: pinch-zoom;
-  overscroll-behavior: contain;
-}
-.newsletter-dialog[open] {
-  display: grid;
-  place-items: center;
-}
-/* The page when something is open over it: dimmed and blurred. One look, for the Subscribe window and for the
-   phone menu. */
-.newsletter-dialog::backdrop,
+/* The page under the open phone menu: dimmed, blurred and held still. The menu exists below the width at
+   which the header shows its links in a row. */
 .menu-scrim {
   background: rgb(0 0 0 / 0.6);
   -webkit-backdrop-filter: blur(8px);
           backdrop-filter: blur(8px);
-}
-.menu-scrim { touch-action: pinch-zoom; }
-/* The page behind stays where it is meanwhile, and keeps its scrollbar's room so nothing jumps. The phone
-   menu exists below the width at which the header shows its links in a row. */
-html:has(.newsletter-dialog[open]) {
-  overflow: hidden;
-  scrollbar-gutter: stable;
+  /* A finger on it pinches to zoom but doesn't drag the page. */
+  touch-action: pinch-zoom;
 }
 @media (width < 48rem) {
   html:has(.menu-scrim) {
@@ -246,6 +220,11 @@ html:has(.newsletter-dialog[open]) {
     background: var(--text);
     color: var(--bg);
   }
+}
+/* A button holding a panel open stays inverted for as long as it is open. */
+.poster-btn[aria-expanded="true"] {
+  background: var(--text);
+  color: var(--bg);
 }
 .poster-btn:not(:disabled):active {
   transform: scale(0.96);
