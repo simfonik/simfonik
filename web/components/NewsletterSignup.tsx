@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, FormEvent, useCallback } from 'react';
+import { useState, useLayoutEffect, useRef, FormEvent, useCallback } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 
 function useNewsletterForm() {
@@ -41,25 +41,44 @@ function useNewsletterForm() {
 
 export function NewsletterModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { email, setEmail, status, errorMessage, handleSubmit } = useNewsletterForm();
+  const dialog = useRef<HTMLDialogElement>(null);
+  const field = useRef<HTMLInputElement>(null);
+  const pressedOutside = useRef(false);
 
-  useEffect(() => {
-    if (!open) return;
-    function handleEsc(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
+  // The browser's own modal dialog: it keeps Tab inside, makes the page behind unreachable, closes on Escape
+  // and hands the keyboard back to whatever opened it. It is opened in a layout effect so that the field
+  // takes focus inside the press that asked for the window, which is what lets a phone bring its keyboard up.
+  useLayoutEffect(() => {
+    const el = dialog.current;
+    if (!el) return;
+    if (open && !el.open) {
+      el.showModal();
+      field.current?.focus();
+    } else if (!open && el.open) {
+      el.close();
     }
-    document.addEventListener('keydown', handleEsc);
-    return () => document.removeEventListener('keydown', handleEsc);
-  }, [open, onClose]);
-
-  if (!open) return null;
+  }, [open]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+    <dialog
+      ref={dialog}
+      className="newsletter-dialog"
+      aria-labelledby="newsletter-dialog-title"
+      onClose={onClose}
+      // A press on the dimmed surround closes the window: one that both began and ended there, so dragging
+      // out of the field while selecting its text doesn't.
+      onPointerDown={(e) => {
+        pressedOutside.current = e.target === e.currentTarget;
+      }}
+      onClick={(e) => {
+        if (pressedOutside.current && e.target === e.currentTarget) onClose();
+      }}
+    >
       <div className="relative bg-[var(--bg)] border-[1.5px] border-[var(--text)] w-full max-w-2xl p-8 sm:p-10">
         <button
+          type="button"
           onClick={onClose}
-          className="absolute top-3 right-3 text-[var(--muted)] hover:text-[var(--text)] transition-colors cursor-pointer p-1"
+          className="absolute top-1 right-1 text-[var(--muted)] hover:text-[var(--text)] transition-colors cursor-pointer p-3"
           aria-label="Close"
         >
           <XMarkIcon className="w-5 h-5" />
@@ -67,7 +86,7 @@ export function NewsletterModal({ open, onClose }: { open: boolean; onClose: () 
 
         {status === 'success' ? (
           <div className="text-center py-2">
-            <p className="font-display text-3xl sm:text-4xl leading-[0.95] text-[var(--text)] mb-3">
+            <p id="newsletter-dialog-title" className="font-display text-3xl sm:text-4xl leading-[0.95] text-[var(--text)] mb-3">
               You&apos;re now subscribed!
             </p>
             <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-[var(--muted)]">
@@ -76,7 +95,7 @@ export function NewsletterModal({ open, onClose }: { open: boolean; onClose: () 
           </div>
         ) : (
           <>
-            <h2 className="font-display text-3xl sm:text-4xl leading-[0.95] text-[var(--text)] mb-3">
+            <h2 id="newsletter-dialog-title" className="font-display text-3xl sm:text-4xl leading-[0.95] text-[var(--text)] mb-3">
               Get notified when new tapes drop.
             </h2>
             <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-[var(--muted)] mb-6">
@@ -89,8 +108,9 @@ export function NewsletterModal({ open, onClose }: { open: boolean; onClose: () 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                autoFocus
-                className="font-mono h-11 w-full sm:flex-1 border-[1.5px] border-[var(--text)] bg-[var(--bg)] px-4 text-sm text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none"
+                ref={field}
+                aria-label="Email address"
+                className="text-field font-mono h-11 w-full sm:flex-1 border-[1.5px] border-[var(--text)] bg-[var(--bg)] px-4 text-sm text-[var(--text)] placeholder:text-[var(--muted)]"
               />
               <button
                 type="submit"
@@ -106,7 +126,7 @@ export function NewsletterModal({ open, onClose }: { open: boolean; onClose: () 
           </>
         )}
       </div>
-    </div>
+    </dialog>
   );
 }
 
@@ -139,7 +159,8 @@ export function NewsletterFooter() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="font-mono h-11 w-full sm:flex-1 border-[1.5px] border-[var(--text)] bg-[var(--bg)] px-4 text-sm text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none"
+          aria-label="Email address"
+          className="text-field font-mono h-11 w-full sm:flex-1 border-[1.5px] border-[var(--text)] bg-[var(--bg)] px-4 text-sm text-[var(--text)] placeholder:text-[var(--muted)]"
         />
         <button
           type="submit"

@@ -92,6 +92,49 @@ body::before {
   }
 }
 
+/* Where the keyboard is, in a field. The search field is a line under its text: with the keyboard in it the
+   line doubles and the glass comes up to full colour. A boxed field gets a second line around its box. */
+.search-field { transition: box-shadow 0.15s ease-out; }
+.search-field svg { transition: color 0.15s ease-out; }
+.search-field input { outline: none; }
+.search-field:focus-within { box-shadow: 0 2px 0 var(--text); }
+.search-field:focus-within svg { color: var(--text); }
+.text-field:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .search-field, .search-field svg { transition: none; }
+}
+
+/* The Subscribe window: the browser's modal dialog, stretched over the whole page so that its dimmed surround
+   is one thing to press, with the panel centred in it. */
+.newsletter-dialog {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0 1rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  /* A finger on the window pinches to zoom but doesn't drag the page behind it. */
+  touch-action: pinch-zoom;
+  overscroll-behavior: contain;
+}
+.newsletter-dialog[open] {
+  display: grid;
+  place-items: center;
+}
+.newsletter-dialog::backdrop {
+  background: rgb(0 0 0 / 0.6);
+  -webkit-backdrop-filter: blur(8px);
+          backdrop-filter: blur(8px);
+}
+/* The page behind stays where it is while the window is open, and keeps its scrollbar's room so nothing jumps. */
+html:has(.newsletter-dialog[open]) {
+  overflow: hidden;
+  scrollbar-gutter: stable;
+}
+
 /* Placeholder cassette reel spin — used by PlaceholderCassetteLive
    when any audio on the page is playing. Two separate classes because
    real cassette reels rotate at different speeds depending on how much

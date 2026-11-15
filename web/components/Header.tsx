@@ -13,6 +13,7 @@ const NAV_LINK_CLASSES =
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
   const { open, onOpen, onClose } = useNewsletterModal();
 
   useEffect(() => {
@@ -65,8 +66,9 @@ export function Header() {
             <div className="md:hidden flex items-center gap-2">
               <ThemeToggle />
               <button
+                ref={menuButtonRef}
                 type="button"
-                className="inline-flex items-center justify-center p-2 text-[var(--text)] hover:text-[var(--accent-text)] transition-colors cursor-pointer"
+                className="relative before:absolute before:-inset-0.5 before:content-[''] inline-flex items-center justify-center p-2 text-[var(--text)] hover:text-[var(--accent-text)] transition-colors cursor-pointer"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 aria-label="Toggle menu"
               >
@@ -84,21 +86,21 @@ export function Header() {
             <nav className="md:hidden mt-4 pt-4 border-t-[1.5px] border-[var(--border)] flex flex-col gap-1">
               <Link
                 href="/djs"
-                className={`block px-3 py-2 ${NAV_LINK_CLASSES}`}
+                className={`block px-3 py-[13px] ${NAV_LINK_CLASSES}`}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Browse DJs
               </Link>
               <Link
                 href="/about"
-                className={`block px-3 py-2 ${NAV_LINK_CLASSES}`}
+                className={`block px-3 py-[13px] ${NAV_LINK_CLASSES}`}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 About
               </Link>
               <Link
                 href="/contribute"
-                className={`block px-3 py-2 ${NAV_LINK_CLASSES}`}
+                className={`block px-3 py-[13px] ${NAV_LINK_CLASSES}`}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Contribute
@@ -106,10 +108,13 @@ export function Header() {
               <button
                 type="button"
                 onClick={() => {
+                  // This button goes when the menu shuts. The menu button takes the keyboard first, so it is
+                  // where focus comes back to when the Subscribe window is closed.
+                  menuButtonRef.current?.focus();
                   setMobileMenuOpen(false);
                   onOpen();
                 }}
-                className={`block px-3 py-2 text-left ${NAV_LINK_CLASSES}`}
+                className={`block px-3 py-[13px] text-left ${NAV_LINK_CLASSES}`}
               >
                 Subscribe
               </button>

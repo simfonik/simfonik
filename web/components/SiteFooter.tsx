@@ -22,7 +22,8 @@ export function SiteFooter() {
       <div className="border-t-[1.5px] border-[var(--border)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
           <p>© respective artists &amp; rights holders · non-commercial</p>
-          <div className="flex gap-6">
+          {/* Each link takes a press for 15px above and below its small type. */}
+          <div className="flex gap-6 [&>a]:relative [&>a]:before:absolute [&>a]:before:-inset-x-2 [&>a]:before:-inset-y-[15px] [&>a]:before:content-['']">
             <Link href="/about" className="hover:text-[var(--accent-text)] transition-colors">About</Link>
             <Link href="/contribute" className="hover:text-[var(--accent-text)] transition-colors">Contribute</Link>
             <Link href="/rights" className="hover:text-[var(--accent-text)] transition-colors">Rights &amp; Takedown</Link>

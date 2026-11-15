@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useTransition } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef, useSyncExternalStore, useTransition } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { TapeListSubset } from '../types/tape';
@@ -15,11 +15,40 @@ interface TapeGalleryWithSearchProps {
   tapes: TapeWithCover[];
 }
 
+/** Tapes in the page as it is sent. */
+const FIRST = 6;
+/** Tapes added each time the end of the list comes near. */
+const STEP = 12;
+/** Past this many the list stops growing by itself and offers a button, so the footer can be reached. */
+const AUTO = 30;
+/** Tapes added by each press of that button. */
+const MORE = 48;
+
+type Kept = { count: number; query: string };
+
+/** What the visitor had on screen the last time they were on this history entry, if they were. */
+function kept(): Kept | null {
+  const state: unknown = window.history.state?.gallery;
+  if (typeof state !== 'object' || state === null) return null;
+  const { count, query } = state as Partial<Kept>;
+  return typeof count === 'number' && typeof query === 'string' ? { count, query } : null;
+}
+
+const never = () => () => {};
+
 export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
-  const [inputValue, setInputValue] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [visibleCount, setVisibleCount] = useState(6);
+  // Coming Back from a tape, the list is put up at the length and with the search it had, in its first
+  // render, so the browser can put the page back where it was left. Not while React is attaching to the page
+  // the server sent: that page has the first six, and the two must agree.
+  const attaching = useSyncExternalStore(never, () => false, () => true);
+  const [start] = useState<Kept>(() => (attaching ? null : kept()) ?? { count: FIRST, query: '' });
+  const [inputValue, setInputValue] = useState(start.query);
+  const [searchQuery, setSearchQuery] = useState(start.query);
+  const [visibleCount, setVisibleCount] = useState(start.count);
   const [, startTransition] = useTransition();
+  useEffect(() => {
+    window.history.replaceState({ ...window.history.state, gallery: { count: visibleCount, query: searchQuery } }, '');
+  }, [visibleCount, searchQuery]);
 
   // Ref callback: attaches/detaches the observer whenever the sentinel mounts or unmounts.
   // This is necessary because the sentinel is conditionally rendered — a one-time useEffect
@@ -29,7 +58,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          setVisibleCount((prev) => prev + 12);
+          setVisibleCount((prev) => prev + STEP);
         }
       },
       { rootMargin: '400px' }
@@ -54,13 +83,29 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
   }, [tapes, searchQuery]);
 
   const visibleTapes = filteredTapes.slice(0, visibleCount);
+  const waiting = filteredTapes.length - visibleTapes.length;
+
+  // "Show more" puts the keyboard on the first tape it added, so a keyboard carries on from there instead of
+  // from a button that has moved to the bottom of a longer list.
+  const grid = useRef<HTMLDivElement>(null);
+  const firstAdded = useRef<number | null>(null);
+  const showMore = () => {
+    firstAdded.current = visibleTapes.length;
+    setVisibleCount((prev) => prev + MORE);
+  };
+  useEffect(() => {
+    if (firstAdded.current === null) return;
+    const link = grid.current?.children[firstAdded.current]?.querySelector('a');
+    firstAdded.current = null;
+    link?.focus({ preventScroll: true });
+  }, [visibleCount]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setInputValue(value);
     startTransition(() => {
       setSearchQuery(value);
-      setVisibleCount(6);
+      setVisibleCount(FIRST);
     });
   };
 
@@ -72,7 +117,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
           <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl leading-[0.95] text-[var(--text)]">
             Mixtapes
           </h1>
-          <div className="w-full sm:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.333rem)] relative pb-1 border-b-[1.5px] border-[var(--text)] flex items-center gap-2">
+          <div className="search-field w-full sm:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.333rem)] relative pb-1 border-b-[1.5px] border-[var(--text)] flex items-center gap-2">
             <svg
               className="w-4 h-4 flex-shrink-0 text-[var(--muted)]"
               fill="none"
@@ -92,21 +137,24 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
               value={inputValue}
               onChange={handleSearchChange}
               placeholder="Search by DJ, title, or year"
-              className="font-mono w-full bg-transparent py-1.5 text-[12px] tracking-wide text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none"
+              aria-label="Search mixtapes by DJ, title, or year"
+              className="font-mono w-full bg-transparent py-2.5 sm:py-1.5 text-[12px] tracking-wide text-[var(--text)] placeholder:text-[var(--muted)]"
             />
           </div>
         </div>
       </div>
 
       {/* Tape grid */}
-      <div className="grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+      <div ref={grid} className="grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
         {visibleTapes.map((tape, index) => {
           const isAboveFold = index < 3;
           return (
-            <article key={tape.id} className="group relative cursor-pointer">
+            <article key={tape.id} className="relative cursor-pointer">
+              {/* The whole card is this link. The title answers to it, and not to the DJ names, which lie
+                  over it and go somewhere else. */}
               <Link
                 href={`/tapes/${tape.id}`}
-                className="absolute inset-0 z-10"
+                className="peer absolute inset-0 z-10"
                 aria-label={`View ${tape.title}`}
               />
               <div className="relative w-full aspect-[3/2] mb-5 overflow-hidden pointer-events-none">
@@ -130,7 +178,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
                   </span>
                 )}
               </div>
-              <h2 className="font-display text-2xl sm:text-3xl leading-[1.05] text-[var(--text)] mb-3 group-hover:text-[var(--accent-text)] transition-colors pointer-events-none">
+              <h2 className="font-display text-2xl sm:text-3xl leading-[1.05] text-[var(--text)] mb-3 decoration-2 underline-offset-4 peer-hover:underline peer-focus-visible:underline pointer-events-none">
                 {tape.title}
               </h2>
               <div className="flex flex-wrap gap-2 relative z-20">
@@ -162,8 +210,19 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
         })}
       </div>
 
-      {visibleTapes.length < filteredTapes.length && (
+      {waiting > 0 && visibleCount < AUTO && (
         <div ref={loadMoreRef} className="h-10 mt-8 w-full" aria-hidden="true" />
+      )}
+
+      {waiting > 0 && visibleCount >= AUTO && (
+        <div className="mt-16 flex flex-col items-center gap-5">
+          <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-[var(--muted)] tabular-nums">
+            {visibleTapes.length} of {filteredTapes.length}
+          </p>
+          <button type="button" onClick={showMore} className="poster-btn h-11">
+            Show more
+          </button>
+        </div>
       )}
 
       {filteredTapes.length === 0 && (

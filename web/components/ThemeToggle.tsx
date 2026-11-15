@@ -54,7 +54,7 @@ export function ThemeToggle() {
       type="button"
       onClick={toggle}
       aria-label={mounted ? (dark ? 'Switch to light' : 'Switch to dark') : 'Toggle theme'}
-      className="inline-flex shrink-0 items-center justify-center w-8 h-8 rounded-md text-[var(--text)] hover:bg-[var(--bg-hover)] hover:text-[var(--accent-text)] transition-colors cursor-pointer"
+      className="relative before:absolute before:-inset-1.5 before:content-[''] inline-flex shrink-0 items-center justify-center w-8 h-8 rounded-md text-[var(--text)] hover:bg-[var(--bg-hover)] hover:text-[var(--accent-text)] transition-colors cursor-pointer"
       suppressHydrationWarning
     >
       <svg
