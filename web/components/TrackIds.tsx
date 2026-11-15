@@ -49,9 +49,11 @@ export function TrackIds({ tapeId, position, ids, time, onPosted }: Props) {
   const messageId = useId();
 
   const open = () => {
-    // Putting a known ID right starts from what it says and goes to where that track starts, so the newer
-    // word replaces the older one.
-    setAt(playing?.known ? playing.start : Math.floor(time));
+    // An ID is for the track playing. Where the comments have marked one, it goes to where that track starts:
+    // a correction then replaces the older word, and an ID for a track marked unknown fills the whole of it
+    // and doesn't split it at the moment the visitor happened to speak up. Putting a known ID right starts
+    // from what it says. Where nothing is marked, the ID goes to this moment.
+    setAt(playing ? playing.start : Math.floor(time));
     setArtist(playing?.known ? playing.artist : '');
     setTitle(playing?.known ? playing.title : '');
     setName(rememberedName());

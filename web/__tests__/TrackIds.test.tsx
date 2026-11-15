@@ -90,6 +90,18 @@ describe('the track line under the player', () => {
     expect(body().content).toBe('[0:00] Moby - Go (Woodtick Mix)');
   });
 
+  it('IDs a track marked unknown from where that track starts, not from the moment the visitor spoke up', async () => {
+    const user = userEvent.setup();
+    window.localStorage.setItem('simfonik:id-name', 'Dana');
+    // The unknown runs from 5:00 to 7:00, and the tape is 50 seconds into it.
+    render(<TrackIds tapeId="tape-1" position="A" ids={ids} time={350} onPosted={posted} />);
+    await user.click(screen.getByRole('button', { name: 'Unknown track. Know it? ID it' }));
+    expect(screen.getByRole('form', { name: 'ID the track at A · 5:00' })).toBeInTheDocument();
+    await user.type(artist(), 'Orbital');
+    await user.type(title(), 'Chime{Enter}');
+    expect(body().content).toBe('[A 5:00] Orbital - Chime');
+  });
+
   it('asks for what is missing on its own line, drops the complaint once it is being put right, and shuts on Escape', async () => {
     const user = userEvent.setup();
     render(<TrackIds tapeId="tape-1" position="A" ids={ids} time={200} onPosted={posted} />);
