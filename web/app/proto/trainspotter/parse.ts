@@ -10,6 +10,8 @@ export type Sighting = {
   known: boolean;
   /** Written with a leading "+": a record brought in over the one already playing. */
   layer?: boolean;
+  /** Read out of a sentence that didn't say which side. Only trusted on a tape with one side. */
+  unsure?: boolean;
   author: string;
   date: string;
 };
@@ -23,7 +25,18 @@ const SIDE = /\b(?:side|part)[\s-]*(a|b|c|d|1|2|3|4|one|two)\b/i;
 const sideIndex = (s: string) => ({ a: 0, "1": 0, one: 0, b: 1, "2": 1, two: 1, c: 2, "3": 2, d: 3, "4": 3 })[s.toLowerCase()] ?? 0;
 const TIME = String.raw`\d{1,2}:\d{2}(?::\d{2})?`;
 const DASH = String.raw`[-–—]`;
-const CHATTER = /\b(anyone|anybody|someone|know|knows|remember|omg|wtf|what|who|which|track|tune|song|please|pls|help|love|amazing)\b/i;
+// Not "love": it is in half the titles of the era.
+const CHATTER = /\b(anyone|anybody|someone|know|knows|remember|omg|wtf|what|who|which|track|tune|song|please|pls|help|amazing)\b/i;
+// "the b side", "A-side": the other way round from SIDE.
+const SIDE_ALT = /\b([abcd])[\s-]*side\b/i;
+const whichSide = (line: string): number | null => {
+  const m = line.match(SIDE) ?? line.match(SIDE_ALT);
+  return m ? sideIndex(m[1]) : null;
+};
+// Someone asking what a track is. The time they give marks a track nobody has ID'd.
+const ASK = /\?|\b(?:anyone|anybody|someone|somebody)\b|\bid\b.*\bplease\b|\bwant(?:ed)? to know\b|\bneed\b.*\b(?:id|name|track)\b|\blooking for\b/i;
+// A time that isn't a place on the tape: a link to somewhere else, or the clock time of a post.
+const NOT_TAPE = /https?:|youtube|mixcloud|soundcloud|\b\d{1,2}:\d{2}\s*[ap]m\b/i;
 // Only real tag names, so "A/B>C" in a title is left alone.
 const TAGS = "li|ul|ol|p|br|b|i|u|em|strong|a|div|span|blockquote|code|cite|q|del|strike|abbr|acronym";
 const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", ndash: "–", mdash: "—", hellip: "…", laquo: "«", raquo: "»", lsquo: "‘", rsquo: "’", ldquo: "“", rdquo: "”" };
@@ -39,31 +52,63 @@ export const plain = (s: string) =>
 const clean = (s: string) =>
   s
     .replace(/https?:\/\/\S+/g, "")
-    .replace(/[“”"‎]/g, "")
+    .replace(/[“”"‎]|''/g, "")
     .replace(/\s+/g, " ")
     .replace(new RegExp(String.raw`^[\s:,.${"\\-"}–—]+|[\s:,${"\\-"}–—]+$`, "g"), "")
+    // "16:09 is Acid Masters - Voodoo Acid" and a trailing aside such as "(More accurate ID?)" are the
+    // commenter talking, not part of the name.
+    .replace(/^is\s+/i, "")
+    .replace(/\s*\([^()]*\?\)\s*$/, "")
     .trim();
 
-function split(text: string): { artist: string; title: string; known: boolean } | null {
+function split(text: string, prose = false): { artist: string; title: string; known: boolean; quoted?: boolean } | null {
+  // The Grid "Flotation (progressive mix)"   Ave Maria 'No Sex Until Marriage' NYC Mix
+  // Whatever follows the closing quote is the commenter talking.
+  const q = text.match(/^\s*([^"“”]{2,60}?)\s+["“]([^"“”]{2,90})["”]/) ?? text.match(/^\s*([^'‘’"“”]{2,60}?)\s+['‘]([^'‘’]{3,90})['’](?=[\s.,!]|$)/);
+  if (q && !/^[\s?]*$/.test(q[1]) && !new RegExp(String.raw`\s${DASH}\s`).test(q[1])) {
+    const artist = clean(q[1]).replace(/[’']s$/, "");
+    // "I 1st heard that "Original Style" from…" is someone talking, not an artist.
+    if (artist && artist.split(" ").length <= 5 && !/^(?:i|it|this|that|he|she|they|we|the track|the song)\b/i.test(artist) && !CHATTER.test(artist)) return { artist, title: clean(q[2]), known: true, quoted: true };
+  }
   const t = clean(text);
   if (t.length > 140) return null; // a sentence, not a track name
   if (!t || /^\?+/.test(t)) return { artist: "", title: clean(t.replace(/^\?+/, "")).replace(/^['‘’]|['‘’]$/g, ""), known: false };
   const m = t.match(new RegExp(String.raw`^(.+?)\s*${DASH}\s+(.+)$`));
   if (m) return { artist: clean(m[1]), title: clean(m[2]), known: true };
+  // "Shoot by Way Out West": only in a sentence, where a bare title is not otherwise accepted.
+  const by = prose ? t.match(/^(.{2,70}?)\s+by\s+(.{2,60}?)(?:\s+on\s+.+)?$/i) : null;
+  if (by) return { artist: clean(by[2]), title: clean(by[1]), known: true, quoted: true };
   return { artist: "", title: t, known: true };
 }
 
 export function parseComment(content: string, author: string, date: string): Sighting[] {
   const out: Sighting[] = [];
   let side = 0;
+  let sideGiven = false;
   // `loose` lines are prose with a time in them, so they only count when they clearly name a record.
-  const push = (s: number, start: number, text: string, end?: number, loose = false) => {
-    const parts = split(text);
-    if (!parts || !Number.isFinite(start)) return;
-    if (loose && (!parts.known || !parts.artist || CHATTER.test(text))) return;
+  // `listed` lines sit in a tracklist: a name with an artist is taken as written, and a bare one must not read
+  // like a remark ("sounds very nice, never heard that before.").
+  const push = (s: number, start: number, text: string, end?: number, loose = false, listed = false) => {
+    if (!Number.isFinite(start)) return;
+    // "1:23:25 - ??????" or "12:10 - unknown": someone marking a track nobody has ID'd yet.
+    if (/^(?:\?+|unknown|unidentified|(?:track\s*)?id\s*\?*)$/i.test(clean(text))) {
+      out.push({ side: s, start, end, artist: "", title: "", known: false, author, date });
+      return;
+    }
+    const found = split(text, loose);
+    if (!found) return;
+    const { quoted, ...parts } = found;
+    // Chatter after a quoted title was already cut off, so only the name itself is checked.
+    if (loose && (!parts.known || !parts.artist || CHATTER.test(quoted ? `${parts.artist} ${parts.title}` : text))) return;
+    if (listed && !parts.artist && (CHATTER.test(text) || parts.title.length > 60 || /[,.]\s|\.$/.test(parts.title))) return;
     out.push({ side: s, start, end, ...parts, author, date });
   };
-  for (const raw of plain(content).split(/\r?\n/)) {
+  const lines = plain(content).split(/\r?\n/);
+  // Three or more lines that open with a time make a tracklist. Its lines are taken at their word, where a
+  // lone line with a time in it has to look like a record before it counts: "Call It What You Want!" is a
+  // title in a list and would be a question anywhere else.
+  const list = lines.filter((l) => new RegExp(String.raw`^\s*\[?${TIME}\b`).test(l)).length >= 3;
+  for (const raw of lines) {
     let line = raw.trim();
     if (!line) continue;
     // "+ [11:56] Tangerine Dream - Love On A Real Train": layered over the track before it.
@@ -75,10 +120,14 @@ export function parseComment(content: string, author: string, date: string): Sig
     const heading = line.match(SIDE);
     if (heading && !new RegExp(TIME).test(line) && line.length < 60) {
       side = sideIndex(heading[1]);
+      sideGiven = true;
       continue;
     }
 
     let m: RegExpMatchArray | null;
+    // The side is known if this line names it, or a heading above it did.
+    const sideHere = whichSide(line);
+    const unsure = sideHere === null && !sideGiven ? true : undefined;
     // "The track playing from [10:20] - [16:37] is Artist - Title"
     if ((m = line.match(new RegExp(String.raw`\[?(${TIME})\]?\s*(?:${DASH}|to)\s*\[?(${TIME})\]?\s+is\s+(.+)$`, "i")))) {
       push(side, seconds(m[1]), m[3], seconds(m[2]));
@@ -88,7 +137,12 @@ export function parseComment(content: string, author: string, date: string): Sig
       push(sideIndex(m[1]), seconds(m[2]), m[4], seconds(m[3]));
     }
     // "Side B @ 26:30 - Artist - Title"
-    else if ((m = line.match(new RegExp(String.raw`^${SIDE.source}\s*[@:]?\s*(?:at\s*)?(${TIME})\s*${DASH}?\s*(.+)$`, "i")))) {
+    // "(Side A) 19:00 Artist - Title"   "Side B, @ 13:15 Artist - Title"
+    else if ((m = line.match(new RegExp(String.raw`^\(?${SIDE.source}\)?\s*[,@:]?\s*@?\s*(?:at\s*)?(${TIME})\s*${DASH}?\s*(.+)$`, "i")))) {
+      push(sideIndex(m[1]), seconds(m[2]), m[3]);
+    }
+    // "(B) @21:35 is Artist"
+    else if ((m = line.match(new RegExp(String.raw`^\(([ab])\)\s*@?\s*(${TIME})\s*(.+)$`, "i")))) {
       push(sideIndex(m[1]), seconds(m[2]), m[3]);
     }
     // "16:25 on side-B is Artist Title"
@@ -96,23 +150,36 @@ export function parseComment(content: string, author: string, date: string): Sig
       push(sideIndex(m[2]), seconds(m[1]), m[3]);
     }
     // "3. [05:15] – Artist – Title"   "3 - 5:15 - Artist - Title"   "19 - 47 - ?? hint"
-    else if ((m = line.match(new RegExp(String.raw`^\d{1,2}\s*[.)${"\\-"}–]\s*\[?\s*(${TIME}|\d{1,2})\s*(?:${DASH}\s*)?\]?\s*${DASH}?\s*(.*)$`)))) {
+    else if ((m = line.match(new RegExp(String.raw`^(?:\d{1,2}|-{2,3})\s*[.)${"\\-"}–]\s*\[?\s*(${TIME}|\d{1,2})\s*(?:${DASH}\s*)?\]?\s*${DASH}?\s*(.*)$`)))) {
       push(side, seconds(m[1]), m[2]);
     }
     // "[05:15] Artist – Title"   "11:00 Artist - Title"
     else if ((m = line.match(new RegExp(String.raw`^\[(${TIME})\]\s*${DASH}?\s*(.+)$`)))) {
       push(side, seconds(m[1]), m[2]);
-    } else if ((m = line.match(new RegExp(String.raw`^(${TIME})\s*${DASH}?\s*(.+)$`)))) {
-      push(side, seconds(m[1]), m[2], undefined, true);
+    } else if ((m = line.match(new RegExp(String.raw`^@?\s*(${TIME})\s*(?:${DASH}|=)?\s*(?:on\s+[\w'’.]+(?:\s+side)?\s+)?(?:is\s*:?\s*)?(.+)$`, "i")))) {
+      push(sideHere ?? side, seconds(m[1]), m[2], undefined, !list, list);
     }
     // "13. ??? (26:20 – 28:20)"
     else if ((m = line.match(new RegExp(String.raw`^\d{1,2}\s*[.)]\s*(.+?)\s*\((${TIME})\s*${DASH}\s*(\d{1,2}\s?:\d{2})\)\s*$`)))) {
       push(side, seconds(m[2]), m[1], seconds(m[3].replace(/\s/g, "")));
     }
+    // "The song at 28:25 is Artist - Title."   "Then at the 17:30 mark is: Artist "Title"."
+    else if ((m = line.match(new RegExp(String.raw`(?:\bat|@)\s*(?:about|around|approx\.?)?\s*(?:the\s+)?@?\s*(${TIME})(?:\s*(?:minute\s+)?mark)?\b[^.?!]{0,40}?\bis\s*:?\s*(?:called\s+|by\s+)?(.{3,})$`, "i")))) {
+      // Only the first sentence is the name.
+      const name = m[2].split(/(?<=[)\w"”'’])[.!]\s+(?=[A-Z@])/)[0].replace(/[.!:]+$/, "");
+      push(sideHere ?? side, seconds(m[1]), name, undefined, true);
+      if (unsure) for (let i = before; i < out.length; i++) out[i].unsure = true;
+    }
     // "Artist - Title at 30:24"
     else if ((m = line.match(new RegExp(String.raw`^(.{3,90}?)\s+(?:at|@)\s+(${TIME})\b`, "i")))) {
       const s = line.match(SIDE);
       push(s ? sideIndex(s[1]) : side, seconds(m[2]), m[1], undefined, true);
+    }
+    // "Anyone know the track @40:05?"   "What is the track from 1:00-4:43"   Nothing above found a name in
+    // this line, and it is asking for one: the time marks a track nobody has ID'd.
+    if (out.length === before && ASK.test(line) && !NOT_TAPE.test(line) && (m = line.match(new RegExp(String.raw`(${TIME})(?:\s*(?:${DASH}|to|thru|through|until|till)\s*(?:around\s+|about\s+)?(${TIME}))?`, "i")))) {
+      const end = m[2] ? seconds(m[2]) : undefined;
+      out.push({ side: sideHere ?? side, start: seconds(m[1]), end: end && end > seconds(m[1]) ? end : undefined, artist: "", title: "", known: false, unsure, author, date });
     }
     if (layer) for (let i = before; i < out.length; i++) out[i].layer = true;
   }

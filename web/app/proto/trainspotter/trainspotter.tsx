@@ -424,7 +424,20 @@ export function Trainspotter({
     if (restored !== "fresh" || opening.current) return;
     opening.current = true;
     void (async () => {
-      if (proposals.length && (await writeAsListeners(proposals.map(toCue)))) setFloor(historyRef.current?.position() ?? 0);
+      if (proposals.length) {
+        // The timeline registers with the bridge a moment after it mounts. Wait for it: giving up here would
+        // show an empty tape and then save it as this visitor's work.
+        let written = false;
+        for (let tries = 0; tries < 60 && !written; tries++) {
+          written = await writeAsListeners(proposals.map(toCue));
+          if (!written) await new Promise((r) => setTimeout(r, 50));
+        }
+        if (!written) {
+          opening.current = false; // nothing saved; the next visit starts clean
+          return;
+        }
+        setFloor(historyRef.current?.position() ?? 0);
+      }
       markSeen(proposals.map(sig));
       setReady(true);
     })();
@@ -1017,9 +1030,10 @@ export function Trainspotter({
         </ComboboxContent>
       </Combobox>
 
-      <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
+      {/* Above the title: its tall letters reach up past their own line and would otherwise sit over this link. */}
+      <p className="relative z-[1] mt-6 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
         Released {tape.released} ·{" "}
-        <Link href={`/tapes/${tape.id}`} className="cursor-pointer underline underline-offset-4 hover:text-[var(--text)]">
+        <Link href={`/tapes/${tape.id}`} className="ts-inline-link">
           Tape page
         </Link>
       </p>

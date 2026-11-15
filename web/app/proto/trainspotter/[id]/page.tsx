@@ -30,8 +30,10 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
       .map((c) => ({ author: c.author_name, date: new Date(c.created_at).toISOString().slice(0, 10), content: c.content })),
   ];
 
+  // A sighting read from a sentence that didn't say which side is only used where there is one side.
+  const timed = (comments: Said[], sideCount: number) => comments.flatMap((c) => parseComment(c.content, c.author, c.date)).filter((s) => !s.unsure || sideCount === 1);
   const mine = said(id);
-  const sightings = mine.flatMap((c) => parseComment(c.content, c.author, c.date));
+  const sightings = timed(mine, tape.sides.length);
   const listed = mine.flatMap((c) => parseListing(c.content, c.author, c.date));
   // The tracklist already published on the site: names in order with no times, the most trusted order there is.
   const official = tape.sides.map((side, i) =>
@@ -44,7 +46,7 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
   const others = getAllTapes()
     .map((t) => {
       const all = said(t.id);
-      const marked = reconcile(all.flatMap((c) => parseComment(c.content, c.author, c.date)), t.sides.map(() => Infinity));
+      const marked = reconcile(timed(all, t.sides.length), t.sides.map(() => Infinity));
       const known = marked.filter((m) => m.known).length;
       const unknown = marked.length - known;
       const names =
