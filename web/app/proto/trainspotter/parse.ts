@@ -57,6 +57,8 @@ const clean = (s: string) =>
     .replace(new RegExp(String.raw`^[\s:,.${"\\-"}–—]+|[\s:,${"\\-"}–—]+$`, "g"), "")
     // "16:09 is Acid Masters - Voodoo Acid" and a trailing aside such as "(More accurate ID?)" are the
     // commenter talking, not part of the name.
+    // "Pot Of Gold discogs: http…": the link is gone by now, its label is left behind.
+    .replace(/\s*\bdiscogs\b:?\s*$/i, "")
     .replace(/^is\s+/i, "")
     .replace(/\s*\([^()]*\?\)\s*$/, "")
     .trim();

@@ -182,7 +182,10 @@
 /* The ruler doubles as the scrubber. The slider places its own thumb; this gives it a size and a handle. */
 .ts-ruler { position: relative; height: 44px; }
 .ts-scrub { display: block; height: 44px; cursor: pointer; user-select: none; -webkit-user-select: none; }
-.ts-scrub-track { height: 44px; border-bottom: 1.5px solid var(--text); }
+.ts-scrub-track { height: 44px; border-bottom: 1.5px solid color-mix(in oklch, var(--text) 35%, transparent); }
+/* How much of the side has played: the rule under the ruler, drawn solid up to the marker. */
+/* The slider sizes it across the track; this pins it to the rule along the bottom. */
+.ts-scrub-fill { top: auto !important; bottom: -1.5px !important; height: 3px; background: var(--text); pointer-events: none; }
 .ts-tick {
   position: absolute;
   bottom: 0;
@@ -243,58 +246,91 @@
   width: 48px;
   margin-right: 8px;
   cursor: pointer;
-  border: 1.5px solid var(--text);
-  background: var(--bg);
-  color: var(--text);
+  box-shadow: inset 0 -1px 0 color-mix(in oklch, var(--text) 22%, transparent);
+  color: var(--muted);
   font-family: var(--font-anton), sans-serif;
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   line-height: 1;
+  transition: color 120ms ease-out;
 }
-.ts-side[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+@media (hover: hover) { .ts-side:hover { color: var(--text); } }
+.ts-side[aria-pressed="true"] { background: var(--text); box-shadow: none; color: var(--bg); }
 .ts-side:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
-.ts-track {
-  position: relative;
-  flex: none;
-  height: 96px;
-  cursor: pointer;
-  background-color: var(--bg-hover);
-  /* a hairline every minute */
-  background-image: linear-gradient(to right, color-mix(in oklch, var(--text) 14%, transparent) 0 1px, transparent 1px);
+/* ── The tape ──
+   Three things can be on a side, and each is drawn so it can't be mistaken for another:
+   bare tape is nothing but a baseline; an ID'd track is a calm filled block you can read; an unknown track
+   is hatched and carries a big question mark, because unknowns are what the page is for. No outlines: an
+   outline is how a selected track is shown, and a row of outlined boxes shouts over everything else.
+   The one track that is playing is the only solid block on the tape. */
+.ts-root {
+  --clip: color-mix(in oklch, var(--text) 17%, var(--bg));
+  --clip-hover: color-mix(in oklch, var(--text) 25%, var(--bg));
+  --hatch: color-mix(in oklch, var(--text) 30%, transparent);
 }
-.ts-beyond {
-  position: absolute;
-  inset-block: 0;
-  right: 0;
-  pointer-events: none;
-  background: repeating-linear-gradient(135deg, transparent 0 6px, color-mix(in oklch, var(--text) 12%, transparent) 6px 7px), var(--bg);
-}
+.ts-track { position: relative; flex: none; height: 96px; cursor: pointer; box-shadow: inset 0 -1px 0 color-mix(in oklch, var(--text) 22%, transparent); }
+/* Past the end of the shorter side there is no tape: the lane simply stops. */
+.ts-beyond { position: absolute; inset-block: 0; right: 0; pointer-events: none; background: var(--ts-paper); }
 .ts-cue {
+  --cue-ring: 0 0 #0000;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   min-width: 6px;
   overflow: hidden;
   cursor: pointer;
-  user-select: none;
-  -webkit-user-select: none;
   outline: none;
-  background: var(--bg);
+  container-type: inline-size;
+  /* A hairline of tape shows between neighbours without moving where a track starts or ends. */
+  border-inline: 1px solid transparent;
+  background-clip: padding-box;
+  background-image: repeating-linear-gradient(135deg, transparent 0 5px, var(--hatch) 5px 6px);
+  box-shadow: var(--cue-ring);
   color: var(--text);
-  /* separation between neighbours without eating into the range's true width */
-  box-shadow: inset 0 0 0 1.5px var(--text);
-  background-image: repeating-linear-gradient(135deg, transparent 0 5px, color-mix(in oklch, var(--text) 16%, transparent) 5px 6px);
   font-size: 12px;
-  line-height: 1.2;
+  line-height: 1.25;
+  transition: background-color 120ms ease-out;
 }
-.ts-cue[data-known] { background: var(--text); color: var(--bg); background-image: none; box-shadow: inset 0 0 0 1.5px var(--bg); }
-.ts-cue[data-selected] { z-index: 2; box-shadow: inset 0 0 0 1.5px var(--bg), 0 0 0 2.5px var(--text); }
-.ts-cue:focus-visible { z-index: 2; box-shadow: inset 0 0 0 1.5px var(--bg), 0 0 0 2.5px var(--text), 0 0 0 5px var(--bg), 0 0 0 6.5px var(--text); }
+.ts-cue[data-known] { background-color: var(--clip); background-image: none; }
+@media (hover: hover) {
+  .ts-cue[data-known]:hover { background-color: var(--clip-hover); }
+  .ts-cue:not([data-known]):hover { --hatch: color-mix(in oklch, var(--text) 48%, transparent); }
+}
+/* Playing: the only solid block. An unknown keeps its hatching, cut out of the fill. */
+.ts-cue[data-playing] { background-color: var(--text); background-image: none; color: var(--bg); }
+.ts-cue[data-playing]:not([data-known]) { background-image: repeating-linear-gradient(135deg, transparent 0 5px, color-mix(in oklch, var(--bg) 28%, transparent) 5px 6px); }
+@media (hover: hover) { .ts-cue[data-playing]:hover { background-color: var(--text); } }
+.ts-cue[data-selected] { z-index: 2; --cue-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--text); }
+.ts-cue:focus-visible { z-index: 2; --cue-ring: 0 0 0 2px var(--bg), 0 0 0 4.5px var(--text); }
 .ts-cue[data-dragging], .ts-cue[data-resizing], .ts-cue[data-drawing] { cursor: grabbing; z-index: 2; opacity: 0.85; }
-.ts-cue-text { display: flex; min-width: 0; flex: 1; flex-direction: column; justify-content: center; overflow: hidden; padding-inline: 2px; pointer-events: none; }
-.ts-cue-text b, .ts-cue-text i { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-style: normal; }
-.ts-cue-text b { font-weight: 600; }
-.ts-cue-text i { opacity: 0.75; }
+@media (prefers-reduced-motion: reduce) { .ts-cue { transition: none; } }
+
+/* A name gets the whole block to wrap in, top-left like a label on a tape box, instead of one cut-off line. */
+.ts-cue-text { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 2px; overflow: hidden; padding: 9px 1px 6px; pointer-events: none; }
+.ts-cue-text b, .ts-cue-text i { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: break-word; font-style: normal; }
+.ts-cue-text b { -webkit-line-clamp: 2; font-weight: 600; }
+.ts-cue-text i { -webkit-line-clamp: 3; opacity: 0.7; }
 .ts-cue-text i:empty { display: none; }
-.ts-edge { flex: none; align-self: stretch; width: 7px; }
+.ts-cue-text .ts-q { display: block; font-family: var(--font-anton), sans-serif; font-size: 26px; font-weight: 400; line-height: 0.9; }
+/* A thin track gets one short line each and is allowed to cut off. The full name is one glance away: big
+   in Now playing while it plays, and beside the time under the pointer. */
+@container (max-width: 84px) {
+  .ts-cue-text :is(b, i):not(.ts-q) { display: block; white-space: nowrap; text-overflow: ellipsis; }
+  .ts-cue-text .ts-q + i { display: none; }
+  .ts-edge { width: 5px; }
+}
+/* Thinner than a few letters: a plain block says more than "B…". */
+@container (max-width: 48px) {
+  .ts-cue-text :is(b, i):not(.ts-q) { display: none; }
+  .ts-cue:not([data-known]) .ts-cue-text { align-items: center; padding-inline: 0; }
+  .ts-edge { width: 3px; }
+}
+@container (max-width: 20px) {
+  .ts-cue-text .ts-q { display: none; }
+}
+/* Trim handles: a grip that appears at each end when the pointer is on the track. */
+.ts-edge { position: relative; flex: none; align-self: stretch; width: 8px; }
+/* Low in the block, clear of the name. */
+.ts-edge::after { content: ""; position: absolute; bottom: 8px; left: 50%; width: 2px; height: 14px; margin-left: -1px; background: currentColor; opacity: 0; transition: opacity 120ms ease-out; }
+@media (hover: hover) { .ts-cue:hover .ts-edge::after, .ts-cue[data-selected] .ts-edge::after { opacity: 0.45; } }
 
 /* A mouse can draw, drag and trim, so the tape must not scroll under it. A finger only taps, so it can. */
 @media (pointer: fine) {
@@ -305,8 +341,43 @@
 }
 @media (pointer: coarse) {
   .ts-edge { display: none; }
-  .ts-cue-text { padding-inline: 6px; }
+  .ts-cue-text { padding-inline: 8px; }
 }
+
+/* Where the pointer is on the tape, as a time: it says "you can go here" without a line of instructions. */
+.ts-ghost {
+  position: absolute;
+  top: 2px;
+  bottom: 10px;
+  left: 0;
+  z-index: 7; /* over the scrubber's marker, so the label is never read through it */
+  width: 1px;
+  pointer-events: none;
+  background: color-mix(in oklch, var(--text) 50%, transparent);
+  opacity: 0;
+  will-change: transform;
+}
+.ts-ghost[data-on] { opacity: 1; }
+.ts-ghost-time {
+  position: absolute;
+  top: 0;
+  left: 5px;
+  display: flex;
+  max-width: 24rem;
+  gap: 0.6em;
+  padding: 2px 6px;
+  background: var(--text);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.33;
+  white-space: nowrap;
+  color: var(--bg);
+}
+.ts-ghost[data-flip] .ts-ghost-time { right: 5px; left: auto; }
+/* The track under the pointer, named in full beside the time. */
+.ts-ghost-time span { overflow: hidden; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; text-overflow: ellipsis; }
+.ts-ghost-time span:empty { display: none; }
 
 .ts-playhead {
   position: absolute;
@@ -324,7 +395,7 @@
 /* ── Naming ── */
 .ts-namebar {
   display: flex;
-  min-height: 5.75rem;
+  min-height: 3.5rem;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem 0.75rem;
@@ -532,3 +603,11 @@
 .ts-page :is(a, button) { text-decoration-thickness: from-font; }
 /* Text on a control isn't for selecting: a drag across the timeline shouldn't highlight track names. */
 .ts-fold-trigger, .ts-part, .ts-side, .ts-option, .ts-cue, .ts-list-row { -webkit-user-select: none; user-select: none; }
+
+/* Keyboard shortcuts, out of the way until asked for. */
+.ts-keys { z-index: var(--ts-z-popup); width: min(22rem, calc(100vw - 2rem)); background: var(--surface); box-shadow: var(--pop-shadow); padding: 0.9rem 1rem 1rem; --pop-shadow: 0 0 0 1px rgb(0 0 0 / 0.08), 0 2px 6px rgb(0 0 0 / 0.06), 0 16px 40px -12px rgb(0 0 0 / 0.22); }
+@media (prefers-color-scheme: dark) { :root:not(.theme-light) .ts-keys { --pop-shadow: 0 0 0 1px rgb(255 255 255 / 0.14); } }
+.theme-dark .ts-keys { --pop-shadow: 0 0 0 1px rgb(255 255 255 / 0.14); }
+.ts-keys dl { display: grid; grid-template-columns: auto 1fr; gap: 0.5rem 1rem; align-items: baseline; margin-top: 0.6rem; font-size: 14px; color: var(--text); }
+.ts-keys dt { font-family: var(--font-geist-mono), ui-monospace, monospace; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; white-space: nowrap; }
+.ts-keys dd { color: var(--muted); }

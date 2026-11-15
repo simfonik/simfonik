@@ -15,7 +15,8 @@ import { usePreference } from "@ui-sdk/react/preferences";
 import { createAgent, registerTools } from "@ui-sdk/react/agent";
 import { createHistory, type HistoryEntry } from "@ui-sdk/react/history";
 import { useShortcut, useShortcutHint } from "@ui-sdk/react/shortcuts";
-import { Slider, SliderControl, SliderThumb, SliderTrack } from "@ui-sdk/react/slider";
+import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack } from "@ui-sdk/react/slider";
+import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from "@ui-sdk/react/popover";
 import { SegmentedControl, SegmentedControlItem } from "@ui-sdk/react/segmented-control";
 import { Toast, ToastAction, ToastClose, ToastDescription, ToastRegion, ToastTitle, createToaster } from "@ui-sdk/react/toast";
 import { Drawer, DrawerBackdrop, DrawerClose, DrawerContent, DrawerTitle } from "@ui-sdk/react/drawer";
@@ -203,6 +204,7 @@ export function Trainspotter({
   // ── Playhead: written straight to the element each frame while playing; React hears once a second ──
   const playheads = useRef<(HTMLDivElement | null)[]>([]);
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const ghostRef = useRef<HTMLDivElement>(null);
   const handsOff = useRef(0); // until when the visitor's own scrolling is left alone
   const sheetOpen = useRef(false);
   const lastSecond = useRef(-1);
@@ -698,7 +700,31 @@ export function Trainspotter({
     el.addEventListener("pointerdown", hold);
     el.addEventListener("wheel", hold, { passive: true });
     el.addEventListener("touchstart", hold, { passive: true });
+    // The time under a mouse pointer, written straight to the element: no render per pixel moved.
+    const ghost = ghostRef.current;
+    const point = (e: PointerEvent) => {
+      if (!ghost) return;
+      const canvas = el.firstElementChild as HTMLElement | null;
+      const box = canvas?.getBoundingClientRect();
+      const x = box ? e.clientX - box.left - GUTTER : -1;
+      const w = box ? box.width - GUTTER : 0;
+      // Not while dragging, not over the side labels, not for a finger.
+      if (e.pointerType !== "mouse" || e.buttons || x < 0 || x > w || e.clientX - el.getBoundingClientRect().left < GUTTER) return ghost.removeAttribute("data-on");
+      ghost.style.transform = `translateX(${x + GUTTER}px)`;
+      const name = (e.target as HTMLElement).closest?.<HTMLElement>(".ts-cue")?.dataset.name ?? "";
+      const label = ghost.firstElementChild as HTMLElement;
+      (label.firstElementChild as HTMLElement).textContent = clock((x / w) * lengthRef.current);
+      (label.lastElementChild as HTMLElement).textContent = name;
+      // Keep the label on screen: it opens to the left once it would run off the right edge.
+      ghost.toggleAttribute("data-flip", e.clientX + label.offsetWidth + 12 > el.getBoundingClientRect().right);
+      ghost.setAttribute("data-on", "");
+    };
+    const unpoint = () => ghost?.removeAttribute("data-on");
+    el.addEventListener("pointermove", point);
+    el.addEventListener("pointerleave", unpoint);
     return () => {
+      el.removeEventListener("pointermove", point);
+      el.removeEventListener("pointerleave", unpoint);
       ro.disconnect();
       el.removeEventListener("pointerdown", hold);
       el.removeEventListener("wheel", hold);
@@ -942,8 +968,10 @@ export function Trainspotter({
                       key={c.id}
                       value={c.id}
                       className="ts-cue"
-                      title={c.known ? cueLabel(c) : c.title ? `Unknown. Clue: “${c.title}”` : undefined}
+                      // Read by the pointer's time label, which names the track it is over.
+                      data-name={c.known ? cueLabel(c) : c.title ? `Unknown. Clue: “${c.title}”` : "Unknown"}
                       data-selected={c.id === selected ? "" : undefined}
+                      data-playing={c.id === playingCue?.id ? "" : undefined}
                       aria-current={c.id === selected ? "true" : undefined}
                       onClick={(e: React.MouseEvent) => {
                         // A click on a track picks it and plays it from its start, whichever side it is on.
@@ -966,8 +994,20 @@ export function Trainspotter({
                     >
                       <span className="ts-edge" data-span-edge="start" aria-hidden />
                       <span className="ts-cue-text">
-                        <b>{c.known ? c.artist || c.title : "Unknown"}</b>
-                        <i>{c.known ? (c.artist ? c.title : "") : c.title ? `“${c.title}”` : "ID it?"}</i>
+                        {c.known ? (
+                          <>
+                            <b>{c.artist || c.title}</b>
+                            <i>{c.artist ? c.title : ""}</i>
+                          </>
+                        ) : (
+                          <>
+                            {/* The block's own label already says "Unknown"; this is the mark you can see from across the room. */}
+                            <b className="ts-q" aria-hidden>
+                              ?
+                            </b>
+                            <i>{c.title ? `“${c.title}”` : ""}</i>
+                          </>
+                        )}
                       </span>
                       <span className="ts-edge" data-span-edge="end" aria-hidden />
                     </CuePart>
@@ -1180,12 +1220,19 @@ export function Trainspotter({
                         {i * 5}:00
                       </span>
                     ))}
+                    <SliderIndicator className="ts-scrub-fill" />
                     <SliderThumb className="ts-scrub-thumb" aria-label={`Position in side ${sides[active]}`} />
                   </SliderTrack>
                 </SliderControl>
               </Slider>
             </div>
             {root}
+            <div ref={ghostRef} className="ts-ghost" aria-hidden>
+              <span className="ts-ghost-time">
+                <b className="font-normal" />
+                <span />
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -1212,12 +1259,35 @@ export function Trainspotter({
             )}
           </>
         ) : (
-          <div className="text-sm text-[var(--muted)]">
-            <p className="ts-fine">Click a track to play and ID it. Drag it to move it, or drag an edge to resize it. Drag the top marker to skip through the tape.</p>
-            <p className="ts-fine mt-1 font-mono text-xs uppercase tracking-[0.1em]">
-              Space play · ← → previous / next track · M new track · Enter ID · Delete remove · Alt ← → nudge · Alt Shift ← → trim · {undoHint.text} undo
-            </p>
-            <p className="ts-coarse">Tap a track to play it, then “ID it”. Slide the top marker to skip through the tape.</p>
+          <div className="flex w-full flex-wrap items-center justify-between gap-x-6 text-sm text-[var(--muted)]">
+            <p className="ts-fine">Click a track to play it and ID it.</p>
+            <p className="ts-coarse">Tap a track to play it, then “ID it”.</p>
+            {/* Everything else the page can do is shown where it happens: the time under the pointer, the grips
+                on a track. The keys are a click away for whoever wants them. */}
+            <Popover>
+              <PopoverTrigger className="ts-link ts-fine-only -mr-2.5">Keyboard shortcuts</PopoverTrigger>
+              <PopoverContent side="top" align="end" sideOffset={6} className="ts-keys">
+                <PopoverTitle className="font-mono text-xs uppercase tracking-[0.14em] text-[var(--muted)]">Keyboard shortcuts</PopoverTitle>
+                <dl>
+                  {[
+                    ["Space", "Play or pause"],
+                    ["← →", "Previous or next track"],
+                    ["M", "A new track starts here"],
+                    ["Enter", "ID the selected track"],
+                    ["Delete", "Remove it"],
+                    ["Alt ← →", "Move it a second"],
+                    ["Alt Shift ← →", "Trim where it ends"],
+                    [undoHint.text, "Undo"],
+                    [redoHint.text, "Redo"],
+                  ].map(([key, what]) => (
+                    <div key={key} className="contents">
+                      <dt>{key}</dt>
+                      <dd>{what}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </PopoverContent>
+            </Popover>
           </div>
         )}
       </div>
@@ -1304,7 +1374,7 @@ export function Trainspotter({
             <Collapsible className="ts-fold" defaultOpen={namesWaiting === namesTotal}>
               <CollapsibleTrigger className="ts-fold-trigger">
                 <span>{fromSite ? "The tape’s tracklist" : "A tracklist from the comments, in order"}</span>
-                <span className="font-mono text-xs tabular-nums text-[var(--muted)]">{namesWaiting} still to place</span>
+                <span className="font-mono text-xs tabular-nums text-[var(--muted)]">{namesWaiting} without a time</span>
               </CollapsibleTrigger>
               <CollapsiblePanel className="ts-fold-panel">
                 <ol className="ts-list ts-names">
@@ -1312,16 +1382,24 @@ export function Trainspotter({
                     order
                       .filter((l) => l.known)
                       .map((l) => {
-                        const placed = !waiting[side].includes(l);
+                        // A name is on the timeline once a track there carries it: show when it plays, and go
+                        // there on a click. A name with no time yet is the work still to do.
+                        const at = cues.find((c) => c.track === sides[side] && c.known && isSameRecord(c, l));
                         return (
-                          <li key={`${side}-${l.n}`} data-placed={placed ? "" : undefined}>
+                          <li key={`${side}-${l.n}`} data-placed={at ? "" : undefined}>
                             <span className="flex-none font-mono text-xs tabular-nums text-[var(--muted)]">
                               {sides[side]} {l.n}
                             </span>
                             <span className="min-w-0 flex-1">
                               {l.artist} — {l.title}
                             </span>
-                            {placed && <span className="flex-none text-xs text-[var(--muted)]">placed</span>}
+                            {at ? (
+                              <button type="button" onClick={() => seek(side, at.start, true)} className="ts-inline-link flex-none font-mono text-xs tabular-nums" aria-label={`Hear it at ${clock(at.start)}`}>
+                                {clock(at.start)}
+                              </button>
+                            ) : (
+                              <span className="flex-none text-xs text-[var(--muted)]">no time yet</span>
+                            )}
                           </li>
                         );
                       }),
