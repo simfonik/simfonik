@@ -11,7 +11,8 @@ import { digest, reconcile, runningOrders, sideNames, trusted, type Said, type S
  *
  * Everything anyone has said about the tape is read: the 2008–2023 archive, then the comments posted through
  * the site since, oldest first, because a later comment corrects an earlier one. A comment in the site's own
- * form (`[B 12:34] Moby - Go`, see compose.ts) is taken exactly as written; the rest are read as prose,
+ * form (`[B 12:34] Moby - Go`, one line or several, see compose.ts) is taken exactly as written, a line that
+ * takes a mark away included; the rest are read as prose,
  * and what they don't place on a side is used only where the tape leaves no doubt (see `trusted`).
  *
  * `orders` is, for each side, its tracks in the order they play where a list gives them with few or no
@@ -38,8 +39,8 @@ export async function readTrackIds(tape: Tape): Promise<{ sides: TrackId[][]; or
   const exact: Sighting[] = [];
   const prose: Said[] = [];
   for (const c of said) {
-    const id = readComposed(c.content, positions);
-    if (id) exact.push({ ...id, known: Boolean(id.artist || id.title), author: c.author, date: c.date });
+    const post = readComposed(c.content, positions);
+    if (post) for (const id of post) exact.push({ ...id, known: Boolean(id.artist || id.title), exact: true, author: c.author, date: c.date });
     else prose.push(c);
   }
   const { sightings, listed } = digest(prose, sideNames(tape.sides));

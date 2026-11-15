@@ -1,21 +1,14 @@
 'use client';
 
 import { FormEvent, RefObject, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
-import { composeId, idAt, idLabel, idPlace, type ListedTrack, type RunningOrder, type TrackId } from '../lib/track-ids/compose';
+import { composeId, composeRemoval, idAt, idLabel, idPlace, ONE_MOMENT, type ListedTrack, type RunningOrder, type TrackId } from '../lib/track-ids/compose';
 import { suggest } from '../lib/track-ids/names';
+import { postIds, rememberedName } from '../lib/track-ids/post';
+import { formatTime } from '../lib/time-utils';
+import { useTapeTrackIds } from './TapeTrackIds';
 
-// A visitor's name is asked for once and offered back the next time, on this device only.
-const NAME_KEY = 'simfonik:id-name';
-const rememberedName = () => {
-  try {
-    return window.localStorage.getItem(NAME_KEY) ?? '';
-  } catch {
-    return '';
-  }
-};
-
-/** IDs this many seconds apart or closer are one moment of the tape to the reader (lib/track-ids/parse.ts). */
-const ONE_MOMENT = 20;
+/** What the blanks are about to do: post the ID in them, take the mark away, or move it to where the tape is. */
+type Act = 'id' | 'remove' | 'move';
 
 /** A screen as narrow as a phone's. There the blanks are a sheet over the page, with a row each. */
 const PHONE = '(max-width: 39.99rem)';
@@ -83,6 +76,11 @@ type Props = {
  * an ID runs until the next one, so without that a side with one ID could never be given a second. Nothing is
  * kept anywhere else.
  *
+ * A mark already on the tape can also be taken away, or moved to where the tape is now if it was made too
+ * early. Both are posts like any other: a line that says no track starts there, which the reader lets
+ * outweigh what was said of that moment before. The tracklist, down the page, can ask for the blanks to
+ * open for one of its lines.
+ *
  * Where the side has a list of its tracks with no times, the two lines of it likeliest to be this track are
  * offered, and pressing one writes it into the blanks.
  */
@@ -90,6 +88,11 @@ export function TrackIds({ tapeId, position, ids, time, order = null, length = n
   const playing = idAt(ids, time);
   // The blanks are for one moment of the tape, fixed when they open, while the tape plays on underneath.
   const [at, setAt] = useState<number | null>(null);
+  // The mark the blanks are for, where the tape already has one at that moment.
+  const [mark, setMark] = useState<TrackId | null>(null);
+  // Where the tape was when the blanks opened, if the mark could be moved there: later than it, and in it.
+  const [later, setLater] = useState<number | null>(null);
+  const [act, setAct] = useState<Act>('id');
   const [sheet, setSheet] = useState(false);
   // The visitor's name is asked for the first time only. The line has room for one thing at a time, so it
   // asks as a second step; the sheet has a row for it from the start.
@@ -110,17 +113,16 @@ export function TrackIds({ tapeId, position, ids, time, order = null, length = n
   const nameField = useRef<HTMLInputElement>(null);
   const messageId = useId();
 
-  const open = (fresh: boolean) => {
+  const begin = (marked: TrackId | null, start: number) => {
     const onPhone = window.matchMedia(PHONE).matches;
     const remembered = rememberedName();
-    // An ID is for the track playing. Where the comments have marked one, it goes to where that track starts:
-    // a correction then replaces the older word, and an ID for a track marked unknown fills the whole of it
-    // and doesn't split it at the moment the visitor happened to speak up. Putting a known ID right starts
-    // from what it says. Where nothing is marked, or the visitor says a new track has started, the ID goes to
-    // this moment.
-    const marked = fresh ? null : playing;
-    const start = marked ? marked.start : Math.floor(time);
+    const now = Math.floor(time);
     setAt(start);
+    setMark(marked);
+    // A mark made too early can be moved to here: the tape is in that track, well past where it is marked,
+    // and nothing else starts at this moment.
+    setLater(marked && marked === playing && now - marked.start > ONE_MOMENT && !ids.some((id) => id !== marked && Math.abs(id.start - now) <= ONE_MOMENT) ? now : null);
+    setAct('id');
     setArtist(marked?.known ? marked.artist : '');
     setTitle(marked?.known ? marked.title : '');
     setOffers(order && !marked?.known ? suggest(start, order.tracks, ids, length) : []);
@@ -132,6 +134,28 @@ export function TrackIds({ tapeId, position, ids, time, order = null, length = n
     setMessage('');
     setThanks('');
   };
+  // An ID is for the track playing. Where the comments have marked one, it goes to where that track starts:
+  // a correction then replaces the older word, and an ID for a track marked unknown fills the whole of it
+  // and doesn't split it at the moment the visitor happened to speak up. Putting a known ID right starts
+  // from what it says. Where nothing is marked, or the visitor says a new track has started, the ID goes to
+  // this moment.
+  const open = (fresh: boolean) => {
+    const marked = fresh ? null : playing;
+    begin(marked, marked ? marked.start : Math.floor(time));
+  };
+  // The tracklist asks for one of its lines. On a tape with sides the blanks belong to the side loaded, so a
+  // line on another side is answered once the player has loaded that side.
+  const { asked, answered } = useTapeTrackIds();
+  // The blanks open on the side's IDs and the tape's place as they are when the asking is heard.
+  const answer = useRef<(time: number) => void>(() => {});
+  useEffect(() => {
+    answer.current = (start) => begin(ids.find((id) => id.start === start) ?? null, start);
+  });
+  useEffect(() => {
+    if (!asked || asked.position !== position) return;
+    answered();
+    answer.current(asked.time);
+  }, [asked, position, answered]);
   const shut = () => setAt(null);
   // The sheet goes back down the way it came up; the blanks in the line just go.
   const leave = () => (sheet && dialog.current ? dismiss(dialog.current) : shut());
@@ -216,50 +240,56 @@ export function TrackIds({ tapeId, position, ids, time, order = null, length = n
     focus(field, true);
   };
 
-  async function post(e: FormEvent) {
-    e.preventDefault();
+  async function send(what: Act) {
     if (status === 'sending' || at === null) return;
-    if (!artist.trim() && !title.trim()) return refuse('Enter the artist or the title.', artistField.current);
+    // Only an ID needs a name: a mark is taken away or moved as it is, named or not.
+    if (what === 'id' && !artist.trim() && !title.trim()) return refuse('Enter the artist or the title.', artistField.current);
     if (!name.trim()) {
       if (askName) return refuse('Enter your name.', nameField.current);
+      // The line asks for the name as a step of its own, and the step ends in what was being done.
+      setAct(what);
       return wantName();
     }
+    // Taking a mark away is one line; moving it is that line and the ID at its new place, in one post.
+    const gone = mark && what !== 'id' ? [composeRemoval({ position, time: mark.start })] : [];
+    const id = what === 'remove' ? [] : [composeId({ position, time: what === 'move' && later !== null ? later : at, artist, title })];
 
     setStatus('sending');
     setMessage('');
+    const failed = await postIds(tapeId, name, [...gone, ...id].join('\n'));
     // In the line the name, once asked for, is the only blank there is.
-    const back = askName && !sheet ? nameField.current : artistField.current;
-    try {
-      const response = await fetch('/api/comments/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tapeId, authorName: name.trim(), authorEmail: '', content: composeId({ position, time: at, artist, title }), website: '' }),
-      });
-      const data = await response.json();
-      if (!response.ok) return refuse(data.error || 'That didn’t post. Please try again.', back);
-    } catch {
-      return refuse('That didn’t post. Please try again.', back);
-    }
-
-    try {
-      window.localStorage.setItem(NAME_KEY, name.trim());
-    } catch {
-      // Storage is off in this browser: the name is asked for again next time.
-    }
+    if (failed) return refuse(failed, askName && !sheet ? nameField.current : artistField.current);
     setStatus('idle');
-    setThanks('Posted. Thanks.');
+    setThanks(what === 'remove' ? 'Removed.' : what === 'move' ? 'Moved. Thanks.' : 'Posted. Thanks.');
     onPosted();
     leave();
   }
+  const post = (e: FormEvent) => {
+    e.preventDefault();
+    send(act);
+  };
 
   const where = idPlace(position, at ?? 0);
   const sending = status === 'sending';
   const from = order?.by ? `From ${order.by}’s list` : 'From the tape’s tracklist';
   const posting = (
     <span className="grid place-items-center">
-      <span className={`col-start-1 row-start-1 ${sending ? 'invisible' : ''}`}>Post</span>
+      <span className={`col-start-1 row-start-1 ${sending ? 'invisible' : ''}`}>{act === 'remove' ? 'Remove' : act === 'move' ? 'Move' : 'Post'}</span>
       <span className={`col-start-1 row-start-1 ${sending ? '' : 'invisible'}`}>…</span>
     </span>
+  );
+  // What can be done with a mark already on the tape besides putting its name right.
+  const upkeep = mark && (
+    <>
+      {later !== null && (
+        <button type="button" onClick={() => send('move')} aria-disabled={sending} className="track-ids-post">
+          Starts at {formatTime(later)} instead
+        </button>
+      )}
+      <button type="button" onClick={() => send('remove')} aria-disabled={sending} className="track-ids-post">
+        {mark.known ? 'Remove this ID' : 'Remove this mark'}
+      </button>
+    </>
   );
   const cross = (
     <svg className="h-3 w-3" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
@@ -291,7 +321,7 @@ export function TrackIds({ tapeId, position, ids, time, order = null, length = n
                 {idLabel(playing)}
               </button>
               {/* Not in the track's first moments: an ID there would be read as this same ID said again. */}
-              {time - playing.start >= ONE_MOMENT && (
+              {time - playing.start > ONE_MOMENT && (
                 <button type="button" onClick={() => open(true)} className="track-ids-post" aria-label="A new track starts here. ID it">
                   New track
                 </button>
@@ -339,6 +369,7 @@ export function TrackIds({ tapeId, position, ids, time, order = null, length = n
               ))}
             </div>
           )}
+          {upkeep && !askName && <div className="flex flex-wrap gap-x-6">{upkeep}</div>}
           {complaint}
         </form>
       )}
@@ -401,6 +432,7 @@ export function TrackIds({ tapeId, position, ids, time, order = null, length = n
                 </button>
               </p>
             )}
+            {upkeep && <div className="flex flex-wrap justify-between gap-x-6">{upkeep}</div>}
             {complaint}
           </form>
         </dialog>

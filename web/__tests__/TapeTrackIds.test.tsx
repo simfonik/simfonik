@@ -3,8 +3,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { LiveComments } from '../components/LiveComments';
-import { TrackIdLog } from '../components/TrackIdLog';
 import { TapeTrackIdsProvider, useTapeTrackIds } from '../components/TapeTrackIds';
+import { Tracklist } from '../components/Tracklist';
 
 // Stands in for the player: says how to take the tape somewhere, and can announce a posted comment.
 function Player({ went }: { went: (position: string | null, time: number) => void }) {
@@ -20,6 +20,8 @@ function Player({ went }: { went: (position: string | null, time: number) => voi
   );
 }
 
+const AB = [{ position: 'A' }, { position: 'B' }];
+
 describe('what a tape page’s parts share about track IDs', () => {
   let comments: { id: number; tape_id: string; author_name: string; content: string; created_at: string }[];
   let ids: unknown[][];
@@ -33,7 +35,7 @@ describe('what a tape page’s parts share about track IDs', () => {
     ];
     ids = [[], [{ start: 754, end: 994, artist: 'Moby', title: 'Go', known: true, by: 'Josh' }]];
     fetchMock = vi.fn((url: RequestInfo | URL) =>
-      Promise.resolve(new Response(JSON.stringify(String(url).includes('/api/track-ids/') ? { sides: ids, complete: true } : comments), { status: 200 })),
+      Promise.resolve(new Response(JSON.stringify(String(url).includes('/api/track-ids/') ? { sides: ids, orders: [null, null], complete: true } : comments), { status: 200 })),
     );
     global.fetch = fetchMock as unknown as typeof fetch;
   });
@@ -42,27 +44,29 @@ describe('what a tape page’s parts share about track IDs', () => {
     vi.restoreAllMocks();
   });
 
-  it('reads the comments once, for the comment list and for the log of IDs', async () => {
+  it('reads the comments once, for the comment list and for the tracklist’s history', async () => {
+    const user = userEvent.setup();
     render(
       <TapeTrackIdsProvider tapeId="tape-1">
         <Player went={() => {}} />
-        <TrackIdLog />
+        <Tracklist tapeId="tape-1" sides={AB} />
         <LiveComments />
       </TapeTrackIdsProvider>,
     );
 
     expect(await screen.findByText('what a tape')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'History · 1 post' }));
     expect(screen.getByText('Moby — Go')).toBeInTheDocument();
     expect(fetchMock.mock.calls.filter(([url]) => String(url) === '/api/comments/tape-1')).toHaveLength(1);
   });
 
-  it('sends the player to the moment an ID in the log is at', async () => {
+  it('sends the player to the moment a track in the tracklist starts', async () => {
     const user = userEvent.setup();
     const went = vi.fn<(position: string | null, time: number) => void>();
     render(
       <TapeTrackIdsProvider tapeId="tape-1">
         <Player went={went} />
-        <TrackIdLog />
+        <Tracklist tapeId="tape-1" sides={AB} />
       </TapeTrackIdsProvider>,
     );
 
@@ -75,7 +79,7 @@ describe('what a tape page’s parts share about track IDs', () => {
     render(
       <TapeTrackIdsProvider tapeId="tape-1">
         <Player went={() => {}} />
-        <TrackIdLog />
+        <Tracklist tapeId="tape-1" sides={AB} />
         <LiveComments />
       </TapeTrackIdsProvider>,
     );
@@ -86,6 +90,7 @@ describe('what a tape page’s parts share about track IDs', () => {
     await user.click(screen.getByRole('button', { name: 'posted, 1 IDs' }));
 
     expect(await screen.findByRole('button', { name: 'posted, 2 IDs' })).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByText('808 State — Cubik')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Play from A 0:00:05' })).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'History · 2 posts' })).toBeInTheDocument();
   });
 });

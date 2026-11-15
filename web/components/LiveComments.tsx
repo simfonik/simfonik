@@ -1,6 +1,6 @@
 'use client';
 
-import { splitComposed } from '../lib/track-ids/compose';
+import { splitPost } from '../lib/track-ids/compose';
 import { CommentBody } from './CommentBody';
 import { useTapeTrackIds } from './TapeTrackIds';
 
@@ -14,10 +14,10 @@ function formatDate(dateString: string): string {
 }
 
 /**
- * What people have said about the tape through the site. A comment that is a track ID in the site's own form
- * (`[B 12:34] Moby - Go`) is not here: a run of those would bury the talk, and they have a log of their own
- * (TrackIdLog). The comments come from the page's shared read of them, which is made again whenever one is
- * posted, so a new one shows without a reload.
+ * What people have said about the tape through the site. A comment that is nothing but track IDs in the
+ * site's own form (`[B 12:34] Moby - Go`) is not here: a run of those would bury the talk, and they are kept
+ * as the tracklist's history (Tracklist). The comments come from the page's shared read of them, which is
+ * made again whenever one is posted, so a new one shows without a reload.
  */
 export function LiveComments() {
   const { comments } = useTapeTrackIds();
@@ -30,7 +30,7 @@ export function LiveComments() {
     );
   }
 
-  const talk = comments.filter((comment) => !splitComposed(comment.content));
+  const talk = comments.filter((comment) => !splitPost(comment.content));
   if (talk.length === 0) {
     return null;
   }

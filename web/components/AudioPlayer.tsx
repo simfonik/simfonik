@@ -39,6 +39,13 @@ export function AudioPlayer({ src, title, tapeId, sidePosition, wave, length, si
     return () => setPlayer(null);
   }, [setPlayer, isPlaying, play, seek]);
 
+  // The tracklist, down the page, lights the track playing and can time one that starts now.
+  const { report } = trackIds;
+  const { currentTime } = state;
+  useEffect(() => {
+    report(sideIndex, currentTime, isPlaying || currentTime > 0);
+  }, [report, sideIndex, currentTime, isPlaying]);
+
   if (state.error) {
     return (
       <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-red-500 border-[1.5px] border-red-500 px-3 py-2">

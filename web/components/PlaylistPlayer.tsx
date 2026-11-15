@@ -86,6 +86,13 @@ export function PlaylistPlayer({ tracks, tapeId, sideCount }: PlaylistPlayerProp
     return () => setPlayer(null);
   }, [setPlayer, tracks, currentTrackIndex, isPlaying, play, seek]);
 
+  // The tracklist, down the page, lights the track playing and can time one that starts now.
+  const { report } = trackIds;
+  const { currentTime } = state;
+  useEffect(() => {
+    report(currentTrack.index, currentTime, isPlaying || currentTime > 0);
+  }, [report, currentTrack.index, currentTime, isPlaying]);
+
   const selectTrack = (index: number) => {
     if (index === currentTrackIndex) {
       // If clicking current track, toggle play/pause

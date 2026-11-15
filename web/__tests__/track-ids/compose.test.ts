@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import tapes from '@/data/tapes.json';
-import { clock, composeId, idAt, idLabel, readComposed, splitComposed, type TrackId, idPlace } from '@/lib/track-ids/compose';
+import { clock, composeId, composeRemoval, idAt, idLabel, idPlace, readComposed, splitComposed, splitPost, type TrackId } from '@/lib/track-ids/compose';
 
 type Tape = { id: string; sides: { position: string }[] };
 
@@ -27,7 +27,7 @@ describe('IDs the site writes', () => {
         for (const time of [0, 5, 754, 3723]) {
           for (const [artist, title] of names) {
             const written = composeId({ position: positions.length > 1 ? side.position : null, time, artist, title });
-            expect(readComposed(written, positions), `${tape.id} ${written}`).toEqual({ side: index, start: time, artist, title });
+            expect(readComposed(written, positions), `${tape.id} ${written}`).toEqual([{ side: index, start: time, artist, title, gone: false }]);
           }
         }
       });
@@ -35,9 +35,26 @@ describe('IDs the site writes', () => {
   });
 
   it('takes its own form apart without knowing the tape, for showing in the comments', () => {
-    expect(splitComposed('[1B 1:02:03] ? - Go')).toEqual({ position: '1B', time: 3723, artist: '', title: 'Go' });
-    expect(splitComposed('[0:05] Moby - Go')).toEqual({ position: null, time: 5, artist: 'Moby', title: 'Go' });
+    expect(splitComposed('[1B 1:02:03] ? - Go')).toEqual({ position: '1B', time: 3723, artist: '', title: 'Go', gone: false });
+    expect(splitComposed('[0:05] Moby - Go')).toEqual({ position: null, time: 5, artist: 'Moby', title: 'Go', gone: false });
     expect(splitComposed('I think [0:05] Moby - Go')).toBeNull();
+  });
+
+  it('writes and reads the line that takes a mark away', () => {
+    expect(composeRemoval({ position: 'B', time: 754 })).toBe('[B 12:34] no track starts here');
+    expect(composeRemoval({ position: null, time: 5 })).toBe('[0:05] no track starts here');
+    expect(splitComposed('[B 12:34] no track starts here')).toEqual({ position: 'B', time: 754, artist: '', title: '', gone: true });
+    expect(readComposed('[0:05] no track starts here', ['A'])).toEqual([{ side: 0, start: 5, artist: '', title: '', gone: true }]);
+  });
+
+  it('reads a post of several lines as so many IDs, and a comment with any talk in it as talk', () => {
+    const post = ['[A 0:00] The Prodigy - Hyperspeed', '[A 3:41] Butsch - The Count', '', '[A 2:10] no track starts here'].join('\n');
+    expect(splitPost(post)?.map((id) => [id.time, id.artist, id.gone])).toEqual([[0, 'The Prodigy', false], [221, 'Butsch', false], [130, '', true]]);
+    expect(readComposed(post, ['A', 'B'])?.map((id) => [id.side, id.start])).toEqual([[0, 0], [0, 221], [0, 130]]);
+    expect(splitPost('[A 0:00] The Prodigy - Hyperspeed\nwhat a tune')).toBeNull();
+    expect(splitPost('   ')).toBeNull();
+    // One line for a side the tape doesn't have, and the whole comment is left to the reader of prose.
+    expect(readComposed('[A 0:00] The Prodigy - Hyperspeed\n[C 3:41] Butsch - The Count', ['A', 'B'])).toBeNull();
   });
 
   it('leaves anything else to the reader of prose', () => {
@@ -47,7 +64,7 @@ describe('IDs the site writes', () => {
     // A side the tape doesn't have, and no side on a tape that has two.
     expect(readComposed('[C 12:34] Moby - Go', positions)).toBeNull();
     expect(readComposed('[12:34] Moby - Go', positions)).toBeNull();
-    expect(readComposed('[12:34] Moby - Go', ['A'])).toEqual({ side: 0, start: 754, artist: 'Moby', title: 'Go' });
+    expect(readComposed('[12:34] Moby - Go', ['A'])).toEqual([{ side: 0, start: 754, artist: 'Moby', title: 'Go', gone: false }]);
   });
 });
 

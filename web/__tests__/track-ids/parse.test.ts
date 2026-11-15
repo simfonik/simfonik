@@ -310,3 +310,47 @@ describe('a list that times a two-sided tape as one recording', () => {
     expect(where([...theirs, other])).toContain('B 0:10:00 Someone else on B');
   });
 });
+
+describe('IDs made with the site’s own form, which places them to the second', () => {
+  const at = (start: number, artist: string, title: string, date: string, more: Partial<Sighting> = {}): Sighting => ({ side: 0, start, artist, title, known: Boolean(artist || title), author: 'Rents', date, exact: true, ...more });
+  const tracks = (read: Sighting[]) => reconcile(read, [3600]).map((p) => `${p.start} ${p.known ? `${p.artist} — ${p.title}` : '??'}`);
+
+  it('are two tracks when more than five seconds apart, where two rough times would be one', () => {
+    expect(tracks([at(0, 'The Prodigy', 'Hyperspeed', '1'), at(12, 'Butsch', 'The Count', '2')])).toEqual(['0 The Prodigy — Hyperspeed', '12 Butsch — The Count']);
+    expect(tracks([at(0, 'The Prodigy', 'Hyperspeed', '1', { exact: false }), at(12, 'Butsch', 'The Count', '2', { exact: false })])).toEqual(['0 Butsch — The Count']);
+  });
+
+  it('are one moment when five seconds apart or closer: the later is the earlier put right', () => {
+    expect(tracks([at(100, 'Orbital', 'Chime', '1'), at(100, 'Joey Beltram', 'Energy Flash', '2')])).toEqual(['100 Joey Beltram — Energy Flash']);
+    expect(tracks([at(100, 'Orbital', 'Chime', '1'), at(105, 'Joey Beltram', 'Energy Flash', '2')])).toEqual(['100 Joey Beltram — Energy Flash']);
+  });
+
+  it('still name the moment someone asked about a few seconds earlier', () => {
+    expect(tracks([at(100, '', '', '1', { exact: false }), at(112, 'Orbital', 'Chime', '2')])).toEqual(['100 Orbital — Chime']);
+  });
+
+  describe('a mark taken away', () => {
+    const gone = (start: number, date: string): Sighting => at(start, '', '', date, { gone: true });
+
+    it('takes with it everything said of that moment before', () => {
+      expect(tracks([at(0, 'Orbital', 'Chime', '1'), at(240, 'Wrong', 'Thing Entirely', '2'), at(240, '', '', '2a', { exact: false }), gone(240, '3')])).toEqual(['0 Orbital — Chime']);
+    });
+
+    it('leaves what is said of it afterwards: the track can be ID’d again', () => {
+      expect(tracks([at(240, 'Wrong', 'Thing Entirely', '1'), gone(240, '2'), at(240, 'Joey Beltram', 'Energy Flash', '3')])).toEqual(['240 Joey Beltram — Energy Flash']);
+    });
+
+    it('moves a track marked too early when the same post IDs it at the right moment, even a moment later', () => {
+      expect(tracks([at(240, 'Orbital', 'Chime', '1'), gone(240, '2'), at(300, 'Orbital', 'Chime', '2')])).toEqual(['300 Orbital — Chime']);
+      expect(tracks([at(240, 'Orbital', 'Chime', '1'), gone(240, '2'), at(243, 'Orbital', 'Chime', '2')])).toEqual(['243 Orbital — Chime']);
+    });
+
+    it('takes nothing from a moment that starts somewhere else', () => {
+      expect(tracks([at(240, 'Orbital', 'Chime', '1'), gone(300, '2')])).toEqual(['240 Orbital — Chime']);
+    });
+
+    it('is undone by deleting it: the reader has only what is still there to read', () => {
+      expect(tracks([at(240, 'Orbital', 'Chime', '1')])).toEqual(['240 Orbital — Chime']);
+    });
+  });
+});

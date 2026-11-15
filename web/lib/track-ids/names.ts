@@ -14,7 +14,7 @@ const same = (id: TrackId, line: ListedTrack) => isSameRecord(id, line) || spelt
  * Which timed ID on the side carries each listed line. A record played twice is listed twice, and the first
  * listing is the earlier track: each ID answers for one line of the list.
  */
-function placed(order: ListedTrack[], ids: TrackId[]): Map<ListedTrack, TrackId> {
+export function placed(order: ListedTrack[], ids: TrackId[]): Map<ListedTrack, TrackId> {
   const named = ids.filter((id) => id.known).sort((a, b) => a.start - b.start);
   const taken = new Set<TrackId>();
   const at = new Map<ListedTrack, TrackId>();

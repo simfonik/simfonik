@@ -14,7 +14,6 @@ import { PlaylistPlayer } from "../../../components/PlaylistPlayer";
 import { CommentForm } from "../../../components/CommentForm";
 import { LiveComments } from "../../../components/LiveComments";
 import { TapeTrackIdsProvider } from "../../../components/TapeTrackIds";
-import { TrackIdLog } from "../../../components/TrackIdLog";
 import { CommentBody } from "../../../components/CommentBody";
 import { RotatingWord } from "../../../components/RotatingWord";
 import { JsonLd } from "../../../components/JsonLd";
@@ -419,35 +418,8 @@ export default async function Page({ params }: Props) {
         )}
       </div>
 
-      {/* Tracklist */}
-      {tape.sides.some(side => side.tracks && side.tracks.length > 0) && (
-        <section className="border-t-[1.5px] border-[var(--border)] pt-14 mt-16">
-          <div className="max-w-3xl">
-            <h2 className="font-display text-4xl sm:text-5xl leading-[0.95] text-[var(--text)] mb-8">
-              Tracklist
-            </h2>
-          <div className="space-y-10">
-            {tape.sides.map((side, idx) => {
-              if (!side.tracks || side.tracks.length === 0) return null;
-
-              return (
-                <div key={idx}>
-                  {!unlabelled && (
-                    <h3 className="font-display text-xl leading-tight text-[var(--text)] mb-4">
-                      {side.title ?? `Side ${side.position}`}
-                    </h3>
-                  )}
-                  <Tracklist tracks={side.tracks} />
-                </div>
-              );
-            })}
-          </div>
-          </div>
-        </section>
-      )}
-
-      {/* The log of ID posts: a section of its own, with its heading, on a tape that has any. */}
-      <TrackIdLog />
+      {/* The tracklist: the tape's own, a list kept in the comments, and the IDs, as one list. */}
+      <Tracklist tapeId={tape.id} sides={tape.sides.map(({ position, title, tracks }) => ({ position, title, tracks }))} />
 
       {/* Comments */}
       <section className="border-t-[1.5px] border-[var(--border)] pt-14 mt-16">

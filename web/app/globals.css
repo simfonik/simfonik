@@ -501,7 +501,8 @@ html:has(.id-sheet[open]) { overflow: hidden; }
    as wide as the screen already, and a page zoomed by a hair then slides from side to side under a finger.
    The player and the track line are tapped twice in a moment all the time (play, pause; open, shut), so
    two taps on them, or anywhere on the sheet, are two presses and never a zoom. */
-.player-play, .player-side, .track-ids-line, .track-ids-post, .track-ids-offer, .track-ids-shut, .tape-picture, .comment-time, .id-sheet { touch-action: manipulation; }
+.player-play, .player-side, .track-ids-line, .track-ids-post, .track-ids-offer, .track-ids-shut, .tape-picture, .comment-time, .id-sheet,
+.tracklist-time, .tracklist-mark, .tracklist-cue, .tracklist-post { touch-action: manipulation; }
 /* A held finger doesn't select the words of what is pressed in the sheet. */
 .id-sheet button { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 /* The sheet's top row stays put when a small phone has to scroll the rest of the sheet. */
@@ -586,8 +587,82 @@ html:has(.id-sheet[open]) { overflow: hidden; }
 .comment-time::before { content: ""; position: absolute; inset: -12px -6px; }
 .comment-time:active { opacity: 0.6; }
 .comment-time:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
-/* The log of a tape's ID posts: one line each in the ID's own type, with who posted it and when after it,
-   more quietly, at the far end of the line where there is room and under it where there is not. Each entry
+/* The tracklist. A row is where a track starts, then what it is. The time is pressed to hear the tape from
+   there. A track nobody has timed has its number in the list where the time will go, and while its side
+   plays a + is there in its place: pressed when the track starts, it gives the row that moment. */
+.tracklist-row {
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 1fr);
+  align-items: baseline;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.375;
+  color: var(--text);
+  outline: none;
+}
+.tracklist-row[hidden] { display: none; }
+/* On a touch screen each row is as tall as a finger needs, so one place to press never lies over the next. */
+@media (pointer: coarse) {
+  .tracklist-row { padding-block: 0.78125rem; }
+}
+@media (hover: hover) and (pointer: fine) {
+  .tracklist-row:hover { background: var(--bg-hover); }
+}
+/* The track playing now. */
+.tracklist-row[aria-current] { background: var(--bg-hover); box-shadow: inset 2px 0 0 var(--text); }
+.tracklist-row[aria-current] .tracklist-time { color: var(--text); }
+.tracklist-time, .tracklist-mark, .tracklist-n {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.tracklist-time, .tracklist-mark { position: relative; cursor: pointer; }
+/* A place to press 44px tall about the words, whatever their height, and as wide as the column. */
+.tracklist-time::before, .tracklist-mark::before { content: ""; position: absolute; inset: calc((100% - 2.75rem) / 2) -0.5rem; }
+.tracklist-mark { min-width: 3rem; font-size: 17px; line-height: 1; text-align: left; }
+/* The visitor's own time, not posted yet. */
+.tracklist-time[data-pending] { color: var(--text); text-decoration: underline dotted; text-underline-offset: 4px; }
+@media (hover: hover) and (pointer: fine) {
+  .tracklist-time:hover, .tracklist-mark:hover { color: var(--text); }
+  .tracklist-time:not([data-pending]):hover { text-decoration: underline; text-underline-offset: 4px; }
+  .tracklist-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+}
+.tracklist-time:active, .tracklist-mark:active, .tracklist-cue:active { opacity: 0.6; }
+.tracklist-time:focus-visible, .tracklist-mark:focus-visible, .tracklist-cue:focus-visible, .tracklist-link:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+/* What can be done about a row, after its name: the same small words as the cue on the player's line. */
+.tracklist-cue {
+  position: relative;
+  margin-left: 0.75em;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--text);
+  cursor: pointer;
+}
+.tracklist-cue::before { content: ""; position: absolute; inset: calc((100% - 2.75rem) / 2) -0.5rem; }
+@media (hover: hover) and (pointer: fine) {
+  .tracklist-cue:hover { text-decoration: underline; text-underline-offset: 4px; }
+}
+/* The visitor's times, waiting to be posted: a bar that stays at the foot of the screen while the list is
+   on it, so it is in reach from whichever row was last pressed. */
+.tracklist-post {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 1rem;
+  margin-top: 1rem;
+  padding: 0.5rem 0 calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1.5px solid var(--border);
+  background: var(--bg);
+}
+.tracklist-post-name { flex: 1 1 8rem; }
+/* The tracklist's history of ID posts: each post's lines in the ID's own type, with who posted it and when
+   after them, more quietly, at the far end of the line where there is room and under it where there is not. Each entry
    is as tall as a finger needs, so one place to press never lies over the next. A long name breaks at the
    end of the line and never widens the page. */
 .id-log-entry {

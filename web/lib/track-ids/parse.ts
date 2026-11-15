@@ -1,5 +1,6 @@
 // Reads the timed track IDs that visitors have been leaving in comments since 2009 and reconciles them
 // into one proposal per moment of tape. Pure functions, no I/O.
+import { ONE_MOMENT } from './compose';
 
 export type Sighting = {
   side: number; // index into the tape's sides
@@ -15,6 +16,10 @@ export type Sighting = {
   /** No side was said on its line or above it, so it sits on the first side for want of anything better.
       Not used on a tape with more than two sides (see `trusted`). */
   sideless?: boolean;
+  /** Placed by the site's own form (compose.ts), to the second. A time typed into a sentence is rougher. */
+  exact?: boolean;
+  /** Not a sighting but the taking away of one: whatever was said of this moment before it no longer stands. */
+  gone?: boolean;
   /** Worked out, not stated: the first track in a list of a side, taken to start the side. Anything someone
       actually timed at that moment is believed over it. */
   weak?: boolean;
@@ -405,12 +410,25 @@ export function reconcile(read: Sighting[], lengths: number[]): Proposal[] {
   const sightings = splitWholeTape(read, lengths);
   const out: Proposal[] = [];
   lengths.forEach((length, side) => {
-    const here = sightings.filter((s) => s.side === side && s.start < length).sort((a, b) => a.start - b.start || a.date.localeCompare(b.date));
+    const here = sightings.filter((s) => s.side === side && !s.gone && s.start < length).sort((a, b) => a.start - b.start || a.date.localeCompare(b.date));
+    // What is said within 20 seconds is said of one moment: people's times are rough. Two times from the
+    // site's own form are not, and are one moment only when ONE_MOMENT apart or closer. Twelve seconds after
+    // an ID made with the form, another made with it is the next track, not the first put right.
     const groups: Sighting[][] = [];
     for (const s of here) {
       const g = groups[groups.length - 1];
-      if (g && s.start - g[0].start <= 20) g.push(s);
+      const another = s.exact && g?.some((x) => x.exact && s.start - x.start > ONE_MOMENT);
+      if (g && s.start - g[0].start <= 20 && !another) g.push(s);
       else groups.push([s]);
+    }
+    // A mark taken away (see compose.ts) is taken from the moment that starts where it says, and takes with
+    // it everything said of that moment before. What is said after stands: the track can be ID'd again.
+    const shown = (g: Sighting[]) => (g.find((s) => !s.weak) ?? g[0]).start;
+    for (const gone of sightings.filter((s) => s.side === side && s.gone)) {
+      const i = groups.findIndex((g) => Math.abs(shown(g) - gone.start) <= ONE_MOMENT);
+      if (i < 0) continue;
+      groups[i] = groups[i].filter((s) => s.date >= gone.date);
+      if (groups[i].length === 0) groups.splice(i, 1);
     }
     groups.forEach((g, i) => {
       const known = g.filter((s) => s.known && (s.artist || s.title));
@@ -440,7 +458,7 @@ export function reconcile(read: Sighting[], lengths: number[]): Proposal[] {
         also.push({ artist: s.artist, title: s.title, known: s.known, author: s.author, date: s.date });
       }
       const open = !(best.end && best.end > best.start) && !groups[j];
-      if (end - best.start >= 5) out.push({ ...best, start: (g.find((s) => !s.weak) ?? g[0]).start, end, voices: new Set(g.map((s) => s.author)).size, also, open: open || undefined });
+      if (end - best.start >= 5) out.push({ ...best, start: shown(g), end, voices: new Set(g.map((s) => s.author)).size, also, open: open || undefined });
     });
   });
   return out;
