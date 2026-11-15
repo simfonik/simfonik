@@ -52,6 +52,17 @@ const origin = (c: Cue): Spot | null => {
   const from = c.by ? c.id.match(/^crowd-(\d+)-(\d+)/) : null;
   return from ? { side: Number(from[1]), start: Number(from[2]) } : null;
 };
+/**
+ * Play, or pause while playing, as the sign everyone knows. It marks the one button here that is not an edit,
+ * and it reads at a glance where a word that changes has to be read. The triangle's box sits a pixel right
+ * of centre, because its weight is on its left.
+ */
+const PlayGlyph = ({ playing }: { playing: boolean }) => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden>
+    {playing ? <path d="M2 1h3.5v12H2zM8.5 1H12v12H8.5z" /> : <path d="M3 1l10 6-10 6z" />}
+  </svg>
+);
+
 /** What is kept in this browser for a tape. */
 type Saved = { v: 2; cues: Cue[]; removed: Spot[]; /** The comment tracks whose times this visitor set themselves, by id. */ moved?: string[] };
 
@@ -570,7 +581,10 @@ export function Trainspotter({
       // end sooner (someone timed another one inside it) would run on over its new neighbour. For work saved
       // before the page recorded whose times were whose, a start still where the comments put it is theirs.
       const mine = moved.current ? moved.current.has(c.id) : c.start !== from.start;
-      const next = { ...c, ...(mine ? {} : { start: p.start, end: p.end, open: p.open }), artist: p.artist, title: p.title, known: p.known, by: p.author };
+      // (The last track on a side keeps its end: the comments only guess it, and the page has since cut it to
+      // the side's real length.)
+      const last = !proposals.some((x) => x.side === p.side && x.start >= p.end);
+      const next = { ...c, ...(mine ? {} : { start: p.start, end: last ? c.end : p.end, open: last ? c.open : p.open }), artist: p.artist, title: p.title, known: p.known, by: p.author };
       if (next.start === c.start && next.end === c.end && next.artist === c.artist && next.title === c.title && next.known === c.known) return [c];
       corrected++;
       return [next];
@@ -1435,8 +1449,8 @@ export function Trainspotter({
           below the name alone. The button says whether it is playing and the clock says where, so neither is
           said twice. On a phone the pinned bar does this job. */}
       <div className="ts-fine-only ts-player mt-6 border-t-[1.5px] border-[var(--text)] pt-5">
-        <button type="button" onClick={toggle} disabled={audioFailed} className="ts-btn ts-btn-solid min-w-[6rem]" aria-keyshortcuts="Space">
-          {playing ? "Pause" : "Play"}
+        <button type="button" onClick={toggle} disabled={audioFailed} className="ts-btn ts-btn-solid ts-play" aria-label={playing ? "Pause" : "Play"} aria-keyshortcuts="Space">
+          <PlayGlyph playing={playing} />
         </button>
         <p className="ts-player-title truncate font-display text-3xl leading-tight text-[var(--text)] sm:text-4xl" title={playingCue?.known ? cueLabel(playingCue) : undefined}>{playingCue ? (playingCue.known ? cueLabel(playingCue) : "Unknown track") : "Nothing ID’d here yet"}</p>
         <p className="flex-none font-mono text-sm tabular-nums text-[var(--text)]">
@@ -1587,27 +1601,9 @@ export function Trainspotter({
           every state. */}
       <div className="ts-namebar">
         <div className="ts-fine-only">{barForm}</div>
+        {/* Phone: the track's name, what to do with it and its ID button are all in the bar pinned to the
+            bottom of the screen, once. Undo and Redo are what is left here. */}
         <div className="ts-coarse-only">
-          <div className="ts-idrow">
-            {/* Artist and title each get a line of their own, and the title may take two: side by side on one
-                line a name was cut off after a couple of words. The row is as tall as that in every state. */}
-            <div className="min-w-0 flex-1">
-              {subject ? (
-                <>
-                  <p className="truncate text-[15px] font-medium text-[var(--text)]">{subject.known ? subject.artist || subject.title : "Unknown track"}</p>
-                  <p className="line-clamp-2 text-sm text-[var(--muted)]">{subject.known ? (subject.artist ? subject.title : "") : subject.title ? `Clue: “${subject.title}”` : "Nobody has ID’d it yet"}</p>
-                </>
-              ) : (
-                <p className="text-sm text-[var(--muted)]">{here.length ? "Tap a track to play it, then “ID track”." : "Nothing marked yet. Play, then tap “New track”."}</p>
-              )}
-            </div>
-            {/* Only when there is a track for it to act on. With none, the bar pinned below already shows the button, disabled. */}
-            {subject && (
-              <button type="button" onClick={() => idIt(subject.id)} className="ts-btn ts-btn-solid flex-none">
-                {subject.known ? "Fix ID" : "ID track"}
-              </button>
-            )}
-          </div>
           <div className="-mr-2.5 flex h-11 items-center justify-end gap-1">{undoRedo}</div>
         </div>
       </div>
@@ -1789,19 +1785,44 @@ export function Trainspotter({
 
       {/* Phone: play, the clock and the two ID actions stay under the thumb wherever the page is scrolled. */}
       <div className="ts-bar" role="group" aria-label="Player">
-        <p className="ts-bar-now">
-          <span className="min-w-0 flex-1 truncate">{audioFailed ? "This side’s audio didn’t load" : playingCue ? (playingCue.known ? cueLabel(playingCue) : "Unknown track") : "Nothing ID’d here yet"}</span>
-          <span className="flex-none font-mono text-xs tabular-nums text-[var(--muted)]">
-            {sides[active]} {clock(now)}
-          </span>
-        </p>
+        {/* Two lines, always: artist over title, as on a record's label. On one line a name was cut off after a
+            few words, and this is the only place a phone shows it. They are about the track the button acts
+            on (the one tapped, else the one playing, the same rule as the fields on a desktop). When there is
+            no such track, the second line says what to do. */}
+        <div className="ts-bar-now">
+          <p className="ts-bar-line">
+            <span className="min-w-0 flex-1 truncate">
+              {audioFailed ? "This side’s audio didn’t load" : subject ? (subject.known ? subject.artist || subject.title : "Unknown track") : here.length ? "Nothing ID’d here yet" : "Nothing marked yet"}
+            </span>
+            <span className="flex-none font-mono text-xs font-normal tabular-nums text-[var(--muted)]">
+              {sides[active]} {clock(now)}
+            </span>
+          </p>
+          <p className="ts-bar-line ts-bar-sub">
+            <span className="min-w-0 flex-1 truncate">
+              {audioFailed
+                ? ""
+                : subject
+                  ? subject.known
+                    ? subject.artist
+                      ? subject.title
+                      : ""
+                    : subject.title
+                      ? `Clue: “${subject.title}”`
+                      : "Nobody has ID’d it yet"
+                  : here.length
+                    ? "Tap a track to play it, then “ID track”."
+                    : "Play, then tap “New track”."}
+            </span>
+          </p>
+        </div>
         <div className="ts-bar-row">
-          <button type="button" onClick={toggle} disabled={audioFailed} className="ts-bar-btn ts-bar-primary">
-            {playing ? "Pause" : "Play"}
+          <button type="button" onClick={toggle} disabled={audioFailed} className="ts-bar-btn ts-bar-primary" aria-label={playing ? "Pause" : "Play"}>
+            <PlayGlyph playing={playing} />
           </button>
           {/* Always here, so the button beside it never moves under the thumb. */}
-          <button type="button" onClick={() => playingCue && idIt(playingCue.id)} disabled={!playingCue} className="ts-bar-btn">
-            {playingCue?.known ? "Fix ID" : "ID track"}
+          <button type="button" onClick={() => subject && idIt(subject.id)} disabled={!subject} className="ts-bar-btn">
+            {subject?.known ? "Fix ID" : "ID track"}
           </button>
           <button type="button" onClick={markHere} className="ts-bar-btn">
             New track

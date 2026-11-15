@@ -72,6 +72,9 @@
   transition: transform 120ms ease-out;
 }
 .ts-btn-solid { background: var(--text); color: var(--bg); }
+/* Play: the same solid block as the page's other main actions, with the sign in it instead of a word. */
+/* As wide as the side labels below it (3rem), so the two share both edges down the page's left. */
+.ts-play { width: 3rem; padding: 0; }
 @media (hover: hover) {
   .ts-btn:not(:disabled):hover { background: var(--text); color: var(--bg); }
   .ts-btn-solid:not(:disabled):hover { background: color-mix(in oklch, var(--text) 82%, var(--bg)); }
@@ -411,7 +414,6 @@
 /* Nothing to ID yet: the fields are there, visibly idle. */
 .ts-input:disabled { border-color: var(--border); cursor: not-allowed; }
 /* The phone's row: tall enough for an artist and two lines of title, in every state. */
-.ts-idrow { display: flex; min-height: 4rem; align-items: center; gap: 0.75rem; }
 .ts-coarse-only { display: none; }
 @media (pointer: coarse) { .ts-coarse-only { display: block; } }
 .ts-nameform { display: flex; width: 100%; flex-wrap: wrap; align-items: flex-end; gap: 0.75rem; }
@@ -566,8 +568,11 @@
     background: var(--bg);
     padding: 0.6rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
   }
-  .ts-bar-now { display: flex; align-items: baseline; gap: 0.75rem; font-size: 14px; font-weight: 500; color: var(--text); }
-  .ts-bar-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem; }
+  /* Each line is one line and keeps its height when empty, so the buttons under it never move. */
+  .ts-bar-line { display: flex; min-height: 1.25rem; align-items: baseline; gap: 0.75rem; font-size: 14px; font-weight: 500; line-height: 1.25rem; color: var(--text); }
+  .ts-bar-sub { font-weight: 400; color: var(--muted); }
+  /* Play is a square at the thumb's corner; the two ID actions share the rest. */
+  .ts-bar-row { display: grid; grid-template-columns: 3.25rem 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem; }
   .ts-bar-btn {
     display: inline-flex;
     min-height: 2.75rem;
