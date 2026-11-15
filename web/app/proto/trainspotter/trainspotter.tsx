@@ -62,7 +62,7 @@ export function Trainspotter({
   /** Every tape with something to work on, in the order the switcher lists them. */
   others: TapeEntry[];
   /** Each side's loudness along its length, where it has been measured (see `outline`). */
-  waves: number[][] | null;
+  waves: (number[] | null)[] | null;
 }) {
   const sides = useMemo(() => tape.sides.map((s) => s.key), [tape.sides]);
   // A set of several tapes (eight DJs, eight recordings) shows one part at a time, chosen from a row of parts.
@@ -137,7 +137,7 @@ export function Trainspotter({
   }, [lengths, cues, proposals, many, active, sides]);
   const sideLength = (i: number) => lengths[i] ?? length;
   // Where a side's sound has been measured, the overview's lane takes its shape.
-  const outlines = useMemo(() => (waves ?? []).map(outline), [waves]);
+  const outlines = useMemo(() => (waves ?? []).map((levels) => (levels ? outline(levels) : null)), [waves]);
   const [sheet, setSheet] = useState(false); // the ID sheet, on phones
   const timeline = useTimeline({ audio, length, many, rows: sides.length, sheet });
   const { scrollerRef, headRef, ghostRef, mapRef, mapWindowRef, mapHeadRef, minutes, snapUntil, scrubAt, scrub, scrubEnd, rulerDown, mapDown, mapMove, mapUp, mapCancel } = timeline;
@@ -151,21 +151,33 @@ export function Trainspotter({
   const [sheetEl, setSheetEl] = useState<HTMLElement | null>(null);
   const pageBefore = useRef(0); // where the page was when the sheet opened
   const pageGlide = useRef(0);
+  const stopGlide = useRef(() => {});
   const glidePage = useCallback((to: number) => {
-    cancelAnimationFrame(pageGlide.current);
+    stopGlide.current();
     const from = window.scrollY;
     if (Math.abs(to - from) < 1) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return window.scrollTo({ top: to });
     const spring = solveSpring(0.34, 1, from - to, 0); // the SDK's sheet spring
     const t0 = performance.now();
+    // The visitor's own scrolling wins: a wheel, a finger or a key ends the glide where it is.
+    const theirs = ["wheel", "touchstart", "keydown"] as const;
+    const stop = () => {
+      cancelAnimationFrame(pageGlide.current);
+      theirs.forEach((type) => window.removeEventListener(type, stop));
+      stopGlide.current = () => {};
+    };
+    stopGlide.current = stop;
+    theirs.forEach((type) => window.addEventListener(type, stop, { passive: true }));
     const tick = (now: number) => {
       const off = spring.position(now - t0);
       const done = Math.abs(off) < 0.5;
       window.scrollTo({ top: done ? to : to + off });
-      if (!done) pageGlide.current = requestAnimationFrame(tick);
+      if (done) stop();
+      else pageGlide.current = requestAnimationFrame(tick);
     };
     pageGlide.current = requestAnimationFrame(tick);
   }, []);
+  useEffect(() => () => stopGlide.current(), []); // not into the next tape's page
   const keepClear = useCallback(() => {
     const tape = scrollerRef.current?.getBoundingClientRect();
     if (!sheetEl || !tape) return;

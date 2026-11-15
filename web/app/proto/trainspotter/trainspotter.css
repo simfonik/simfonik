@@ -685,6 +685,10 @@
    enough to show it. The untimed stretches show too, faintly: the tape is there whether or not anyone has
    ID'd it. No line under the lane; a mask would cut it off, and the shape is its own edge. */
 .ts-map-lane[data-wave] { height: 22px; box-shadow: none; background: color-mix(in oklch, var(--text) 13%, transparent); -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
+/* A tap on a bar plays that side, so on a touch screen each bar is tall enough to hit, with or without a
+   measured shape: with the strip's margin above and below (.ts-map::before), a bar and its share of the
+   margin come to 44px. */
+@media (pointer: coarse) { .ts-map-lane, .ts-map-lane[data-wave] { height: 30px; } }
 .ts-map-lane i { position: absolute; inset-block: 0; min-width: 2px; border-inline: 0.5px solid transparent; background-clip: padding-box; background-image: repeating-linear-gradient(135deg, transparent 0 2px, color-mix(in oklch, var(--text) 55%, transparent) 2px 3px); }
 .ts-map-lane i[data-known] { background-color: color-mix(in oklch, var(--text) 26%, var(--bg)); background-image: none; }
 .ts-map-lane i[data-playing] { background-color: var(--text); background-image: none; }

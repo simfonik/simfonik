@@ -19,7 +19,7 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
   const [{ sightings, listed, complete }, others] = await Promise.all([readTape(tape), tapeIndex()]);
   // How loud each side is along its length, for the tapes where that has been measured. The overview draws it.
   const waves = await import(`../../../../data/waveforms/${tape.id}.json`).then(
-    (file) => file.default as number[][],
+    (file) => file.default as (number[] | null)[],
     () => null,
   );
   // The tracklist already published on the site: names in order with no times, the most trusted order there is.

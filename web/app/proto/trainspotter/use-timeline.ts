@@ -253,6 +253,7 @@ export function useTimeline({
     seek(side, Math.min(m.at * lengthRef.current, Math.max(0, sideLength(side) - 1)), true);
   };
   const mapDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return; // a right-click is for the browser's menu, not for playing the tape
     mapPress.current = { id: e.pointerId, x: e.clientX, y: e.clientY, dragging: false };
     if (e.pointerType !== "touch") e.currentTarget.setPointerCapture(e.pointerId);
   };
