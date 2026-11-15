@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getAllTapes, getCommentsForTape, getTapeById } from "../../../../lib/data";
 import { getPaginatedComments } from "../../../../lib/comments";
-import { parseComment, parseListing, runningOrders } from "../parse";
+import { parseComment, parseListing, reconcile, runningOrders } from "../parse";
 import { Trainspotter } from "../trainspotter";
 import "../trainspotter.css";
 
@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 };
 
 type Said = { author: string; date: string; content: string };
+const GROUPS = ["Unknown tracks to ID", "Tracklist known, times needed", "Started by listeners"];
 
 export default async function TrainspotterPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -37,21 +38,31 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
     (side.tracks ?? []).map((t, n) => ({ side: i, n: n + 1, artist: t.artist, title: t.title, known: true, author: "simfonik", date: "" })),
   );
 
-  // Other tapes worth opening: the ones with timed IDs or a running order to place.
+  // Every tape with something to work on, in the order the switcher lists them: the ones with unknown tracks
+  // first, then the ones whose tracklist is known but not timed, then the ones listeners have only started.
+  const plural = (n: number, one: string) => `${n} ${n === 1 ? one : `${one}s`}`;
   const others = getAllTapes()
     .map((t) => {
       const all = said(t.id);
-      const timed = all.reduce((n, c) => n + parseComment(c.content, c.author, c.date).length, 0);
-      const named =
+      const marked = reconcile(all.flatMap((c) => parseComment(c.content, c.author, c.date)), t.sides.map(() => Infinity));
+      const known = marked.filter((m) => m.known).length;
+      const unknown = marked.length - known;
+      const names =
         t.sides.reduce((n, side) => n + (side.tracks?.length ?? 0), 0) ||
         runningOrders(all.flatMap((c) => parseListing(c.content, c.author, c.date)), t.sides.length)
           .flat()
           .filter((l) => l.known).length;
-      return { id: t.id, label: `${t.djs.map((d) => d.name).join(", ")} — ${t.title}`, count: timed + named };
+      // A compilation's eight names would fill the row; its title says more.
+      const label = t.djs.length > 3 ? `${t.title} — ${t.djs.length} DJs` : `${t.djs.map((d) => d.name).join(", ")} — ${t.title}`;
+      const done = marked.length ? known / marked.length : null;
+      if (unknown) return { id: t.id, label, group: "Unknown tracks to ID", meta: `${unknown} unknown · ${known} ID’d`, done, rank: unknown };
+      if (names > known) return { id: t.id, label, group: "Tracklist known, times needed", meta: `${plural(names, "track")} to place`, done: null, rank: names };
+      if (known) return { id: t.id, label, group: "Started by listeners", meta: `${known} ID’d`, done, rank: known };
+      return null;
     })
-    .filter((t) => t.count > 0)
-    .sort((a, b) => b.count - a.count)
-    .map(({ id, label }) => ({ id, label }));
+    .filter((t) => t !== null)
+    .sort((a, b) => GROUPS.indexOf(a.group) - GROUPS.indexOf(b.group) || b.rank - a.rank || a.label.localeCompare(b.label))
+    .map(({ id, label, group, meta, done }) => ({ id, label, group, meta, done }));
 
   return (
     <Trainspotter
@@ -59,6 +70,7 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
         id: tape.id,
         title: tape.title,
         djs: tape.djs.map((d) => d.name).join(", "),
+        djCount: tape.djs.length,
         released: tape.released ?? "",
         sides: tape.sides.map((s) => ({ key: s.position, title: s.title ?? `Side ${s.position}`, audio: s.audio_links[0]?.url ?? null })),
       }}

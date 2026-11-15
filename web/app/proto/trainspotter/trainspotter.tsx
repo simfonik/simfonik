@@ -15,16 +15,17 @@ import { createAgent, registerTools } from "@ui-sdk/react/agent";
 import { createHistory, type HistoryEntry } from "@ui-sdk/react/history";
 import { useShortcut, useShortcutHint } from "@ui-sdk/react/shortcuts";
 import { Slider, SliderControl, SliderThumb, SliderTrack } from "@ui-sdk/react/slider";
+import { SegmentedControl, SegmentedControlItem } from "@ui-sdk/react/segmented-control";
 import { Toast, ToastAction, ToastClose, ToastDescription, ToastRegion, ToastTitle, createToaster } from "@ui-sdk/react/toast";
 import { Drawer, DrawerBackdrop, DrawerClose, DrawerContent, DrawerTitle } from "@ui-sdk/react/drawer";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@ui-sdk/react/collapsible";
-import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxLabel, ComboboxList } from "@ui-sdk/react/combobox";
+import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxGroup, ComboboxGroupLabel, ComboboxInput, ComboboxItem, ComboboxList, ComboboxTrigger } from "@ui-sdk/react/combobox";
 import { Field, FieldLabel } from "@ui-sdk/react/field";
 import { Input } from "@ui-sdk/react/input";
 import { isSameRecord, reconcile, runningOrders, type Listed, type Proposal, type Sighting } from "./parse";
 import { DEFAULT_LENGTH, clock, cueLabel, tracklist, type Cue } from "./tracklist-primitive";
 
-type TapeProp = { id: string; title: string; djs: string; released: string; sides: { key: string; title: string; audio: string | null }[] };
+type TapeProp = { id: string; title: string; djs: string; djCount: number; released: string; sides: { key: string; title: string; audio: string | null }[] };
 
 // One bridge for the page. Every UI SDK component registers with it, including the timeline.
 const agent = typeof window === "undefined" ? null : createAgent();
@@ -87,10 +88,26 @@ export function Trainspotter({
   sightings: Sighting[];
   listed: Listed[];
   official: Listed[][];
-  others: { id: string; label: string }[];
+  /** Every tape with something to work on, in the order the switcher lists them. */
+  others: { id: string; label: string; group: string; meta: string; done: number | null }[];
 }) {
   const router = useRouter();
+  // ── Changing tape: the title is the switcher, and the two links beside it step through the same list ──
+  const [switcher, setSwitcher] = useState<HTMLButtonElement | null>(null);
+  const [tapeQuery, setTapeQuery] = useState("");
+  const [tapesOpen, setTapesOpen] = useState(false);
+  const tapesOpenRef = useRef(false);
+  tapesOpenRef.current = tapesOpen;
+  const tapClicked = useRef(false);
+  const tapeGroups = useMemo(() => [...new Set(others.map((o) => o.group))].map((group) => ({ group, tapes: others.filter((o) => o.group === group) })), [others]);
+  const place = others.findIndex((o) => o.id === tape.id);
+  const elsewhere = others.some((o) => o.id !== tape.id);
+  const prevTape = elsewhere ? others[(place <= 0 ? others.length : place) - 1] : null;
+  const nextTape = elsewhere ? others[(place + 1) % others.length] : null;
   const sides = useMemo(() => tape.sides.map((s) => s.key), [tape.sides]);
+  // A set of several tapes (eight DJs, eight recordings) shows one part at a time, chosen from a row of parts.
+  // Stacked, the rows would bury the one being listened to under seven that aren't.
+  const many = sides.length > 2;
   const storageKey = `simfonik:trainspotter:${tape.id}`;
   // Behaviour forks on the pointer; styling forks on media queries in the stylesheet.
   const touch = usePreference(pointerKind).pointer === "coarse";
@@ -171,9 +188,12 @@ export function Trainspotter({
 
   // The timeline is as long as the longest thing it has to show: a measured side, or the last known track.
   const length = useMemo(() => {
-    const unmeasured = durations.every((d) => d === null) ? DEFAULT_LENGTH : 0;
-    return Math.max(60, unmeasured, ...durations.map((d) => d ?? 0), ...cues.map((c) => c.end), ...proposals.map((p) => p.end));
-  }, [durations, cues, proposals]);
+    const shown = (i: number) => !many || i === active;
+    const measured = durations.filter((_, i) => shown(i));
+    const unmeasured = measured.every((d) => d === null) ? DEFAULT_LENGTH : 0;
+    const ends = [...cues.filter((c) => shown(sides.indexOf(c.track))).map((c) => c.end), ...proposals.filter((p) => shown(p.side)).map((p) => p.end)];
+    return Math.max(60, unmeasured, ...measured.map((d) => d ?? 0), ...ends);
+  }, [durations, cues, proposals, many, active, sides]);
   const lengthRef = useRef(length);
   lengthRef.current = length;
   const sideLength = (i: number) => durations[i] ?? length;
@@ -509,9 +529,17 @@ export function Trainspotter({
     }
   }, [selected, focusName]);
   const idIt = (id: string) => {
+    // Where one part shows at a time, go to the part this track is on, so it is on screen to be ID'd.
+    const cue = cuesRef.current.find((c) => c.id === id);
+    const side = cue ? sides.indexOf(cue.track) : -1;
+    if (many && cue && side >= 0 && side !== activeRef.current) seek(side, cue.start);
     setSelected(id);
     focusName(id);
   };
+  // Changing part leaves behind a selection that is no longer on screen.
+  useEffect(() => {
+    if (many) setSelected((id) => (cuesRef.current.find((c) => c.id === id)?.track === sides[active] ? id : null));
+  }, [many, active, sides]);
 
   // M marks and Space plays, unless the key belongs to a field or a control. A focused track is neither.
   useEffect(() => {
@@ -681,6 +709,10 @@ export function Trainspotter({
   const unknownCount = counted.length - knownCount;
   const audioFailed = failed[active];
 
+  // A compilation is named by its title and the part being heard, not by a line of eight DJs.
+  const compactTitle = tape.djCount > 3;
+  const partTitle = (i: number) => (tape.sides[i]?.title && !/^side\b/i.test(tape.sides[i].title) ? tape.sides[i].title : null);
+  const partName = partTitle(active);
   const markLabel = touch ? "New track" : "A new track starts here";
   const intro =
     namesWaiting > 0
@@ -826,7 +858,7 @@ export function Trainspotter({
       className: "ts-rows",
       children: ({ cues: live }: { cues: Cue[] }) => (
         <>
-          {tape.sides.map((side, i) => (
+          {tape.sides.map((side, i) => (many && i !== active ? null : (
             <div key={side.key} className="ts-row">
               <button type="button" className="ts-side" onClick={() => seek(i, audios.current[i]?.currentTime ?? 0)} aria-pressed={i === active} aria-label={`Listen to side ${side.key}${side.title && side.title !== `Side ${side.key}` ? `, ${side.title}` : ""}`}>
                 {side.key}
@@ -890,7 +922,7 @@ export function Trainspotter({
                 />
               </Track>
             </div>
-          ))}
+          )))}
         </>
       ),
     },
@@ -906,19 +938,100 @@ export function Trainspotter({
             audios.current[i] = el;
           }}
           src={s.audio ?? undefined}
-          preload="metadata"
+          // Of eight recordings, only the one on screen is worth asking the audio host about.
+          preload={many && i !== active ? "none" : "metadata"}
           playsInline
         />
       ))}
 
-      <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
+      {/* Getting around: step to the next tape, or open the whole list with each tape's progress. The list is a
+          combobox with its search inside the popup; on a phone it presents as a sheet. */}
+      <Combobox
+        value={tape.id}
+        onValueChange={(v: unknown) => {
+          if (typeof v === "string" && v !== tape.id) router.push(`/proto/trainspotter/${v}`);
+        }}
+        query={tapeQuery}
+        onQueryChange={setTapeQuery}
+        open={tapesOpen}
+        onOpenChange={(open: boolean) => {
+          setTapesOpen(open);
+          if (open) setTapeQuery("");
+        }}
+        onOpenChangeComplete={(open: boolean) => !open && switcher?.focus()}
+        presentation="auto"
+        autoHighlight
+      >
+        <nav aria-label="Tapes" className="ts-nav">
+          {elsewhere && (
+            <Link href={`/proto/trainspotter/${prevTape!.id}`} className="poster-btn min-h-11" aria-label={`Previous tape: ${prevTape!.label}`}>
+              ‹<span className="ts-nav-word"> Prev</span>
+            </Link>
+          )}
+          <ComboboxTrigger
+            ref={setSwitcher}
+            className="poster-btn ts-nav-all min-h-11"
+            // A finger tap normally arrives as a click and the combobox opens itself. In WebKit's touch
+            // emulation the click never comes, so if a tap ends and nothing followed, open it here.
+            onClick={() => {
+              tapClicked.current = true;
+            }}
+            onPointerUp={(e: React.PointerEvent) => {
+              if (e.pointerType !== "touch") return;
+              tapClicked.current = false;
+              const wasOpen = tapesOpenRef.current;
+              setTimeout(() => !tapClicked.current && tapesOpenRef.current === wasOpen && setTapesOpen(!wasOpen), 150);
+            }}
+          >
+            <span>All tapes</span>
+            <span className="tabular-nums opacity-60">{place >= 0 ? `${place + 1} of ${others.length}` : others.length}</span>
+            <span aria-hidden>▾</span>
+          </ComboboxTrigger>
+          {elsewhere && (
+            <Link href={`/proto/trainspotter/${nextTape!.id}`} className="poster-btn min-h-11" aria-label={`Next tape: ${nextTape!.label}`}>
+              <span className="ts-nav-word">Next </span>›
+            </Link>
+          )}
+        </nav>
+        <ComboboxContent anchor={switcher} align="start" className="ts-tapes">
+          <div className="ts-tapes-search">
+            <ComboboxInput autoFocus aria-label="Search tapes" placeholder="Search by DJ or tape" autoComplete="off" spellCheck={false} className="ts-input" />
+          </div>
+          <ComboboxEmpty className="px-3 py-3 text-sm text-[var(--muted)]">No tape by that name has track IDs to work with yet.</ComboboxEmpty>
+          <ComboboxList className="ts-tapes-list">
+            {tapeGroups.map(({ group, tapes }) => (
+              <ComboboxGroup key={group}>
+                <ComboboxGroupLabel className="ts-tapes-group">{group}</ComboboxGroupLabel>
+                {tapes.map((t) => (
+                  <ComboboxItem key={t.id} value={t.id} label={t.label} className="ts-option">
+                    <span className="min-w-0 flex-1 truncate">{t.label}</span>
+                    <span className="flex-none font-mono text-[11px] tabular-nums opacity-70">{t.id === tape.id ? "You’re here" : t.meta}</span>
+                    {/* How much of what's marked has a name: a full bar is a tape with nothing left unknown. */}
+                    <span className="ts-prog" style={{ "--done": t.done ?? 0 } as React.CSSProperties} data-none={t.done === null ? "" : undefined} aria-hidden />
+                  </ComboboxItem>
+                ))}
+              </ComboboxGroup>
+            ))}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
+
+      <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
         Released {tape.released} ·{" "}
         <Link href={`/tapes/${tape.id}`} className="cursor-pointer underline underline-offset-4 hover:text-[var(--text)]">
           Tape page
         </Link>
       </p>
       <h1 className="mt-2 line-clamp-3 font-display text-4xl leading-[0.95] text-[var(--text)] [text-wrap:balance] sm:text-6xl">
-        {tape.djs} <span className="text-[var(--muted)]">{tape.title}</span>
+        {compactTitle ? (
+          <>
+            {tape.title} <span className="text-[var(--muted)]">{partName ?? `${tape.djCount} DJs`}</span>
+          </>
+        ) : (
+          <>
+            {tape.djs} <span className="text-[var(--muted)]">{tape.title}</span>
+          </>
+        )}
       </h1>
       <p className="mt-3 max-w-[60ch] text-[17px] text-[var(--text)]">{intro}</p>
 
@@ -965,7 +1078,30 @@ export function Trainspotter({
         </div>
       </div>
 
-      <div className="ts-root mt-4">
+      {many && (
+        <SegmentedControl
+          aria-label="Part of this set"
+          value={sides[active]}
+          onValueChange={(v: string | null) => {
+            const i = v === null ? -1 : sides.indexOf(v);
+            if (i >= 0 && i !== active) seek(i, audios.current[i]?.currentTime ?? 0);
+          }}
+          className="ts-parts mt-5"
+        >
+          {tape.sides.map((side, i) => {
+            const left = cues.filter((c) => c.track === side.key && !c.known).length;
+            return (
+              <SegmentedControlItem key={side.key} value={side.key} className="ts-part">
+                <b>{side.key}</b>
+                {partTitle(i) && <span>{partTitle(i)}</span>}
+                {left > 0 && <i aria-label={`${left} unknown`}>{left}</i>}
+              </SegmentedControlItem>
+            );
+          })}
+        </SegmentedControl>
+      )}
+
+      <div className={`ts-root ${many ? "mt-2" : "mt-4"}`}>
         <div className="ts-scroller" ref={scrollerRef} data-proto-keys>
           <div className="ts-canvas" style={{ width: width + GUTTER }}>
             {/* The ruler is the scrubber: a slider the width of the tape. It sits outside the tracklist
@@ -1012,11 +1148,11 @@ export function Trainspotter({
           </>
         ) : (
           <div className="text-sm text-[var(--muted)]">
-            <p className="ts-fine">Drag the marker along the top to scrub, or click bare tape to go there. Click a track to hear it from its start and ID it. Drag a track to move it, or an end to trim it.</p>
-            <p className="ts-fine mt-1">
-              Keys: Space plays · M marks a new track · {undoHint.text} undoes. On a track: ← → move between tracks · Enter IDs it · Alt ← → nudges it a second · Alt Shift ← → trims its end · Delete removes it.
+            <p className="ts-fine">Click a track to hear and ID it. Drag it to move, or an end to trim. Drag the marker to scrub.</p>
+            <p className="ts-fine mt-1 font-mono text-[11px] uppercase tracking-[0.1em]">
+              Space play · M new track · {undoHint.text} undo · ← → next track · Enter ID · Alt ← → nudge · Alt Shift ← → trim · Delete remove
             </p>
-            <p className="ts-coarse">Slide the marker along the top to scrub, or tap bare tape to go there. Tap a track to hear it, then “ID it”.</p>
+            <p className="ts-coarse">Tap a track to hear it, then “ID it”. Slide the marker to scrub.</p>
           </div>
         )}
       </div>
@@ -1183,30 +1319,6 @@ export function Trainspotter({
             </button>
           )}
         </div>
-      </div>
-
-      <div className="mt-12 border-t border-[var(--border)] pt-6">
-        <Combobox
-          value={null}
-          onValueChange={(v: unknown) => {
-            if (typeof v === "string") router.push(`/proto/trainspotter/${v}`);
-          }}
-        >
-          <div className="w-full sm:w-96">
-            <ComboboxLabel className="ts-label">Try another tape</ComboboxLabel>
-            <ComboboxInput placeholder="Search by DJ or tape" autoComplete="off" spellCheck={false} className="ts-input" />
-          </div>
-          <ComboboxContent className="z-50 max-h-80 w-[var(--anchor-width,20rem)] min-w-72 overflow-y-auto border-[1.5px] border-[var(--text)] bg-[var(--bg)] shadow-[4px_4px_0_var(--text)]">
-            <ComboboxList>
-              {others.map((t) => (
-                <ComboboxItem key={t.id} value={t.id} className="ts-option flex min-h-11 cursor-pointer items-center px-3 text-sm text-[var(--text)]">
-                  <span className="truncate">{t.label}</span>
-                </ComboboxItem>
-              ))}
-            </ComboboxList>
-            <ComboboxEmpty className="px-3 py-3 text-sm text-[var(--muted)]">No tape by that name has track IDs to work with yet.</ComboboxEmpty>
-          </ComboboxContent>
-        </Combobox>
       </div>
 
       {/* Phone: play, the clock and the two ID actions stay under the thumb wherever the page is scrolled. */}
