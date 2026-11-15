@@ -933,8 +933,7 @@ export function Trainspotter({
   // release, so one drag is a handful of requests to the audio host instead of dozens.
   const [scrubAt, setScrubAt] = useState<number | null>(null);
   const lastSeek = useRef(0);
-  const scrub = (v: number | number[]) => {
-    const t = Math.min(v as number, sideLength(activeRef.current));
+  const scrubTo = (t: number) => {
     setScrubAt(t);
     scrubT.current = t;
     paint(); // marker and line move with the pointer now; the audio catches up below
@@ -943,28 +942,84 @@ export function Trainspotter({
       seek(activeRef.current, t);
     }
   };
+  // While the ruler is held, the time comes from where the pointer is on the tape, not from the slider. The
+  // slider measures its track once, at the press, so its value goes stale as soon as the tape moves under
+  // the pointer. And the tape does move: held near either end of what is on screen, it scrolls that way,
+  // faster the nearer the edge, with the playhead staying under the pointer. Without that, a finger could
+  // only reach the part of a long tape that happened to be on screen.
+  const held = useRef<{ id: number; x: number; left: number; right: number; origin: number; grab: number; carry: number; last: number; frame: number } | null>(null);
+  const heldTime = () => {
+    const h = held.current!;
+    const along = (h.x - h.origin + (scrollerRef.current?.scrollLeft ?? 0)) / Math.max(1, widthRef.current);
+    return Math.max(0, Math.min(sideLength(activeRef.current), Math.max(0, Math.min(1, along)) * lengthRef.current + h.grab));
+  };
+  const scrub = (v: number | number[]) => scrubTo(held.current ? heldTime() : Math.min(v as number, sideLength(activeRef.current)));
   const scrubEnd = (v: number | number[]) => {
+    const t = held.current ? heldTime() : Math.min(v as number, sideLength(activeRef.current));
     scrubT.current = null;
-    seek(activeRef.current, Math.min(v as number, sideLength(activeRef.current)));
+    seek(activeRef.current, t);
     setScrubAt(null);
   };
-  // The slider only reports the end of a drag whose value changed. A drag that comes back to where it began
-  // would leave the playhead held at the drag's time with the audio running on, so every press on the ruler
-  // also ends the scrub on release, after the slider has had its turn.
+  const scrubToRef = useRef(scrubTo);
+  scrubToRef.current = scrubTo;
   const scrubEndRef = useRef(scrubEnd);
   scrubEndRef.current = scrubEnd;
   const rulerPress = useRef<AbortController | null>(null);
-  const rulerDown = () => {
+  const rulerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    const sc = scrollerRef.current;
+    if (!sc || (e.pointerType === "mouse" && e.button !== 0)) return;
     rulerPress.current?.abort();
     const press = (rulerPress.current = new AbortController());
-    const up = () => {
+    const view = sc.getBoundingClientRect();
+    const h = { id: e.pointerId, x: e.clientX, left: view.left, right: view.right, origin: e.currentTarget.getBoundingClientRect().left + sc.scrollLeft, grab: 0, carry: 0, last: performance.now(), frame: 0 };
+    held.current = h;
+    // Taken by its handle, the playhead keeps the distance it had from the pointer instead of jumping to it.
+    if ((e.target as HTMLElement).closest(".ts-scrub-thumb")) h.grab = (scrubT.current ?? audios.current[activeRef.current]?.currentTime ?? 0) - heldTime();
+    // Sideways only, and by the clock, so it is the same speed on any screen. The band on the left starts
+    // past the side's label, which stays put over the tape.
+    const EDGE = 48;
+    const tick = (now: number) => {
+      if (held.current !== h) return;
+      const dt = Math.min(0.05, (now - h.last) / 1000);
+      h.last = now;
+      const lo = h.left + GUTTER + EDGE;
+      const hi = h.right - EDGE;
+      const push = h.x > hi ? Math.min(1, (h.x - hi) / EDGE) : h.x < lo ? -Math.min(1, (lo - h.x) / EDGE) : 0;
+      h.carry = push ? h.carry + push * (reduceMotion.current ? 420 : 840) * dt : 0;
+      const step = Math.trunc(h.carry);
+      if (step) {
+        h.carry -= step;
+        const before = sc.scrollLeft;
+        sc.scrollLeft = before + step;
+        if (sc.scrollLeft !== before) scrubToRef.current(heldTime());
+      }
+      h.frame = requestAnimationFrame(tick);
+    };
+    h.frame = requestAnimationFrame(tick);
+    press.signal.addEventListener("abort", () => cancelAnimationFrame(h.frame));
+    window.addEventListener("pointermove", (ev) => ev.pointerId === h.id && (h.x = ev.clientX), { signal: press.signal });
+    // The slider only reports the end of a drag whose value changed. A drag that comes back to where it began
+    // would leave the playhead held at the drag's time with the audio running on, so the press itself ends
+    // the scrub on release, once the slider has had its turn.
+    const up = (ev: PointerEvent) => {
+      if (ev.pointerId !== h.id) return;
       press.abort();
-      setTimeout(() => scrubT.current !== null && scrubEndRef.current(scrubT.current), 0);
+      setTimeout(() => {
+        const t = scrubT.current;
+        if (held.current === h) held.current = null;
+        if (t !== null) scrubEndRef.current(t);
+      }, 0);
     };
     window.addEventListener("pointerup", up, { signal: press.signal });
     window.addEventListener("pointercancel", up, { signal: press.signal });
   };
-  useEffect(() => () => rulerPress.current?.abort(), []);
+  useEffect(
+    () => () => {
+      rulerPress.current?.abort();
+      held.current = null;
+    },
+    [],
+  );
 
   // A press that didn't travel is a click: on bare tape it moves the playhead. A drag is the SDK's to handle.
   const down = useRef<{ x: number; y: number } | null>(null);
@@ -1443,7 +1498,7 @@ export function Trainspotter({
           <div className="ts-canvas" style={{ width: width + GUTTER }}>
             {/* The ruler is the scrubber: a slider the width of the tape. It sits outside the tracklist
                 so that moving through the audio is never recorded as a change to the tracklist. */}
-            <div className="ts-ruler" style={{ marginLeft: GUTTER, width }} onPointerDown={rulerDown}>
+            <div className="ts-ruler" style={{ marginLeft: GUTTER, width }} onPointerDownCapture={rulerDown}>
               <Slider value={Math.min(scrubAt ?? now, length)} onValueChange={scrub} onValueCommit={scrubEnd} min={0} max={length} step={1} largeStep={15} format={clock}>
                 <SliderControl
                   className="ts-scrub"
