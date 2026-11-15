@@ -138,6 +138,8 @@ export function PlaylistPlayer({ tracks, tapeId, sideCount }: PlaylistPlayerProp
             position={sideCount > 1 ? currentTrack.position : null}
             ids={ids}
             time={state.currentTime}
+            order={trackIds.orders[currentTrack.index]}
+            length={state.duration > 0 ? state.duration : currentTrack.length}
             onPosted={trackIds.refresh}
           />
         )}

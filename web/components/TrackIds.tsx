@@ -1,7 +1,8 @@
 'use client';
 
-import { FormEvent, useEffect, useId, useRef, useState } from 'react';
-import { composeId, idAt, idLabel, idPlace, type TrackId } from '../lib/track-ids/compose';
+import { FormEvent, RefObject, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { composeId, idAt, idLabel, idPlace, type ListedTrack, type RunningOrder, type TrackId } from '../lib/track-ids/compose';
+import { suggest } from '../lib/track-ids/names';
 
 // A visitor's name is asked for once and offered back the next time, on this device only.
 const NAME_KEY = 'simfonik:id-name';
@@ -13,6 +14,32 @@ const rememberedName = () => {
   }
 };
 
+/** A screen as narrow as a phone's. There the blanks are a sheet over the page, with a row each. */
+const PHONE = '(max-width: 39.99rem)';
+
+/**
+ * Puts the keyboard in a field. In the sheet it is done "in place": on an iPhone, a field taking focus makes
+ * Safari scroll the page to bring the field to the middle of the screen, even a field in a sheet, which
+ * doesn't move with the page, so the sheet stays put and the page slides away underneath it. Safari skips the
+ * scroll for a field it takes to be at the top already, so the field is put there for the instant it takes
+ * focus. (React Aria does the same.)
+ */
+function focus(field: HTMLInputElement | null, inPlace: boolean) {
+  if (!field) return;
+  if (!inPlace) return field.focus();
+  field.style.transform = 'translateY(-2000px)';
+  field.focus({ preventScroll: true });
+  requestAnimationFrame(() => (field.style.transform = ''));
+}
+
+/** Sends the sheet back down, then closes it. With no motion to wait for, it closes at once. */
+function dismiss(sheet: HTMLDialogElement) {
+  if ('leaving' in sheet.dataset) return;
+  sheet.dataset.leaving = '';
+  // Asking for the animations starts the one the attribute calls for.
+  Promise.allSettled(sheet.getAnimations().map((animation) => animation.finished)).then(() => sheet.close());
+}
+
 type Props = {
   tapeId: string;
   /** The side's label as the site shows it ("A", "1B"), or null on a tape that is one recording. */
@@ -21,22 +48,35 @@ type Props = {
   ids: TrackId[];
   /** Where the tape is, in seconds. */
   time: number;
+  /** The side's tracks in order, where a list gives them without times: likely names are offered from it. */
+  order?: RunningOrder | null;
+  /** The side's length in seconds, where it is known. */
+  length?: number | null;
   /** An ID has been posted: the comments have changed and should be read again. */
   onPosted: () => void;
 };
 
 /**
  * One line under the bar. It says the track playing now, as the comments have ID'd it; where they haven't, it
- * asks. Pressed, the line becomes two blanks in its own place, and Enter posts what was typed as an ordinary
- * comment that carries the side and the time (see lib/track-ids/compose.ts), through the same route as any
- * comment. A name already there can be pressed to put it right. Nothing is kept anywhere else.
+ * asks. Pressed, it takes an ID: with a mouse the line becomes two blanks in its own place; on a phone a sheet
+ * rises over the page and stays on top of the keyboard. What is typed is posted as an ordinary comment that
+ * carries the side and the time (see lib/track-ids/compose.ts), through the same route as any comment. A name
+ * already there can be pressed to put it right. Nothing is kept anywhere else.
+ *
+ * Where the side has a list of its tracks with no times, the two lines of it likeliest to be this track are
+ * offered, and pressing one writes it into the blanks.
  */
-export function TrackIds({ tapeId, position, ids, time, onPosted }: Props) {
+export function TrackIds({ tapeId, position, ids, time, order = null, length = null, onPosted }: Props) {
   const playing = idAt(ids, time);
-  // The fields are for one moment of the tape, fixed when they open, while the tape plays on underneath.
+  // The blanks are for one moment of the tape, fixed when they open, while the tape plays on underneath.
   const [at, setAt] = useState<number | null>(null);
-  // The visitor's name is asked for the first time only, as a second step in the same line.
-  const [step, setStep] = useState<'track' | 'name'>('track');
+  const [sheet, setSheet] = useState(false);
+  // The visitor's name is asked for the first time only. The line has room for one thing at a time, so it
+  // asks as a second step; the sheet has a row for it from the start.
+  const [askName, setAskName] = useState(false);
+  // Counts each time the name is asked for after the blanks are open, so the keyboard can go to it.
+  const [nameWanted, setNameWanted] = useState(0);
+  const [offers, setOffers] = useState<ListedTrack[]>([]);
   const [artist, setArtist] = useState('');
   const [title, setTitle] = useState('');
   const [name, setName] = useState('');
@@ -44,48 +84,110 @@ export function TrackIds({ tapeId, position, ids, time, onPosted }: Props) {
   const [message, setMessage] = useState('');
   const [thanks, setThanks] = useState('');
   const line = useRef<HTMLButtonElement>(null);
+  const dialog = useRef<HTMLDialogElement>(null);
   const artistField = useRef<HTMLInputElement>(null);
+  const titleField = useRef<HTMLInputElement>(null);
   const nameField = useRef<HTMLInputElement>(null);
   const messageId = useId();
 
   const open = () => {
+    const onPhone = window.matchMedia(PHONE).matches;
+    const remembered = rememberedName();
     // An ID is for the track playing. Where the comments have marked one, it goes to where that track starts:
     // a correction then replaces the older word, and an ID for a track marked unknown fills the whole of it
     // and doesn't split it at the moment the visitor happened to speak up. Putting a known ID right starts
     // from what it says. Where nothing is marked, the ID goes to this moment.
-    setAt(playing ? playing.start : Math.floor(time));
+    const start = playing ? playing.start : Math.floor(time);
+    setAt(start);
     setArtist(playing?.known ? playing.artist : '');
     setTitle(playing?.known ? playing.title : '');
-    setName(rememberedName());
-    setStep('track');
+    setOffers(order && !playing?.known ? suggest(start, order.tracks, ids, length) : []);
+    setName(remembered);
+    setSheet(onPhone);
+    setAskName(onPhone && !remembered);
+    setNameWanted(0);
     setStatus('idle');
     setMessage('');
     setThanks('');
   };
   const shut = () => setAt(null);
+  // The sheet goes back down the way it came up; the blanks in the line just go.
+  const leave = () => (sheet && dialog.current ? dismiss(dialog.current) : shut());
 
-  // The keyboard follows: into the fields as they open, on to the name when it is asked for, and back to the
+  useLayoutEffect(() => {
+    if (at !== null && sheet && !dialog.current?.open) dialog.current?.showModal();
+  }, [at, sheet]);
+
+  // The sheet sits on the keyboard. A phone doesn't move a fixed thing out of the keyboard's way, it draws
+  // the keyboard over it, so the sheet is told how much of the screen the keyboard has taken and how much is
+  // left to be seen.
+  useEffect(() => {
+    const el = dialog.current;
+    const view = window.visualViewport;
+    if (!el || !view) return;
+    const follow = () => {
+      const keyboard = Math.max(0, window.innerHeight - view.height - view.offsetTop);
+      el.style.setProperty('--keyboard', `${keyboard}px`);
+      el.style.setProperty('--seen', `${view.height}px`);
+      el.toggleAttribute('data-keyboard', keyboard > 0);
+    };
+    follow();
+    view.addEventListener('resize', follow);
+    view.addEventListener('scroll', follow);
+    return () => {
+      view.removeEventListener('resize', follow);
+      view.removeEventListener('scroll', follow);
+    };
+  }, [at, sheet]);
+
+  // The keyboard follows: into the blanks as they open, on to the name when it is asked for, and back to the
   // line when they shut.
   const wasOpen = useRef(false);
   useEffect(() => {
     if (at === null) {
       if (wasOpen.current) line.current?.focus();
-    } else if (step === 'name') nameField.current?.focus();
-    else artistField.current?.focus();
+    } else if (!wasOpen.current) focus(artistField.current, sheet);
     wasOpen.current = at !== null;
-  }, [at, step]);
+  }, [at, sheet]);
+  useEffect(() => {
+    if (nameWanted > 0) focus(nameField.current, sheet);
+  }, [nameWanted, sheet]);
+  const wantName = () => {
+    setAskName(true);
+    setNameWanted((n) => n + 1);
+  };
 
+  const settle = () => {
+    if (status !== 'error') return;
+    setStatus('idle');
+    setMessage('');
+  };
   const refuse = (text: string, field: HTMLInputElement | null) => {
     setStatus('error');
     setMessage(text);
-    field?.focus();
+    focus(field, sheet);
   };
   const typed = (set: (value: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
     set(e.target.value);
-    if (status === 'error') {
-      setStatus('idle');
-      setMessage('');
-    }
+    settle();
+  };
+  const take = (offer: ListedTrack) => {
+    setArtist(offer.artist);
+    setTitle(offer.title);
+    settle();
+  };
+  // In the sheet the keyboard's Next key sends Enter. It should go on to the next blank, not post half an ID.
+  const onward = (next: RefObject<HTMLInputElement | null>) => (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter' || e.nativeEvent.isComposing || !next.current) return;
+    e.preventDefault();
+    focus(next.current, true);
+  };
+  // A tap on another blank in the sheet, taken in place for the reason `focus` gives.
+  const tapped = (e: React.TouchEvent<HTMLFormElement>) => {
+    const field = e.target instanceof HTMLInputElement ? e.target : null;
+    if (!field || field === document.activeElement) return; // a tap in the blank being typed in places the caret
+    e.preventDefault();
+    focus(field, true);
   };
 
   async function post(e: FormEvent) {
@@ -93,13 +195,14 @@ export function TrackIds({ tapeId, position, ids, time, onPosted }: Props) {
     if (status === 'sending' || at === null) return;
     if (!artist.trim() && !title.trim()) return refuse('Enter the artist or the title.', artistField.current);
     if (!name.trim()) {
-      if (step === 'name') return refuse('Enter your name.', nameField.current);
-      return setStep('name');
+      if (askName) return refuse('Enter your name.', nameField.current);
+      return wantName();
     }
 
     setStatus('sending');
     setMessage('');
-    const back = step === 'name' ? nameField.current : artistField.current;
+    // In the line the name, once asked for, is the only blank there is.
+    const back = askName && !sheet ? nameField.current : artistField.current;
     try {
       const response = await fetch('/api/comments/submit', {
         method: 'POST',
@@ -120,16 +223,34 @@ export function TrackIds({ tapeId, position, ids, time, onPosted }: Props) {
     setStatus('idle');
     setThanks('Posted. Thanks.');
     onPosted();
-    shut();
+    leave();
   }
 
   const where = idPlace(position, at ?? 0);
   const sending = status === 'sending';
+  const from = order?.by ? `From ${order.by}’s list` : 'From the tape’s tracklist';
+  const posting = (
+    <span className="grid place-items-center">
+      <span className={`col-start-1 row-start-1 ${sending ? 'invisible' : ''}`}>Post</span>
+      <span className={`col-start-1 row-start-1 ${sending ? '' : 'invisible'}`}>…</span>
+    </span>
+  );
+  const cross = (
+    <svg className="h-3 w-3" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+      <path d="M1 1l12 12M13 1L1 13" />
+    </svg>
+  );
+  const complaint = (
+    <p id={messageId} role="alert" className="font-mono text-[10px] uppercase leading-4 tracking-[0.22em] text-pretty text-red-500 empty:hidden mt-2">
+      {message}
+    </p>
+  );
 
   return (
     <div className="track-ids mt-2">
-      {at === null ? (
-        // As tall as the fields that take its place, so nothing below moves when they do.
+      {at === null || sheet ? (
+        // As tall as the blanks that take its place, so nothing below moves when they do. Under the sheet it
+        // stays as it was.
         <div className="flex min-h-11 items-center">
           {playing?.known ? (
             <button
@@ -151,38 +272,103 @@ export function TrackIds({ tapeId, position, ids, time, onPosted }: Props) {
       ) : (
         <form onSubmit={post} noValidate onKeyDown={(e) => e.key === 'Escape' && shut()} aria-label={`ID the track at ${where}`}>
           {/* The line itself, with blanks where the names go: the same type in the same place, a rule under
-              each blank, and no boxes. On a phone the blanks are a row each. */}
-          <div className="flex min-h-11 flex-col gap-x-3 sm:flex-row sm:items-center">
+              each blank, and no boxes. */}
+          <div className="flex min-h-11 items-center gap-x-3">
             <span className="track-ids-where">{where}</span>
-            {step === 'track' ? (
+            {askName ? (
+              <input ref={nameField} value={name} onChange={typed(setName)} placeholder="Your name" aria-label="Your name" aria-describedby={message ? messageId : undefined} autoComplete="name" maxLength={100} enterKeyHint="send" className="track-ids-field" />
+            ) : (
               <>
                 <input ref={artistField} value={artist} onChange={typed(setArtist)} placeholder="Artist" aria-label="Artist" aria-describedby={message ? messageId : undefined} autoComplete="off" autoCapitalize="words" enterKeyHint="send" className="track-ids-field" />
-                <span aria-hidden className="hidden text-[var(--muted)] sm:inline">
+                <span aria-hidden className="text-[var(--muted)]">
                   —
                 </span>
                 <input value={title} onChange={typed(setTitle)} placeholder="Title" aria-label="Title" autoComplete="off" autoCapitalize="words" enterKeyHint="send" className="track-ids-field" />
               </>
-            ) : (
-              <input ref={nameField} value={name} onChange={typed(setName)} placeholder="Your name" aria-label="Your name" aria-describedby={message ? messageId : undefined} autoComplete="name" maxLength={100} enterKeyHint="send" className="track-ids-field" />
             )}
             <div className="flex items-center">
               <button type="submit" aria-disabled={sending} className="track-ids-post">
-                <span className="grid place-items-center">
-                  <span className={`col-start-1 row-start-1 ${sending ? 'invisible' : ''}`}>Post</span>
-                  <span className={`col-start-1 row-start-1 ${sending ? '' : 'invisible'}`}>…</span>
-                </span>
+                {posting}
               </button>
               <button type="button" onClick={shut} aria-label="Cancel" className="track-ids-shut">
-                <svg className="h-3 w-3" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-                  <path d="M1 1l12 12M13 1L1 13" />
-                </svg>
+                {cross}
               </button>
             </div>
           </div>
-          <p id={messageId} role="alert" className="font-mono text-[10px] uppercase leading-4 tracking-[0.22em] text-pretty text-red-500 empty:hidden mt-2">
-            {message}
-          </p>
+          {offers.length > 0 && !askName && (
+            <p className="track-ids-offers">
+              <span className="flex-none">{from}:</span>
+              {offers.map((offer) => (
+                <button key={offer.n} type="button" onClick={() => take(offer)} className="track-ids-offer" title={`${offer.artist} — ${offer.title}`}>
+                  {offer.artist} — {offer.title}
+                </button>
+              ))}
+            </p>
+          )}
+          {complaint}
         </form>
+      )}
+      {at !== null && sheet && (
+        <dialog
+          ref={dialog}
+          className="id-sheet"
+          aria-label={`ID the track at ${where}`}
+          onClose={shut}
+          onCancel={(e) => {
+            e.preventDefault();
+            leave();
+          }}
+          // A press on the page above the sheet lands on the dialog itself, outside its box.
+          onClick={(e) => e.target === e.currentTarget && e.clientY < e.currentTarget.getBoundingClientRect().top && leave()}
+        >
+          <form onSubmit={post} noValidate onTouchEndCapture={tapped}>
+            <div className="flex h-11 items-center justify-between">
+              <p className="id-sheet-label">
+                ID this track <span className="id-sheet-where">{where}</span>
+              </p>
+              <button type="button" onClick={leave} aria-label="Cancel" className="track-ids-shut -mr-3.5">
+                {cross}
+              </button>
+            </div>
+            {/* What can be answered with one press comes before what needs typing. */}
+            {offers.length > 0 && (
+              <div className="mb-4">
+                <p className="id-sheet-label">{from}</p>
+                {offers.map((offer) => (
+                  <button key={offer.n} type="button" onClick={() => take(offer)} className="id-sheet-offer">
+                    <span>{offer.n}</span>
+                    {offer.artist} — {offer.title}
+                  </button>
+                ))}
+              </div>
+            )}
+            <label className="block">
+              <span className="id-sheet-label">Artist</span>
+              <input ref={artistField} value={artist} onChange={typed(setArtist)} onKeyDown={onward(titleField)} aria-describedby={message ? messageId : undefined} autoComplete="off" autoCapitalize="words" enterKeyHint="next" className="track-ids-field" />
+            </label>
+            <label className="mt-2 block">
+              <span className="id-sheet-label">Title</span>
+              <input ref={titleField} value={title} onChange={typed(setTitle)} onKeyDown={askName && !name.trim() ? onward(nameField) : undefined} autoComplete="off" autoCapitalize="words" enterKeyHint={askName && !name.trim() ? 'next' : 'send'} className="track-ids-field" />
+            </label>
+            {askName ? (
+              <label className="mt-2 block">
+                <span className="id-sheet-label">Your name</span>
+                <input ref={nameField} value={name} onChange={typed(setName)} aria-describedby={message ? messageId : undefined} autoComplete="name" maxLength={100} enterKeyHint="send" className="track-ids-field" />
+              </label>
+            ) : (
+              <p className="id-sheet-label mt-4 flex min-h-11 items-center">
+                Posting as <span className="id-sheet-where">{name}</span>
+                <button type="button" onClick={wantName} className="track-ids-post ml-auto">
+                  Change
+                </button>
+              </p>
+            )}
+            {complaint}
+            <button type="submit" aria-disabled={sending} className="poster-btn mt-4 h-12 w-full">
+              {posting}
+            </button>
+          </form>
+        </dialog>
       )}
       {/* Always here, so a screen reader hears the thanks arrive. */}
       <p role="status" className="sr-only">

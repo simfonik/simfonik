@@ -395,11 +395,11 @@ body::before {
   font-variant-numeric: tabular-nums;
   color: var(--muted);
 }
-/* A full-size place to press, with its rule drawn just under the words and not at its foot. On a phone the
-   blanks are a row each, and keep their height; side by side they share the width. */
+/* A full-size place to press, with its rule drawn just under the words and not at its foot. In the line the
+   blanks share the width; in the sheet each has a row. */
 .track-ids-field {
   --rule: color-mix(in srgb, var(--muted) 45%, transparent);
-  flex: none;
+  flex: 1;
   width: 100%;
   min-width: 0;
   height: 2.75rem;
@@ -414,9 +414,6 @@ body::before {
 }
 @media (hover: hover) and (pointer: fine) {
   .track-ids-field { font-size: 12px; }
-}
-@media (min-width: 40rem) {
-  .track-ids-field { flex: 1; }
 }
 .track-ids-field::placeholder { color: var(--muted); }
 .track-ids-field:focus-visible { --rule: var(--text); background-size: 100% 1.5px; }
@@ -436,6 +433,105 @@ body::before {
 }
 .track-ids-post:active { opacity: 0.6; }
 .track-ids-post:focus-visible { outline: 2px solid var(--text); outline-offset: -4px; }
+/* Names a list offers for the track, under the blanks: said quietly, each one pressed to write it in. They
+   keep to one line, and a long name is cut short to stay on it. */
+.track-ids-offers {
+  display: flex;
+  align-items: baseline;
+  gap: 1.25rem;
+  white-space: nowrap;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--muted);
+}
+.track-ids-offer {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 6px 0;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--muted) 45%, transparent);
+  text-underline-offset: 4px;
+  color: var(--text);
+  cursor: pointer;
+}
+@media (hover: hover) and (pointer: fine) {
+  .track-ids-offer:hover { text-decoration-color: currentColor; }
+}
+.track-ids-offer:active { opacity: 0.6; }
+.track-ids-offer:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+/* ID'ing a track on a phone: a sheet that rises from the foot of the screen and sits on the keyboard, with a
+   row to itself for each blank. `--keyboard` and `--seen` are how much of the screen the keyboard has taken
+   and how much is left, which the component reads from the browser and keeps up to date. */
+.id-sheet {
+  position: fixed;
+  inset: auto 0 var(--keyboard, 0px) 0;
+  width: 100%;
+  max-width: none;
+  max-height: calc(var(--seen, 100dvh) - 1rem);
+  margin: 0;
+  padding: 0.25rem 1rem calc(1rem + env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 0;
+  border-top: 1px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text);
+  animation: id-sheet-up 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+}
+/* The keyboard covers the strip at the foot of the screen that the padding was keeping clear of. */
+.id-sheet[data-keyboard] { padding-bottom: 1rem; }
+.id-sheet::backdrop { background: rgb(0 0 0 / 0.6); animation: id-sheet-dim 0.2s ease-out; }
+.id-sheet[data-leaving] { animation: id-sheet-down 0.2s cubic-bezier(0.4, 0, 1, 1) forwards; }
+.id-sheet[data-leaving]::backdrop { animation: id-sheet-clear 0.2s ease-in forwards; }
+@keyframes id-sheet-up { from { transform: translateY(100%); } }
+@keyframes id-sheet-down { to { transform: translateY(100%); } }
+@keyframes id-sheet-dim { from { opacity: 0; } }
+@keyframes id-sheet-clear { to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .id-sheet, .id-sheet::backdrop, .id-sheet[data-leaving], .id-sheet[data-leaving]::backdrop { animation: none; }
+}
+html:has(.id-sheet[open]) { overflow: hidden; }
+/* The small words in the sheet: what it is for, and what each blank is. */
+.id-sheet-label {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10px;
+  line-height: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--muted);
+}
+.id-sheet-where {
+  margin-left: 0.75em;
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+/* A name the list offers: a row to press, with its number in the list before it. */
+.id-sheet-offer {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 14px;
+  line-height: 1.35;
+  text-align: left;
+  color: var(--text);
+  cursor: pointer;
+}
+.id-sheet-offer span { flex: none; min-width: 1.5em; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--muted); }
+.id-sheet-offer:active { opacity: 0.6; }
+.id-sheet-offer:focus-visible { outline: 2px solid var(--text); outline-offset: -2px; }
+
 /* The cross that shuts the fields: a small mark in a full-size place to press. */
 .track-ids-shut {
   display: grid;

@@ -491,7 +491,9 @@ export function runningOrders(listed: Listed[], sides: number): Listed[][] {
     const kept = new Map<string, Listed[]>();
     for (const l of listed) if (l.running && l.side === side) kept.set(`${l.date} ${l.author}`, [...(kept.get(`${l.date} ${l.author}`) ?? []), l]);
     const fullest = [...kept.entries()].sort((a, b) => b[1].length - a[1].length || b[0].localeCompare(a[0]))[0]?.[1];
-    if (fullest) return [...fullest].sort((a, b) => a.n - b.n);
+    // Someone who posts their list twice in a day has every number in it twice. The later saying of a line is
+    // the one that stands: it is the same line, or that line put right.
+    if (fullest) return [...new Map(fullest.map((l) => [l.n, l])).values()].sort((a, b) => a.n - b.n);
     // One list per run of rising numbers. Someone who posts a corrected list the same day starts again at 1,
     // and that is a second list, not more of the first.
     const lists: Listed[][] = [];

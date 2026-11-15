@@ -69,6 +69,8 @@ export function AudioPlayer({ src, title, tapeId, sidePosition, wave, length, si
             position={sideCount > 1 ? sidePosition ?? null : null}
             ids={ids}
             time={state.currentTime}
+            order={trackIds.orders[sideIndex]}
+            length={state.duration > 0 ? state.duration : length}
             onPosted={trackIds.refresh}
           />
         )}

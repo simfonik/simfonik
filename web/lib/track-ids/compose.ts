@@ -21,6 +21,25 @@ export type TrackId = {
   by: string;
 };
 
+/** A line of a side's running order: a track written down in its place, with or without a time. */
+export type ListedTrack = {
+  /** Its number in the list. */
+  n: number;
+  artist: string;
+  title: string;
+  /** False where the list itself has the track down as unknown. */
+  known: boolean;
+  /** When the list says it plays, in seconds, where it says. */
+  at?: number;
+};
+
+/**
+ * A side's tracks in the order they play, from a list that gives few or none of them a time: the tape's own
+ * tracklist (`by` is null) or the fullest list someone kept in the comments (`by` is who). The tape page
+ * offers a visitor ID'ing a track the lines that could be it.
+ */
+export type RunningOrder = { by: string | null; tracks: ListedTrack[] };
+
 /** A time as people write one in a comment: 12:34, or 1:02:03 past the hour. */
 export const clock = (seconds: number) => {
   const s = Math.max(0, Math.floor(seconds));

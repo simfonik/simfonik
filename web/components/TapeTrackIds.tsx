@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import type { TrackId } from '../lib/track-ids/compose';
+import type { RunningOrder, TrackId } from '../lib/track-ids/compose';
 
 /** Takes the tape to a moment on a side. `position` is the side's label, or null on a tape with one side. */
 type GoTo = (position: string | null, time: number) => void;
@@ -9,6 +9,8 @@ type GoTo = (position: string | null, time: number) => void;
 type TapeTrackIds = {
   /** The IDs the comments give: one list per side, in the order the tape has its sides. Empty until they arrive. */
   sides: TrackId[][];
+  /** Each side's tracks in order, where a list gives them without times (see lib/track-ids/read.ts). */
+  orders: (RunningOrder | null)[];
   /** Counts up each time the comments are known to have changed. Whatever shows comments reads them again. */
   changed: number;
   /** A comment has been posted: read everything again. */
@@ -18,7 +20,7 @@ type TapeTrackIds = {
   goTo: GoTo;
 };
 
-const nothing: TapeTrackIds = { sides: [], changed: 0, refresh: () => {}, setPlayer: () => {}, goTo: () => {} };
+const nothing: TapeTrackIds = { sides: [], orders: [], changed: 0, refresh: () => {}, setPlayer: () => {}, goTo: () => {} };
 const Context = createContext<TapeTrackIds>(nothing);
 
 /**
@@ -27,7 +29,7 @@ const Context = createContext<TapeTrackIds>(nothing);
  * either place both are told, and a time in a comment can send the player to it.
  */
 export function TapeTrackIdsProvider({ tapeId, children }: { tapeId: string; children: ReactNode }) {
-  const [sides, setSides] = useState<TrackId[][]>([]);
+  const [{ sides, orders }, setRead] = useState<Pick<TapeTrackIds, 'sides' | 'orders'>>({ sides: [], orders: [] });
   const [changed, setChanged] = useState(0);
   const player = useRef<GoTo | null>(null);
 
@@ -35,8 +37,8 @@ export function TapeTrackIdsProvider({ tapeId, children }: { tapeId: string; chi
     let current = true;
     fetch(`/api/track-ids/${tapeId}`)
       .then((response) => (response.ok ? response.json() : Promise.reject(new Error(`status ${response.status}`))))
-      .then((data: { sides: TrackId[][] }) => {
-        if (current) setSides(data.sides);
+      .then((data: Pick<TapeTrackIds, 'sides' | 'orders'>) => {
+        if (current) setRead({ sides: data.sides, orders: data.orders });
       })
       .catch((error) => console.error('Failed to load track IDs:', error));
     return () => {
@@ -50,7 +52,7 @@ export function TapeTrackIdsProvider({ tapeId, children }: { tapeId: string; chi
   }, []);
   const goTo = useCallback<GoTo>((position, time) => player.current?.(position, time), []);
 
-  const value = useMemo(() => ({ sides, changed, refresh, setPlayer, goTo }), [sides, changed, refresh, setPlayer, goTo]);
+  const value = useMemo(() => ({ sides, orders, changed, refresh, setPlayer, goTo }), [sides, orders, changed, refresh, setPlayer, goTo]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 
