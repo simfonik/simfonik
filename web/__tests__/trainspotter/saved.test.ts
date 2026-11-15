@@ -107,6 +107,15 @@ describe('reading what was stored', () => {
     expect(readSaved('[]', true)).toEqual({ cues: [], removed: [], moved: null });
   });
 
+  it('leaves out anything stored that is not a track', () => {
+    const good = { id: 'a', track: 'A', start: 0, end: 60, artist: '', title: '', known: false };
+    const found = readSaved(JSON.stringify({ v: 2, cues: [null, good, { id: 'b', track: 'A', start: 5 }, 'x'], removed: [null, { side: 0, start: 5 }, {}], moved: ['a', 3] }), false)!;
+    expect(found.cues).toEqual([good]);
+    expect(found.removed).toEqual([{ side: 0, start: 5 }]);
+    expect(found.moved).toEqual(new Set(['a']));
+    expect(readSaved(JSON.stringify([null, good]), false)!.cues).toEqual([good]);
+  });
+
   it('takes nothing, or nonsense, for a first visit', () => {
     expect(readSaved(null, false)).toBeNull();
     expect(readSaved('{not json', false)).toBeNull();

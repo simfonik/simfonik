@@ -16,14 +16,16 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
   const tape = getTapeById(id);
   if (!tape) notFound();
 
-  const [{ sightings, listed }, others] = await Promise.all([readTape(tape), tapeIndex()]);
+  const [{ sightings, listed, complete }, others] = await Promise.all([readTape(tape), tapeIndex()]);
   // The tracklist already published on the site: names in order with no times, the most trusted order there is.
   const official = tape.sides.map((side, i) =>
     (side.tracks ?? []).map((t, n) => ({ side: i, n: n + 1, artist: t.artist, title: t.title, known: true, author: "simfonik", date: "" })),
   );
 
   return (
+    // Keyed by tape: the timeline, its history and its saved copy belong to one tape and start over with the next.
     <Trainspotter
+      key={tape.id}
       tape={{
         id: tape.id,
         title: tape.title,
@@ -33,6 +35,7 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
         sides: tape.sides.map((s) => ({ key: s.position, title: s.title ?? `Side ${s.position}`, audio: s.audio_links[0]?.url ?? null })),
       }}
       sightings={sightings}
+      complete={complete}
       listed={listed}
       official={official}
       others={others}

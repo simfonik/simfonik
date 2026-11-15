@@ -39,6 +39,24 @@ export const DEFAULT_LENGTH = 47 * 60;
 let made = 0;
 const newId = () => `cue-${Date.now().toString(36)}-${++made}`;
 
+/**
+ * A track as given from outside (an agent's arguments, a saved copy), made safe: times whole and in order, at
+ * least five seconds long, on a side the tape has. Null if it has no usable times.
+ *
+ * It is not held to the length of the timeline. The timeline may be showing one part of a set of several, and
+ * a write of the whole tracklist (an undo, a return visit, "start over") carries the tracks of every part:
+ * cut to the shown part's length, a track 70 minutes into part D would land at the 40-minute end of part A.
+ */
+export function tidyCue(input: Partial<Cue>, sides: string[]): Cue | null {
+  const track = sides.includes(String(input.track)) ? String(input.track) : sides[0];
+  const start = Math.max(0, Math.round(Number(input.start)));
+  const end = Math.max(start + 5, Math.round(Number(input.end ?? start + 180)));
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return null;
+  const artist = String(input.artist ?? "").slice(0, 120);
+  const title = String(input.title ?? "").slice(0, 160);
+  return { id: input.id ? String(input.id) : newId(), track, start, end, artist, title, known: input.known ?? Boolean(artist || title), by: input.by ? String(input.by).slice(0, 60) : undefined, open: input.open ? true : undefined };
+}
+
 export const tracklist = definePrimitive({
   name: "tracklist",
   options: { value: "value", defaultValue: "value", onValueChange: "callback", sides: "list", length: "number" },
@@ -80,16 +98,7 @@ export const tracklist = definePrimitive({
     });
 
     const current = () => context.store.get().value;
-    // Agent arguments arrive unchecked, so every method normalises what it is given.
-    const tidy = (input: Partial<Cue>): Cue | null => {
-      const track = sides().includes(String(input.track)) ? String(input.track) : sides()[0];
-      const start = Math.max(0, Math.min(length() - 5, Math.round(Number(input.start))));
-      const end = Math.max(start + 5, Math.min(length(), Math.round(Number(input.end ?? start + 180))));
-      if (!Number.isFinite(start) || !Number.isFinite(end)) return null;
-      const artist = String(input.artist ?? "").slice(0, 120);
-      const title = String(input.title ?? "").slice(0, 160);
-      return { id: input.id ? String(input.id) : newId(), track, start, end, artist, title, known: input.known ?? Boolean(artist || title), by: input.by ? String(input.by).slice(0, 60) : undefined, open: input.open ? true : undefined };
-    };
+    const tidy = (input: Partial<Cue>) => tidyCue(input, sides());
 
     return {
       spans,
@@ -101,11 +110,15 @@ export const tracklist = definePrimitive({
         const next = tidy(cue);
         return next ? change("value", [...current(), next], { reason: "imperative" }) : false;
       },
-      /** "Mark new track": marks one at `time` and ends whatever was playing before it. */
+      /**
+       * "Mark new track": marks one at `time` and ends whatever was playing before it. Refused where a track
+       * already starts: marking is offered to assistants, which may add tracks but not remove them, and a mark
+       * on top of a track would replace it.
+       */
       markAt: (track: string, time: number) => {
         const t = sides().includes(String(track)) ? String(track) : sides()[0];
         const start = Math.max(0, Math.min(length() - 5, Math.round(Number(time))));
-        if (!Number.isFinite(start)) return false;
+        if (!Number.isFinite(start) || current().some((c) => c.track === t && Math.abs(c.start - start) < 5)) return false;
         const next = current()
           .filter((c) => c.track === t && c.start > start + 5)
           .sort((a, b) => a.start - b.start)[0];
@@ -122,7 +135,7 @@ export const tracklist = definePrimitive({
         const end = Math.max(start + 5, Math.min(guessed ? start + 240 : until, length()));
         const before = current()
           .map((c) => (c.track === t && c.start < start && c.end > start ? { ...c, end: start, open: undefined } : c))
-          .filter((c) => c.end - c.start >= 5 && !(c.track === t && Math.abs(c.start - start) < 5));
+          .filter((c) => c.end - c.start >= 5);
         return change("value", [...before, { id: newId(), track: t, start, end, artist: "", title: "", known: false, open: guessed ? true : undefined }], { reason: "imperative" });
       },
       /** Names a marked track. A name someone types replaces whoever was credited before. */

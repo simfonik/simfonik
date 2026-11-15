@@ -3,6 +3,7 @@
 // What sits under the timeline: the tracks still to ID as a list, how to send IDs in, and three lists that
 // stay folded until asked for (the names without times, what the comments said, what this visitor changed).
 import { useState } from "react";
+import { announce } from "@ui-sdk/core";
 import Link from "next/link";
 import type { HistoryEntry } from "@ui-sdk/react/history";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@ui-sdk/react/collapsible";
@@ -75,6 +76,7 @@ export function SendItIn({ tapeId, sides, cues }: { tapeId: string; sides: strin
     try {
       await navigator.clipboard.writeText(asComment());
       setCopied("yes");
+      announce("Copied");
       setTimeout(() => setCopied("no"), 1500);
     } catch {
       setCopied("failed"); // show the text so it can be copied by hand

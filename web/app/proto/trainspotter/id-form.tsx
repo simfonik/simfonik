@@ -36,10 +36,11 @@ export function UndoRedo({ canUndo, canRedo, onStep }: { canUndo: boolean; canRe
   const redo = useShortcutHint("mod+shift+z");
   return (
     <>
-      <button type="button" onClick={() => onStep(-1)} disabled={!canUndo} className="ts-link" aria-keyshortcuts={undo.ariaKeyshortcuts} title={`Undo (${undo.text})`}>
+      {/* Unavailable, not disabled: a disabled button drops the keyboard's focus the moment the last step is undone. */}
+      <button type="button" onClick={() => canUndo && onStep(-1)} aria-disabled={!canUndo} className="ts-link" aria-keyshortcuts={undo.ariaKeyshortcuts} title={`Undo (${undo.text})`}>
         Undo
       </button>
-      <button type="button" onClick={() => onStep(1)} disabled={!canRedo} className="ts-link" aria-keyshortcuts={redo.ariaKeyshortcuts} title={`Redo (${redo.text})`}>
+      <button type="button" onClick={() => canRedo && onStep(1)} aria-disabled={!canRedo} className="ts-link" aria-keyshortcuts={redo.ariaKeyshortcuts} title={`Redo (${redo.text})`}>
         Redo
       </button>
     </>
@@ -172,9 +173,10 @@ export function IdBar({
         e.preventDefault();
         form.save();
       }}
-      // Leaving the bar saves. Moving between its fields and buttons does not.
+      // Leaving the bar saves. Moving between its fields and buttons does not, and neither does the whole
+      // window losing focus: switching to another tab mid-word is not finishing.
       onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) form.save();
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null) && document.hasFocus()) form.save();
       }}
       onKeyDown={(e) => {
         if (e.key === "Escape" && subject) onAbandon();
@@ -188,7 +190,7 @@ export function IdBar({
             Save
           </button>
           {/* Pulled out by its own padding, so its last letter ends where "Keyboard shortcuts" below it does. */}
-          <button type="button" disabled={!subject} onClick={form.remove} className="ts-link -mr-2.5" data-agent-confirm="Remove this track from the tracklist?">
+          <button type="button" disabled={!subject} onClick={form.remove} className="ts-link -mr-2.5">
             Remove
           </button>
         </div>
@@ -289,7 +291,7 @@ export function IdSheetForm({ form, track, onClose, onReplay }: { form: IdDraft;
         <button type="button" onClick={onReplay} className="ts-link">
           Replay
         </button>
-        <button type="button" onClick={form.remove} className="ts-link" data-agent-confirm="Remove this track from the tracklist?">
+        <button type="button" onClick={form.remove} className="ts-link">
           Remove
         </button>
       </div>

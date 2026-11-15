@@ -10,15 +10,22 @@ type Tape = ReturnType<typeof getAllTapes>[number];
 /**
  * Everything anyone has said about a tape: the 2008–2023 archive, then the comments posted through the site
  * since. Oldest first, because a later comment corrects an earlier one and two on the same day are told apart
- * only by the order they arrive in. The newer ones are one cached query; if the database can't be reached the
- * archive still reads.
+ * only by the order they arrive in. The newer ones are one cached query.
+ *
+ * `complete` is false when the newer ones couldn't be read. The site's query answers "no comments at all" when
+ * the database can't be reached, and there have been comments since the site reopened, so none means it
+ * couldn't. The archive still reads, but nobody should conclude from this reading that a track has gone.
  */
-async function everyone(): Promise<(tapeId: string) => Said[]> {
-  const live = [...(await getPaginatedComments(1, 5000)).comments].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-  return (tapeId) => [
-    ...getCommentsForTape(tapeId).map((c) => ({ author: c.author, date: c.date, content: c.content })),
-    ...live.filter((c) => c.tape_id === tapeId).map((c) => ({ author: c.author_name, date: new Date(c.created_at).toISOString().slice(0, 10), content: c.content })),
-  ];
+async function everyone(): Promise<{ said: (tapeId: string) => Said[]; complete: boolean }> {
+  const { comments, total } = await getPaginatedComments(1, 5000);
+  const live = [...comments].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  return {
+    complete: total > 0,
+    said: (tapeId) => [
+      ...getCommentsForTape(tapeId).map((c) => ({ author: c.author, date: c.date, content: c.content })),
+      ...live.filter((c) => c.tape_id === tapeId).map((c) => ({ author: c.author_name, date: new Date(c.created_at).toISOString().slice(0, 10), content: c.content })),
+    ],
+  };
 }
 
 /**
@@ -32,7 +39,8 @@ function read(tape: Tape, said: Said[]): { sightings: Sighting[]; listed: Listed
 }
 
 export async function readTape(tape: Tape) {
-  return read(tape, (await everyone())(tape.id));
+  const { said, complete } = await everyone();
+  return { ...read(tape, said(tape.id)), complete };
 }
 
 const GROUPS = ["Tracks marked unknown", "Tracklist known, times needed", "Started in the comments", "Nothing marked yet"];
@@ -44,16 +52,30 @@ const plural = (n: number, one: string) => `${n} ${n === 1 ? one : `${one}s`}`;
  *
  * Building it means reading every comment on every tape, about a fifth of a second, and it is the same for
  * every page. So it is kept, and made again when a comment is posted (the tag) or the archive itself changes
- * (the key).
+ * (the key). A list made while the newer comments couldn't be read is used for this page and not kept.
  */
-export function tapeIndex(): Promise<TapeEntry[]> {
+export async function tapeIndex(): Promise<TapeEntry[]> {
   const tapes = getAllTapes();
   const archive = `${tapes.length}:${tapes.reduce((n, t) => n + t.sides.reduce((m, s) => m + 1 + (s.tracks?.length ?? 0), 0), 0)}`;
-  return unstable_cache(buildIndex, ["trainspotter-tape-index", archive], { tags: [COMMENTS_CACHE_TAG], revalidate: 60 * 60 * 24 })();
+  const kept = unstable_cache(
+    async () => {
+      const { said, complete } = await everyone();
+      if (!complete) throw new Incomplete();
+      return buildIndex(said);
+    },
+    ["trainspotter-tape-index", archive],
+    { tags: [COMMENTS_CACHE_TAG], revalidate: 60 * 60 * 24 },
+  );
+  try {
+    return await kept();
+  } catch (error) {
+    if (!(error instanceof Incomplete)) throw error;
+    return buildIndex((await everyone()).said);
+  }
 }
+class Incomplete extends Error {}
 
-async function buildIndex(): Promise<TapeEntry[]> {
-  const said = await everyone();
+function buildIndex(said: (tapeId: string) => Said[]): TapeEntry[] {
   return getAllTapes()
     .map((t) => {
       const all = read(t, said(t.id));

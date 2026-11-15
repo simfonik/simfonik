@@ -56,11 +56,22 @@ export function readSaved(raw: string | null, opened: boolean): Kept | null {
   } catch {
     return null;
   }
-  if (Array.isArray(saved)) return saved.length > 0 || opened ? { cues: saved as Cue[], removed: [], moved: null } : null;
+  if (Array.isArray(saved)) return saved.length > 0 || opened ? { cues: saved.filter(isCue), removed: [], moved: null } : null;
   if (!saved || typeof saved !== "object" || !Array.isArray((saved as Saved).cues)) return null;
-  const { cues, removed, moved } = saved as Saved;
-  return { cues, removed: Array.isArray(removed) ? removed : [], moved: Array.isArray(moved) ? new Set(moved) : null };
+  const { cues, removed, moved } = saved as { cues: unknown[]; removed?: unknown; moved?: unknown };
+  return {
+    cues: cues.filter(isCue),
+    removed: Array.isArray(removed) ? removed.filter(isSpot) : [],
+    moved: Array.isArray(moved) ? new Set(moved.filter((id): id is string => typeof id === "string")) : null,
+  };
 }
+
+// Storage is the visitor's to edit and other versions of this page have written to it. Whatever in it is not a
+// track is left out: one bad entry would otherwise break the page on every visit, with no way back.
+const isObject = (x: unknown): x is Record<string, unknown> => typeof x === "object" && x !== null;
+const isSpot = (x: unknown): x is Spot => isObject(x) && Number.isFinite(x.side) && Number.isFinite(x.start);
+const isCue = (x: unknown): x is Cue =>
+  isObject(x) && typeof x.id === "string" && typeof x.track === "string" && Number.isFinite(x.start) && Number.isFinite(x.end) && typeof x.artist === "string" && typeof x.title === "string" && typeof x.known === "boolean";
 
 /**
  * Return visit: the saved timeline is brought back in line with the comments. Nobody approves any of it.

@@ -47,12 +47,15 @@ function CuePart({ value, ...props }: { value: string } & React.ComponentProps<"
 export function Trainspotter({
   tape,
   sightings,
+  complete,
   listed,
   official,
   others,
 }: {
   tape: TapeProp;
   sightings: Sighting[];
+  /** False when the newer comments couldn't be read, and `sightings` is the archive's alone. */
+  complete: boolean;
   listed: Listed[];
   official: Listed[][];
   /** Every tape with something to work on, in the order the switcher lists them. */
@@ -248,18 +251,19 @@ export function Trainspotter({
     });
   }, []);
 
-  const target = () => agent?.snapshot().find((c) => c.component === "tracklist")?.ref;
+  // The timeline as the bridge lists it. A timeline that has left the page (the tape before this one) can
+  // still be listed, marked as gone, and can't be written to.
+  const target = () => agent?.snapshot().find((c) => c.component === "tracklist" && !c.offPage)?.ref;
   /** Writes listeners' tracks through the agent bridge, so the history knows they weren't typed here. */
   const writeAsListeners = useCallback(async (next: Cue[]) => {
     const ref = target();
     if (!agent || !ref) return false;
     quiet.current = true;
     try {
-      await agent.act({ steps: [{ ref, action: "setValue", args: [next] }] });
+      return (await agent.act({ steps: [{ ref, action: "setValue", args: [next] }] })).ok;
     } finally {
       quiet.current = false;
     }
-    return true;
   }, []);
 
   // The timeline registers with the bridge a moment after it mounts, so a write made as the page opens waits
@@ -297,7 +301,8 @@ export function Trainspotter({
   // Return visit: the saved timeline is brought back in line with the comments (the rules are in `followComments`).
   const merged = useRef(false);
   useEffect(() => {
-    if (restored !== "saved" || merged.current) return;
+    // Not from a reading that is missing the newer comments: their tracks would look "gone" and be removed.
+    if (restored !== "saved" || merged.current || !complete) return;
     merged.current = true;
     const next = followComments({ cues: cuesRef.current, removed: gone.current, moved: moved.current }, proposals, sides);
     if (!next) return;
@@ -346,8 +351,7 @@ export function Trainspotter({
       focusName(same.id);
       return;
     }
-    wantName.current = true;
-    api.markAt(sides[activeRef.current], t);
+    wantName.current = api.markAt(sides[activeRef.current], t) !== false;
   }, [api, sides, focusName, activeRef, audios]);
   useEffect(() => {
     if (selected && wantName.current) {
@@ -367,6 +371,11 @@ export function Trainspotter({
   useEffect(() => {
     if (many) setSelected((id) => (cuesRef.current.find((c) => c.id === id)?.track === sides[active] ? id : null));
   }, [many, active, sides]);
+  // The sheet is about the picked track. If that track goes (an undo, a change of part), so does the sheet;
+  // left "open" with nothing in it, it would hold the tape still for good.
+  useEffect(() => {
+    if (sheet && !cues.some((c) => c.id === selected)) closeSheet();
+  }, [sheet, cues, selected, closeSheet]);
 
   // ← and →: the previous or next track, from wherever the keyboard is. The audio goes with it, and keeps
   // playing if it was playing. With no track picked, it steps from the one under the playhead.
@@ -398,6 +407,8 @@ export function Trainspotter({
   // M marks and Space plays, unless the key belongs to a field or a control. A focused track is neither.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // A held key is one press, and a key something else has already handled is not ours.
+      if (e.repeat || e.defaultPrevented) return;
       const t = e.target as HTMLElement;
       if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && !(e.metaKey || e.ctrlKey || e.altKey || e.shiftKey)) {
         // Not where arrows already mean something: a text field, the scrubber, the part picker, an open list.
@@ -463,7 +474,9 @@ export function Trainspotter({
     // Only when the track under the playhead changes; what was picked and typed is read as it stands then.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playingCue?.id]);
+  const abandoning = useRef(false);
   const saveId = (artist = draft.artist, title = draft.title) => {
+    if (abandoning.current) return false;
     const a = artist.trim();
     const t = title.trim();
     if (!subject || (a === subject.artist && t === shownTitle)) return false;
@@ -673,7 +686,12 @@ export function Trainspotter({
               <SegmentedControlItem key={side.key} value={side.key} className="ts-part">
                 <b>{side.key}</b>
                 {partTitle(i) && <span>{partTitle(i)}</span>}
-                {left > 0 && <i aria-label={`${left} unknown`}>{left}</i>}
+                {left > 0 && (
+                  <i>
+                    {left}
+                    <span className="sr-only"> unknown</span>
+                  </i>
+                )}
               </SegmentedControlItem>
             );
           })}
@@ -682,7 +700,7 @@ export function Trainspotter({
 
       {/* The stylesheet turns the tape's length into its width: see .ts-canvas. */}
       <div className={`ts-root ${many ? "mt-2" : "mt-4"}`} style={{ "--minutes": length / 60 } as React.CSSProperties}>
-        <div className="ts-scroller" ref={scrollerRef} data-proto-keys>
+        <div className="ts-scroller" ref={scrollerRef}>
           <div className="ts-canvas">
             {/* The ruler is the scrubber: a slider the width of the tape. It sits outside the tracklist
                 so that moving through the audio is never recorded as a change to the tracklist. */}
@@ -782,7 +800,10 @@ export function Trainspotter({
             }}
             onAbandon={() => {
               if (subject) setDraft({ artist: subject.artist, title: shownTitle });
+              // Moving focus out of the bar would save what was typed, which is what Escape is refusing.
+              abandoning.current = true;
               pickedBlock()?.focus();
+              abandoning.current = false;
             }}
             onNamed={() => requestAnimationFrame(() => pickedBlock()?.focus())}
           >

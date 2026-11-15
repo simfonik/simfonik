@@ -104,8 +104,8 @@
   white-space: nowrap;
   color: var(--text);
 }
-@media (hover: hover) { .ts-link:not(:disabled):hover { text-decoration: underline; text-underline-offset: 4px; } }
-.ts-link:disabled { cursor: not-allowed; color: var(--muted); opacity: 0.6; }
+@media (hover: hover) { .ts-link:not(:disabled, [aria-disabled="true"]):hover { text-decoration: underline; text-underline-offset: 4px; } }
+.ts-link:is(:disabled, [aria-disabled="true"]) { cursor: not-allowed; color: var(--muted); opacity: 0.6; }
 @media (prefers-reduced-motion: reduce) { .ts-btn { transition: none; } }
 
 /* Getting between tapes: a line of text, not a row of boxes. */
@@ -192,7 +192,8 @@
 /* No scrollbar of its own: the overview strip under the rows shows where the tape is and moves it, and the
    right edge fades where there is more. The browser's bar said the same thing a third time, and on a Mac it
    flashed across the bottom row whenever the tape moved. Wheel, trackpad, touch and keys scroll as before. */
-.ts-scroller { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+/* A track brought into view (by the keyboard's focus, say) stops clear of the side label, which stays put over the tape. */
+.ts-scroller { overflow-x: auto; overscroll-behavior-x: contain; scroll-padding-inline-start: var(--ts-gutter); scrollbar-width: none; }
 .ts-scroller::-webkit-scrollbar { display: none; }
 /* As wide as the tape is long at the page's scale, or the whole width where the side fits in it (a short
    side, or a very wide window): then it is stretched to fill. --minutes is set on .ts-root by the page. */
