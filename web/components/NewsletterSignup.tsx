@@ -90,12 +90,12 @@ export function NewsletterModal({ open, onClose }: { open: boolean; onClose: () 
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoFocus
-                className="font-mono w-full sm:flex-1 border-[1.5px] border-[var(--text)] bg-[var(--bg)] px-4 py-2.5 text-sm text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none"
+                className="font-mono h-11 w-full sm:flex-1 border-[1.5px] border-[var(--text)] bg-[var(--bg)] px-4 text-sm text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none"
               />
               <button
                 type="submit"
                 disabled={status === 'loading'}
-                className="poster-btn whitespace-nowrap"
+                className="poster-btn h-11 whitespace-nowrap"
               >
                 {status === 'loading' ? 'Subscribing\u2026' : 'Subscribe'}
               </button>
@@ -139,12 +139,12 @@ export function NewsletterFooter() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="font-mono w-full sm:flex-1 border-[1.5px] border-[var(--text)] bg-[var(--bg)] px-4 py-2.5 text-sm text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none"
+          className="font-mono h-11 w-full sm:flex-1 border-[1.5px] border-[var(--text)] bg-[var(--bg)] px-4 text-sm text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none"
         />
         <button
           type="submit"
           disabled={status === 'loading'}
-          className="poster-btn whitespace-nowrap"
+          className="poster-btn h-11 whitespace-nowrap"
         >
           {status === 'loading' ? 'Subscribing...' : 'Subscribe'}
         </button>
