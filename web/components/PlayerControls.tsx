@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { outline } from '../lib/waveform';
 
 export interface PlayerControlsProps {
@@ -35,7 +35,15 @@ export function PlayerControls({
   };
 
   const shape = useMemo(() => (wave ? outline(wave) : null), [wave]);
-  const played = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
+  // The audio isn't fetched until it is played, so before that its length isn't known. A press on the bar
+  // then starts the tape, and the place pressed (a share of the bar, 0 to 1) is gone to once the length is in.
+  const [wanted, setWanted] = useState<number | null>(null);
+  useEffect(() => {
+    if (wanted === null || !(duration > 0)) return;
+    onSeek(wanted * duration);
+    setWanted(null);
+  }, [wanted, duration, onSeek]);
+  const played = wanted !== null ? wanted * 100 : duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
 
   return (
     <div className={`flex gap-3 ${shape ? 'items-start' : 'items-center'}`}>
@@ -45,7 +53,7 @@ export function PlayerControls({
         onClick={isPlaying ? onPause : onPlay}
         disabled={isLoading}
         aria-label={isPlaying ? 'Pause' : 'Play'}
-        className="player-play flex-shrink-0 w-11 h-11 flex items-center justify-start text-[var(--text)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--text)]"
+        className="player-play flex-shrink-0 w-11 h-11 flex items-center justify-start text-[var(--text)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
       >
         {isLoading ? (
           <svg className="w-8 h-8 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -74,11 +82,17 @@ export function PlayerControls({
             <input
               type="range"
               min="0"
-              max={duration || 0}
-              value={currentTime}
-              onChange={(e) => onSeek(parseFloat(e.target.value))}
-              disabled={isLoading || !duration}
+              max={duration || 1}
+              step={duration ? 1 : 0.001}
+              value={duration ? currentTime : wanted ?? 0}
+              onChange={(e) => {
+                const value = parseFloat(e.target.value);
+                if (duration) return onSeek(value);
+                setWanted(value);
+                if (!isPlaying) onPlay();
+              }}
               aria-label={`Seek audio${title ? `: ${title}` : ''}`}
+              aria-valuetext={duration ? `${formatTime(currentTime)} of ${formatTime(duration)}` : 'Not loaded yet'}
             />
           </div>
           <div className="mt-1 flex justify-between">
@@ -100,7 +114,7 @@ export function PlayerControls({
             onChange={(e) => onSeek(parseFloat(e.target.value))}
             disabled={isLoading || !duration}
             aria-label={`Seek audio${title ? `: ${title}` : ''}`}
-            className="flex-1 h-[2px] bg-[var(--border)] appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none
+            className="flex-1 h-[2px] bg-[var(--border)] appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed player-line
               [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-[var(--text)] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:rounded-none
               [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:bg-[var(--text)] [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:rounded-none"
           />

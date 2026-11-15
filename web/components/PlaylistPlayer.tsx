@@ -91,7 +91,7 @@ export function PlaylistPlayer({ tracks, tapeId }: PlaylistPlayerProps) {
               <button
                 key={track.position}
                 onClick={() => selectTrack(index)}
-                className={`w-full text-left px-3 py-2.5 transition-colors cursor-pointer focus:outline-none flex items-center gap-3 text-[var(--text)] ${
+                className={`w-full text-left px-3 py-2.5 transition-colors cursor-pointer player-side flex items-center gap-3 text-[var(--text)] ${
                   isCurrent ? 'bg-[var(--bg-hover)]' : 'hover:bg-[var(--bg-hover)]'
                 }`}
               >

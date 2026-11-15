@@ -219,13 +219,13 @@ body::before {
 .player-wave-shape {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, var(--text) var(--played), color-mix(in oklch, var(--text) 30%, transparent) var(--played));
+  /* The part still to come is the bar a visitor aims at: at 45% it holds 3:1 against the page in both themes. */
+  background: linear-gradient(to right, var(--text) var(--played), color-mix(in srgb, var(--text) 45%, var(--bg)) var(--played));
   -webkit-mask-size: 100% 100%;
           mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat;
           mask-repeat: no-repeat;
 }
-.player-wave:has(input:disabled) .player-wave-shape { opacity: 0.5; }
 /* The slider itself, unseen, over the whole bar. */
 .player-wave input {
   position: absolute;
@@ -236,8 +236,11 @@ body::before {
   opacity: 0;
   cursor: pointer;
 }
-.player-wave input:disabled { cursor: not-allowed; }
+/* Where the keyboard is: the bar, the play button, the plain line that stands in for the bar, a side's row. */
 .player-wave:has(input:focus-visible) { outline: 2px solid var(--text); outline-offset: 4px; }
+.player-play:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.player-line:focus-visible { outline: 2px solid var(--text); outline-offset: 8px; }
+.player-side:focus-visible { outline: 2px solid var(--text); outline-offset: -2px; }
 @media (prefers-reduced-motion: reduce) {
   .player-play { transition: none; }
 }
