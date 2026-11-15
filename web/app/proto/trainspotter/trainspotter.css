@@ -25,14 +25,58 @@
 .ts-option[data-selected] { font-weight: 600; }
 
 /* ── The tape switcher: the title is its button ── */
-.ts-nav { display: flex; align-items: stretch; gap: 0.5rem; }
-.ts-nav .poster-btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.6em; white-space: nowrap; }
-.ts-nav-all { min-width: 0; }
-.ts-nav-all[data-open] { background: var(--text); color: var(--bg); }
-@media (max-width: 30rem) {
-  .ts-nav { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; }
-  .ts-nav-word { display: none; }
+/* ── Buttons: this page's own. One boxed action per group; everything else is a quiet text link. ── */
+.ts-btn {
+  display: inline-flex;
+  min-height: 2.75rem;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6em;
+  border: 1.5px solid var(--text);
+  background: transparent;
+  padding: 0 1.1rem;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--text);
+  transition: transform 120ms ease-out;
 }
+.ts-btn-solid { background: var(--text); color: var(--bg); }
+@media (hover: hover) {
+  .ts-btn:not(:disabled):hover { background: var(--text); color: var(--bg); }
+  .ts-btn-solid:not(:disabled):hover { background: color-mix(in oklch, var(--text) 82%, var(--bg)); }
+}
+.ts-btn:not(:disabled):active { transform: scale(0.97); }
+.ts-btn:disabled { cursor: not-allowed; border-color: var(--border); background: transparent; color: var(--muted); }
+.ts-btn:focus-visible, .ts-link:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.ts-link {
+  display: inline-flex;
+  min-height: 2.75rem;
+  cursor: pointer;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0 0.6rem;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--text);
+}
+@media (hover: hover) { .ts-link:not(:disabled):hover { text-decoration: underline; text-underline-offset: 4px; } }
+.ts-link:disabled { cursor: not-allowed; color: var(--muted); opacity: 0.6; }
+@media (prefers-reduced-motion: reduce) { .ts-btn { transition: none; } }
+
+/* Getting between tapes: a line of text, not a row of boxes. */
+.ts-nav { display: flex; flex-wrap: wrap; align-items: center; column-gap: 0.75rem; margin-left: -0.6rem; }
+.ts-nav-all[data-open] { text-decoration: underline; text-underline-offset: 4px; }
 /* How far along a tape is, in the list of tapes. */
 .ts-prog { position: relative; flex: none; width: 2.5rem; height: 4px; background: color-mix(in oklch, currentColor 25%, transparent); }
 .ts-prog::after { content: ""; position: absolute; inset: 0; transform-origin: left; transform: scaleX(var(--done, 0)); background: currentColor; }
@@ -406,12 +450,10 @@
   .ts-bar-primary { background: var(--text); color: var(--bg); }
   .ts-bar-btn:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 
-  /* The site's poster buttons lift on hover, and on a phone that sticks after a tap. Not on this page. */
-  .ts-page .poster-btn:hover { transform: none; box-shadow: none; }
 }
 /* No double-tap zoom on the things that get tapped twice in quick succession; no text selection on a long press. */
-.ts-page .ts-root, .ts-page .poster-btn, .ts-page .ts-chip, .ts-bar-btn, .ts-list-row { touch-action: manipulation; }
-.ts-page .poster-btn, .ts-bar-btn, .ts-chip { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.ts-page .ts-root, .ts-btn, .ts-link, .ts-page .ts-chip, .ts-bar-btn, .ts-list-row { touch-action: manipulation; }
+.ts-btn, .ts-link, .ts-bar-btn, .ts-chip { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .ts-unknowns { max-height: none; }
 /* The row gives way to its button, never the other way round: the text column can shrink to nothing,
    the button column is as wide as the button. */

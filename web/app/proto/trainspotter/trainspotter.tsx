@@ -795,13 +795,13 @@ export function Trainspotter({
         <Input data-title value={draft.title} onValueChange={(v: string) => setDraft((d) => ({ ...d, title: v }))} {...nameHints("done")} className="ts-input" />
       </Field>
       <div className="flex flex-none flex-wrap items-end gap-2">
-        <button type="submit" className="poster-btn min-h-11 !bg-[var(--text)] !text-[var(--bg)]">
+        <button type="submit" className="ts-btn ts-btn-solid">
           Save
         </button>
-        <button type="button" onClick={() => seek(sides.indexOf(sel.track), sel.start, true)} className="poster-btn min-h-11">
+        <button type="button" onClick={() => seek(sides.indexOf(sel.track), sel.start, true)} className="ts-link">
           Hear it
         </button>
-        <button type="button" onClick={() => remove()} className="poster-btn min-h-11" data-agent-confirm="Remove this track from the tracklist?">
+        <button type="button" onClick={() => remove()} className="ts-link" data-agent-confirm="Remove this track from the tracklist?">
           Remove
         </button>
       </div>
@@ -839,10 +839,10 @@ export function Trainspotter({
 
   const undoRedo = (
     <>
-      <button type="button" onClick={() => void step(-1)} disabled={!canUndo} className="poster-btn min-h-11" aria-keyshortcuts={undoHint.ariaKeyshortcuts} title={`Undo (${undoHint.text})`}>
+      <button type="button" onClick={() => void step(-1)} disabled={!canUndo} className="ts-link" aria-keyshortcuts={undoHint.ariaKeyshortcuts} title={`Undo (${undoHint.text})`}>
         Undo
       </button>
-      <button type="button" onClick={() => void step(1)} disabled={!canRedo} className="poster-btn min-h-11" aria-keyshortcuts={redoHint.ariaKeyshortcuts} title={`Redo (${redoHint.text})`}>
+      <button type="button" onClick={() => void step(1)} disabled={!canRedo} className="ts-link" aria-keyshortcuts={redoHint.ariaKeyshortcuts} title={`Redo (${redoHint.text})`}>
         Redo
       </button>
     </>
@@ -964,13 +964,13 @@ export function Trainspotter({
       >
         <nav aria-label="Tapes" className="ts-nav">
           {elsewhere && (
-            <Link href={`/proto/trainspotter/${prevTape!.id}`} className="poster-btn min-h-11" aria-label={`Previous tape: ${prevTape!.label}`}>
-              ‹<span className="ts-nav-word"> Prev</span>
+            <Link href={`/proto/trainspotter/${prevTape!.id}`} className="ts-link" aria-label={`Previous tape: ${prevTape!.label}`}>
+              ‹ Prev
             </Link>
           )}
           <ComboboxTrigger
             ref={setSwitcher}
-            className="poster-btn ts-nav-all min-h-11"
+            className="ts-link ts-nav-all"
             // A finger tap normally arrives as a click and the combobox opens itself. In WebKit's touch
             // emulation the click never comes, so if a tap ends and nothing followed, open it here.
             onClick={() => {
@@ -988,8 +988,8 @@ export function Trainspotter({
             <span aria-hidden>▾</span>
           </ComboboxTrigger>
           {elsewhere && (
-            <Link href={`/proto/trainspotter/${nextTape!.id}`} className="poster-btn min-h-11" aria-label={`Next tape: ${nextTape!.label}`}>
-              <span className="ts-nav-word">Next </span>›
+            <Link href={`/proto/trainspotter/${nextTape!.id}`} className="ts-link" aria-label={`Next tape: ${nextTape!.label}`}>
+              Next ›
             </Link>
           )}
         </nav>
@@ -1037,13 +1037,13 @@ export function Trainspotter({
 
       {!touch && (
         <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 border-t-[1.5px] border-[var(--text)] pt-4">
-          <button type="button" onClick={toggle} disabled={audioFailed} className="ts-fine-only poster-btn min-h-11 min-w-[6rem] !bg-[var(--text)] !text-[var(--bg)]" aria-keyshortcuts="Space">
+          <button type="button" onClick={toggle} disabled={audioFailed} className="ts-fine-only ts-btn ts-btn-solid min-w-[6rem]" aria-keyshortcuts="Space">
             {playing ? "Pause" : "Play"}
           </button>
           <p className="ts-fine-only font-mono text-sm tabular-nums text-[var(--text)]">
             Side {sides[active]} · {clock(now)} <span className="text-[var(--muted)]">/ {durations[active] === null ? "–:––" : clock(durations[active]!)}</span>
           </p>
-          <div className="ml-auto flex gap-2">{undoRedo}</div>
+          <div className="ml-auto flex gap-1">{undoRedo}</div>
         </div>
       )}
 
@@ -1068,11 +1068,11 @@ export function Trainspotter({
         </div>
         <div className="flex flex-wrap gap-2">
           {playingCue && (
-            <button type="button" onClick={() => idIt(playingCue.id)} className={`poster-btn min-h-11 ${playingCue.known || playingCue.id === selected ? "" : "!bg-[var(--text)] !text-[var(--bg)]"}`}>
+            <button type="button" onClick={() => idIt(playingCue.id)} className={playingCue.known ? "ts-link" : "ts-btn ts-btn-solid"}>
               {playingCue.known ? "Fix this ID" : "ID this track"}
             </button>
           )}
-          <button type="button" onClick={markHere} className={`poster-btn min-h-11 ${playingCue ? "" : "!bg-[var(--text)] !text-[var(--bg)]"}`} aria-keyshortcuts="M">
+          <button type="button" onClick={markHere} className={playingCue ? (playingCue.known ? "ts-btn" : "ts-link") : "ts-btn ts-btn-solid"} aria-keyshortcuts="M">
             A new track starts here
           </button>
         </div>
@@ -1135,10 +1135,10 @@ export function Trainspotter({
             {touch ? (
               <div className="flex w-full items-center gap-3">
                 <p className="min-w-0 flex-1 truncate text-[15px] font-medium text-[var(--text)]">{cueLabel(sel)}</p>
-                <button type="button" onClick={() => seek(sides.indexOf(sel.track), sel.start, true)} className="poster-btn min-h-11 flex-none">
+                <button type="button" onClick={() => seek(sides.indexOf(sel.track), sel.start, true)} className="ts-link flex-none">
                   Hear it
                 </button>
-                <button type="button" onClick={() => openSheet(sel.id)} className="poster-btn min-h-11 flex-none !bg-[var(--text)] !text-[var(--bg)]">
+                <button type="button" onClick={() => openSheet(sel.id)} className="ts-btn ts-btn-solid flex-none">
                   {sel.known ? "Fix ID" : "ID it"}
                 </button>
               </div>
@@ -1158,7 +1158,7 @@ export function Trainspotter({
       </div>
 
       {/* On a phone, undo appears under the timeline once there is something to undo, so the timeline never moves. */}
-      {touch && (canUndo || canRedo) && <div className="mt-3 flex justify-end gap-2">{undoRedo}</div>}
+      {touch && (canUndo || canRedo) && <div className="mt-1 flex justify-end gap-1">{undoRedo}</div>}
 
       <Drawer open={sheet && Boolean(sel) && touch} onOpenChange={(open: boolean) => (open ? setSheet(true) : closeSheet())}>
         <DrawerBackdrop className="ts-backdrop" />
@@ -1168,7 +1168,7 @@ export function Trainspotter({
             <>
               <div className="flex items-start justify-between gap-3">
                 <DrawerTitle className="font-display text-2xl leading-tight text-[var(--text)]">{sel.known ? "Fix this ID" : "What is this track?"}</DrawerTitle>
-                <DrawerClose className="poster-btn min-h-11 flex-none">Close</DrawerClose>
+                <DrawerClose className="ts-link flex-none">Close</DrawerClose>
               </div>
               <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] tabular-nums">
                 Side {sel.track} · {clock(sel.start)} to {clock(sel.end)}
@@ -1212,7 +1212,7 @@ export function Trainspotter({
             What you ID here is saved on this device. To add it to the archive, copy your IDs and post them as a comment on the tape’s page. Listeners’ IDs on this timeline came from the same place.
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <button type="button" onClick={copy} disabled={!mine.length} className="poster-btn min-h-11 min-w-[12.5rem]">
+            <button type="button" onClick={copy} disabled={!mine.length} className="ts-btn min-w-[12.5rem]">
               {copied === "yes" ? "Copied ✓" : mine.length ? `Copy my IDs (${mine.length})` : "Copy my IDs"}
             </button>
             <Link href={`/tapes/${tape.id}`} className="inline-flex min-h-11 cursor-pointer items-center text-[15px] text-[var(--text)] underline underline-offset-4">
