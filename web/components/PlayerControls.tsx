@@ -43,6 +43,12 @@ export function PlayerControls({
     onSeek(wanted * duration);
     setWanted(null);
   }, [wanted, duration, onSeek]);
+  // A phone lets audio start only from inside a finished tap, click or key press. The slider reports its new
+  // value the moment a finger lands, which is too early: started from there, an iPhone refuses to play. So
+  // the value is only noted when it changes, and the tape is started when the press ends.
+  const begin = () => {
+    if (wanted !== null && !duration && !isPlaying && !isLoading) onPlay();
+  };
   const played = wanted !== null ? wanted * 100 : duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
 
   // Under a mouse: a line where a click would land and, once the side's length is known, the time there.
@@ -116,8 +122,11 @@ export function PlayerControls({
               const value = parseFloat(e.target.value);
               if (duration) return onSeek(value);
               setWanted(value);
-              if (!isPlaying) onPlay();
             }}
+            onPointerUp={begin}
+            onTouchEnd={begin}
+            onClick={begin}
+            onKeyUp={begin}
             aria-label={`Seek audio${title ? `: ${title}` : ''}`}
             aria-valuetext={duration ? `${formatTime(currentTime)} of ${formatTime(duration)}` : 'Not loaded yet'}
           />
