@@ -104,6 +104,8 @@
 /* Underline the words only: across the whole button the line would break at each gap. */
 .ts-nav-all:hover, .ts-nav-all[data-open] { text-decoration: none !important; }
 .ts-nav-all[data-open] > span:first-child { text-decoration: underline; text-underline-offset: 4px; }
+/* Focus handed back after the list was closed by a tap or a click: no ring. The switcher says why. */
+.ts-nav-all[data-quiet]:focus-visible { outline: none; }
 @media (hover: hover) { .ts-nav-all:hover > span:first-child { text-decoration: underline; text-underline-offset: 4px; } }
 
 /* ── Parts of a set: one shows at a time ── */

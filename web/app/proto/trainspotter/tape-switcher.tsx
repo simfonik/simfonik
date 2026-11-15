@@ -62,10 +62,6 @@ export const TapeSwitcher = memo(function TapeSwitcher({ tapes, currentId }: { t
       onValueChange={(v: unknown) => {
         if (typeof v === "string" && v !== currentId) router.push(`/proto/trainspotter/${v}`);
       }}
-      // The search text is ours so it can be emptied each time the list opens; left to itself the field would
-      // open holding the current tape's name. It is committed at once: the combobox picks which match to
-      // highlight straight after telling us, and a render later it would highlight a match for the letters
-      // before this one.
       items={tapeItems}
       // Bring the highlighted tape into view. With only the rows in view built, the combobox can't scroll to
       // one itself. A heading above the first tape of a group comes along with it.
@@ -77,17 +73,29 @@ export const TapeSwitcher = memo(function TapeSwitcher({ tapes, currentId }: { t
         if (top < el.scrollTop) el.scrollTop = top;
         else if (row.top + row.height > el.scrollTop + el.clientHeight) el.scrollTop = row.top + row.height - el.clientHeight;
       }}
+      // The search text is ours so it can be emptied each time the list opens; left to itself the field would
+      // open holding the current tape's name. It is committed at once: the combobox picks which match to
+      // highlight straight after telling us, and a render later it would highlight a match for the letters
+      // before this one.
       query={tapeQuery}
       onQueryChange={(q: string) => flushSync(() => setTapeQuery(q))}
       open={tapesOpen}
-      onOpenChange={(open: boolean) => {
+      onOpenChange={(open: boolean, details?: { reason?: string; source?: string }) => {
         setTapesOpen(open);
         if (open) {
           setTapeQuery("");
           setTapeScroll((v) => ({ ...v, top: 0 }));
         }
+        // Focus comes back to the button when the list closes. After a tap or a click the combobox brings it
+        // back itself, and that is silent: a focus ring is for someone using the keyboard. After Escape it
+        // does not (it expects the search field to outlive the list, and ours is inside it), so that one is
+        // ours, made at once so focus never sits nowhere. Tabbing out is left alone.
+        else if (details?.reason !== "focus-out") {
+          const byKeyboard = details?.source === "keyboard";
+          switcher?.toggleAttribute("data-quiet", !byKeyboard);
+          if (byKeyboard) switcher?.focus({ preventScroll: true });
+        }
       }}
-      onOpenChangeComplete={(open: boolean) => !open && switcher?.focus()}
       presentation="auto"
       // Typing highlights the first match; opening highlights the tape you are on, so the list opens there.
       autoHighlight="always"
@@ -98,9 +106,61 @@ export const TapeSwitcher = memo(function TapeSwitcher({ tapes, currentId }: { t
             ‹ Prev
           </Link>
         )}
+        {/* The list sits here in the page, directly before its button, on purpose. When it closes, the combobox
+            hands focus to the next focusable element after the list's place in the page (it cannot hand it
+            back to the search field, which is inside the list). Placed after the nav, that element was the
+            "Tape page" link: focus showed there for half a second and then jumped to the button. Placed here,
+            the next element is the button. The list is drawn in the top layer, so where it sits in the page
+            changes nothing you can see. */}
+        <ComboboxContent anchor={tapeNav} align="start" alignOffset={10} sideOffset={4} className="ts-tapes">
+          <div className="ts-tapes-search">
+            <ComboboxInput autoFocus aria-label="Search tapes" placeholder="Search by DJ or tape" autoComplete="off" spellCheck={false} className="ts-input" />
+          </div>
+          <ComboboxEmpty className="px-3 py-3 text-sm text-[var(--muted)]">No tape by that name has track IDs to work with yet.</ComboboxEmpty>
+          <div
+            ref={tapeScroller}
+            className="ts-tapes-list"
+            onScroll={(e) => {
+              const el = e.currentTarget;
+              setTapeScroll({ top: el.scrollTop, height: el.clientHeight });
+            }}
+          >
+            <ComboboxList>
+              {(state: { items: unknown }) => {
+                const { rows, height } = layOutTapes(state.items as TapeItem[]);
+                tapeRows.current = rows;
+                // A few rows either side of what is in view, so a quick scroll doesn't show a gap.
+                const from = tapeScroll.top - 4 * TAPE_ROW;
+                const to = tapeScroll.top + tapeScroll.height + 4 * TAPE_ROW;
+                return (
+                  <div className="relative" style={{ height }}>
+                    {rows
+                      .filter((r) => r.top + r.height > from && r.top < to)
+                      .map((r) =>
+                        "heading" in r ? (
+                          <div key={`g-${r.heading}`} className="ts-tapes-group" style={{ top: r.top, height: r.height }} role="presentation">
+                            {r.heading}
+                          </div>
+                        ) : (
+                          <ComboboxItem key={r.item.value} value={r.item.value} label={r.item.label} index={r.index} className="ts-option" style={{ top: r.top, height: r.height }}>
+                            <span className="min-w-0 flex-1 truncate" title={r.item.label}>
+                              {r.item.label}
+                            </span>
+                            <span className="flex-none font-mono text-xs tabular-nums opacity-70">{r.item.value === currentId ? "You’re here" : r.item.meta}</span>
+                          </ComboboxItem>
+                        ),
+                      )}
+                  </div>
+                );
+              }}
+            </ComboboxList>
+          </div>
+        </ComboboxContent>
         <ComboboxTrigger
           ref={setSwitcher}
           className="ts-link ts-nav-all"
+          onBlur={(e: React.FocusEvent<HTMLButtonElement>) => e.currentTarget.removeAttribute("data-quiet")}
+          onKeyDown={(e: React.KeyboardEvent<HTMLButtonElement>) => e.currentTarget.removeAttribute("data-quiet")}
           // A finger tap normally arrives as a click and the combobox opens itself. In WebKit's touch
           // emulation the click never comes, so if a tap ends and nothing followed, open it here.
           onClick={() => {
@@ -123,50 +183,6 @@ export const TapeSwitcher = memo(function TapeSwitcher({ tapes, currentId }: { t
           </Link>
         )}
       </nav>
-      <ComboboxContent anchor={tapeNav} align="start" alignOffset={10} sideOffset={4} className="ts-tapes">
-        <div className="ts-tapes-search">
-          <ComboboxInput autoFocus aria-label="Search tapes" placeholder="Search by DJ or tape" autoComplete="off" spellCheck={false} className="ts-input" />
-        </div>
-        <ComboboxEmpty className="px-3 py-3 text-sm text-[var(--muted)]">No tape by that name has track IDs to work with yet.</ComboboxEmpty>
-        <div
-          ref={tapeScroller}
-          className="ts-tapes-list"
-          onScroll={(e) => {
-            const el = e.currentTarget;
-            setTapeScroll({ top: el.scrollTop, height: el.clientHeight });
-          }}
-        >
-          <ComboboxList>
-            {(state: { items: unknown }) => {
-              const { rows, height } = layOutTapes(state.items as TapeItem[]);
-              tapeRows.current = rows;
-              // A few rows either side of what is in view, so a quick scroll doesn't show a gap.
-              const from = tapeScroll.top - 4 * TAPE_ROW;
-              const to = tapeScroll.top + tapeScroll.height + 4 * TAPE_ROW;
-              return (
-                <div className="relative" style={{ height }}>
-                  {rows
-                    .filter((r) => r.top + r.height > from && r.top < to)
-                    .map((r) =>
-                      "heading" in r ? (
-                        <div key={`g-${r.heading}`} className="ts-tapes-group" style={{ top: r.top, height: r.height }} role="presentation">
-                          {r.heading}
-                        </div>
-                      ) : (
-                        <ComboboxItem key={r.item.value} value={r.item.value} label={r.item.label} index={r.index} className="ts-option" style={{ top: r.top, height: r.height }}>
-                          <span className="min-w-0 flex-1 truncate" title={r.item.label}>
-                            {r.item.label}
-                          </span>
-                          <span className="flex-none font-mono text-xs tabular-nums opacity-70">{r.item.value === currentId ? "You’re here" : r.item.meta}</span>
-                        </ComboboxItem>
-                      ),
-                    )}
-                </div>
-              );
-            }}
-          </ComboboxList>
-        </div>
-      </ComboboxContent>
     </Combobox>
     </>
   );
