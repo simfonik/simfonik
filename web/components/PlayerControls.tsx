@@ -1,4 +1,5 @@
 import React, { ReactNode, useMemo, useRef } from 'react';
+import { formatTime } from '../lib/time-utils';
 import { idAt, idLabel, type TrackId } from '../lib/track-ids/compose';
 import { outline } from '../lib/waveform';
 
@@ -22,15 +23,6 @@ export interface PlayerControlsProps {
   onPause: () => void;
   onSeek: (time: number) => void;
 }
-
-/** A time on a side, always h:mm:ss. */
-export const formatTime = (seconds: number): string => {
-  if (!isFinite(seconds)) return '0:00:00';
-  const hours = Math.floor(seconds / 3600);
-  const mins = Math.floor((seconds % 3600) / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-};
 
 export function PlayerControls({
   isPlaying,
@@ -92,7 +84,8 @@ export function PlayerControls({
     const time = timeAt(x, bar);
     const id = time !== null && ids ? idAt(ids, time) : null;
     const label = el.firstElementChild as HTMLElement;
-    label.textContent = time === null ? '' : `${formatTime(time)}${id ? ` · ${idLabel(id)}` : ''}`;
+    // An ID as the page writes one everywhere: the time, a space, the track.
+    label.textContent = time === null ? '' : `${formatTime(time)}${id ? `\u2002${idLabel(id)}` : ''}`;
     label.dataset.by = id ? `${id.known ? 'ID' : 'marked'} by ${id.by}` : '';
     // The label stays inside the bar's ends, however long the name makes it.
     const half = label.offsetWidth / 2;

@@ -96,7 +96,7 @@ describe('the track line under the player', () => {
     // The unknown runs from 5:00 to 7:00, and the tape is 50 seconds into it.
     render(<TrackIds tapeId="tape-1" position="A" ids={ids} time={350} onPosted={posted} />);
     await user.click(screen.getByRole('button', { name: 'Unknown track. Know it? ID it' }));
-    expect(screen.getByRole('form', { name: 'ID the track at A · 5:00' })).toBeInTheDocument();
+    expect(screen.getByRole('form', { name: 'ID the track at A 0:05:00' })).toBeInTheDocument();
     await user.type(artist(), 'Orbital');
     await user.type(title(), 'Chime{Enter}');
     expect(body().content).toBe('[A 5:00] Orbital - Chime');

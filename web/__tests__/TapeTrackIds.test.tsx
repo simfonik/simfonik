@@ -53,7 +53,7 @@ describe('what a tape page’s parts share about track IDs', () => {
 
     expect(await screen.findByText('what a tape')).toBeInTheDocument();
     expect(screen.getByText('Moby — Go')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Play from B · 12:34' }));
+    await user.click(screen.getByRole('button', { name: 'Play from B 0:12:34' }));
     expect(went).toHaveBeenCalledWith('B', 754);
   });
 

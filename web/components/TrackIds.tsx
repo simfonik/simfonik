@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useId, useRef, useState } from 'react';
-import { clock, composeId, idAt, idLabel, type TrackId } from '../lib/track-ids/compose';
+import { composeId, idAt, idLabel, idPlace, type TrackId } from '../lib/track-ids/compose';
 
 // A visitor's name is asked for once and offered back the next time, on this device only.
 const NAME_KEY = 'simfonik:id-name';
@@ -123,7 +123,7 @@ export function TrackIds({ tapeId, position, ids, time, onPosted }: Props) {
     shut();
   }
 
-  const where = `${position ? `${position} · ` : ''}${clock(at ?? 0)}`;
+  const where = idPlace(position, at ?? 0);
   const sending = status === 'sending';
 
   return (

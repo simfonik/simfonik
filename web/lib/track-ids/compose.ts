@@ -7,6 +7,8 @@
 // for IDs made with the "ID this track" form on the tape page, where the side and the time are known exactly
 // and should be read back exactly, not guessed from prose. Pure functions, used by the browser and the server.
 
+import { formatTime } from '../time-utils';
+
 /** One identified stretch of a side: what the tape page marks on the waveform. Times in seconds. */
 export type TrackId = {
   start: number;
@@ -73,6 +75,13 @@ export function idAt(ids: TrackId[], time: number): TrackId | null {
   }
   return found;
 }
+
+/**
+ * Where an ID is, as the page shows it wherever one appears: the side's label on a tape with sides, then the
+ * time the way the player writes times. "A 0:01:55"; on a tape that is one recording, "0:01:55". (The comment
+ * an ID is kept as writes its time the shorter way people do, `[A 1:55]`; see `composeId`.)
+ */
+export const idPlace = (position: string | null, time: number) => `${position ? `${position} ` : ''}${formatTime(time)}`;
 
 /** How an ID is said in one line: "Moby — Go", or what little is known of it. */
 export const idLabel = (id: Pick<TrackId, 'artist' | 'title' | 'known'>) =>

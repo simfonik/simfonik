@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import tapes from '@/data/tapes.json';
-import { clock, composeId, idAt, idLabel, readComposed, splitComposed, type TrackId } from '@/lib/track-ids/compose';
+import { clock, composeId, idAt, idLabel, readComposed, splitComposed, type TrackId, idPlace } from '@/lib/track-ids/compose';
 
 type Tape = { id: string; sides: { position: string }[] };
 
@@ -72,5 +72,10 @@ describe('the ID at a moment of the tape', () => {
     expect(idLabel(ids[0])).toBe('Moby — Go');
     expect(idLabel(ids[1])).toBe('Unknown track');
     expect(idLabel(ids[2])).toBe('Cubik');
+  });
+  it('says where an ID is the way the player writes times, with the side first on a tape that has sides', () => {
+    expect(idPlace('A', 115)).toBe('A 0:01:55');
+    expect(idPlace('1B', 3723)).toBe('1B 1:02:03');
+    expect(idPlace(null, 115)).toBe('0:01:55');
   });
 });

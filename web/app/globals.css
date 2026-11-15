@@ -451,15 +451,25 @@ body::before {
 }
 .track-ids-shut:active { opacity: 0.6; }
 .track-ids-shut:focus-visible { outline: 2px solid var(--text); outline-offset: -4px; }
-/* A time in a comment that can be pressed to hear that moment. */
-.comment-time {
-  position: relative;
+/* A track ID among the comments: one line in the type the player's track line is set in. Where it is on the
+   tape comes first, more quietly, and can be pressed to hear that moment. */
+.comment-id {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--text);
+}
+.comment-time {
+  position: relative;
   font-variant-numeric: tabular-nums;
+  color: var(--muted);
   text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--muted) 45%, transparent);
   text-underline-offset: 4px;
   cursor: pointer;
+}
+@media (hover: hover) and (pointer: fine) {
+  .comment-time:hover { color: var(--text); text-decoration-color: currentColor; }
 }
 .comment-time::before { content: ""; position: absolute; inset: -12px -6px; }
 .comment-time:active { opacity: 0.6; }

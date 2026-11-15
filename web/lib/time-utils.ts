@@ -13,3 +13,12 @@ export function formatTimeAgo(dateString: string): string {
   if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
+
+/** A time on a tape side, always h:mm:ss with its zeros (0:01:55): how the player and every track ID say one. */
+export function formatTime(seconds: number): string {
+  if (!isFinite(seconds)) return '0:00:00';
+  const hours = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}

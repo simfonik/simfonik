@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { clock, splitComposed } from '../lib/track-ids/compose';
+import { idLabel, idPlace, splitComposed } from '../lib/track-ids/compose';
 import { CommentBody } from './CommentBody';
 import { useTapeTrackIds } from './TapeTrackIds';
 
@@ -27,19 +27,20 @@ function formatDate(dateString: string): string {
 }
 
 /**
- * A comment's text. One that is a track ID in the site's own form (`[B 12:34] Moby - Go`) is shown as what
- * it is: the time, which can be pressed to hear that moment, and the track.
+ * A comment's text. One that is a track ID in the site's own form (`[B 12:34] Moby - Go`) is shown as an ID
+ * is shown everywhere on the page, in one line of one type: where it is, which can be pressed to hear that
+ * moment, and the track.
  */
 function CommentText({ content, goTo }: { content: string; goTo: (position: string | null, time: number) => void }) {
   const id = splitComposed(content);
   if (!id) return <CommentBody content={content} />;
-  const where = `${id.position ? `${id.position} · ` : ''}${clock(id.time)}`;
+  const where = idPlace(id.position, id.time);
   return (
-    <p className="text-[var(--text)] leading-relaxed">
+    <p className="comment-id">
       <button type="button" onClick={() => goTo(id.position, id.time)} className="comment-time" aria-label={`Play from ${where}`}>
         {where}
       </button>{' '}
-      {[id.artist, id.title].filter(Boolean).join(' — ')}
+      {idLabel({ ...id, known: Boolean(id.artist || id.title) })}
     </p>
   );
 }

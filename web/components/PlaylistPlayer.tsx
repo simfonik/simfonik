@@ -2,7 +2,8 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
-import { PlayerControls, formatTime } from './PlayerControls';
+import { formatTime } from '../lib/time-utils';
+import { PlayerControls } from './PlayerControls';
 import { useTapeTrackIds } from './TapeTrackIds';
 import { TrackIds } from './TrackIds';
 
