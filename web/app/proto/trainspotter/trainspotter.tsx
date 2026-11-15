@@ -22,6 +22,7 @@ import { DEFAULT_LENGTH, clock, cueLabel, tracklist, type Cue } from "./tracklis
 import { ordersFor, placeNames, suggestNames } from "./names";
 import { ChangesFold, CommentsFold, NamesFold, SendItIn, StillUnknown } from "./below-the-tape";
 import { IdBar, IdSheetForm, Shortcuts, UndoRedo, type IdDraft } from "./id-form";
+import { awayFrom } from "./keys";
 import { PhoneBar, Player } from "./player";
 import { useTapeAudio } from "./use-tape-audio";
 import { GUTTER, useTimeline } from "./use-timeline";
@@ -404,31 +405,17 @@ export function Trainspotter({
     [sides, seek, activeRef, audios, scrollerRef, snapUntil],
   );
 
-  // M marks and Space plays, unless the key belongs to a field or a control. A focused track is neither.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      // A held key is one press, and a key something else has already handled is not ours.
-      if (e.repeat || e.defaultPrevented) return;
-      const t = e.target as HTMLElement;
-      if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && !(e.metaKey || e.ctrlKey || e.altKey || e.shiftKey)) {
-        // Not where arrows already mean something: a text field, the scrubber, the part picker, an open list.
-        if (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.closest("[role=slider],[role=radio],[role=radiogroup],[role=option],[role=listbox],[role=combobox],[role=dialog]")) return;
-        e.preventDefault();
-        stepTrack(e.key === "ArrowLeft" ? -1 : 1);
-        return;
-      }
-      if (e.metaKey || e.ctrlKey || e.altKey || t.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(t.tagName) || t.closest("[role=slider],[role=option],[role=dialog]")) return;
-      if (e.key === "m" || e.key === "M") {
-        e.preventDefault();
-        markHere();
-      } else if (e.key === " ") {
-        e.preventDefault();
-        toggle();
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [markHere, toggle, stepTrack]);
+  // The page's keys are the SDK's shortcuts: it leaves plain keys to whoever is typing, holds them while a
+  // dialog is open, takes a held key as one press, and can say which are available for the list of keys.
+  // What it can't know is where a key already means something on this page, so each says where it stands
+  // aside: Space and M on a button or link (where Space presses it), the arrows on the scrubber, the part
+  // picker or an open list. A focused track is none of those.
+  const offControls = awayFrom("button, a, input, [role=slider], [role=option]");
+  const arrowsFree = awayFrom("input, [role=slider], [role=radio], [role=radiogroup], [role=option], [role=listbox], [role=combobox]");
+  useShortcut("space", toggle, { description: "Play or pause", when: offControls });
+  useShortcut("arrowleft", () => stepTrack(-1), { description: "Previous track", when: arrowsFree });
+  useShortcut("arrowright", () => stepTrack(1), { description: "Next track", when: arrowsFree });
+  useShortcut("m", markHere, { description: "Mark new track", when: offControls });
 
   // Names waiting for a time: the site's own tracklist if there is one, else a list kept in the comments.
   const orders = useMemo(() => ordersFor(listed, official, sides.length), [listed, official, sides]);

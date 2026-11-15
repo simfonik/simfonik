@@ -3,11 +3,13 @@
 // IDing a track: two fields, and beside them whatever could save the typing (a likely name from the tracklist,
 // what someone else thought it was, a clue). Two layouts: a bar under the timeline with a mouse, a sheet above
 // the keyboard on a phone. Undo, redo and the list of keys live here too, since the bar is where they sit.
+import { useState } from "react";
 import { inputHints } from "@ui-sdk/core";
 import { Field, FieldLabel } from "@ui-sdk/react/field";
 import { Input } from "@ui-sdk/react/input";
 import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from "@ui-sdk/react/popover";
 import { useShortcutHint } from "@ui-sdk/react/shortcuts";
+import { listKeys } from "./keys";
 import type { Listed, Opinion } from "./parse";
 import type { Cue } from "./tracklist-primitive";
 
@@ -49,31 +51,36 @@ export function UndoRedo({ canUndo, canRedo, onStep }: { canUndo: boolean; canRe
 
 /**
  * Everything else the page can do is shown where it happens: the time under the pointer, the grips on a track.
- * The keys are a click away for whoever wants them, named the way they are printed on the keyboard in front
- * of the visitor.
+ * The keys are a click away for whoever wants them. The page's own come from the SDK's list of shortcuts that
+ * can run now, read when the list opens, so it can't fall out of step with what the keys do. A focused track's
+ * keys belong to the timeline, not to the page, and are listed after them. All are named the way they are
+ * printed on the keyboard in front of the visitor.
  */
 export function Shortcuts() {
-  const undo = useShortcutHint("mod+z");
-  const redo = useShortcutHint("mod+shift+z");
-  const mac = undo.text.includes("⌘");
+  const [page, setPage] = useState<{ hint: string; description: string }[]>([]);
+  const [history, setHistory] = useState<{ hint: string; description: string }[]>([]);
+  const mac = useShortcutHint("mod+z").text.includes("⌘");
   return (
-    <Popover>
+    <Popover
+      onOpenChange={(open: boolean) => {
+        if (!open) return;
+        setPage(listKeys(["space", "arrowleft", "arrowright", "m"]));
+        setHistory(listKeys(["mod+z", "mod+shift+z"]));
+      }}
+    >
       <PopoverTrigger className="ts-link ts-fine-only">Keyboard shortcuts</PopoverTrigger>
       <PopoverContent side="top" align="end" sideOffset={6} className="ts-keys">
         <PopoverTitle className="font-mono text-xs uppercase tracking-[0.14em] text-[var(--muted)]">Keyboard shortcuts</PopoverTitle>
         <dl>
           {[
-            ["Space", "Play or pause"],
-            ["← →", "Previous or next track"],
-            ["M", "Mark new track"],
+            ...page.map((k) => [k.hint, k.description]),
             [mac ? "Return" : "Enter", "ID the selected track"],
             ["Delete", "Remove it"],
             [mac ? "⌥ ← →" : "Alt ← →", "Move it a second"],
             [mac ? "⌥ ⇧ ← →" : "Alt Shift ← →", "Trim where it ends"],
-            [undo.text, "Undo"],
-            [redo.text, "Redo"],
+            ...history.map((k) => [k.hint, k.description]),
           ].map(([key, what]) => (
-            <div key={key} className="contents">
+            <div key={`${key} ${what}`} className="contents">
               <dt>{key}</dt>
               <dd>{what}</dd>
             </div>
