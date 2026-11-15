@@ -101,7 +101,7 @@ export const tracklist = definePrimitive({
         const next = tidy(cue);
         return next ? change("value", [...current(), next], { reason: "imperative" }) : false;
       },
-      /** "A new track starts here": marks one at `time` and ends whatever was playing before it. */
+      /** "Mark new track": marks one at `time` and ends whatever was playing before it. */
       markAt: (track: string, time: number) => {
         const t = sides().includes(String(track)) ? String(track) : sides()[0];
         const start = Math.max(0, Math.min(length() - 5, Math.round(Number(time))));

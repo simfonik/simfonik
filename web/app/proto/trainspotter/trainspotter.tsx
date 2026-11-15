@@ -546,7 +546,7 @@ export function Trainspotter({
     [cues, sides, active, now],
   );
 
-  // "A new track starts here": mark it at the playhead and go straight to ID'ing it.
+  // "Mark new track": mark it at the playhead and go straight to ID'ing it.
   const markHere = useCallback(() => {
     const a = audios.current[activeRef.current];
     const t = Math.floor(a?.currentTime ?? 0);
@@ -812,7 +812,7 @@ export function Trainspotter({
   const compactTitle = tape.djCount > 3;
   const partTitle = (i: number) => (tape.sides[i]?.title && !/^side\b/i.test(tape.sides[i].title) ? tape.sides[i].title : null);
   const partName = partTitle(active);
-  const markLabel = touch ? "New track" : "A new track starts here";
+  const markLabel = touch ? "New track" : "Mark new track";
   // What to do, in one line. The counts are in the list of tapes and the lists below; here they were a
   // sentence of numbers in front of the instruction.
   const intro =
@@ -1180,11 +1180,11 @@ export function Trainspotter({
               which one matters now: ID an unknown, or mark a track where nothing is marked. Before, they swapped
               between a boxed button and a text link, and the clock and both buttons jumped sideways each time
               the tape moved on to the next track. */}
-          <button type="button" onClick={() => playingCue && idIt(playingCue.id)} disabled={!playingCue} className={`ts-btn min-w-[10.5rem] ${playingCue && !playingCue.known ? "ts-btn-solid" : ""}`}>
-            {playingCue?.known ? "Fix this ID" : "ID this track"}
+          <button type="button" onClick={() => playingCue && idIt(playingCue.id)} disabled={!playingCue} className={`ts-btn min-w-[7.5rem] ${playingCue && !playingCue.known ? "ts-btn-solid" : ""}`}>
+            {playingCue?.known ? "Fix ID" : "ID track"}
           </button>
-          <button type="button" onClick={markHere} className={`ts-btn ${playingCue ? "" : "ts-btn-solid"}`} aria-keyshortcuts="M">
-            A new track starts here
+          <button type="button" onClick={markHere} className={`ts-btn ${playingCue ? "" : "ts-btn-solid"}`} aria-keyshortcuts="M" title="Mark where a new track starts, at the current time (M)">
+            Mark new track
           </button>
         </div>
         <p className="ts-player-sub min-h-[1.25rem] truncate text-sm text-[var(--muted)]">
@@ -1282,7 +1282,7 @@ export function Trainspotter({
                   {[
                     ["Space", "Play or pause"],
                     ["← →", "Previous or next track"],
-                    ["M", "A new track starts here"],
+                    ["M", "Mark new track"],
                     ["Enter", "ID the selected track"],
                     ["Delete", "Remove it"],
                     ["Alt ← →", "Move it a second"],
@@ -1328,7 +1328,7 @@ export function Trainspotter({
           {sel && (
             <>
               <div className="flex items-start justify-between gap-3">
-                <DrawerTitle className="font-display text-2xl leading-tight text-[var(--text)]">{sel.known ? "Fix this ID" : "What is this track?"}</DrawerTitle>
+                <DrawerTitle className="font-display text-2xl leading-tight text-[var(--text)]">{sel.known ? "Fix ID" : "What is this track?"}</DrawerTitle>
                 <DrawerClose className="ts-link flex-none">Close</DrawerClose>
               </div>
               <p className="mt-1 font-mono text-xs uppercase tracking-[0.14em] text-[var(--muted)] tabular-nums">
@@ -1510,7 +1510,7 @@ export function Trainspotter({
           </button>
           {/* Always here, so the button beside it never moves under the thumb. */}
           <button type="button" onClick={() => playingCue && idIt(playingCue.id)} disabled={!playingCue} className="ts-bar-btn">
-            {playingCue?.known ? "Fix ID" : "ID it"}
+            {playingCue?.known ? "Fix ID" : "ID track"}
           </button>
           <button type="button" onClick={markHere} className="ts-bar-btn">
             New track
