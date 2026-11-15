@@ -11,6 +11,12 @@ type Picture = TapeView["images"][number];
 
 /** The widest file the site makes of an image. One that was scanned smaller is kept at its own size. */
 const WIDEST = 1200;
+/**
+ * How large the viewer shows an image, against the size it was scanned at. Half: on a screen with two pixels
+ * to the point, which is what the scans are mostly looked at on, that is one pixel of scan to one of screen.
+ * At its full size each pixel of a scan is spread over four of the screen's, and the picture looks soft.
+ */
+const SHOWN = 0.5;
 
 /**
  * The tape's first image, as wide as the column and as tall as its own shape makes it, up to `--image-max`.
@@ -41,9 +47,9 @@ export function Frame({ images }: { images: Picture[] }) {
 }
 
 /**
- * Every image of the tape, one to a screen and never larger than it was scanned: a scan stretched to fill
- * a wide window is a blur. Swiped through on a phone, stepped through with the arrows on screen or on the
- * keyboard. The browser's own modal dialog, so Escape shuts it and the keyboard goes back to the picture.
+ * Every image of the tape, one to a screen, at the size it is sharp at (see SHOWN) and never stretched to
+ * fill the window. Swiped through on a phone, stepped through with the arrows on screen or on the keyboard.
+ * The browser's own modal dialog, so Escape shuts it and the keyboard goes back to the picture.
  */
 function Viewer({ images, onClose }: { images: Picture[]; onClose: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -79,7 +85,7 @@ function Viewer({ images, onClose }: { images: Picture[]; onClose: () => void })
         {images.map((img, i) => (
           // A press beside the picture, on what is left of the page, shuts the viewer.
           <figure key={img.src} className="proto-viewer-slide" onClick={(e) => e.target === e.currentTarget && dialog.current?.close()}>
-            <div className="proto-viewer-picture" style={{ width: `min(100%, ${Math.min(img.width, WIDEST)}px)`, aspectRatio: `${img.width} / ${img.height}` }}>
+            <div className="proto-viewer-picture" style={{ width: `min(100%, ${Math.min(img.width, WIDEST) * SHOWN}px)`, aspectRatio: `${img.width} / ${img.height}` }}>
               <Image loader={imageLoader} src={img.src} alt={img.label} fill sizes="100vw" priority={i === 0} className="object-contain" />
             </div>
           </figure>
