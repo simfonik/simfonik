@@ -4,15 +4,15 @@ import type { Tape } from '../../types/tape';
 import { getTapeComments } from '../comments';
 import { getCommentsForTape } from '../data';
 import { readComposed, type TrackId } from './compose';
-import { digest, reconcile, type Said, type Sighting } from './parse';
+import { digest, reconcile, sideNames, trusted, type Said, type Sighting } from './parse';
 
 /**
  * One list of IDs per side, in the order the tape has its sides, each in order of time.
  *
  * Everything anyone has said about the tape is read: the 2008–2023 archive, then the comments posted through
  * the site since, oldest first, because a later comment corrects an earlier one. A comment in the site's own
- * form (`[B 12:34] Moby - Go`, see compose.ts) is taken exactly as written; the rest are read as prose. A
- * track read from a sentence that didn't say which side is only used on a tape with one side.
+ * form (`[B 12:34] Moby - Go`, see compose.ts) is taken exactly as written; the rest are read as prose,
+ * and what they don't place on a side is used only where the tape leaves no doubt (see `trusted`).
  *
  * `complete` is false when the newer comments couldn't be fetched. The archive still reads, so the IDs given
  * are real, but nobody should conclude from them that there are no others.
@@ -37,7 +37,7 @@ export async function readTrackIds(tape: Tape): Promise<{ sides: TrackId[][]; co
     if (id) exact.push({ ...id, known: Boolean(id.artist || id.title), author: c.author, date: c.date });
     else prose.push(c);
   }
-  const read = digest(prose, tape.sides.map((s) => s.title ?? '')).sightings.filter((s) => !s.unsure || tape.sides.length === 1);
+  const read = trusted(digest(prose, sideNames(tape.sides)).sightings, tape.sides.length);
 
   // A side whose length was never measured has no end to hold its IDs to.
   const measured = (sideLengths as Record<string, (number | null)[]>)[tape.id];

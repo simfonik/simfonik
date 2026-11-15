@@ -7,14 +7,14 @@
 import { describe, expect, it } from 'vitest';
 import comments from '@/data/tape-comments.json';
 import tapes from '@/data/tapes.json';
-import { digest, parseComment, reconcile, runningOrders, splitWholeTape, type Said, type Sighting } from '@/lib/track-ids/parse';
+import { digest, parseComment, reconcile, runningOrders, sideNames, splitWholeTape, trusted, type Said, type SideNames, type Sighting } from '@/lib/track-ids/parse';
 
 const clock = (s: number) => `${Math.floor(s / 3600)}:${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
 /** What the page would show for a tape: its timeline, then its running order, one line each. */
-function shown(said: Said[], titles: string[]): string[] {
+function shown(said: Said[], titles: SideNames): string[] {
   const { sightings, listed } = digest(said, titles);
-  const timed = sightings.filter((s) => !s.unsure || titles.length === 1);
+  const timed = trusted(sightings, titles.length);
   return [
     ...reconcile(timed, titles.map(() => Infinity)).map((p) => `side ${p.side} ${clock(p.start)} ${p.known ? `${p.artist} — ${p.title}` : `?? ${p.title}`.trim()} [${p.author}]`),
     ...runningOrders(listed, titles.length).flatMap((order, side) => order.map((l) => `order side ${side} no.${l.n} ${l.known ? `${l.artist} — ${l.title}` : `?? ${l.title}`.trim()} [${l.author}]`)),
@@ -27,9 +27,9 @@ const AB = ['', ''];
 describe('every archived comment', () => {
   it('reads as it did when this copy was saved', async () => {
     const all = comments as Record<string, { author: string; date: string; content: string }[]>;
-    const lines = (tapes as { id: string; sides: { title?: string }[] }[]).flatMap((tape) => {
+    const lines = (tapes as { id: string; sides: { title?: string; djs?: { name: string }[] }[] }[]).flatMap((tape) => {
       const said = (all[tape.id] ?? []).map((c) => ({ author: c.author, date: c.date.slice(0, 10), content: c.content }));
-      return shown(said, tape.sides.map((s) => s.title ?? '')).map((line) => `${tape.id} | ${line}`);
+      return shown(said, sideNames(tape.sides)).map((line) => `${tape.id} | ${line}`);
     });
     await expect(`${lines.join('\n')}\n`).toMatchFileSnapshot('./archive.snapshot.txt');
   });
@@ -148,6 +148,79 @@ describe('side headings', () => {
   it('does not take a record with “Part 1” in its name for the start of a side', () => {
     const lines = shown([say(['Side 2', '4:00 Acid Junkies Part 1 - Sector 9', '8:00 Bravo - Two', '12:00 Charlie - Three'].join('\n'))], AB);
     expect(lines).toContain('side 1 0:08:00 Bravo — Two [Keeper]');
+  });
+});
+
+// Circa ’92: five tapes, each one DJ’s set and named after them. What follows is how its commenters write.
+describe('a set of several DJs’ tapes, where a side is known by who played it', () => {
+  const CIRCA = sideNames(['Scott Hardkiss', 'Jon Williams', 'Barry Weaver', 'Doc Martin', 'Mark Lewis'].map((name) => ({ title: name, djs: [{ name }] })));
+  const tracks = ['0:21 S’Xpress - Hey Music Lover (The Glass Cut)', '2:12 Messiah - There Is No Law', '3:54 Friends of Alex - What Is..? Fick Dich', '6:42 XTRO And Q Brik - Dikke Vette Pannekoeke'];
+  const sidesOf = (lines: string[]) => [...new Set(lines.map((l) => l.match(/^side (\d)/)?.[1]))];
+
+  it.each([
+    ['Tracklist for Barry Weaver', '2'],
+    ['Mark Lewis Tracklist', '4'],
+    ['Current Tracklist for Scott Hardkiss:', '0'],
+    ['Doc Martin tracklist:', '3'],
+    ['Doc Martin’s set', '3'],
+    ['Barry Weaver IDs', '2'],
+    ['Jon Williams', '1'],
+  ])('reads “%s” as the heading of that DJ’s side', (heading, side) => {
+    expect(sidesOf(shown([say([heading, '', ...tracks].join('\n'))], CIRCA))).toEqual([side]);
+  });
+
+  it('knows a side with no title by the name of its DJ', () => {
+    const untitled = sideNames([{ djs: [{ name: 'DJ Trance' }] }, { djs: [{ name: 'Fester' }] }]);
+    expect(sidesOf(shown([say(['Fester', ...tracks].join('\n'))], untitled))).toEqual(['1']);
+    expect(shown([say(['Fester’s side:', 'Alpha - One @ 12:00'].join('\n'))], untitled)).toEqual(['side 1 0:12:00 Alpha — One [Keeper]']);
+  });
+
+  it('does not take a DJ’s name in a sentence or in a record’s credit for a heading', () => {
+    const lines = shown([say(['Tracklist for Barry Weaver', ...tracks, 'Doc Martin set the place on fire after this.', 'Mark Lewis - Tracklist Of Dreams', '9:34 Program 2 - Twister'].join('\n'))], CIRCA);
+    expect(lines).toContain('side 2 0:09:34 Program 2 — Twister [Keeper]');
+    expect(sidesOf(lines)).toEqual(['2']);
+  });
+
+  it('does not use a list that never says whose set it is', () => {
+    // Cooper’s recap of Doc Martin’s set, posted on that set’s own page before the five pages became one.
+    const recap = say(['here’s a recap with an addition', '', '00:45 Sil – Windows', '3:45 Coco Steele & Lovebomb – Feel It', '7:40 Bobby Konder’s – Nervous Acid'].join('\n'), 'Cooper', '2010-11-20');
+    expect(shown([recap], CIRCA)).toEqual([]);
+    // On a tape with two sides it is taken to open on the first, as it always was.
+    expect(sidesOf(shown([recap], AB))).toEqual(['0']);
+  });
+
+  it('keeps a line that says its side with a letter', () => {
+    expect(shown([say('(B) @21:35 is Alpha - One')], CIRCA)).toEqual(['side 1 0:21:35 Alpha — One [Keeper]']);
+  });
+
+  describe('a list posted again without its heading', () => {
+    const first = say(['Tracklist for Barry Weaver', '', ...tracks, '14:03 ??'].join('\n'), 'Softboiled', '2026-11-01T03:25:47.164Z');
+    const tidied = say(['Nice work Softboiled!! Thank you!! I added one ID and cleaned it up.', '', 'Intro (Frogs)', ...tracks, '14:03 D-Mob Featuring Gary Haisman – We Call It Acieeed (The Matey Beats)'].join('\n'), 'Josh McClintock', '2026-11-01T08:45:37.689Z');
+    const again = say(['Wow! I thought that was it for sure.', '', 'Intro (Frogs)', ...tracks, '14:03 ??? unknown mix of D-Mob Featuring Gary Haisman – We Call It Acieeed (The Matey Beats)', '15:15 ??'].join('\n'), 'Josh McClintock', '2026-11-01T18:56:15.583Z');
+
+    it('goes on the side of the list it repeats', () => {
+      const lines = shown([first, tidied], CIRCA);
+      expect(lines).toContain('side 2 0:14:03 D-Mob Featuring Gary Haisman — We Call It Acieeed (The Matey Beats) [Josh McClintock]');
+      expect(sidesOf(lines)).toEqual(['2']);
+    });
+
+    it('is followed in turn by the next copy', () => {
+      const lines = shown([first, tidied, again], CIRCA);
+      expect(lines).toContain('side 2 0:15:15 ?? [Josh McClintock]');
+      expect(sidesOf(lines)).toEqual(['2']);
+    });
+
+    it('is not taken for a copy of a list it shares nothing with', () => {
+      const other = say(['Mark Lewis Tracklist', '', '0:01 DJ’s Unite Vol. 1 - A', '2:09 Modular Expansion - Cubes', '3:07 Awesome 3 - Don’t Go (Original Mix)'].join('\n'), 'Softboiled', '2026-11-01T02:00:00.000Z');
+      const lines = shown([other, tidied], CIRCA);
+      expect(sidesOf(lines)).toEqual(['4']);
+    });
+
+    it('is not placed when two sides have as much of it', () => {
+      const twin = say(['Jon Williams Tracklist', '', ...tracks, '14:03 ??'].join('\n'), 'Someone', '2026-11-01T04:00:00.000Z');
+      expect(sidesOf(shown([first, twin, tidied], CIRCA)).sort()).toEqual(['1', '2']);
+      expect(shown([first, twin, tidied], CIRCA).filter((l) => l.includes('[Josh McClintock]'))).toEqual([]);
+    });
   });
 });
 

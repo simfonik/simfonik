@@ -12,7 +12,8 @@ export type Sighting = {
   layer?: boolean;
   /** Read out of a sentence that didn't say which side. Only trusted on a tape with one side. */
   unsure?: boolean;
-  /** No side was said on its line or above it, so it sits on the first side for want of anything better. */
+  /** No side was said on its line or above it, so it sits on the first side for want of anything better.
+      Not used on a tape with more than two sides (see `trusted`). */
   sideless?: boolean;
   /** Worked out, not stated: the first track in a list of a side, taken to start the side. Anything someone
       actually timed at that moment is believed over it. */
@@ -20,6 +21,14 @@ export type Sighting = {
   author: string;
   date: string;
 };
+
+/**
+ * What each side of a tape goes by: its title, or every name it has. On a set of several DJs' tapes a side is
+ * known by who played it ("Tracklist for Barry Weaver"), whatever it is titled.
+ */
+export type SideNames = (string | string[])[];
+/** The names of a tape's sides, as its data has them: each side's title and whoever is credited with it. */
+export const sideNames = (sides: { title?: string; djs?: { name: string }[] }[]): SideNames => sides.map((side) => [side.title ?? "", ...(side.djs ?? []).map((dj) => dj.name)]);
 
 const seconds = (t: string) => {
   const p = t.split(":").map(Number);
@@ -33,8 +42,10 @@ const sideIndex = (s: string) =>
 // "the second side", "1st side"
 const SIDE_ORD = /\b(1st|2nd|3rd|4th|first|second|third|fourth|uno|dos)[\s-]+side\b/i;
 const squash = (s: string) => s.toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, " ").trim();
+// "Doc Martin's set" is about Doc Martin, and "Omar's side" is the Omar side.
+const unowned = (s: string) => squash(s.replace(/[’']s\b/gi, ""));
 // The name of a side as people write it: "Technology Has Its Subliminal Side" is "Technology Has Its Subliminal".
-const stem = (s: string) => squash(s).replace(/ side$/, "");
+const stem = (s: string) => unowned(s).replace(/ side$/, "");
 /** Same words up to a typo or two: "Full Moon Maddness" is "Full Moon Madness". */
 const alike = (a: string, b: string) => {
   if (a === b) return true;
@@ -51,27 +62,40 @@ const alike = (a: string, b: string) => {
   }
   return row[b.length] <= Math.max(1, Math.floor(b.length / 12));
 };
+// What people write round a side's name when they head a list with it: "Tracklist for Barry Weaver", "Mark Lewis
+// Tracklist", "Current tracklist for Scott Hardkiss:", "Doc Martin's set", "Barry Weaver IDs". The word for the
+// list has to be there; the small words round it are only dropped along with it, so "For Love" is not the Love side.
+const LIST = /\b(?:track ?list(?:ing)?|set ?list|track ids?|ids?|set|mix)\b/g;
+const LIST_FILLER = /\b(?:current|updated|latest|complete|full|partial|preliminary|so far|for|of|the)\b/g;
 /**
- * Which side a piece of text names by the side's own title: "on the Cookie side", "Planet Earth", "Side 1 - Technology
- * Has Its Subliminal". The title wins over a letter or number beside it: commenters number the sides in the order
- * they played them, and "Side 1" is not always the tape's A. A bare title only counts as a heading (a line that is
- * nothing else); inside a sentence it must be followed or preceded by the word "side", so a DJ's name in a track
- * credit is left alone.
+ * Which side a piece of text names by one of the side's own names: "on the Cookie side", "Planet Earth", "Side 1 -
+ * Technology Has Its Subliminal", "Tracklist for Barry Weaver". The name wins over a letter or number beside it:
+ * commenters number the sides in the order they played them, and "Side 1" is not always the tape's A. A bare name,
+ * or a name with the words of a list round it, only counts as a heading (a line that is nothing else); inside a
+ * sentence it must be followed or preceded by the word "side", so a DJ's name in a track credit is left alone.
  */
-function sideNamed(text: string, titles: string[], heading = false): number | null {
-  const n = squash(text);
+function sideNamed(text: string, names: SideNames, heading = false): number | null {
+  const n = unowned(text);
   const bare = n.replace(/^(?:side \w+ |on )?(?:the )?/, "").replace(/ side$/, "");
+  const listed = bare.replace(LIST, " ").replace(LIST_FILLER, " ").replace(/ +/g, " ").trim();
+  const heads = heading && bare.search(LIST) >= 0;
   const found = new Set<number>();
   let best = 0;
-  titles.forEach((title, i) => {
-    const t = stem(title);
-    if (t.length < 3 || /^side\b/.test(t)) return;
-    const hit = ` ${n} `.includes(` ${t} side `) || ` ${n} `.includes(` side ${t} `) || (heading && (alike(bare, t) || (bare.includes(" ") && t.startsWith(`${bare} `)) || (n.startsWith(`${t} `) && n.endsWith(" side"))));
-    if (!hit) return;
-    if (t.length > best) found.clear();
-    if (t.length >= best) {
-      best = t.length;
-      found.add(i);
+  names.forEach((side, i) => {
+    for (const name of [side].flat()) {
+      const t = stem(name);
+      if (t.length < 3 || /^side\b/.test(t)) continue;
+      const hit =
+        ` ${n} `.includes(` ${t} side `) ||
+        ` ${n} `.includes(` side ${t} `) ||
+        (heading && (alike(bare, t) || (bare.includes(" ") && t.startsWith(`${bare} `)) || (n.startsWith(`${t} `) && n.endsWith(" side")))) ||
+        (heads && alike(listed, t));
+      if (!hit) continue;
+      if (t.length > best) found.clear();
+      if (t.length >= best) {
+        best = t.length;
+        found.add(i);
+      }
     }
   });
   return found.size === 1 ? [...found][0] : null;
@@ -82,7 +106,7 @@ const DASH = String.raw`[-–—]`;
 const CHATTER = /\b(anyone|anybody|someone|know|knows|remember|omg|wtf|what|who|which|track|tune|song|please|pls|help|amazing)\b/i;
 // "the b side", "A-side": the other way round from SIDE.
 const SIDE_ALT = /\b([abcd])[\s-]*side\b/i;
-const whichSide = (line: string, titles: string[] = []): number | null => {
+const whichSide = (line: string, titles: SideNames = []): number | null => {
   const named = sideNamed(line, titles);
   if (named !== null) return named;
   const m = line.match(SIDE) ?? line.match(SIDE_ALT) ?? line.match(SIDE_ORD);
@@ -91,7 +115,7 @@ const whichSide = (line: string, titles: string[] = []): number | null => {
 // The shape of a record's name: something, a dash with a space after it, something.
 const NAMED = new RegExp(String.raw`\S\s*${DASH}\s+\S`);
 /** A line that is only a side: "Side B", "Side 1 - Technology Has Its Subliminal", "Planet Earth", "the second side". */
-const headingSide = (line: string, titles: string[]): number | null => {
+const headingSide = (line: string, titles: SideNames): number | null => {
   if (line.length >= 60 || new RegExp(TIME).test(line)) return null;
   const named = sideNamed(line, titles, true);
   if (named !== null) return named;
@@ -178,7 +202,7 @@ const FIRST = /\b(?:first|1st|opening)\s+(?:track|song|tune|record|cut)\b([^.?!:
  * The timed tracks in one comment. `listing` says the comment is known to be a tracklist (see `digest`), so its
  * lines are taken at their word however few of them carry a time.
  */
-export function parseComment(content: string, author: string, date: string, titles: string[] = [], listing = false): Sighting[] {
+export function parseComment(content: string, author: string, date: string, titles: SideNames = [], listing = false): Sighting[] {
   const out: Sighting[] = [];
   let side = 0;
   let sideGiven = false;
@@ -239,6 +263,8 @@ export function parseComment(content: string, author: string, date: string, titl
     // The side is known if this line names it, or a heading above it did.
     const sideHere = whichSide(line, titles) ?? (of === raw ? null : whichSide(of, titles));
     const unsure = sideHere === null && !sideGiven ? true : undefined;
+    // "(B) @21:35" says its side with a letter that `whichSide` doesn't look for.
+    let lettered = false;
     // "The track playing from [10:20] - [16:37] is Artist - Title"
     if ((m = line.match(new RegExp(String.raw`\[?(${TIME})\]?\s*(?:${DASH}|to)\s*\[?(${TIME})\]?\s+is\s+(.+)$`, "i")))) {
       push(side, seconds(m[1]), m[3], seconds(m[2]));
@@ -255,6 +281,7 @@ export function parseComment(content: string, author: string, date: string, titl
     // "(B) @21:35 is Artist"
     else if ((m = line.match(new RegExp(String.raw`^\(([ab])\)\s*@?\s*(${TIME})\s*(.+)$`, "i")))) {
       push(sideIndex(m[1]), seconds(m[2]), m[3]);
+      lettered = true;
     }
     // "16:25 on side-B is Artist Title"
     else if ((m = line.match(new RegExp(String.raw`^(${TIME})\s+on\s+${SIDE.source}\s+is\s+(.+)$`, "i")))) {
@@ -302,10 +329,19 @@ export function parseComment(content: string, author: string, date: string, titl
       out.push({ side: sideHere ?? side, start: seconds(m[1]), end: end && end > seconds(m[1]) ? end : undefined, artist: "", title: "", known: false, unsure, author, date });
     }
     if (layer) for (let i = before; i < out.length; i++) out[i].layer = true;
-    if (sideHere === null && !sideGiven) for (let i = before; i < out.length; i++) out[i].sideless = true;
+    if (sideHere === null && !sideGiven && !lettered) for (let i = before; i < out.length; i++) out[i].sideless = true;
   }
   return out;
 }
+
+/**
+ * The sightings a tape with this many sides can use. One read out of a sentence that didn't say which side is
+ * believed only where there is one side. A list that never said its side is taken to open on the first side of
+ * a tape with two (`splitWholeTape` then moves what runs past its end). With more than two there is no telling:
+ * on a set of five DJs' tapes the first is the wrong guess four times in five, and a track shown on the wrong
+ * recording is worse than a track not shown.
+ */
+export const trusted = (sightings: Sighting[], sides: number) => sightings.filter((s) => (!s.unsure || sides === 1) && (!s.sideless || sides <= 2));
 
 /** Another thing someone said about the same moment: a rival ID, or a hint about an unnamed track. */
 export type Opinion = { artist: string; title: string; known: boolean; author: string; date: string };
@@ -427,7 +463,7 @@ export type Listed = {
 };
 
 /** Numbered lines with a name and no time, e.g. "6. Moby - Go" under a "Side 1" heading. */
-function parseListing(content: string, author: string, date: string, titles: string[] = []): Listed[] {
+function parseListing(content: string, author: string, date: string, titles: SideNames = []): Listed[] {
   const out: Listed[] = [];
   let side = 0;
   for (const raw of plain(content).split(/\r?\n/)) {
@@ -560,7 +596,7 @@ function rowOf(raw: string, expect?: number): (Omit<Row, "side" | "n"> & { n?: n
  * doesn't say which. Two labels this page doesn't know, on a tape with two sides ("Side X", then "Side E"),
  * are taken in the order the tape runs.
  */
-function parseRunning(content: string, titles: string[] = []): { rows: Row[]; headed: boolean; prose: string } | null {
+function parseRunning(content: string, titles: SideNames = []): { rows: Row[]; headed: boolean; prose: string } | null {
   const lines = plain(content).split(/\r?\n/);
   const time = new RegExp(TIME);
   // A line that names a side: one this page can place, or one it can't ("Side X", "Marques's side").
@@ -674,7 +710,7 @@ const sameAuthor = (a: string, b: string) => {
  * times. Comments are read one by one, except a keeper's running tracklist (above): its older versions are
  * set aside, apart from what was said around them, and the newest stands for all of them.
  */
-export function digest(comments: Said[], titles: string[] = []): { sightings: Sighting[]; listed: Listed[] } {
+export function digest(comments: Said[], titles: SideNames = []): { sightings: Sighting[]; listed: Listed[] } {
   const read = comments.map((c) => ({ c, list: parseRunning(c.content, titles) }));
   // Oldest first; comments arrive in the order they were posted, which settles two on the same day.
   const lists = read.flatMap(({ c, list }) => (list ? [{ c, list }] : [])).sort((a, b) => a.c.date.localeCompare(b.c.date));
@@ -704,7 +740,10 @@ export function digest(comments: Said[], titles: string[] = []): { sightings: Si
   const sightings: Sighting[] = [];
   const listed: Listed[] = [];
   const inferred: { s: Sighting; once: boolean }[] = [];
+  // Where each comment's sightings begin in the list of them all.
+  const begins: number[] = [];
   for (const { c, list } of read) {
+    begins.push(sightings.length);
     const rows = heads.get(c);
     // A running list is read here, row by row, so that its sides are the ones its headings were found to
     // mean. What was said around it, in any version, is read as any comment is.
@@ -736,6 +775,8 @@ export function digest(comments: Said[], titles: string[] = []): { sightings: Si
         inferred.push({ s: { ...said, start: 0, weak: true }, once: true });
     });
   }
+  // What each comment timed, in the order the comments were posted.
+  const posts = begins.map((from, i) => sightings.slice(from, begins[i + 1]));
   // "23:38 is The Slippers - Tribal Hen", in reply to a keeper whose list has "23:38 ???" under Side 2: the
   // reply didn't say the side because the list had. A time with no side goes to the side where a keeper's
   // list, in any version, has that very time, if there is one such side.
@@ -746,8 +787,40 @@ export function digest(comments: Said[], titles: string[] = []): { sightings: Si
       const near = timed.filter((r) => Math.abs(r.start - s.start) <= 5);
       const best = Math.min(...near.map((r) => Math.abs(r.start - s.start)));
       const sides = new Set(near.filter((r) => Math.abs(r.start - s.start) === best).map((r) => r.side));
-      if (sides.size === 1) s.side = [...sides][0];
+      if (sides.size === 1) {
+        s.side = [...sides][0];
+        s.sideless = undefined;
+      }
     }
+    // A list posted again with a line filled in is seldom headed again: "Nice work! I added one ID and cleaned
+    // it up.", and then the list, by whoever tidied it. A list that says no side and has in it at least half
+    // of what an earlier comment timed on a side (and three of those times or more, each to within five
+    // seconds and none with a different record at it) is that list again, and sits where it sat. Oldest
+    // first, so a third copy follows the second.
+    const named = (x: Sighting) => x.known && Boolean(x.artist || x.title);
+    posts.forEach((post, p) => {
+      const loose = post.filter((x) => x.sideless);
+      if (loose.length < 3) return;
+      const again = (e: Sighting) => loose.some((x) => Math.abs(x.start - e.start) <= 5 && !(named(x) && named(e) && !sameTrack(x, e)));
+      let most = 0;
+      let where: number | null = null;
+      for (const earlier of posts.slice(0, p)) {
+        for (const side of new Set(earlier.filter((e) => !e.sideless).map((e) => e.side))) {
+          const theirs = earlier.filter((e) => !e.sideless && e.side === side);
+          const shared = theirs.filter(again).length;
+          if (shared < 3 || shared < theirs.length / 2 || shared < most) continue;
+          // As much of two different sides: it could be either, so it is neither.
+          where = shared === most && where !== side ? null : side;
+          most = shared;
+        }
+      }
+      if (where === null) return;
+      for (const x of loose) {
+        x.side = where;
+        x.sideless = undefined;
+        x.unsure = undefined;
+      }
+    });
   }
   // A time worked out from an earlier version gives way to one somebody stated for the same record: a
   // keeper's "22:15 ??" and a reply's "21:15 is…" are one track, and where the two are far apart it is the
