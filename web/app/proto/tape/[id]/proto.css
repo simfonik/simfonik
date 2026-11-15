@@ -1,0 +1,112 @@
+/* PROTOTYPE (SIM-43). Throwaway. */
+
+/* Where the bar runs the full width of the page it is taller, and the play button sits at its middle. */
+.proto-wide .player-wave { height: 4.5rem; }
+.proto-wide .player-play { margin-top: 0.875rem; }
+@media (max-width: 63.99rem) {
+  .proto-wide .player-wave { height: 2.75rem; }
+  .proto-wide .player-play { margin-top: 0; }
+}
+
+/* ---- The picker: harness chrome, copied from the prototype skill's spec. Not part of any direction. ---- */
+.proto-picker {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(10, 10, 10, 0.82);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 8px 24px rgba(0, 0, 0, 0.24),
+    0 2px 6px rgba(0, 0, 0, 0.12);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.proto-picker-highlight {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  will-change: transform;
+}
+.proto-picker[data-ready] .proto-picker-highlight {
+  transition:
+    transform 250ms cubic-bezier(0.23, 1, 0.32, 1),
+    width 250ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .proto-picker[data-ready] .proto-picker-highlight { transition: none; }
+}
+.proto-picker-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font: inherit;
+  cursor: pointer;
+  transition: color 150ms ease-out;
+}
+.proto-picker-item:hover { color: rgba(255, 255, 255, 0.85); }
+.proto-picker-item:active { transform: scale(0.97); }
+.proto-picker-item:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.4); outline-offset: 2px; }
+.proto-picker-item[data-active] { color: #fff; }
+
+/* ---- Direction 4, "Sheet" ---- */
+/* A side, as a tab over the bar: the loaded one in full colour with a line under it. */
+.proto-tab {
+  position: relative;
+  padding: 0.6875rem 0;
+  color: var(--muted);
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.15s ease-out;
+}
+.proto-tab[aria-pressed="true"] { color: var(--text); box-shadow: inset 0 -2px 0 var(--text); }
+@media (hover: hover) and (pointer: fine) {
+  .proto-tab:hover { color: var(--text); }
+}
+.proto-tab:active { opacity: 0.6; }
+.proto-tab:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+/* A track in the running order: the whole row is pressed to hear it. */
+.proto-row {
+  display: grid;
+  grid-template-columns: 3.75rem minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  padding: 0.75rem 0.5rem;
+  margin: 0 -0.5rem;
+  width: calc(100% + 1rem);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease-out;
+}
+.proto-row[aria-current="true"] { background: var(--bg-hover); }
+@media (hover: hover) and (pointer: fine) {
+  .proto-row:hover { background: var(--bg-hover); }
+}
+.proto-row:active { opacity: 0.6; }
+.proto-row:focus-visible { outline: 2px solid var(--text); outline-offset: -2px; }
+@media (prefers-reduced-motion: reduce) {
+  .proto-tab, .proto-row { transition: none; }
+}
