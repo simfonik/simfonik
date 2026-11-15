@@ -192,6 +192,22 @@ describe('the track line under the player', () => {
     });
   });
 
+  it('takes a new track inside one that is ID’d, at this moment and with empty blanks, once that track’s first moments have passed', async () => {
+    const user = userEvent.setup();
+    window.localStorage.setItem('simfonik:id-name', 'Dana');
+    // Moby — Go runs from 0:00. Ten seconds in, an ID would be read as that same ID said again.
+    const { rerender } = render(<TrackIds tapeId="tape-1" position="A" ids={ids} time={10} onPosted={posted} />);
+    expect(screen.queryByRole('button', { name: 'A new track starts here. ID it' })).not.toBeInTheDocument();
+
+    rerender(<TrackIds tapeId="tape-1" position="A" ids={ids} time={95.4} onPosted={posted} />);
+    await user.click(screen.getByRole('button', { name: 'A new track starts here. ID it' }));
+    expect(screen.getByRole('form', { name: 'ID the track at A 0:01:35' })).toBeInTheDocument();
+    expect(artist()).toHaveValue('');
+    await user.type(artist(), 'Orbital');
+    await user.type(title(), 'Chime{Enter}');
+    expect(body().content).toBe('[A 1:35] Orbital - Chime');
+  });
+
   it('asks for what is missing on its own line, drops the complaint once it is being put right, and shuts on Escape', async () => {
     const user = userEvent.setup();
     render(<TrackIds tapeId="tape-1" position="A" ids={ids} time={200} onPosted={posted} />);

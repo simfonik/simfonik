@@ -14,6 +14,9 @@ const rememberedName = () => {
   }
 };
 
+/** IDs this many seconds apart or closer are one moment of the tape to the reader (lib/track-ids/parse.ts). */
+const ONE_MOMENT = 20;
+
 /** A screen as narrow as a phone's. There the blanks are a sheet over the page, with a row each. */
 const PHONE = '(max-width: 39.99rem)';
 
@@ -76,7 +79,9 @@ type Props = {
  * asks. Pressed, it takes an ID: with a mouse the line becomes two blanks in its own place; on a phone a sheet
  * rises over the page and stays on top of the keyboard. What is typed is posted as an ordinary comment that
  * carries the side and the time (see lib/track-ids/compose.ts), through the same route as any comment. A name
- * already there can be pressed to put it right. Nothing is kept anywhere else.
+ * already there can be pressed to put it right, and beside it is the way to say that a new track has started:
+ * an ID runs until the next one, so without that a side with one ID could never be given a second. Nothing is
+ * kept anywhere else.
  *
  * Where the side has a list of its tracks with no times, the two lines of it likeliest to be this track are
  * offered, and pressing one writes it into the blanks.
@@ -105,18 +110,20 @@ export function TrackIds({ tapeId, position, ids, time, order = null, length = n
   const nameField = useRef<HTMLInputElement>(null);
   const messageId = useId();
 
-  const open = () => {
+  const open = (fresh: boolean) => {
     const onPhone = window.matchMedia(PHONE).matches;
     const remembered = rememberedName();
     // An ID is for the track playing. Where the comments have marked one, it goes to where that track starts:
     // a correction then replaces the older word, and an ID for a track marked unknown fills the whole of it
     // and doesn't split it at the moment the visitor happened to speak up. Putting a known ID right starts
-    // from what it says. Where nothing is marked, the ID goes to this moment.
-    const start = playing ? playing.start : Math.floor(time);
+    // from what it says. Where nothing is marked, or the visitor says a new track has started, the ID goes to
+    // this moment.
+    const marked = fresh ? null : playing;
+    const start = marked ? marked.start : Math.floor(time);
     setAt(start);
-    setArtist(playing?.known ? playing.artist : '');
-    setTitle(playing?.known ? playing.title : '');
-    setOffers(order && !playing?.known ? suggest(start, order.tracks, ids, length) : []);
+    setArtist(marked?.known ? marked.artist : '');
+    setTitle(marked?.known ? marked.title : '');
+    setOffers(order && !marked?.known ? suggest(start, order.tracks, ids, length) : []);
     setName(remembered);
     setSheet(onPhone);
     setAskName(onPhone && !remembered);
@@ -270,20 +277,28 @@ export function TrackIds({ tapeId, position, ids, time, order = null, length = n
       {at === null || sheet ? (
         // As tall as the blanks that take its place, so nothing below moves when they do. Under the sheet it
         // stays as it was.
-        <div className="flex min-h-11 items-center">
+        <div className="flex min-h-11 items-center gap-x-3">
           {playing?.known ? (
-            <button
-              ref={line}
-              type="button"
-              onClick={open}
-              className="track-ids-line text-[var(--text)]"
-              aria-label={`Now playing: ${idLabel(playing)}. Correct this ID`}
-              title={`ID by ${playing.by}. Press to correct it.`}
-            >
-              {idLabel(playing)}
-            </button>
+            <>
+              <button
+                ref={line}
+                type="button"
+                onClick={() => open(false)}
+                className="track-ids-line text-[var(--text)]"
+                aria-label={`Now playing: ${idLabel(playing)}. Correct this ID`}
+                title={`ID by ${playing.by}. Press to correct it.`}
+              >
+                {idLabel(playing)}
+              </button>
+              {/* Not in the track's first moments: an ID there would be read as this same ID said again. */}
+              {time - playing.start >= ONE_MOMENT && (
+                <button type="button" onClick={() => open(true)} className="track-ids-post" aria-label="A new track starts here. ID it">
+                  New track
+                </button>
+              )}
+            </>
           ) : (
-            <button ref={line} type="button" onClick={open} className="track-ids-line text-[var(--muted)]">
+            <button ref={line} type="button" onClick={() => open(false)} className="track-ids-line text-[var(--muted)]">
               {playing ? 'Unknown track. Know it?' : 'Know this track?'} <span className="track-ids-cue">ID it</span>
             </button>
           )}
