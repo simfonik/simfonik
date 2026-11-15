@@ -497,8 +497,12 @@ body::before {
   .id-sheet, .id-sheet::backdrop, .id-sheet[data-leaving], .id-sheet[data-leaving]::backdrop { animation: none; }
 }
 html:has(.id-sheet[open]) { overflow: hidden; }
-/* What is pressed in the sheet answers at once, and a held finger doesn't select its words. */
-.id-sheet button, .id-sheet input { touch-action: manipulation; }
+/* Two quick taps on a phone zoom the page in to the block that was tapped, by a hair when the block is nearly
+   as wide as the screen already, and a page zoomed by a hair then slides from side to side under a finger.
+   The player and the track line are tapped twice in a moment all the time (play, pause; open, shut), so
+   two taps on them, or anywhere on the sheet, are two presses and never a zoom. */
+.player-play, .player-side, .track-ids-line, .track-ids-post, .track-ids-offer, .track-ids-shut, .tape-picture, .comment-time, .id-sheet { touch-action: manipulation; }
+/* A held finger doesn't select the words of what is pressed in the sheet. */
 .id-sheet button { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 /* The sheet's top row stays put when a small phone has to scroll the rest of the sheet. */
 .id-sheet-bar { position: sticky; top: 0; z-index: 1; background: var(--bg-secondary); }
