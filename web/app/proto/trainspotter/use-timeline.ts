@@ -125,7 +125,8 @@ export function useTimeline({
     if (mapHeadRef.current) mapHeadRef.current.style.transform = `translate3d(${snap(part * Math.max(0, visible))}px, 0, 0)`;
     hear(t);
   }, [audios, activeRef, hear]);
-  audio.painter.current = paint;
+  const { onFrame } = audio;
+  useEffect(() => onFrame(paint), [onFrame, paint]);
 
   // The stylesheet sets the scale: so many pixels a minute, or the whole width where the side fits in it. So
   // the tracks are the right size in the HTML the server sends, before any of this runs. What is measured

@@ -24,7 +24,13 @@ type TracklistOptions = {
   length?: number;
 };
 
-type TracklistState = { value: Cue[]; draft: SpansDraft<Cue> | null; focused: string | null };
+type TracklistState = {
+  value: Cue[];
+  draft: SpansDraft<Cue> | null;
+  focused: string | null;
+  /** The timeline's length. It is state so that a new length redraws every track at the new scale. */
+  length: number;
+};
 
 export const cueLabel = (cue: Pick<Cue, "artist" | "title" | "known">) =>
   cue.known ? [cue.artist, cue.title].filter(Boolean).join(" — ") || "Untitled" : cue.title ? `Unknown track (“${cue.title}”)` : "Unknown track";
@@ -67,11 +73,12 @@ export const tracklist = definePrimitive({
     value: options.value ?? options.defaultValue ?? [],
     draft: null,
     focused: null,
+    length: options.length ?? DEFAULT_LENGTH,
   }),
-  sync: (options) => (options.value === undefined ? {} : { value: options.value }),
+  sync: (options) => ({ length: options.length ?? DEFAULT_LENGTH, ...(options.value === undefined ? {} : { value: options.value }) }),
   api: (context) => {
     const change = createChange(context);
-    const length = () => context.options().length ?? DEFAULT_LENGTH;
+    const length = () => context.store.get().length;
     const sides = () => context.options().sides ?? ["A"];
 
     const spans = createSpans<TracklistState, Cue>(context, {

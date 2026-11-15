@@ -17,8 +17,14 @@ export function useTapeAudio(sideCount: number) {
   const activeRef = useRef(0);
   activeRef.current = active;
 
-  // What to draw each frame while playing. The timeline sets it; the loop here only keeps time.
-  const painter = useRef<() => void>(() => {});
+  // The loop here only keeps time. Whoever draws the playhead asks to be called each frame while it plays.
+  const draw = useRef<() => void>(() => {});
+  const onFrame = useCallback((fn: () => void) => {
+    draw.current = fn;
+    return () => {
+      if (draw.current === fn) draw.current = () => {};
+    };
+  }, []);
   // React hears the time once a second, not sixty times: the playhead is moved without it.
   const lastSecond = useRef(-1);
   const hear = useCallback((t: number) => {
@@ -30,7 +36,7 @@ export function useTapeAudio(sideCount: number) {
   const run = useCallback(() => {
     cancelAnimationFrame(loop.current);
     const tick = () => {
-      painter.current();
+      draw.current();
       const a = audios.current[activeRef.current];
       if (a && !a.paused) loop.current = requestAnimationFrame(tick);
     };
@@ -95,5 +101,5 @@ export function useTapeAudio(sideCount: number) {
     else a.pause();
   }, []);
 
-  return { audios, durations, failed, active, activeRef, playing, now, seek, toggle, painter, hear };
+  return { audios, durations, failed, active, activeRef, playing, now, seek, toggle, onFrame, hear };
 }

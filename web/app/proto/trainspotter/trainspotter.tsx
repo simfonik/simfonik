@@ -5,7 +5,7 @@
 // ID'd in the comments; a visitor plays the tape and IDs what they recognise. Every change goes through the
 // SDK's change pipeline, so one history gives undo and redo and knows who made each change. The page is
 // operable by a browser's own assistant through the same bridge that loads the listeners' tracklist.
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { createPointerKind } from "@ui-sdk/core";
 import { usePart, usePrimitive } from "@ui-sdk/react/primitive";
@@ -182,14 +182,6 @@ export function Trainspotter({
     length,
   });
   const api = handle.api;
-  // The timeline learns a new length one render after the page does. Without a second pass, a change of
-  // scale (another part of a set, or a side's audio reporting how long it is) leaves every track drawn at
-  // the old scale: a three-minute track on a 97-minute part drawn as if the part were 17 minutes long.
-  const [, redraw] = useState(0);
-  useLayoutEffect(() => {
-    redraw((n) => n + 1);
-  }, [length]);
-
   // Every change to the timeline, with who made it. It is the undo stack.
   const rootRef = useRef<HTMLDivElement>(null);
   const historyRef = useRef<ReturnType<typeof createHistory> | null>(null);
