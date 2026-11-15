@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 type Said = { author: string; date: string; content: string };
-const GROUPS = ["Unknown tracks to ID", "Tracklist known, times needed", "Started by listeners"];
+const GROUPS = ["Unknown tracks to ID", "Tracklist known, times needed", "Started in the comments"];
 
 export default async function TrainspotterPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -57,7 +57,7 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
       const done = marked.length ? known / marked.length : null;
       if (unknown) return { id: t.id, label, group: "Unknown tracks to ID", meta: `${unknown} unknown · ${known} ID’d`, done, rank: unknown };
       if (names > known) return { id: t.id, label, group: "Tracklist known, times needed", meta: `${plural(names, "track")} to place`, done: null, rank: names };
-      if (known) return { id: t.id, label, group: "Started by listeners", meta: `${known} ID’d`, done, rank: known };
+      if (known) return { id: t.id, label, group: "Started in the comments", meta: `${known} ID’d`, done, rank: known };
       return null;
     })
     .filter((t) => t !== null)

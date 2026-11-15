@@ -60,7 +60,7 @@ function describe(e: HistoryEntry): string {
   const after = (Array.isArray(e.value) ? e.value : []) as Cue[];
   const added = after.filter((c) => !before.some((b) => b.id === c.id));
   const removed = before.filter((b) => !after.some((c) => c.id === b.id));
-  if (e.source === "agent") return added.length ? `Added ${added.length} ${added.length === 1 ? "track" : "tracks"} from listeners` : "Went back to what listeners ID’d";
+  if (e.source === "agent") return added.length ? `Added ${added.length} ${added.length === 1 ? "track" : "tracks"} from the comments` : "Went back to the IDs from the comments";
   if (added.length === 1 && removed.length <= 1) return `Marked a new track at ${clock(added[0].start)}, side ${added[0].track}`;
   if (removed.length === 1 && !added.length) return `Removed ${cueLabel(removed[0])}`;
   if (!added.length && !removed.length) {
@@ -477,7 +477,7 @@ export function Trainspotter({
     void writeAsListeners(next).then((ok) => {
       if (!ok) return;
       const parts = [added ? `added ${added} ${added === 1 ? "track" : "tracks"}` : "", corrected ? `corrected ${corrected}` : ""].filter(Boolean).join(" and ");
-      confirmWithUndo(`Since you were last here, listeners ${parts}.`);
+      confirmWithUndo(`Since you were last here, new comments ${parts}.`);
     });
     // Runs once, with the proposals as they are when saved work has been restored.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -487,7 +487,7 @@ export function Trainspotter({
     if (await writeAsListeners(proposals.map(toCue))) {
       markSeen(proposals.map(sig));
       setSelected(null);
-      confirmWithUndo("Back to what listeners ID’d.");
+      confirmWithUndo("Back to the IDs from the comments.");
     }
   };
 
@@ -771,7 +771,7 @@ export function Trainspotter({
       {chips}
       {!sel.known && sel.title && (
         <p className="w-full text-[15px] text-[var(--text)]">
-          Clue from {sel.by ?? "a listener"}: “{sel.title}”
+          Clue from {sel.by ?? "a comment"}: “{sel.title}”
         </p>
       )}
       <Field className="min-w-0 flex-1 basis-40">
@@ -1131,7 +1131,7 @@ export function Trainspotter({
         {sel ? (
           <>
             <p className="w-full font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] tabular-nums">
-              Side {sel.track} · {clock(sel.start)} to {clock(sel.end)} · {sel.known ? "is this right?" : "what is this track?"}
+              {sel.track} {clock(sel.start)}–{clock(sel.end)}
             </p>
             {touch ? (
               <div className="flex w-full items-center gap-3">
@@ -1172,7 +1172,7 @@ export function Trainspotter({
                 <DrawerClose className="ts-link flex-none">Close</DrawerClose>
               </div>
               <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] tabular-nums">
-                Side {sel.track} · {clock(sel.start)} to {clock(sel.end)}
+                {sel.track} {clock(sel.start)}–{clock(sel.end)}
               </p>
               <div className="mt-3">{idForm}</div>
             </>
@@ -1210,7 +1210,7 @@ export function Trainspotter({
         <div className="min-w-0">
           <h2 className="font-display text-2xl leading-none text-[var(--text)]">Send it in</h2>
           <p className="mt-2 max-w-[52ch] text-[15px] text-[var(--muted)]">
-            What you ID here is saved on this device. To add it to the archive, copy your IDs and post them as a comment on the tape’s page. Listeners’ IDs on this timeline came from the same place.
+            What you ID here is saved on this device. To add it to the archive, copy your IDs and post them as a comment on the tape’s page. The other IDs on this timeline came from comments there.
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <button type="button" onClick={copy} disabled={!mine.length} className="ts-btn min-w-[12.5rem]">
@@ -1233,7 +1233,7 @@ export function Trainspotter({
           {namesTotal > 0 && (
             <Collapsible className="ts-fold" defaultOpen={namesWaiting === namesTotal}>
               <CollapsibleTrigger className="ts-fold-trigger">
-                <span>{fromSite ? "The tape’s tracklist" : "A listener’s tracklist, in order"}</span>
+                <span>{fromSite ? "The tape’s tracklist" : "A tracklist from the comments, in order"}</span>
                 <span className="font-mono text-[11px] tabular-nums text-[var(--muted)]">{namesWaiting} still to place</span>
               </CollapsibleTrigger>
               <CollapsiblePanel className="ts-fold-panel">
@@ -1262,7 +1262,7 @@ export function Trainspotter({
           )}
           <Collapsible className="ts-fold">
             <CollapsibleTrigger className="ts-fold-trigger">
-              <span>Where listeners’ IDs came from</span>
+              <span>IDs from the comments</span>
               <span className="font-mono text-[11px] tabular-nums text-[var(--muted)]">{proposals.length}</span>
             </CollapsibleTrigger>
             <CollapsiblePanel className="ts-fold-panel">
@@ -1301,7 +1301,7 @@ export function Trainspotter({
                     .reverse()
                     .map(({ e, n }) => (
                       <li key={e.id} className="ts-history-row" data-undone={n > position || e.reverted ? "" : undefined}>
-                        <span className="ts-source">{e.source === "agent" ? "Listeners" : "You"}</span>
+                        <span className="ts-source">{e.source === "agent" ? "Comments" : "You"}</span>
                         <span className="min-w-0 flex-1">
                           {describe(e)}
                           {n > position || e.reverted ? " (undone)" : ""}
@@ -1316,7 +1316,7 @@ export function Trainspotter({
           </Collapsible>
           {proposals.length > 0 && (
             <button type="button" onClick={() => void startOver()} className="mt-2 inline-flex min-h-11 cursor-pointer items-center text-sm text-[var(--muted)] underline underline-offset-4 hover:text-[var(--text)]">
-              Start over from what listeners ID’d
+              Start over from the comments’ IDs
             </button>
           )}
         </div>

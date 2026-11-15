@@ -1,4 +1,10 @@
 /* PROTOTYPE (SIM-37) — Trainspotter */
+.ts-page {
+  --ts-paper:
+    linear-gradient(color-mix(in srgb, var(--bg) calc((1 - var(--bg-image-opacity, 0)) * 100%), transparent) 0 0),
+    var(--bg-image, none) fixed,
+    var(--bg);
+}
 .ts-label {
   display: block;
   margin-bottom: 0.375rem;
@@ -144,6 +150,20 @@
 .ts-root { border-block: 1.5px solid var(--text); }
 .ts-scroller { overflow-x: auto; overscroll-behavior-x: contain; }
 .ts-canvas { position: relative; padding-block: 2px 10px; }
+/* When the tape is scrolled, the ruler's ticks and flag stop at the side labels' column instead of sliding
+   through the space above them. Narrower than the column by half a flag, so the flag is whole at 0:00. */
+.ts-canvas::before {
+  content: "";
+  position: sticky;
+  left: 0;
+  z-index: 6;
+  display: block;
+  width: 47px;
+  height: 44px;
+  margin-bottom: -44px;
+  background: var(--ts-paper);
+  pointer-events: none;
+}
 /* The ruler doubles as the scrubber. The slider places its own thumb; this gives it a size and a handle. */
 .ts-ruler { position: relative; height: 44px; }
 .ts-scrub { display: block; height: 44px; cursor: pointer; user-select: none; -webkit-user-select: none; }
@@ -187,10 +207,23 @@
 }
 .ts-scrub-thumb:has(:focus-visible)::before { outline: 2px solid var(--text); outline-offset: 3px; clip-path: none; border-radius: 1px; }
 .ts-row { display: flex; align-items: stretch; margin-top: 6px; }
+/* The label stays put while the tape scrolls under it. Behind the label sits a patch of page the width of
+   the label and its gap, and a little taller than the row: a track, its selection ring and the playhead all
+   vanish at one clean edge instead of showing through the gap or poking out above and below the label. */
+.ts-row::before {
+  content: "";
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  flex: none;
+  width: 56px;
+  margin: -5px -56px -5px 0;
+  background: var(--ts-paper);
+}
 .ts-side {
   position: sticky;
   left: 0;
-  z-index: 3;
+  z-index: 6; /* above the playhead and the patch behind this label */
   flex: none;
   width: 48px;
   margin-right: 8px;
