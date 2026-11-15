@@ -58,7 +58,7 @@ const alike = (a: string, b: string) => {
  * nothing else); inside a sentence it must be followed or preceded by the word "side", so a DJ's name in a track
  * credit is left alone.
  */
-export function sideNamed(text: string, titles: string[], heading = false): number | null {
+function sideNamed(text: string, titles: string[], heading = false): number | null {
   const n = squash(text);
   const bare = n.replace(/^(?:side \w+ |on )?(?:the )?/, "").replace(/ side$/, "");
   const found = new Set<number>();
@@ -311,8 +311,9 @@ export function parseComment(content: string, author: string, date: string, titl
 export type Opinion = { artist: string; title: string; known: boolean; author: string; date: string };
 export type Proposal = Sighting & { end: number; voices: number; also: Opinion[]; /** The end is a guess: the last thing anyone timed on this side. */ open?: boolean };
 
-const words = (s: Sighting) => new Set(`${s.artist} ${s.title}`.toLowerCase().replace(/\([^)]*\)/g, "").match(/[a-z0-9]{3,}/g) ?? []);
-function sameTrack(a: Sighting, b: Sighting) {
+type Named = { artist: string; title: string };
+const words = (s: Named) => new Set(`${s.artist} ${s.title}`.toLowerCase().replace(/\([^)]*\)/g, "").match(/[a-z0-9]{3,}/g) ?? []);
+function sameTrack(a: Named, b: Named) {
   const wa = words(a);
   const wb = words(b);
   const small = wa.size <= wb.size ? wa : wb;
@@ -370,7 +371,7 @@ export function reconcile(sightings: Sighting[], lengths: number[]): Proposal[] 
   return out;
 }
 
-// ── Running orders: tracklists people posted in order but without times ──
+// Running orders: tracklists people posted in order but without times.
 
 export type Listed = {
   side: number;
@@ -387,7 +388,7 @@ export type Listed = {
 };
 
 /** Numbered lines with a name and no time, e.g. "6. Moby - Go" under a "Side 1" heading. */
-export function parseListing(content: string, author: string, date: string, titles: string[] = []): Listed[] {
+function parseListing(content: string, author: string, date: string, titles: string[] = []): Listed[] {
   const out: Listed[] = [];
   let side = 0;
   for (const raw of plain(content).split(/\r?\n/)) {
@@ -431,11 +432,10 @@ export function runningOrders(listed: Listed[], sides: number): Listed[][] {
 }
 
 /** True when a marked track already carries this listed name. */
-export const isSameRecord = (a: { artist: string; title: string }, b: { artist: string; title: string }) =>
-  sameTrack({ ...a, known: true } as Sighting, { ...b, known: true } as Sighting);
+export const isSameRecord = (a: Named, b: Named) => sameTrack(a, b);
 
 
-// ── Running tracklists: a side written out in order, and written out again each time a track is ID'd ──
+// Running tracklists: a side written out in order, and written out again each time a track is ID'd.
 //
 // Some tapes have a keeper. They post each side as a list, a name where the track is known and a time with
 // "??" where it isn't, and when someone IDs one they post the whole list again with that line changed:
@@ -521,7 +521,7 @@ function rowOf(raw: string, expect?: number): (Omit<Row, "side" | "n"> & { n?: n
  * doesn't say which. Two labels this page doesn't know, on a tape with two sides ("Side X", then "Side E"),
  * are taken in the order the tape runs.
  */
-export function parseRunning(content: string, titles: string[] = []): { rows: Row[]; headed: boolean; prose: string } | null {
+function parseRunning(content: string, titles: string[] = []): { rows: Row[]; headed: boolean; prose: string } | null {
   const lines = plain(content).split(/\r?\n/);
   const time = new RegExp(TIME);
   // A line that names a side: one this page can place, or one it can't ("Side X", "Marques's side").
@@ -584,7 +584,7 @@ export function parseRunning(content: string, titles: string[] = []): { rows: Ro
   return { rows, headed, prose: prose.join("\n") };
 }
 
-const sameRow = (a: Row, b: Row) => sameTrack(a as unknown as Sighting, b as unknown as Sighting) || squash(`${a.artist} ${a.title}`) === squash(`${b.artist} ${b.title}`);
+const sameRow = (a: Row, b: Row) => sameTrack(a, b) || squash(`${a.artist} ${a.title}`) === squash(`${b.artist} ${b.title}`);
 
 /**
  * Passes times from one version of a side to the next. Rows that are the same in both are the fixed points;
@@ -638,23 +638,23 @@ const sameAuthor = (a: string, b: string) => {
 export function digest(comments: Said[], titles: string[] = []): { sightings: Sighting[]; listed: Listed[] } {
   const read = comments.map((c) => ({ c, list: parseRunning(c.content, titles) }));
   // Oldest first; comments arrive in the order they were posted, which settles two on the same day.
-  const lists = read.filter((r) => r.list).sort((a, b) => a.c.date.localeCompare(b.c.date));
+  const lists = read.flatMap(({ c, list }) => (list ? [{ c, list }] : [])).sort((a, b) => a.c.date.localeCompare(b.c.date));
   const replaced = new Set<Said>();
   const heads = new Map<Said, Row[]>();
   for (let h = lists.length - 1; h >= 0; h--) {
     const head = lists[h];
     if (replaced.has(head.c)) continue;
-    const rows = head.list!.rows.map((r) => ({ ...r }));
+    const rows = head.list.rows.map((r) => ({ ...r }));
     // Its earlier versions: the same keeper's lists that are mostly in this one. Walked oldest to newest so a
     // time passes down the whole line of them.
     const versions = lists.slice(0, h).filter((v) => {
       if (replaced.has(v.c) || !sameAuthor(v.c.author, head.c.author)) return false;
-      const names = v.list!.rows.filter((r) => r.known);
+      const names = v.list.rows.filter((r) => r.known);
       return names.length > 0 && names.filter((r) => rows.some((x) => x.known && sameRow(x, r))).length >= Math.max(2, names.length * 0.5);
     });
     let prior: Row[] | null = null;
-    for (const v of [...versions, { c: head.c, list: { ...head.list!, rows } }]) {
-      const now = v.c === head.c ? rows : v.list!.rows.map((r) => ({ ...r }));
+    for (const v of [...versions, { c: head.c, list: { ...head.list, rows } }]) {
+      const now = v.c === head.c ? rows : v.list.rows.map((r) => ({ ...r }));
       if (prior) for (const side of new Set(now.map((r) => r.side))) carry(prior.filter((r) => r.side === side), now.filter((r) => r.side === side));
       prior = now;
     }
@@ -674,17 +674,18 @@ export function digest(comments: Said[], titles: string[] = []): { sightings: Si
       sightings.push(...parseComment(c.content, c.author, c.date, titles));
       listed.push(...parseListing(c.content, c.author, c.date, titles));
     }
-    if (!rows) continue;
-    const own = list!.rows;
+    if (!rows || !list) continue;
+    const own = list.rows;
     rows.forEach((r, k) => {
       listed.push({ side: r.side, n: r.n, artist: r.artist, title: r.title, known: r.known, author: c.author, date: c.date, running: true, at: r.start });
       const said = { side: r.side, artist: r.artist, title: r.title, known: r.known, author: c.author, date: c.date };
       // Written with its time: read as a timed line always has been (it knows more ways of writing one than
       // a row needs to), and put on the side this list's headings were found to mean.
-      if (own[k].start !== undefined) {
+      const written = own[k].start;
+      if (written !== undefined) {
         // (An unnamed row is the exception: "0:55 ?? (ambient track)" keeps its clue as a row reads it.)
         const line = r.known ? parseComment(r.raw ?? "", c.author, c.date, titles, true) : [];
-        sightings.push(...(line.length ? line.map((s) => ({ ...s, side: r.side, sideless: undefined, unsure: undefined })) : [{ ...said, start: own[k].start!, end: r.end, layer: r.layer }]));
+        sightings.push(...(line.length ? line.map((s) => ({ ...s, side: r.side, sideless: undefined, unsure: undefined })) : [{ ...said, start: written, end: r.end, layer: r.layer }]));
       }
       else if (!r.known) return;
       // A time handed down from an earlier version of the list: the keeper's own, but worked out from where
@@ -692,7 +693,7 @@ export function digest(comments: Said[], titles: string[] = []): { sightings: Si
       else if (r.start !== undefined) inferred.push({ s: { ...said, start: r.start }, once: rows.filter((x) => x.side === r.side && x.known && sameRow(x, r)).length === 1 });
       // The first track listed on a side starts the side (a keeper writes "0:00 ??" when it opens on something
       // else). First means first: under a side heading, and numbered 1 or carrying on from the side before.
-      else if (rows.findIndex((x) => x.side === r.side) === k && (list!.headed || titles.length === 1) && (!r.numbered || r.n === 1 || (k > 0 && rows[k - 1].numbered && rows[k - 1].n === r.n - 1)))
+      else if (rows.findIndex((x) => x.side === r.side) === k && (list.headed || titles.length === 1) && (!r.numbered || r.n === 1 || (k > 0 && rows[k - 1].numbered && rows[k - 1].n === r.n - 1)))
         inferred.push({ s: { ...said, start: 0, weak: true }, once: true });
     });
   }
@@ -700,12 +701,12 @@ export function digest(comments: Said[], titles: string[] = []): { sightings: Si
   // reply didn't say the side because the list had. A time with no side goes to the side where a keeper's
   // list, in any version, has that very time, if there is one such side.
   if (titles.length > 1) {
-    const timed = lists.flatMap((l) => l.list!.rows.filter((r) => r.start !== undefined));
+    const timed = lists.flatMap((l) => l.list.rows.flatMap((r) => (r.start === undefined ? [] : [{ side: r.side, start: r.start }])));
     for (const s of sightings) {
       if (!s.sideless) continue;
-      const near = timed.filter((r) => Math.abs(r.start! - s.start) <= 5);
-      const best = Math.min(...near.map((r) => Math.abs(r.start! - s.start)));
-      const sides = new Set(near.filter((r) => Math.abs(r.start! - s.start) === best).map((r) => r.side));
+      const near = timed.filter((r) => Math.abs(r.start - s.start) <= 5);
+      const best = Math.min(...near.map((r) => Math.abs(r.start - s.start)));
+      const sides = new Set(near.filter((r) => Math.abs(r.start - s.start) === best).map((r) => r.side));
       if (sides.size === 1) s.side = [...sides][0];
     }
   }

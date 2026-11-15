@@ -46,7 +46,8 @@ export function useTapeAudio(sideCount: number) {
       // Whichever side's event this is, the button reflects the side that is active now. The side being
       // left pauses a moment after the switch, and must not leave the button stuck on "Pause".
       const sync = () => {
-        setPlaying(Boolean(audios.current[activeRef.current] && !audios.current[activeRef.current]!.paused));
+        const current = audios.current[activeRef.current];
+        setPlaying(Boolean(current && !current.paused));
         run();
       };
       const error = () => {

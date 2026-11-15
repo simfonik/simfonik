@@ -33,7 +33,7 @@ export function useTimeline({
   lengthRef.current = length;
   const sideLength = (i: number) => durations[i] ?? length;
 
-  // ── Playhead: written straight to the element each frame while playing; React hears once a second ──
+  // The playhead is written straight to its element each frame while playing; React hears once a second.
   // The playhead is one element: the marker on the ruler and the line down the side that is playing. It is
   // moved by a single transform, once per frame, from one time. While the marker is being dragged that time
   // is the dragged one (scrubT), so marker and line stay under the pointer instead of trailing the audio.
@@ -87,8 +87,7 @@ export function useTimeline({
     // chosen for what caused it:
     //  · Playing along: the playhead rides at a fixed spot a little past the middle and the tape slides under
     //    it at the speed of the music, under a pixel a frame. What is coming is always in view, and the
-    //    playhead never reaches the faded edge. This replaces turning the page when it hit the edge, which
-    //    moved the whole row in a single frame.
+    //    playhead never reaches the faded edge.
     //  · After a click that lands the playhead far from that spot: a short spring to it. A spring, because a
     //    second click mid-flight should bend the motion, not restart it; no bounce, settled in about a third of a second.
     //  · After a key press: no animation. The tape is simply there. Keys are for moving fast.
@@ -128,7 +127,6 @@ export function useTimeline({
   }, [audios, activeRef, hear]);
   audio.painter.current = paint;
 
-  // ── Timeline geometry ──
   // The stylesheet sets the scale: so many pixels a minute, or the whole width where the side fits in it. So
   // the tracks are the right size in the HTML the server sends, before any of this runs. What is measured
   // here is the result, for the things that are placed in pixels: the playhead, scrubbing, the overview.
@@ -270,14 +268,14 @@ export function useTimeline({
   // faster the nearer the edge, with the playhead staying under the pointer. Without that, a finger could
   // only reach the part of a long tape that happened to be on screen.
   const held = useRef<{ id: number; x: number; left: number; right: number; origin: number; grab: number; carry: number; last: number; frame: number } | null>(null);
-  const heldTime = () => {
-    const h = held.current!;
+  type Held = NonNullable<typeof held.current>;
+  const timeUnder = (h: Held) => {
     const along = (h.x - h.origin + (scrollerRef.current?.scrollLeft ?? 0)) / Math.max(1, widthRef.current);
     return Math.max(0, Math.min(sideLength(activeRef.current), Math.max(0, Math.min(1, along)) * lengthRef.current + h.grab));
   };
-  const scrub = (v: number | number[]) => scrubTo(held.current ? heldTime() : Math.min(v as number, sideLength(activeRef.current)));
+  const scrub = (v: number | number[]) => scrubTo(held.current ? timeUnder(held.current) : Math.min(v as number, sideLength(activeRef.current)));
   const scrubEnd = (v: number | number[]) => {
-    const t = held.current ? heldTime() : Math.min(v as number, sideLength(activeRef.current));
+    const t = held.current ? timeUnder(held.current) : Math.min(v as number, sideLength(activeRef.current));
     scrubT.current = null;
     seek(activeRef.current, t);
     setScrubAt(null);
@@ -296,7 +294,7 @@ export function useTimeline({
     const h = { id: e.pointerId, x: e.clientX, left: view.left, right: view.right, origin: e.currentTarget.getBoundingClientRect().left + sc.scrollLeft, grab: 0, carry: 0, last: performance.now(), frame: 0 };
     held.current = h;
     // Taken by its handle, the playhead keeps the distance it had from the pointer instead of jumping to it.
-    if ((e.target as HTMLElement).closest(".ts-scrub-thumb")) h.grab = (scrubT.current ?? audios.current[activeRef.current]?.currentTime ?? 0) - heldTime();
+    if ((e.target as HTMLElement).closest(".ts-scrub-thumb")) h.grab = (scrubT.current ?? audios.current[activeRef.current]?.currentTime ?? 0) - timeUnder(h);
     // Sideways only, and by the clock, so it is the same speed on any screen. The band on the left starts
     // past the side's label, which stays put over the tape.
     const EDGE = 48;
@@ -313,7 +311,7 @@ export function useTimeline({
         h.carry -= step;
         const before = sc.scrollLeft;
         sc.scrollLeft = before + step;
-        if (sc.scrollLeft !== before) scrubToRef.current(heldTime());
+        if (sc.scrollLeft !== before) scrubToRef.current(timeUnder(h));
       }
       h.frame = requestAnimationFrame(tick);
     };

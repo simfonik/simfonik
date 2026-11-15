@@ -137,9 +137,8 @@ function OtherIds({ form }: { form: IdDraft }) {
 /**
  * With a mouse: the ID bar under the timeline. It is always there and always the same height, whatever is
  * picked or playing: two fields and their buttons, then one line that holds whichever applies (what to do,
- * likely names from the tracklist, other people's IDs, a clue) beside undo, redo and the keys. Built to appear
- * only once a track was picked, it pushed the rest of the page down on the first click, again when a clue
- * turned up mid-typing, and again when suggestions did.
+ * likely names from the tracklist, other people's IDs, a clue) beside undo, redo and the keys. Nothing under
+ * it moves when a track is picked, a clue turns up or suggestions do.
  */
 export function IdBar({
   form,

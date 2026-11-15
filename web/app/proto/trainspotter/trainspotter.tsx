@@ -66,16 +66,13 @@ export function Trainspotter({
   // Behaviour forks on the pointer; styling forks on media queries in the stylesheet.
   const touch = usePreference(pointerKind).pointer === "coarse";
 
-  // ── Audio: one element per side ──
   const audio = useTapeAudio(tape.sides.length);
   const { audios, durations, failed, active, activeRef, playing, now, seek, toggle } = audio;
 
-  // ── What listeners said in the comments, reconciled into one proposal per moment ──
-  // An unmeasured side is treated as endless, so a slow connection never drops an ID for being "past the end".
+  // What the comments said, reconciled into one proposal per moment. An unmeasured side is treated as endless, so a slow connection never drops an ID for being "past the end".
   const proposals = useMemo(() => reconcile(sightings, durations.map((d) => d ?? Infinity)), [sightings, durations]);
   const toCue = useCallback((p: Proposal): Cue => cueFrom(p, sides), [sides]);
 
-  // ── The tracklist value: controlled here, saved in this browser ──
   // It starts as what the comments say, so the tracks are in the HTML the server sends. Saved work, if this
   // browser has any, takes its place as soon as the page can read it.
   const [cues, setCues] = useState<Cue[]>(() => reconcile(sightings, tape.sides.map(() => Infinity)).map((p) => cueFrom(p, tape.sides.map((s) => s.key))));
@@ -188,7 +185,7 @@ export function Trainspotter({
     redraw((n) => n + 1);
   }, [length]);
 
-  // ── History: every change to the timeline, with who made it. It is the undo stack. ──
+  // Every change to the timeline, with who made it. It is the undo stack.
   const rootRef = useRef<HTMLDivElement>(null);
   const historyRef = useRef<ReturnType<typeof createHistory> | null>(null);
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
@@ -218,7 +215,6 @@ export function Trainspotter({
     // Offer the timeline to an assistant built into the browser, where the browser supports WebMCP. It may add
     // and ID tracks; replacing, clearing or removing is left to a person.
     const unregister = registerTools(agent, { allow: (step) => !["setValue", "clear", "removeCue"].includes(step.action) });
-    (window as unknown as { simfonikAgent?: unknown }).simfonikAgent = agent;
     return () => {
       off();
       unregister?.();
@@ -330,7 +326,7 @@ export function Trainspotter({
   useShortcut("mod+z", () => canUndo && void step(-1), { description: "Undo", when: notTyping });
   useShortcut("mod+shift+z", () => canRedo && void step(1), { description: "Redo", when: notTyping });
 
-  // ── The track under the playhead on the side that's playing ──
+  // The track under the playhead, on the side that is playing.
   const playingCue = useMemo(
     () =>
       cues
@@ -423,7 +419,7 @@ export function Trainspotter({
     return () => document.removeEventListener("keydown", onKey);
   }, [markHere, toggle, stepTrack]);
 
-  // ── Names waiting for a time: the site's own tracklist if there is one, else a commenter's running order ──
+  // Names waiting for a time: the site's own tracklist if there is one, else a list kept in the comments.
   const orders = useMemo(() => ordersFor(listed, official, sides.length), [listed, official, sides]);
   const fromSite = official.some((o) => o.length > 0);
   // Which track on the timeline carries each listed name, and the names still without one.
@@ -436,7 +432,6 @@ export function Trainspotter({
   // fields are always there and always about something: press play, hear a track you know, and type. Putting
   // the cursor in a field picks that track, so it stays put while the tape plays on to the next one.
   const subject = sel ?? playingCue;
-  // For a track nobody has named, the listed names that could be it.
   const nextNames = useMemo(() => {
     if (!subject) return [];
     const side = sides.indexOf(subject.track);
@@ -507,13 +502,10 @@ export function Trainspotter({
     return !d || Math.hypot(e.clientX - d.x, e.clientY - d.y) < 5;
   };
 
-  // Before the tracklist is in place (the first paint, and the server's HTML), count from what listeners posted.
-  const counted = ready ? cues : proposals;
-  const knownCount = counted.filter((c) => c.known).length;
-  const unknownCount = counted.length - knownCount;
+  const unknownCount = cues.filter((c) => !c.known).length;
   // What is on screen: the one part of a multi-part tape, else the whole tape. The intro and the lines shown
   // when nothing is picked speak about this, so they never mention tracks that are on some other part.
-  const here = ready ? cues.filter((c) => !many || c.track === sides[active]) : proposals.filter((p) => !many || p.side === active);
+  const here = cues.filter((c) => !many || c.track === sides[active]);
   const audioFailed = failed[active];
 
   // The unknown list follows the timeline: every side of a two-sided tape, or the one part on screen.
@@ -530,7 +522,7 @@ export function Trainspotter({
     namesWaiting > 0 && fromSite
       ? "We know the tracklist but not the times. Press play and mark where each track starts."
       : // Names someone listed in a comment are a start, not the tracklist.
-        namesWaiting > 0 && !counted.length
+        namesWaiting > 0 && !cues.length
         ? "Some tracks are named in the comments, without times. Press play and mark where each one starts."
         : here.length
         ? here.some((c) => !c.known)
@@ -605,7 +597,7 @@ export function Trainspotter({
                       <span className="ts-edge" data-span-edge="start" aria-hidden />
                       <span className="ts-cue-text">
                         {/* An unknown track shows nothing but its hatching. Its label, the pointer's time label and the
-                            list below say "unknown" in words; a mark repeated in every block was noise. */}
+                            list below say "unknown" in words. */}
                         {c.known && (
                           <>
                             <b>{c.artist || c.title}</b>
@@ -718,10 +710,8 @@ export function Trainspotter({
               </Slider>
             </div>
             {root}
-            {/* The playhead. One element, so the marker and the line cannot part company: built as two, the
-                marker (a slider handle, placed in percent once a second) ticked along while the line (placed in
-                pixels every frame) glided, and they could sit a pixel apart. The slider's handle is still under
-                the marker, invisible, for dragging and for the keyboard. */}
+            {/* The playhead. One element, so the marker and the line cannot part company. The slider's handle is
+                still under the marker, invisible, for dragging and for the keyboard. */}
             <div ref={headRef} className="ts-head" style={{ left: GUTTER }} aria-hidden>
               {/* The cap: drawn as a path, not clipped from a box, so its curves and its point are exact. Eleven
                   wide around a one-pixel line, so its point lands dead centre on the line. */}

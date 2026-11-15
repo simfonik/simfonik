@@ -60,9 +60,8 @@ export function Player({
       </p>
       <div className="flex flex-none flex-wrap items-center gap-2">
         {/* Both actions keep their place and their size whatever is playing. Only the fill changes, to show
-            which one matters now: ID an unknown, or mark a track where nothing is marked. Before, they swapped
-            between a boxed button and a text link, and the clock and both buttons jumped sideways each time
-            the tape moved on to the next track. */}
+            which one matters now: ID an unknown, or mark a track where nothing is marked. Neither the clock
+            nor the buttons shift when the tape moves on to the next track. */}
         <button type="button" onClick={() => cue && onId(cue.id)} disabled={!cue} className={`ts-btn min-w-[7.5rem] ${cue && !cue.known ? "ts-btn-solid" : ""}`}>
           {cue?.known ? "Fix ID" : "ID track"}
         </button>

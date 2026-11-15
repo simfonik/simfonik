@@ -125,8 +125,8 @@ export const TapeSwitcher = memo(function TapeSwitcher({ tapes, currentId }: { t
       autoHighlight="always"
     >
       <nav aria-label="Tapes" className="ts-nav" ref={setTapeNav}>
-        {elsewhere && (
-          <Link href={`/proto/trainspotter/${prevTape!.id}`} className="ts-link" aria-label={`Previous tape: ${prevTape!.label}`}>
+        {prevTape && (
+          <Link href={`/proto/trainspotter/${prevTape.id}`} className="ts-link" aria-label={`Previous tape: ${prevTape.label}`}>
             ‹ Prev
           </Link>
         )}
@@ -201,8 +201,8 @@ export const TapeSwitcher = memo(function TapeSwitcher({ tapes, currentId }: { t
           <span className="tabular-nums opacity-60">{place >= 0 ? `${place + 1} of ${tapes.length}` : tapes.length}</span>
           <span aria-hidden>▾</span>
         </ComboboxTrigger>
-        {elsewhere && (
-          <Link href={`/proto/trainspotter/${nextTape!.id}`} className="ts-link" aria-label={`Next tape: ${nextTape!.label}`}>
+        {nextTape && (
+          <Link href={`/proto/trainspotter/${nextTape.id}`} className="ts-link" aria-label={`Next tape: ${nextTape.label}`}>
             Next ›
           </Link>
         )}
