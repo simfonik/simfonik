@@ -6,6 +6,7 @@
 // SDK's change pipeline, so one history gives undo and redo, and the page is operable by an agent through
 // the same bridge that loads the listeners' tracklist.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createPointerKind, inputHints } from "@ui-sdk/core";
@@ -965,8 +966,12 @@ export function Trainspotter({
         onValueChange={(v: unknown) => {
           if (typeof v === "string" && v !== tape.id) router.push(`/proto/trainspotter/${v}`);
         }}
+        // The search text is ours so it can be emptied each time the list opens; left to itself the field would
+        // open holding the current tape's name. It is committed at once: the combobox picks which match to
+        // highlight straight after telling us, and a render later it would highlight a match for the letters
+        // before this one.
         query={tapeQuery}
-        onQueryChange={setTapeQuery}
+        onQueryChange={(q: string) => flushSync(() => setTapeQuery(q))}
         open={tapesOpen}
         onOpenChange={(open: boolean) => {
           setTapesOpen(open);
