@@ -57,7 +57,7 @@ function CuePart({ value, ...props }: { value: string } & React.ComponentProps<"
 }
 
 /** A plain-language line for one history entry, worked out from what changed in the list. */
-function describe(e: HistoryEntry): string {
+function describe(e: HistoryEntry, clock: (s: number) => string): string {
   const before = (Array.isArray(e.previous) ? e.previous : []) as Cue[];
   const after = (Array.isArray(e.value) ? e.value : []) as Cue[];
   const added = after.filter((c) => !before.some((b) => b.id === c.id));
@@ -203,6 +203,12 @@ export function Trainspotter({
   }, [durations, cues, proposals, many, active, sides]);
   const lengthRef = useRef(length);
   lengthRef.current = length;
+  // Times read 5:15 on an ordinary tape and 1:23:25 on one with a side an hour or longer, the way people
+  // write them in the comments. One format for the whole page, so a tape never mixes the two.
+  const long = durations.some((d) => (d ?? 0) >= 3600) || cues.some((c) => c.start >= 3600);
+  const longRef = useRef(long);
+  longRef.current = long;
+  const time = useCallback((s: number) => clock(s, long), [long]);
   const sideLength = (i: number) => durations[i] ?? length;
 
   // ── Playhead: written straight to the element each frame while playing; React hears once a second ──
@@ -728,7 +734,7 @@ export function Trainspotter({
       ghost.style.transform = `translateX(${x + GUTTER}px)`;
       const name = (e.target as HTMLElement).closest?.<HTMLElement>(".ts-cue")?.dataset.name ?? "";
       const label = ghost.firstElementChild as HTMLElement;
-      (label.firstElementChild as HTMLElement).textContent = clock((x / w) * lengthRef.current);
+      (label.firstElementChild as HTMLElement).textContent = clock((x / w) * lengthRef.current, longRef.current);
       (label.lastElementChild as HTMLElement).textContent = name;
       // Keep the label on screen: it opens to the left once it would run off the right edge.
       ghost.toggleAttribute("data-flip", e.clientX + label.offsetWidth + 12 > el.getBoundingClientRect().right);
@@ -814,14 +820,15 @@ export function Trainspotter({
   const partTitle = (i: number) => (tape.sides[i]?.title && !/^side\b/i.test(tape.sides[i].title) ? tape.sides[i].title : null);
   const partName = partTitle(active);
   const markLabel = touch ? "New track" : "A new track starts here";
+  // What to do, in one line. The counts are in the list of tapes and the lists below; here they were a
+  // sentence of numbers in front of the instruction.
   const intro =
     namesWaiting > 0
-      ? `${namesTotal - namesWaiting} of ${namesTotal} tracks placed. We know what’s on this tape, but not when each one comes in. Press play, and press “${markLabel}” each time one starts.`
+      ? `We know what’s on this tape, but not when each track comes in. Press play, and press “${markLabel}” each time one starts.`
       : counted.length
         ? unknownCount
-          ? `${knownCount} of ${counted.length} ID’d. ${unknownCount} still unknown. Press play and help ID the unknowns.`
-          : // Every marked track has a name, which says nothing about the stretches nobody has marked.
-            `${knownCount} ${knownCount === 1 ? "track" : "tracks"} ID’d so far. Press play, and when you hear one that isn’t marked, press “${markLabel}” and ID it.`
+          ? "Press play and help ID the unknowns."
+          : `Press play, and when you hear a track that isn’t marked, press “${markLabel}” and ID it.`
         : `Nothing ID’d on this tape yet. Press play, and press “${markLabel}” when you hear a track you know.`;
 
   // The ID form: inline under the timeline with a mouse, in a sheet above the keyboard on a phone.
@@ -1173,7 +1180,7 @@ export function Trainspotter({
         <p className="ts-player-title truncate font-display text-3xl leading-tight text-[var(--text)] sm:text-4xl" title={playingCue?.known ? cueLabel(playingCue) : undefined}>{playingCue ? (playingCue.known ? cueLabel(playingCue) : "Unknown track") : "Nothing ID’d here yet"}</p>
         <p className="flex-none font-mono text-sm tabular-nums text-[var(--text)]">
           <span className="sr-only">Side </span>
-          {sides[active]} {clock(now)} <span className="text-[var(--muted)]">/ {durations[active] === null ? "–:––" : clock(durations[active]!)}</span>
+          {sides[active]} {time(now)} <span className="text-[var(--muted)]">/ {durations[active] === null ? "–:––" : time(durations[active]!)}</span>
         </p>
         <div className="flex flex-none flex-wrap items-center gap-2">
           {playingCue && (
@@ -1229,12 +1236,12 @@ export function Trainspotter({
             {/* The ruler is the scrubber: a slider the width of the tape. It sits outside the tracklist
                 so that moving through the audio is never recorded as a change to the tracklist. */}
             <div className="ts-ruler" style={{ marginLeft: GUTTER, width }}>
-              <Slider value={Math.min(scrubAt ?? now, length)} onValueChange={scrub} onValueCommit={scrubEnd} min={0} max={length} step={1} largeStep={15} format={(v: number) => clock(v)}>
+              <Slider value={Math.min(scrubAt ?? now, length)} onValueChange={scrub} onValueCommit={scrubEnd} min={0} max={length} step={1} largeStep={15} format={time}>
                 <SliderControl className="ts-scrub">
                   <SliderTrack className="ts-scrub-track">
                     {Array.from({ length: Math.floor(minutes / 5) + 1 }, (_, i) => (
                       <span key={i} className="ts-tick" style={{ left: `${((i * 300) / length) * 100}%` }} aria-hidden>
-                        {i * 5}:00
+                        {time(i * 300)}
                       </span>
                     ))}
                     <SliderIndicator className="ts-scrub-fill" />
@@ -1325,7 +1332,7 @@ export function Trainspotter({
                 <DrawerClose className="ts-link flex-none">Close</DrawerClose>
               </div>
               <p className="mt-1 font-mono text-xs uppercase tracking-[0.14em] text-[var(--muted)] tabular-nums">
-                {sel.track} {clock(sel.start)}–{clock(sel.end)}
+                {sel.track} {time(sel.start)}–{time(sel.end)}
               </p>
               <div className="mt-3">{idForm}</div>
             </>
@@ -1349,14 +1356,14 @@ export function Trainspotter({
             {unknownHere
               .map((c) => (
                 <li key={c.id}>
-                  <button type="button" onClick={() => seek(sides.indexOf(c.track), c.start, true)} className="ts-list-row" aria-label={`Hear side ${c.track} from ${clock(c.start)}${c.title ? `. Clue: ${c.title}` : ""}`}>
+                  <button type="button" onClick={() => seek(sides.indexOf(c.track), c.start, true)} className="ts-list-row" aria-label={`Hear side ${c.track} from ${time(c.start)}${c.title ? `. Clue: ${c.title}` : ""}`}>
                     <span className="flex-none font-mono text-xs tabular-nums text-[var(--muted)]">
-                      {c.track} {clock(c.start)}
+                      {c.track} {time(c.start)}
                     </span>
                     <span className="min-w-0 flex-1 truncate" title={c.title || undefined}>{c.title ? `Clue: “${c.title}”` : "No clues yet"}</span>
                     <span className="flex-none text-xs text-[var(--muted)]">Hear it</span>
                   </button>
-                  <button type="button" onClick={() => idIt(c.id)} className="ts-chip flex-none" aria-label={`ID the track at ${clock(c.start)}, side ${c.track}`}>
+                  <button type="button" onClick={() => idIt(c.id)} className="ts-chip flex-none" aria-label={`ID the track at ${time(c.start)}, side ${c.track}`}>
                     ID it
                   </button>
                 </li>
@@ -1413,8 +1420,8 @@ export function Trainspotter({
                               {l.artist} — {l.title}
                             </span>
                             {at ? (
-                              <button type="button" onClick={() => seek(side, at.start, true)} className="ts-inline-link flex-none font-mono text-xs tabular-nums" aria-label={`Hear it at ${clock(at.start)}`}>
-                                {clock(at.start)}
+                              <button type="button" onClick={() => seek(side, at.start, true)} className="ts-inline-link flex-none font-mono text-xs tabular-nums" aria-label={`Hear it at ${time(at.start)}`}>
+                                {time(at.start)}
                               </button>
                             ) : (
                               <span className="flex-none text-xs text-[var(--muted)]">no time yet</span>
@@ -1437,9 +1444,9 @@ export function Trainspotter({
                 <ul className="ts-list">
                   {proposals.map((p) => (
                     <li key={`${p.side}-${p.start}`}>
-                      <button type="button" onClick={() => seek(p.side, p.start, true)} className="ts-list-row" aria-label={`Hear side ${sides[p.side]} at ${clock(p.start)}: ${cueLabel(toCue(p))}`}>
+                      <button type="button" onClick={() => seek(p.side, p.start, true)} className="ts-list-row" aria-label={`Hear side ${sides[p.side]} at ${time(p.start)}: ${cueLabel(toCue(p))}`}>
                         <span className="font-mono text-xs tabular-nums text-[var(--muted)]">
-                          {sides[p.side]} {clock(p.start)}
+                          {sides[p.side]} {time(p.start)}
                         </span>
                         <span className="min-w-0 flex-1 truncate" title={cueLabel(toCue(p))}>{cueLabel(toCue(p))}</span>
                         <span className="flex-none text-xs text-[var(--muted)]">
@@ -1470,7 +1477,7 @@ export function Trainspotter({
                       <li key={e.id} className="ts-history-row" data-undone={n > position || e.reverted ? "" : undefined}>
                         <span className="ts-source">{e.source === "agent" ? "Comments" : "You"}</span>
                         <span className="min-w-0 flex-1">
-                          {describe(e)}
+                          {describe(e, time)}
                           {n > position || e.reverted ? " (undone)" : ""}
                         </span>
                       </li>
@@ -1494,7 +1501,7 @@ export function Trainspotter({
         <p className="ts-bar-now">
           <span className="min-w-0 flex-1 truncate">{audioFailed ? "This side’s audio didn’t load" : playingCue ? (playingCue.known ? cueLabel(playingCue) : "Unknown track") : "Nothing ID’d here yet"}</span>
           <span className="flex-none font-mono text-xs tabular-nums text-[var(--muted)]">
-            {sides[active]} {clock(now)}
+            {sides[active]} {time(now)}
           </span>
         </p>
         <div className="ts-bar-row">
