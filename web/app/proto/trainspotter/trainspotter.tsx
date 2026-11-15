@@ -277,7 +277,7 @@ export function Trainspotter({
   // ── What listeners said in the comments, reconciled into one proposal per moment ──
   const proposals = useMemo(() => reconcile(sightings, lengths), [sightings, lengths]);
   const toCue = useCallback(
-    (p: Proposal): Cue => ({ id: `crowd-${p.side}-${p.start}`, track: sides[p.side] ?? sides[0], start: p.start, end: p.end, artist: p.artist, title: p.title, known: p.known, by: p.author }),
+    (p: Proposal): Cue => ({ id: `crowd-${p.side}-${p.start}`, track: sides[p.side] ?? sides[0], start: p.start, end: p.end, artist: p.artist, title: p.title, known: p.known, by: p.author, open: p.open }),
     [sides],
   );
   // A proposal's signature: where it is and what it says. A later comment that corrects a name is a new one.

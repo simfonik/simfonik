@@ -121,7 +121,7 @@ export function parseComment(content: string, author: string, date: string): Sig
 
 /** Another thing someone said about the same moment: a rival ID, or a hint about an unnamed track. */
 export type Opinion = { artist: string; title: string; known: boolean; author: string; date: string };
-export type Proposal = Sighting & { end: number; voices: number; also: Opinion[] };
+export type Proposal = Sighting & { end: number; voices: number; also: Opinion[]; /** The end is a guess: the last thing anyone timed on this side. */ open?: boolean };
 
 const words = (s: Sighting) => new Set(`${s.artist} ${s.title}`.toLowerCase().replace(/\([^)]*\)/g, "").match(/[a-z0-9]{3,}/g) ?? []);
 function sameTrack(a: Sighting, b: Sighting) {
@@ -174,7 +174,8 @@ export function reconcile(sightings: Sighting[], lengths: number[]): Proposal[] 
         if (also.some((o) => o.known === s.known && (s.known ? sameTrack(o as Sighting, s) : o.title === s.title))) continue;
         also.push({ artist: s.artist, title: s.title, known: s.known, author: s.author, date: s.date });
       }
-      if (end - best.start >= 5) out.push({ ...best, start: g[0].start, end, voices: new Set(g.map((s) => s.author)).size, also });
+      const open = !(best.end && best.end > best.start) && !groups[j];
+      if (end - best.start >= 5) out.push({ ...best, start: g[0].start, end, voices: new Set(g.map((s) => s.author)).size, also, open: open || undefined });
     });
   });
   return out;

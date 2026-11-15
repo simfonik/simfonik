@@ -10,6 +10,8 @@ export type Cue = Span & {
   known: boolean;
   /** Who identified it, when it came from a comment. */
   by?: string;
+  /** The end is a guess: nobody has said where this track stops, only where it starts. */
+  open?: boolean;
 };
 
 type TracklistOptions = {
@@ -80,7 +82,7 @@ export const tracklist = definePrimitive({
       if (!Number.isFinite(start) || !Number.isFinite(end)) return null;
       const artist = String(input.artist ?? "").slice(0, 120);
       const title = String(input.title ?? "").slice(0, 160);
-      return { id: input.id ? String(input.id) : newId(), track, start, end, artist, title, known: input.known ?? Boolean(artist || title), by: input.by ? String(input.by).slice(0, 60) : undefined };
+      return { id: input.id ? String(input.id) : newId(), track, start, end, artist, title, known: input.known ?? Boolean(artist || title), by: input.by ? String(input.by).slice(0, 60) : undefined, open: input.open ? true : undefined };
     };
 
     return {
@@ -101,17 +103,21 @@ export const tracklist = definePrimitive({
         const next = current()
           .filter((c) => c.track === t && c.start > start + 5)
           .sort((a, b) => a.start - b.start)[0];
-        // Pressed in the middle of a track: this splits it. The first part keeps its name and now ends here;
-        // the new track takes the rest of that stretch and no more, so it never spills onto unmarked tape.
+        // Pressed in the middle of a track: this splits it, and the first part now ends here.
         const split = current()
           .filter((c) => c.track === t && c.start < start && c.end > start)
           .sort((a, b) => b.end - a.end)[0];
-        const until = Math.min(next?.start ?? Infinity, split?.end ?? Infinity);
-        const end = Math.max(start + 5, Math.min(Number.isFinite(until) ? until : start + 240, length()));
+        // If that track's end was known, the new one takes the rest of it and no more. If its end was only
+        // a guess (it was marked by ear and nothing has followed it yet), the new one gets a guess of its own;
+        // otherwise marking tracks one after another would leave each a stub of the last one's guess.
+        const known = split && !split.open ? split.end : Infinity;
+        const until = Math.min(next?.start ?? Infinity, known);
+        const guessed = !Number.isFinite(until);
+        const end = Math.max(start + 5, Math.min(guessed ? start + 240 : until, length()));
         const before = current()
-          .map((c) => (c.track === t && c.start < start && c.end > start ? { ...c, end: start } : c))
+          .map((c) => (c.track === t && c.start < start && c.end > start ? { ...c, end: start, open: undefined } : c))
           .filter((c) => c.end - c.start >= 5 && !(c.track === t && Math.abs(c.start - start) < 5));
-        return change("value", [...before, { id: newId(), track: t, start, end, artist: "", title: "", known: false }], { reason: "imperative" });
+        return change("value", [...before, { id: newId(), track: t, start, end, artist: "", title: "", known: false, open: guessed ? true : undefined }], { reason: "imperative" });
       },
       /** Names a marked track. A name someone types replaces whoever was credited before. */
       renameCue: (id: string, artist: string, title: string) => {
