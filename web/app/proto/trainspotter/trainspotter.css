@@ -81,7 +81,7 @@
 /* Play: the same solid block as the page's other main actions, with the sign in it instead of a word. */
 /* As wide as the side labels below it (3rem), so the two share both edges down the page's left. */
 .ts-play { width: 3rem; padding: 0; }
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .ts-btn:not(:disabled):hover { background: var(--text); color: var(--bg); }
   .ts-btn-solid:not(:disabled):hover { background: color-mix(in oklch, var(--text) 82%, var(--bg)); }
 }
@@ -104,7 +104,7 @@
   white-space: nowrap;
   color: var(--text);
 }
-@media (hover: hover) { .ts-link:not(:disabled, [aria-disabled="true"]):hover { text-decoration: underline; text-underline-offset: 4px; } }
+@media (hover: hover) and (pointer: fine) { .ts-link:not(:disabled, [aria-disabled="true"]):hover { text-decoration: underline; text-underline-offset: 4px; } }
 .ts-link:is(:disabled, [aria-disabled="true"]) { cursor: not-allowed; color: var(--muted); opacity: 0.6; }
 @media (prefers-reduced-motion: reduce) { .ts-btn { transition: none; } }
 
@@ -116,7 +116,7 @@
 .ts-nav-all[data-open] > span:first-child { text-decoration: underline; text-underline-offset: 4px; }
 /* Focus handed back after the list was closed by a tap or a click: no ring. The switcher says why. */
 .ts-nav-all[data-quiet]:focus-visible { outline: none; }
-@media (hover: hover) { .ts-nav-all:hover > span:first-child { text-decoration: underline; text-underline-offset: 4px; } }
+@media (hover: hover) and (pointer: fine) { .ts-nav-all:hover > span:first-child { text-decoration: underline; text-underline-offset: 4px; } }
 
 /* ── Parts of a set: one shows at a time ── */
 .ts-parts { display: flex; gap: 0.4rem; overflow-x: auto; padding-bottom: 0.4rem; scrollbar-width: thin; }
@@ -137,7 +137,7 @@
 .ts-part b { font-family: var(--font-anton), sans-serif; font-size: 1.15rem; font-weight: 400; line-height: 1; }
 .ts-part i { font-family: var(--font-geist-mono), ui-monospace, monospace; font-size: 12px; font-style: normal; font-variant-numeric: tabular-nums; opacity: 0.7; }
 .ts-part[data-checked] { background: var(--text); color: var(--bg); }
-@media (hover: hover) { .ts-part:not([data-checked]):hover { background: var(--bg-hover); } }
+@media (hover: hover) and (pointer: fine) { .ts-part:not([data-checked]):hover { background: var(--bg-hover); } }
 .ts-part:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 .ts-tapes {
   /* Depth from a soft layered shadow, not a border and a hard offset. In the dark a shadow can't be seen,
@@ -266,7 +266,7 @@
   line-height: 1;
   transition: color 120ms ease-out;
 }
-@media (hover: hover) { .ts-side:hover { color: var(--text); } }
+@media (hover: hover) and (pointer: fine) { .ts-side:hover { color: var(--text); } }
 .ts-side[aria-pressed="true"] { background: var(--text); color: var(--bg); }
 .ts-side:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 /* ── The tape ──
@@ -305,14 +305,14 @@
   transition: background-color 120ms ease-out;
 }
 .ts-cue[data-known] { background-color: var(--clip); background-image: none; }
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .ts-cue[data-known]:hover { background-color: var(--clip-hover); }
   .ts-cue:not([data-known]):hover { --hatch: color-mix(in oklch, var(--text) 48%, transparent); }
 }
 /* Playing: the only solid block. An unknown keeps its hatching, cut out of the fill. */
 .ts-cue[data-playing] { background-color: var(--text); background-image: none; color: var(--bg); }
 .ts-cue[data-playing]:not([data-known]) { background-image: repeating-linear-gradient(135deg, transparent 0 5px, color-mix(in oklch, var(--bg) 28%, transparent) 5px 6px); }
-@media (hover: hover) { .ts-cue[data-playing]:hover { background-color: var(--text); } }
+@media (hover: hover) and (pointer: fine) { .ts-cue[data-playing]:hover { background-color: var(--text); } }
 /* The picked track is framed INSIDE its own edges: a line at the edge and a second, in the page colour, just
    within it, so it shows on a grey block, a hatched one and the solid playing one alike. Drawn outside, the
    frame made the picked track bigger than its neighbours and taller than the row, and the row seemed to
@@ -347,7 +347,7 @@
 .ts-edge { position: relative; flex: none; align-self: stretch; width: 8px; }
 /* Low in the block, clear of the name. */
 .ts-edge::after { content: ""; position: absolute; bottom: 8px; left: 50%; width: 2px; height: 14px; margin-left: -1px; background: currentColor; opacity: 0; transition: opacity 120ms ease-out; }
-@media (hover: hover) { .ts-cue:hover .ts-edge::after, .ts-cue[data-selected] .ts-edge::after { opacity: 0.45; } }
+@media (hover: hover) and (pointer: fine) { .ts-cue:hover .ts-edge::after, .ts-cue[data-selected] .ts-edge::after { opacity: 0.45; } }
 
 /* A mouse can draw, drag and trim, so the tape must not scroll under it. A finger only taps, so it can. */
 @media (pointer: fine) {
@@ -449,7 +449,7 @@
   font-size: 14px;
   text-align: left;
 }
-@media (hover: hover) { .ts-chip:hover { background: var(--text); color: var(--bg); } }
+@media (hover: hover) and (pointer: fine) { .ts-chip:hover { background: var(--text); color: var(--bg); } }
 .ts-chip:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 
 /* The sheet: the drawer positions and moves it; this gives it a surface and a size. */
@@ -466,6 +466,8 @@
   /* A step up from the page, so in dark mode the sheet doesn't melt into what's behind it. */
   background: var(--surface);
   padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom));
+  /* Scrolled to its end, the sheet doesn't hand the rest of the swipe to the page behind it. */
+  overscroll-behavior: contain;
   /* Pulled up past where it rests, a phone lets the sheet stretch and spring back. Its surface carries on
      below its edge, so the pull shows more sheet and never the page underneath. A shadow, not an element:
      the sheet scrolls its own contents, which would clip one. Offset and spread are equal, so it starts
@@ -507,7 +509,7 @@
   font-size: 14px;
   color: var(--text);
 }
-@media (hover: hover) { .ts-list-row:hover { background: var(--bg-hover); } }
+@media (hover: hover) and (pointer: fine) { .ts-list-row:hover { background: var(--bg-hover); } }
 .ts-list-row:focus-visible { outline: 2px solid var(--text); outline-offset: -2px; }
 .ts-history-row > span:last-child, .ts-list-row > span { overflow-wrap: anywhere; }
 .ts-history-row { display: flex; align-items: baseline; gap: 0.6rem; padding: 0.55rem 0.25rem; font-size: 14px; line-height: 1.3; color: var(--text); }
@@ -613,8 +615,21 @@
   .ts-bar-btn:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 
 }
-/* No double-tap zoom on the things that get tapped twice in quick succession; no text selection on a long press. */
-.ts-page .ts-root, .ts-btn, .ts-link, .ts-page .ts-chip, .ts-bar-btn, .ts-list-row { touch-action: manipulation; }
+/* On a phone. The page and the surfaces it opens over itself (the ID sheet, the list of tapes, the notices):
+   · A tap never waits to see whether it is the first half of a double-tap zoom. Pinching still zooms.
+   · A tap gets the page's own answer (below), not the browser's grey flash over the control.
+   · Turning the phone sideways doesn't inflate the type. */
+.ts-page, .ts-sheet, .ts-tapes, .ts-toasts { touch-action: manipulation; -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+/* The answer to a press, on the finger going down, for everything that isn't a boxed button (those shrink a
+   little, above). It is what a mouse sees on hover: a finger has no hover, and without this a tap on a row,
+   a track or a link would show nothing until the page had acted on it. */
+.ts-link:not(:disabled, [aria-disabled="true"]):active, .ts-inline-link:active { opacity: 0.6; }
+.ts-chip:active { background: var(--text); color: var(--bg); }
+.ts-part:not([data-checked]):active, .ts-list-row:active, .ts-fold-trigger:active, .ts-option:active { background: var(--bg-hover); }
+.ts-cue[data-known]:not([data-playing]):active { background-color: var(--clip-hover); }
+.ts-cue:not([data-known]):active { --hatch: color-mix(in oklch, var(--text) 48%, transparent); }
+.ts-toast-btn:active { opacity: 0.6; }
+/* No text selection on a long press of a control. */
 .ts-btn, .ts-link, .ts-bar-btn, .ts-chip { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .ts-unknowns { max-height: none; }
 /* The row gives way to its button, never the other way round: the text column can shrink to nothing,
@@ -634,7 +649,7 @@
 /* A text link in a line of small type: the same look, a 44px-tall target. */
 .ts-inline-link { position: relative; cursor: pointer; text-decoration: underline; text-underline-offset: 4px; }
 .ts-inline-link::before { content: ""; position: absolute; inset: -15px -8px; }
-@media (hover: hover) { .ts-inline-link:hover { color: var(--text); } }
+@media (hover: hover) and (pointer: fine) { .ts-inline-link:hover { color: var(--text); } }
 .ts-inline-link:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 
 /* Underlines take their weight from the typeface rather than the browser's default. */
@@ -675,7 +690,7 @@
    outside it dimmed. No outline. With tracks under it the dimming already marks the edge, and with none an
    outline was an empty box. It brightens a step while the pointer is on the strip or dragging it. */
 .ts-map-window { position: absolute; inset-block: 0; z-index: 2; background: color-mix(in oklch, var(--text) 9%, transparent); box-shadow: 0 0 0 100vw color-mix(in oklch, var(--bg) 62%, transparent); pointer-events: none; transition: background-color 120ms ease-out; }
-@media (hover: hover) { .ts-map:hover .ts-map-window { background: color-mix(in oklch, var(--text) 16%, transparent); } }
+@media (hover: hover) and (pointer: fine) { .ts-map:hover .ts-map-window { background: color-mix(in oklch, var(--text) 16%, transparent); } }
 .ts-map:active .ts-map-window { background: color-mix(in oklch, var(--text) 16%, transparent); }
 @media (prefers-reduced-motion: reduce) { .ts-map-window { transition: none; } }
 
