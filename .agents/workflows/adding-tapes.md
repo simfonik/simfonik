@@ -29,7 +29,12 @@ description: Steps for adding a new tape to the archive
    node web/scripts/optimize-images.mjs
    ```
 
-5. **Commit** — include `tapes.json`, source JPGs, and ALL freshly generated optimized assets in `web/public/optimized/` and `web/public/og/`. (Do NOT gitignore the generated files; tracking them locally allows Vercel to skip heavy image processing via hashing.)
+5. **Measure the audio** — once the tape's audio is on R2. The tape page's player draws each side's shape and says its length from these files; a tape without them gets a plain line and no length. Needs `ffmpeg` installed.
+   ```
+   cd web && pnpm measure-waveforms && pnpm measure-side-lengths
+   ```
+
+6. **Commit** — include `tapes.json`, `web/data/waveforms/{id}.json`, `web/data/side-lengths.json`, source JPGs, and ALL freshly generated optimized assets in `web/public/optimized/` and `web/public/og/`. (Do NOT gitignore the generated files; tracking them locally allows Vercel to skip heavy image processing via hashing.)
 
 ---
 

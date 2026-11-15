@@ -17,7 +17,8 @@
     "generate-icon": "node scripts/generate-icon.mjs",
     "generate-placeholders": "node scripts/generate-placeholder-shaders.mjs",
     "optimize-images": "node scripts/optimize-images.mjs",
-    "measure-waveforms": "node scripts/measure-waveforms.mjs"
+    "measure-waveforms": "node scripts/measure-waveforms.mjs",
+    "measure-side-lengths": "node scripts/measure-side-lengths.mjs"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

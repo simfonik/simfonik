@@ -9,10 +9,21 @@ export interface PlayerControlsProps {
   title?: string; // Optional context for ARIA labels
   /** The side's loudness along its length (see lib/waveform). With it the scrub bar is drawn as the sound. */
   wave?: number[] | null;
+  /** The side's length in seconds, known ahead of time, for before the audio has said so itself. */
+  length?: number | null;
   onPlay: () => void;
   onPause: () => void;
   onSeek: (time: number) => void;
 }
+
+/** A time on a side, always h:mm:ss. */
+export const formatTime = (seconds: number): string => {
+  if (!isFinite(seconds)) return '0:00:00';
+  const hours = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+};
 
 export function PlayerControls({
   isPlaying,
@@ -21,18 +32,11 @@ export function PlayerControls({
   isLoading,
   title,
   wave,
+  length,
   onPlay,
   onPause,
   onSeek
 }: PlayerControlsProps) {
-  
-  const formatTime = (seconds: number): string => {
-    if (!isFinite(seconds)) return '0:00:00';
-    const hours = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
 
   const shape = useMemo(() => (wave ? outline(wave) : null), [wave]);
   // The audio isn't fetched until it is played, so before that its length isn't known. A press on the bar
@@ -54,6 +58,9 @@ export function PlayerControls({
   };
   const played = wanted !== null ? wanted * 100 : duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
 
+  // The side's length: what the audio says once it has loaded, and before that what was read ahead of time.
+  const whole = duration > 0 ? duration : length ?? 0;
+
   // Under a mouse: a line where a click would land and, once the side's length is known, the time there.
   // Written straight to the element; a pointer moves far more often than the page needs to re-render.
   const ghost = useRef<HTMLDivElement>(null);
@@ -65,7 +72,7 @@ export function PlayerControls({
     el.style.setProperty('--at', `${x}px`);
     // The label stays inside the bar's ends.
     el.style.setProperty('--label', `${Math.max(30, Math.min(bar.width - 30, x))}px`);
-    el.firstElementChild!.textContent = duration > 0 ? formatTime((x / bar.width) * duration) : '';
+    el.firstElementChild!.textContent = whole > 0 ? formatTime((x / bar.width) * whole) : '';
     el.setAttribute('data-on', '');
   };
 
@@ -150,7 +157,7 @@ export function PlayerControls({
         </div>
         <div className="mt-1 flex justify-between">
           <span>{formatTime(currentTime)}</span>
-          <span>{duration > 0 ? formatTime(duration) : '--:--:--'}</span>
+          <span>{whole > 0 ? formatTime(whole) : '--:--:--'}</span>
         </div>
       </div>
     </div>

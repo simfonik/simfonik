@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
-import { PlayerControls } from './PlayerControls';
+import { PlayerControls, formatTime } from './PlayerControls';
 
 interface DJ {
   name: string;
@@ -16,6 +16,7 @@ interface Track {
   position: string;
   djs?: DJ[];
   wave?: number[] | null;
+  length?: number | null;
 }
 
 interface PlaylistPlayerProps {
@@ -77,6 +78,7 @@ export function PlaylistPlayer({ tracks, tapeId }: PlaylistPlayerProps) {
         isLoading={state.isLoading}
         title={currentTrack.title}
         wave={currentTrack.wave}
+        length={currentTrack.length}
         onPlay={controls.play}
         onPause={controls.pause}
         onSeek={controls.seek}
@@ -93,7 +95,7 @@ export function PlaylistPlayer({ tracks, tapeId }: PlaylistPlayerProps) {
               key={track.position}
               onClick={() => selectTrack(index)}
               aria-current={isCurrent ? 'true' : undefined}
-              className={`player-side grid w-full grid-cols-[2.75rem_1fr] items-center gap-x-3 border-b border-[var(--border)] py-3 text-left cursor-pointer ${
+              className={`player-side grid w-full grid-cols-[2.75rem_1fr_auto] items-center gap-x-3 border-b border-[var(--border)] py-3 text-left cursor-pointer ${
                 isCurrent ? 'text-[var(--text)]' : 'text-[var(--muted)]'
               }`}
             >
@@ -108,6 +110,8 @@ export function PlaylistPlayer({ tracks, tapeId }: PlaylistPlayerProps) {
                   </span>
                 )}
               </span>
+              {/* How long the side is, said before it is played. */}
+              {track.length ? <span className="font-mono text-[12px] tabular-nums text-[var(--muted)]">{formatTime(track.length)}</span> : null}
             </button>
           );
         })}

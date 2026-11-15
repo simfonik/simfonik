@@ -20,6 +20,7 @@ import { JsonLd } from "../../../components/JsonLd";
 import { Tracklist } from "../../../components/Tracklist";
 import { generateTapeSchema } from "../../../lib/structured-data";
 import { thin } from "../../../lib/waveform";
+import sideLengths from "../../../data/side-lengths.json";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -114,6 +115,7 @@ export default async function Page({ params }: Props) {
 
   // How loud each side is along its length, where it has been measured (scripts/measure-waveforms.mjs).
   // The player draws its scrub bar in that shape; a tape without the file keeps the plain line.
+  const lengths = (sideLengths as Record<string, (number | null)[]>)[tape.id];
   const waves = await import(`../../../data/waveforms/${tape.id}.json`).then(
     (file) => file.default as (number[] | null)[],
     () => null,
@@ -341,15 +343,17 @@ export default async function Page({ params }: Props) {
             {(() => {
               // Build playlist from sides with audio
               const playlist = tape.sides
-                .map((side, index) => ({ side, wave: waves?.[index] ?? null }))
+                .map((side, index) => ({ side, wave: waves?.[index] ?? null, length: lengths?.[index] ?? null }))
                 .filter(({ side }) => side.audio_links[0] && isStreamable(side.audio_links[0].url))
-                .map(({ side, wave }) => ({
+                .map(({ side, wave, length }) => ({
                   title: side.title ?? `Side ${side.position}`,
                   url: side.audio_links[0].url,
                   position: side.position,
                   djs: side.djs,
                   // Half the measured detail: the bar is a few hundred pixels wide.
-                  wave: wave ? thin(wave, 300) : null
+                  wave: wave ? thin(wave, 300) : null,
+                  // In seconds, read ahead of time, so the page can say it before the audio is fetched.
+                  length
                 }));
 
               // Use playlist player for 2+ tracks, individual player for single side
@@ -394,6 +398,7 @@ export default async function Page({ params }: Props) {
                         tapeId={tape.id}
                         sidePosition={track.position}
                         wave={track.wave}
+                        length={track.length}
                       />
                     </div>
                   ))}
