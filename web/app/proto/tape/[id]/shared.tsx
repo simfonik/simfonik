@@ -3,7 +3,7 @@
 // PROTOTYPE (SIM-43): what the four directions share. Throwaway.
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import imageLoader from "../../../../lib/imageLoader";
 import { PlaceholderCassetteLive } from "../../../../components/PlaceholderCassetteLive";
 import { useTapeTrackIds } from "../../../../components/TapeTrackIds";
@@ -24,11 +24,16 @@ export type TapeView = {
   tracks: Track[];
 };
 
-/** The tape's name, who made it, and the small print. `big` is for where the words lead the page. */
-export function Words({ tape, big = false }: { tape: TapeView; big?: boolean }) {
+/**
+ * The tape's name, who made it, and the small print. `big` is for where the words lead the page. `spread`
+ * is for when nothing else shares their column: the name keeps the top, level with the top of the cover, and
+ * the rest goes to the foot, level with its bottom, so the column is held at both ends and not left half empty.
+ */
+export function Words({ tape, big = false, spread = false }: { tape: TapeView; big?: boolean; spread?: boolean }) {
   return (
-    <header>
+    <header className={spread ? "lg:flex lg:h-full lg:flex-col lg:justify-between" : undefined}>
       <h1 className={`font-display text-4xl sm:text-5xl ${big ? "lg:text-6xl" : ""} leading-[0.95] text-[var(--text)] mb-6 text-balance`}>{tape.title}</h1>
+      <div>
       <div className="flex gap-2 flex-wrap mb-6">
         {tape.djs.map((dj) =>
           dj.link ? (
@@ -70,101 +75,37 @@ export function Words({ tape, big = false }: { tape: TapeView; big?: boolean }) 
           </p>
         )}
       </div>
+      </div>
     </header>
   );
 }
 
 /**
- * The images where the words lead the page: one of them, the cover, held to a height so it never sets the
- * height of the row. Pressing it opens all of them, large, one at a time. (The real gallery runs a strip of
- * thumbnails down the side, and on a set with nine images the strip is taller than the image.)
+ * The images where the words lead the page: one at a time, in a box of a fixed height, so the picture never
+ * sets the height of the row and nothing moves when another is chosen. The others are a row of small
+ * thumbnails under it, and pressing one puts it in the box. (The real gallery runs its thumbnails down the
+ * side, and on a set with nine images that strip is taller than the picture. A full-screen viewer was tried
+ * and dropped: it blew small scans up far past their size.)
  */
 export function Cover({ tape }: { tape: TapeView }) {
-  const [viewing, setViewing] = useState(false);
+  const [chosen, setChosen] = useState(tape.images[0]?.src ?? "");
   if (tape.placeholderLabel) return <PlaceholderCassetteLive tapeId={tape.id} labelDataUri={tape.placeholderLabel} />;
-  const count = tape.images.length;
+  const shown = tape.images.find((img) => img.src === chosen) ?? tape.images[0];
   return (
-    <>
-      <button type="button" onClick={() => setViewing(true)} className="proto-cover" aria-label={count > 1 ? `View all ${count} images` : "View the image larger"}>
-        <Image
-          loader={imageLoader}
-          src={tape.images[0].src}
-          alt={tape.images[0].label}
-          width={800}
-          height={600}
-          priority
-          sizes="(max-width: 1024px) 100vw, 576px"
-          className="block h-auto max-h-[20rem] w-full object-contain object-right-top"
-        />
-        {count > 1 && <span className="proto-cover-count">{count} images</span>}
-      </button>
-      {viewing && <Viewer images={tape.images} onClose={() => setViewing(false)} />}
-    </>
-  );
-}
-
-/**
- * Every image of the tape, one to a screen: swiped through on a phone, stepped through with the arrows on
- * screen or on the keyboard. The browser's own modal dialog, so Escape shuts it and the keyboard goes back
- * to the cover.
- */
-function Viewer({ images, onClose }: { images: TapeView["images"]; onClose: () => void }) {
-  const dialog = useRef<HTMLDialogElement>(null);
-  const track = useRef<HTMLDivElement>(null);
-  const [at, setAt] = useState(0);
-  useLayoutEffect(() => {
-    dialog.current?.showModal();
-  }, []);
-  // A press on an arrow glides to the next image; the keyboard steps there at once.
-  const go = (to: number, glide: boolean) => {
-    const el = track.current;
-    if (!el) return;
-    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    el.scrollTo({ left: Math.max(0, Math.min(images.length - 1, to)) * el.clientWidth, behavior: glide && !still ? "smooth" : "auto" });
-  };
-  return (
-    <dialog
-      ref={dialog}
-      className="proto-viewer"
-      aria-label="Images of the tape"
-      onClose={onClose}
-      onKeyDown={(e) => {
-        if (e.key === "ArrowRight") go(at + 1, false);
-        else if (e.key === "ArrowLeft") go(at - 1, false);
-      }}
-    >
-      <div ref={track} className="proto-viewer-track" onScroll={(e) => setAt(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
-        {images.map((img, i) => (
-          <figure key={img.src} className="proto-viewer-slide">
-            <div className="relative h-full w-full">
-              <Image loader={imageLoader} src={img.src} alt={img.label} fill sizes="100vw" priority={i === 0} className="object-contain" />
-            </div>
-          </figure>
-        ))}
+    <div>
+      <div className="relative h-56 sm:h-80">
+        <Image loader={imageLoader} key={shown.src} src={shown.src} alt={shown.label} fill priority sizes="(max-width: 1024px) 100vw, 576px" className="object-contain object-top lg:object-right-top" />
       </div>
-      <button type="button" className="proto-viewer-button" data-place="close" aria-label="Close" onClick={() => dialog.current?.close()}>
-        <svg className="h-4 w-4" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-          <path d="M1 1l12 12M13 1L1 13" />
-        </svg>
-      </button>
-      {images.length > 1 && (
-        <>
-          <button type="button" className="proto-viewer-button" data-place="before" aria-label="Previous image" aria-disabled={at === 0} onClick={() => go(at - 1, true)}>
-            <svg className="h-4 w-4" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-              <path d="M9 1L3 7l6 6" />
-            </svg>
-          </button>
-          <button type="button" className="proto-viewer-button" data-place="after" aria-label="Next image" aria-disabled={at === images.length - 1} onClick={() => go(at + 1, true)}>
-            <svg className="h-4 w-4" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-              <path d="M5 1l6 6-6 6" />
-            </svg>
-          </button>
-          <p className="proto-viewer-count" aria-live="polite">
-            {at + 1} / {images.length}
-          </p>
-        </>
+      {tape.images.length > 1 && (
+        <div className="mt-3 flex flex-wrap gap-2 lg:justify-end">
+          {tape.images.map((img) => (
+            <button key={img.src} type="button" onClick={() => setChosen(img.src)} aria-label={img.label} aria-pressed={img.src === shown.src} title={img.label} className="proto-thumb">
+              <Image loader={imageLoader} src={img.src} alt="" fill sizes="48px" className="object-contain" />
+            </button>
+          ))}
+        </div>
       )}
-    </dialog>
+    </div>
   );
 }
 

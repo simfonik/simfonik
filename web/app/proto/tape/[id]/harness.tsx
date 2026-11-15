@@ -56,8 +56,6 @@ export function Harness({ tape }: { tape: TapeView }) {
       const target = e.target as HTMLElement;
       if (/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || target.isContentEditable) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
-      // The image viewer has the arrows while it is open.
-      if (document.querySelector("dialog[open]")) return;
       const num = parseInt(e.key, 10);
       if (num >= 1 && num <= VARIANTS.length) choose(num - 1);
       else if (e.key === "ArrowRight") choose((current + 1) % VARIANTS.length);
