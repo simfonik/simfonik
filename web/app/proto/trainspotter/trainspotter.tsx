@@ -34,8 +34,12 @@ const agent = typeof window === "undefined" ? null : createAgent();
 const pointerKind = createPointerKind();
 const toaster = createToaster();
 
-const PHONE_PPM = 26; // pixels per minute where the timeline scrolls
-const MIN_FIT_PPM = 24; // below this a fitted timeline is too cramped to read
+// Pixels per minute. A four-minute track is 160px wide with a mouse and 136px on a phone: room for an artist
+// and a title. Seeing a whole 47-minute side at once on a laptop made every block too narrow to read, so the
+// tape scrolls and follows the playhead instead. A side that fits at this scale (a short one, or a very wide
+// window) is stretched to fill the width.
+const PPM = 40;
+const PPM_TOUCH = 34;
 const GUTTER = 56; // the side label and its gap, to the left of every track
 const UNDO_TOAST = "undo"; // one undo toast at a time: a newer one replaces the older
 
@@ -90,7 +94,7 @@ export function Trainspotter({
   listed: Listed[];
   official: Listed[][];
   /** Every tape with something to work on, in the order the switcher lists them. */
-  others: { id: string; label: string; group: string; meta: string; done: number | null }[];
+  others: { id: string; label: string; group: string; meta: string }[];
 }) {
   const router = useRouter();
   // ── Changing tape: the title is the switcher, and the two links beside it step through the same list ──
@@ -208,6 +212,18 @@ export function Trainspotter({
   const playheads = useRef<(HTMLDivElement | null)[]>([]);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const ghostRef = useRef<HTMLDivElement>(null);
+  // The overview under the sides: the whole tape in a strip, with a frame over the part on screen.
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapWindowRef = useRef<HTMLDivElement>(null);
+  const mapHeadRef = useRef<HTMLDivElement>(null);
+  const frame = useCallback(() => {
+    const sc = scrollerRef.current;
+    const win = mapWindowRef.current;
+    const tape = sc ? sc.scrollWidth - GUTTER : 0;
+    if (!sc || !win || tape <= 0) return;
+    win.style.left = `${(sc.scrollLeft / tape) * 100}%`;
+    win.style.width = `${Math.min(1, (sc.clientWidth - GUTTER) / tape) * 100}%`;
+  }, []);
   const handsOff = useRef(0); // until when the visitor's own scrolling is left alone
   const sheetOpen = useRef(false);
   const lastSecond = useRef(-1);
@@ -229,6 +245,7 @@ export function Trainspotter({
       const left = x + GUTTER - sc.scrollLeft;
       if (left > sc.clientWidth - 48 || left < GUTTER) sc.scrollLeft = Math.max(0, x - 24);
     }
+    if (mapHeadRef.current) mapHeadRef.current.style.left = `${Math.min(1, t / lengthRef.current) * 100}%`;
     if (Math.floor(t) !== lastSecond.current) {
       lastSecond.current = Math.floor(t);
       setNow(t);
@@ -739,7 +756,9 @@ export function Trainspotter({
     const unpoint = () => ghost?.removeAttribute("data-on");
     el.addEventListener("pointermove", point);
     el.addEventListener("pointerleave", unpoint);
+    el.addEventListener("scroll", frame, { passive: true });
     return () => {
+      el.removeEventListener("scroll", frame);
       el.removeEventListener("pointermove", point);
       el.removeEventListener("pointerleave", unpoint);
       ro.disconnect();
@@ -747,14 +766,27 @@ export function Trainspotter({
       el.removeEventListener("wheel", hold);
       el.removeEventListener("touchstart", hold);
     };
-  }, [paint]);
+  }, [paint, frame]);
   // Fit the whole side when there is room for it to stay readable; otherwise keep a fixed scale and scroll.
   const fit = avail - GUTTER - 2;
-  const width = fit >= (length / 60) * MIN_FIT_PPM ? fit : Math.round((length / 60) * PHONE_PPM);
+  const ppm = touch ? PPM_TOUCH : PPM;
+  const width = fit >= (length / 60) * ppm ? fit : Math.round((length / 60) * ppm);
   const minutes = Math.ceil(length / 60);
+  // More tape than fits: the overview strip shows the rest and takes you there.
+  const scrolls = avail > 0 && width > fit + 1;
   useEffect(() => {
     paint(); // the playhead is placed in pixels, so it moves when the scale does
-  }, [width, length, paint]);
+    frame();
+  }, [width, length, paint, frame, scrolls, active]);
+  // Press or drag on the overview: bring that part of the tape to the middle of the screen.
+  const mapTo = (e: React.PointerEvent<HTMLDivElement>) => {
+    const sc = scrollerRef.current;
+    if (!sc || !(e.buttons & 1)) return;
+    const box = e.currentTarget.getBoundingClientRect();
+    const at = Math.max(0, Math.min(1, (e.clientX - box.left) / box.width));
+    handsOff.current = performance.now() + 5000; // the visitor is steering; don't snap back to the playhead
+    sc.scrollLeft = at * (sc.scrollWidth - GUTTER) - (sc.clientWidth - GUTTER) / 2;
+  };
 
   // Scrubbing: the marker follows the finger at once; the audio follows a few times a second and settles on
   // release, so one drag is a handful of requests to the audio host instead of dozens.
@@ -904,9 +936,13 @@ export function Trainspotter({
         <button type="submit" className="ts-btn ts-btn-solid">
           Save
         </button>
-        <button type="button" onClick={() => seek(sides.indexOf(sel.track), sel.start, true)} className="ts-link">
-          Hear it
-        </button>
+        {/* With a mouse, clicking the track plays it, so a button for that would say what is already
+            happening. The phone's sheet covers the timeline, so there it stays, as a way to hear it again. */}
+        {touch && (
+          <button type="button" onClick={() => seek(sides.indexOf(sel.track), sel.start, true)} className="ts-link">
+            Replay
+          </button>
+        )}
         <button type="button" onClick={() => remove()} className="ts-link" data-agent-confirm="Remove this track from the tracklist?">
           Remove
         </button>
@@ -922,7 +958,7 @@ export function Trainspotter({
               {o.known ? (
                 <>
                   {o.author} thought it was{" "}
-                  <button type="button" onClick={() => saveId(o.artist, o.title)} className="inline-flex min-h-11 cursor-pointer items-center text-[var(--text)] underline underline-offset-4">
+                  <button type="button" onClick={() => saveId(o.artist, o.title)} className="ts-inline-link text-[var(--text)]">
                     {[o.artist, o.title].filter(Boolean).join(" — ")}
                   </button>
                   .
@@ -1122,8 +1158,6 @@ export function Trainspotter({
                   <ComboboxItem key={t.id} value={t.id} label={t.label} className="ts-option">
                     <span className="min-w-0 flex-1 truncate" title={t.label}>{t.label}</span>
                     <span className="flex-none font-mono text-xs tabular-nums opacity-70">{t.id === tape.id ? "You’re here" : t.meta}</span>
-                    {/* How much of what's marked has a name: a full bar is a tape with nothing left unknown. */}
-                    <span className="ts-prog" style={{ "--done": t.done ?? 0 } as React.CSSProperties} data-none={t.done === null ? "" : undefined} aria-hidden />
                   </ComboboxItem>
                 ))}
               </ComboboxGroup>
@@ -1244,6 +1278,37 @@ export function Trainspotter({
             </div>
           </div>
         </div>
+        {/* The whole tape at a glance, when it doesn't all fit: a lane per side, unknowns in full strength,
+            the playhead, and a frame around what is on screen. Press or drag it to go there. It is a second
+            way to scroll, so it stays out of the accessibility tree; the timeline itself scrolls for everyone. */}
+        {scrolls && (
+          <div
+            ref={mapRef}
+            className="ts-map"
+            style={{ marginLeft: GUTTER }}
+            aria-hidden
+            onPointerDown={(e) => {
+              e.currentTarget.setPointerCapture(e.pointerId);
+              mapTo(e);
+            }}
+            onPointerMove={mapTo}
+          >
+            {tape.sides.map((side, i) =>
+              many && i !== active ? null : (
+                <div key={side.key} className="ts-map-lane">
+                  {durations[i] !== null && durations[i]! < length && <span style={{ left: `${(durations[i]! / length) * 100}%` }} />}
+                  {cues
+                    .filter((c) => c.track === side.key)
+                    .map((c) => (
+                      <i key={c.id} data-known={c.known ? "" : undefined} style={{ left: `${(c.start / length) * 100}%`, width: `${((c.end - c.start) / length) * 100}%` }} />
+                    ))}
+                </div>
+              ),
+            )}
+            <div ref={mapHeadRef} className="ts-map-head" />
+            <div ref={mapWindowRef} className="ts-map-window" />
+          </div>
+        )}
       </div>
 
       {/* With a mouse the ID fields sit under the timeline. On a phone they open in a sheet that stays above the keyboard. */}
@@ -1299,9 +1364,6 @@ export function Trainspotter({
                 <p className="truncate text-[15px] font-medium text-[var(--text)]">{sel.known ? sel.artist || sel.title : "Unknown track"}</p>
                 <p className="line-clamp-3 text-sm text-[var(--muted)]">{sel.known ? (sel.artist ? sel.title : "") : sel.title ? `Clue: “${sel.title}”` : "Nobody has ID’d it yet"}</p>
               </div>
-              <button type="button" onClick={() => seek(sides.indexOf(sel.track), sel.start, true)} className="ts-link flex-none">
-                Hear it
-              </button>
               <button type="button" onClick={() => openSheet(sel.id)} className="ts-btn ts-btn-solid flex-none">
                 {sel.known ? "Fix ID" : "ID it"}
               </button>
@@ -1372,8 +1434,8 @@ export function Trainspotter({
             <button type="button" onClick={copy} disabled={!mine.length} className="ts-btn min-w-[12.5rem]">
               {copied === "yes" ? "Copied ✓" : mine.length ? `Copy my IDs (${mine.length})` : "Copy my IDs"}
             </button>
-            <Link href={`/tapes/${tape.id}`} className="inline-flex min-h-11 cursor-pointer items-center text-[15px] text-[var(--text)] underline underline-offset-4">
-              Go to the tape’s page
+            <Link href={`/tapes/${tape.id}`} className="ts-link">
+              Open the tape page
             </Link>
           </div>
           {!mine.length && <p className="mt-2 text-sm text-[var(--muted)]">Nothing to copy yet. ID a track and it will appear here.</p>}
@@ -1479,7 +1541,7 @@ export function Trainspotter({
             </CollapsiblePanel>
           </Collapsible>
           {proposals.length > 0 && (
-            <button type="button" onClick={() => void startOver()} className="mt-2 inline-flex min-h-11 cursor-pointer items-center text-sm text-[var(--muted)] underline underline-offset-4 hover:text-[var(--text)]">
+            <button type="button" onClick={() => void startOver()} className="ts-link -ml-2.5 mt-2 !text-[var(--muted)] hover:!text-[var(--text)]">
               Start over from the comments’ IDs
             </button>
           )}

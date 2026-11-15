@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 type Said = { author: string; date: string; content: string };
-const GROUPS = ["Unknown tracks to ID", "Tracklist known, times needed", "Started in the comments"];
+const GROUPS = ["Tracks marked unknown", "Tracklist known, times needed", "Started in the comments"];
 
 export default async function TrainspotterPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -56,15 +56,19 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
           .filter((l) => l.known).length;
       // A compilation's eight names would fill the row; its title says more.
       const label = t.djs.length > 3 ? `${t.title} — ${t.djs.length} DJs` : `${t.djs.map((d) => d.name).join(", ")} — ${t.title}`;
-      const done = marked.length ? known / marked.length : null;
-      if (unknown) return { id: t.id, label, group: "Unknown tracks to ID", meta: `${unknown} unknown · ${known} ID’d`, done, rank: unknown };
-      if (names > known) return { id: t.id, label, group: "Tracklist known, times needed", meta: `${plural(names, "track")} to place`, done: null, rank: names };
-      if (known) return { id: t.id, label, group: "Started in the comments", meta: `${known} ID’d`, done, rank: known };
+      // Counts say only what is so: how many tracks have a name, and how many spots someone has marked or
+      // asked about. Neither is a total. Nobody knows how many tracks an unmarked tape holds, so there is no
+      // "x of y" and no progress bar.
+      const idd = known ? `${known} ID’d` : "";
+      const open = unknown ? `${unknown} marked unknown` : "";
+      if (unknown) return { id: t.id, label, group: "Tracks marked unknown", meta: [idd, open].filter(Boolean).join(" · "), rank: unknown };
+      if (names > known) return { id: t.id, label, group: "Tracklist known, times needed", meta: `${plural(names, "track")} to place`, rank: names };
+      if (known) return { id: t.id, label, group: "Started in the comments", meta: idd, rank: known };
       return null;
     })
     .filter((t) => t !== null)
     .sort((a, b) => GROUPS.indexOf(a.group) - GROUPS.indexOf(b.group) || b.rank - a.rank || a.label.localeCompare(b.label))
-    .map(({ id, label, group, meta, done }) => ({ id, label, group, meta, done }));
+    .map(({ id, label, group, meta }) => ({ id, label, group, meta }));
 
   return (
     <Trainspotter

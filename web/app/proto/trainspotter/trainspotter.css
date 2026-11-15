@@ -99,10 +99,6 @@
 .ts-nav-all:hover, .ts-nav-all[data-open] { text-decoration: none !important; }
 .ts-nav-all[data-open] > span:first-child { text-decoration: underline; text-underline-offset: 4px; }
 @media (hover: hover) { .ts-nav-all:hover > span:first-child { text-decoration: underline; text-underline-offset: 4px; } }
-/* How far along a tape is, in the list of tapes. */
-.ts-prog { position: relative; flex: none; width: 2.5rem; height: 4px; background: color-mix(in oklch, currentColor 25%, transparent); }
-.ts-prog::after { content: ""; position: absolute; inset: 0; transform-origin: left; transform: scaleX(var(--done, 0)); background: currentColor; }
-.ts-prog[data-none] { visibility: hidden; }
 
 /* ── Parts of a set: one shows at a time ── */
 .ts-parts { display: flex; gap: 0.4rem; overflow-x: auto; padding-bottom: 0.4rem; scrollbar-width: thin; }
@@ -616,3 +612,17 @@
 .ts-keys dl { display: grid; grid-template-columns: auto 1fr; gap: 0.5rem 1rem; align-items: baseline; margin-top: 0.6rem; font-size: 14px; color: var(--text); }
 .ts-keys dt { font-family: var(--font-geist-mono), ui-monospace, monospace; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; white-space: nowrap; }
 .ts-keys dd { color: var(--muted); }
+
+/* ── The overview: the whole tape in a strip under the sides ──
+   Shown only when the tape is wider than the screen. Unknowns are drawn at full strength and ID'd tracks
+   faint, so it doubles as a map of where the work is. */
+.ts-map { position: relative; display: grid; gap: 2px; margin-top: 12px; padding-block: 4px; cursor: pointer; touch-action: none; -webkit-user-select: none; user-select: none; }
+/* A strip this thin still needs a finger-sized target. */
+.ts-map::before { content: ""; position: absolute; inset: -12px 0; }
+.ts-map-lane { position: relative; height: 5px; overflow: hidden; background: color-mix(in oklch, var(--text) 9%, transparent); }
+.ts-map-lane i { position: absolute; inset-block: 0; min-width: 2px; background: var(--text); }
+.ts-map-lane i[data-known] { background: color-mix(in oklch, var(--text) 34%, transparent); }
+/* Past the end of a shorter side: no tape. */
+.ts-map-lane span { position: absolute; inset-block: 0; right: 0; background: var(--ts-paper); }
+.ts-map-head { position: absolute; inset-block: 1px; width: 2px; margin-left: -1px; background: var(--text); box-shadow: 0 0 0 1px var(--bg); pointer-events: none; }
+.ts-map-window { position: absolute; inset-block: 0; border: 1.5px solid var(--text); pointer-events: none; }
