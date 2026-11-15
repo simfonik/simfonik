@@ -7,23 +7,21 @@
 // the same bridge that loads the listeners' tracklist.
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { createPointerKind, inputHints } from "@ui-sdk/core";
+import { createPointerKind } from "@ui-sdk/core";
 import { usePart, usePrimitive } from "@ui-sdk/react/primitive";
 import { usePreference } from "@ui-sdk/react/preferences";
 import { createAgent, registerTools } from "@ui-sdk/react/agent";
 import { createHistory, type HistoryEntry } from "@ui-sdk/react/history";
-import { useShortcut, useShortcutHint } from "@ui-sdk/react/shortcuts";
+import { useShortcut } from "@ui-sdk/react/shortcuts";
 import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack } from "@ui-sdk/react/slider";
-import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from "@ui-sdk/react/popover";
 import { SegmentedControl, SegmentedControlItem } from "@ui-sdk/react/segmented-control";
 import { Toast, ToastAction, ToastClose, ToastDescription, ToastRegion, ToastTitle, createToaster } from "@ui-sdk/react/toast";
 import { Drawer, DrawerBackdrop, DrawerClose, DrawerContent, DrawerTitle } from "@ui-sdk/react/drawer";
-import { Field, FieldLabel } from "@ui-sdk/react/field";
-import { Input } from "@ui-sdk/react/input";
 import { reconcile, type Listed, type Proposal, type Sighting } from "./parse";
 import { DEFAULT_LENGTH, clock, cueLabel, tracklist, type Cue } from "./tracklist-primitive";
 import { ordersFor, placeNames, suggestNames } from "./names";
 import { ChangesFold, CommentsFold, NamesFold, SendItIn, StillUnknown } from "./below-the-tape";
+import { IdBar, IdSheetForm, Shortcuts, UndoRedo, type IdDraft } from "./id-form";
 import { PhoneBar, Player } from "./player";
 import { useTapeAudio } from "./use-tape-audio";
 import { GUTTER, useTimeline } from "./use-timeline";
@@ -38,11 +36,6 @@ const pointerKind = createPointerKind();
 const toaster = createToaster();
 
 const UNDO_TOAST = "undo"; // one undo toast at a time: a newer one replaces the older
-
-const nameHints = (enter: "next" | "done") => {
-  const h = inputHints("name", { enter }) as Record<string, string>;
-  return { autoCapitalize: h.autoCapitalize, autoCorrect: h.autoCorrect, spellCheck: h.spellCheck === "true", enterKeyHint: enter, autoComplete: "off" } as const;
-};
 
 function Track({ value, ...props }: { value: string } & React.ComponentProps<"div">) {
   return usePart(tracklist, "track", { value }, props, "div");
@@ -347,10 +340,6 @@ export function Trainspotter({
   const notTyping = () => !(document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLTextAreaElement);
   useShortcut("mod+z", () => canUndo && void step(-1), { description: "Undo", when: notTyping });
   useShortcut("mod+shift+z", () => canRedo && void step(1), { description: "Redo", when: notTyping });
-  const undoHint = useShortcutHint("mod+z");
-  // The hint already knows the platform: it writes ⌘ on a Mac and Ctrl elsewhere.
-  const onMac = undoHint.text.includes("⌘");
-  const redoHint = useShortcutHint("mod+shift+z");
 
   // ── The track under the playhead on the side that's playing ──
   const playingCue = useMemo(
@@ -560,236 +549,10 @@ export function Trainspotter({
           : "Press play and mark any track that’s missing."
         : "Press play and mark the first track you know.";
 
-  // The ID form: inline under the timeline with a mouse, in a sheet above the keyboard on a phone.
-  const undoRedo = (
-    <>
-      <button type="button" onClick={() => void step(-1)} disabled={!canUndo} className="ts-link" aria-keyshortcuts={undoHint.ariaKeyshortcuts} title={`Undo (${undoHint.text})`}>
-        Undo
-      </button>
-      <button type="button" onClick={() => void step(1)} disabled={!canRedo} className="ts-link" aria-keyshortcuts={redoHint.ariaKeyshortcuts} title={`Redo (${redoHint.text})`}>
-        Redo
-      </button>
-    </>
-  );
-
-  // Everything else the page can do is shown where it happens: the time under the pointer, the grips on a
-  // track. The keys are a click away for whoever wants them.
-  const shortcuts = (
-    <Popover>
-      <PopoverTrigger className="ts-link ts-fine-only">Keyboard shortcuts</PopoverTrigger>
-      <PopoverContent side="top" align="end" sideOffset={6} className="ts-keys">
-        <PopoverTitle className="font-mono text-xs uppercase tracking-[0.14em] text-[var(--muted)]">Keyboard shortcuts</PopoverTitle>
-        <dl>
-          {[
-            ["Space", "Play or pause"],
-            ["← →", "Previous or next track"],
-            ["M", "Mark new track"],
-            // Keys are named the way they are printed on the keyboard in front of the visitor.
-            [onMac ? "Return" : "Enter", "ID the selected track"],
-            ["Delete", "Remove it"],
-            [onMac ? "⌥ ← →" : "Alt ← →", "Move it a second"],
-            [onMac ? "⌥ ⇧ ← →" : "Alt Shift ← →", "Trim where it ends"],
-            [undoHint.text, "Undo"],
-            [redoHint.text, "Redo"],
-          ].map(([key, what]) => (
-            <div key={key} className="contents">
-              <dt>{key}</dt>
-              <dd>{what}</dd>
-            </div>
-          ))}
-        </dl>
-      </PopoverContent>
-    </Popover>
-  );
-
-  // The two fields, shared by the bar under the timeline (mouse) and the sheet (phone).
-  const fields = (artistId: string) => (
-    <>
-      <Field className="min-w-0 flex-1 basis-40" disabled={!subject}>
-        <FieldLabel className="ts-label">Artist</FieldLabel>
-        <Input
-          id={artistId}
-          value={draft.artist}
-          onValueChange={(v: string) => setDraft((d) => ({ ...d, artist: v }))}
-          // The keyboard's Next key sends Enter. It should go to Title, not save half an ID.
-          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-            if (e.key === "Enter" && !e.nativeEvent.isComposing) {
-              e.preventDefault();
-              (e.currentTarget.form?.querySelector("[data-title]") as HTMLInputElement | null)?.focus();
-            }
-          }}
-          {...nameHints("next")}
-          className="ts-input"
-        />
-      </Field>
-      <Field className="min-w-0 flex-[1.4] basis-48" disabled={!subject}>
-        <FieldLabel className="ts-label">Title</FieldLabel>
-        <Input data-title value={draft.title} onValueChange={(v: string) => setDraft((d) => ({ ...d, title: v }))} {...nameHints("done")} className="ts-input" />
-      </Field>
-    </>
-  );
+  // IDing: the fields, the likely names and what else was said, for the bar (mouse) and the sheet (phone).
+  const idForm: IdDraft = { draft, setDraft, save: saveId, remove: () => remove(), names: nextNames, opinions, fromSite };
   const pickedBlock = () => scrollerRef.current?.querySelector("[data-selected]") as HTMLElement | null;
-  const otherIds = opinions.map((o, i) => (
-    <span key={i}>
-      {i > 0 ? " " : ""}
-      {o.known ? (
-        <>
-          {o.author} thought it was{" "}
-          <button type="button" onClick={() => saveId(o.artist, o.title)} className="ts-inline-link text-[var(--text)]">
-            {[o.artist, o.title].filter(Boolean).join(" — ")}
-          </button>
-          .
-        </>
-      ) : (
-        <>
-          {o.author} heard “{o.title}”.
-        </>
-      )}
-    </span>
-  ));
-
-  // With a mouse: the ID bar under the timeline. It is always there and always the same height, whatever is
-  // picked or playing: two fields and their buttons, then one line that holds whichever applies (what to do,
-  // likely names from the tracklist, other people's IDs, a clue) beside undo, redo and the keys. Built to
-  // appear only once a track was picked, it pushed the rest of the page down on the first click, again when
-  // a clue turned up mid-typing, and again when suggestions did.
-  const barForm = (
-    <form
-      className="ts-idbar"
-      onSubmit={(e) => {
-        e.preventDefault();
-        saveId();
-      }}
-      // Leaving the bar saves. Moving between its fields and buttons does not.
-      onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) saveId();
-      }}
-      // Escape abandons what was typed.
-      onKeyDown={(e) => {
-        if (e.key !== "Escape" || !subject) return;
-        setDraft({ artist: subject.artist, title: shownTitle });
-        pickedBlock()?.focus();
-      }}
-    >
-      <div
-        className="ts-idbar-fields"
-        // Typing about the track under the playhead picks it, so the fields don't move on when the tape does.
-        onFocus={() => {
-          if (!sel && playingCue) setSelected(playingCue.id);
-        }}
-      >
-        {fields("ts-artist")}
-        <div className="flex flex-none items-center gap-2">
-          <button type="submit" disabled={!subject} className="ts-btn ts-btn-solid">
-            Save
-          </button>
-          {/* Pulled out by its own padding, so its last letter ends where "Keyboard shortcuts" below it does. */}
-          <button type="button" disabled={!subject} onClick={() => remove()} className="ts-link -mr-2.5" data-agent-confirm="Remove this track from the tracklist?">
-            Remove
-          </button>
-        </div>
-      </div>
-      <div className="ts-idbar-foot">
-        <div className="ts-idbar-context">
-          {!subject ? (
-            here.length ? (
-              "Click a track to play it and ID it."
-            ) : (
-              "Nothing marked yet. Play, then “Mark new track”."
-            )
-          ) : nextNames.length > 0 ? (
-            <>
-              <span className="flex-none">{fromSite ? "From the tracklist:" : `From ${nextNames[0].author}’s list:`}</span>
-              {nextNames.map((l) => (
-                <button
-                  key={`${l.side}-${l.n}`}
-                  type="button"
-                  onClick={() => {
-                    saveId(l.artist, l.title);
-                    requestAnimationFrame(() => pickedBlock()?.focus());
-                  }}
-                  className="ts-chip ts-chip-inline"
-                  title={`${l.artist} — ${l.title}`}
-                >
-                  <span className="font-mono text-xs tabular-nums opacity-70">{l.n}</span>
-                  <span className="truncate">
-                    {l.artist} — {l.title}
-                  </span>
-                </button>
-              ))}
-            </>
-          ) : opinions.length > 0 ? (
-            <span className="truncate">{otherIds}</span>
-          ) : !subject.known && subject.title && subject.id !== playingCue?.id ? (
-            // The player already shows the clue of the track that is playing; this is for one that isn't.
-            <span className="truncate">
-              Clue from {subject.by ?? "a comment"}: “{subject.title}”
-            </span>
-          ) : null}
-        </div>
-        <div className="-mr-2.5 flex flex-none items-center gap-1">
-          {undoRedo}
-          {shortcuts}
-        </div>
-      </div>
-    </form>
-  );
-
-  // On a phone the same job is a sheet that stays above the keyboard. Height is free there, so the likely
-  // names and the clue get lines of their own.
-  const sheetForm = sel && (
-    <form
-      className="ts-nameform"
-      onSubmit={(e) => {
-        e.preventDefault();
-        saveId();
-        closeSheet();
-      }}
-    >
-      {/* One-tap answers come before the fields that need typing. */}
-      {nextNames.length > 0 && (
-        <div className="w-full">
-          <p className="ts-label">{fromSite ? "Is it one of these, from the tape’s tracklist?" : `Is it one of these, from ${nextNames[0].author}’s list?`}</p>
-          <div className="flex flex-wrap gap-2">
-            {nextNames.map((l) => (
-              <button
-                key={`${l.side}-${l.n}`}
-                type="button"
-                onClick={() => {
-                  saveId(l.artist, l.title);
-                  closeSheet();
-                }}
-                className="ts-chip"
-              >
-                <span className="font-mono text-xs tabular-nums opacity-70">{l.n}</span> {l.artist} — {l.title}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      {/* The sheet covers the player, so the clue is said here. */}
-      {!sel.known && sel.title && (
-        <p className="w-full text-[15px] text-[var(--text)]">
-          Clue from {sel.by ?? "a comment"}: “{sel.title}”
-        </p>
-      )}
-      {fields("ts-artist-sheet")}
-      <div className="flex flex-none flex-wrap items-end gap-2">
-        <button type="submit" className="ts-btn ts-btn-solid">
-          Save
-        </button>
-        {/* The sheet covers the timeline, so this is the way to hear the track again from here. */}
-        <button type="button" onClick={() => seek(sides.indexOf(sel.track), sel.start, true)} className="ts-link">
-          Replay
-        </button>
-        <button type="button" onClick={() => remove()} className="ts-link" data-agent-confirm="Remove this track from the tracklist?">
-          Remove
-        </button>
-      </div>
-      {opinions.length > 0 && <p className="w-full text-sm text-[var(--muted)]">{otherIds}</p>}
-    </form>
-  );
-
+  const undoRedo = <UndoRedo canUndo={canUndo} canRedo={canRedo} onStep={(by) => void step(by)} />;
 
   const root = usePart(
     handle,
@@ -1027,7 +790,25 @@ export function Trainspotter({
           pointer, so a phone never paints the mouse layout first and then swaps it. Each keeps one height in
           every state. */}
       <div className="ts-namebar">
-        <div className="ts-fine-only">{barForm}</div>
+        <div className="ts-fine-only">
+          <IdBar
+            form={idForm}
+            subject={subject}
+            playingId={playingCue?.id ?? null}
+            empty={here.length === 0}
+            onPick={() => {
+              if (!sel && playingCue) setSelected(playingCue.id);
+            }}
+            onAbandon={() => {
+              if (subject) setDraft({ artist: subject.artist, title: shownTitle });
+              pickedBlock()?.focus();
+            }}
+            onNamed={() => requestAnimationFrame(() => pickedBlock()?.focus())}
+          >
+            {undoRedo}
+            <Shortcuts />
+          </IdBar>
+        </div>
         {/* Phone: the track's name, what to do with it and its ID button are all in the bar pinned to the
             bottom of the screen, once. Undo and Redo are what is left here. */}
         <div className="ts-coarse-only">
@@ -1048,7 +829,9 @@ export function Trainspotter({
               <p className="mt-1 font-mono text-xs uppercase tracking-[0.14em] text-[var(--muted)] tabular-nums">
                 {sel.track} {clock(sel.start)}–{clock(sel.end)}
               </p>
-              <div className="mt-3">{sheetForm}</div>
+              <div className="mt-3">
+                <IdSheetForm form={idForm} track={sel} onClose={closeSheet} onReplay={() => seek(sides.indexOf(sel.track), sel.start, true)} />
+              </div>
             </>
           )}
         </DrawerContent>
