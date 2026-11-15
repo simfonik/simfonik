@@ -578,6 +578,31 @@ html:has(.id-sheet[open]) { overflow: hidden; }
 .comment-time::before { content: ""; position: absolute; inset: -12px -6px; }
 .comment-time:active { opacity: 0.6; }
 .comment-time:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+/* The log of a tape's ID posts: one line each in the ID's own type, with who posted it and when after it,
+   more quietly, at the far end of the line where there is room and under it where there is not. Each entry
+   is as tall as a finger needs, so one place to press never lies over the next. A long name breaks at the
+   end of the line and never widens the page. */
+.id-log-entry {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0 1.5rem;
+  padding: 0.75rem 0;
+}
+.id-log-entry[hidden] { display: none; }
+.id-log-entry .comment-id { min-width: 0; overflow-wrap: anywhere; }
+.id-log-by {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10px;
+  /* The ID line's own height, so an entry with both on one line is one line tall. */
+  line-height: 1.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--muted);
+}
 /* The tape's picture: in the middle of its column when it is narrower, pressed to see every
    image larger. Where there are more, their count sits in its corner. */
 .tape-picture { position: relative; display: block; margin-inline: auto; cursor: zoom-in; }

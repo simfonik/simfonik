@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { LiveComments } from '../components/LiveComments';
+import { TrackIdLog } from '../components/TrackIdLog';
 import { TapeTrackIdsProvider, useTapeTrackIds } from '../components/TapeTrackIds';
 
 // Stands in for the player: says how to take the tape somewhere, and can announce a posted comment.
@@ -41,19 +42,31 @@ describe('what a tape page’s parts share about track IDs', () => {
     vi.restoreAllMocks();
   });
 
-  it('shows an ID in the comments as a time that takes the tape there, and other comments as they were written', async () => {
-    const user = userEvent.setup();
-    const went = vi.fn<(position: string | null, time: number) => void>();
+  it('reads the comments once, for the comment list and for the log of IDs', async () => {
     render(
       <TapeTrackIdsProvider tapeId="tape-1">
-        <Player went={went} />
-        <LiveComments tapeId="tape-1" />
+        <Player went={() => {}} />
+        <TrackIdLog />
+        <LiveComments />
       </TapeTrackIdsProvider>,
     );
 
     expect(await screen.findByText('what a tape')).toBeInTheDocument();
     expect(screen.getByText('Moby — Go')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Play from B 0:12:34' }));
+    expect(fetchMock.mock.calls.filter(([url]) => String(url) === '/api/comments/tape-1')).toHaveLength(1);
+  });
+
+  it('sends the player to the moment an ID in the log is at', async () => {
+    const user = userEvent.setup();
+    const went = vi.fn<(position: string | null, time: number) => void>();
+    render(
+      <TapeTrackIdsProvider tapeId="tape-1">
+        <Player went={went} />
+        <TrackIdLog />
+      </TapeTrackIdsProvider>,
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Play from B 0:12:34' }));
     expect(went).toHaveBeenCalledWith('B', 754);
   });
 
@@ -62,7 +75,8 @@ describe('what a tape page’s parts share about track IDs', () => {
     render(
       <TapeTrackIdsProvider tapeId="tape-1">
         <Player went={() => {}} />
-        <LiveComments tapeId="tape-1" />
+        <TrackIdLog />
+        <LiveComments />
       </TapeTrackIdsProvider>,
     );
     expect(await screen.findByRole('button', { name: 'posted, 1 IDs' })).toBeInTheDocument();
