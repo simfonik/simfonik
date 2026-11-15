@@ -101,7 +101,13 @@ export const tracklist = definePrimitive({
         const next = current()
           .filter((c) => c.track === t && c.start > start + 5)
           .sort((a, b) => a.start - b.start)[0];
-        const end = Math.max(start + 5, Math.min(next?.start ?? start + 240, length()));
+        // Pressed in the middle of a track: this splits it. The first part keeps its name and now ends here;
+        // the new track takes the rest of that stretch and no more, so it never spills onto unmarked tape.
+        const split = current()
+          .filter((c) => c.track === t && c.start < start && c.end > start)
+          .sort((a, b) => b.end - a.end)[0];
+        const until = Math.min(next?.start ?? Infinity, split?.end ?? Infinity);
+        const end = Math.max(start + 5, Math.min(Number.isFinite(until) ? until : start + 240, length()));
         const before = current()
           .map((c) => (c.track === t && c.start < start && c.end > start ? { ...c, end: start } : c))
           .filter((c) => c.end - c.start >= 5 && !(c.track === t && Math.abs(c.start - start) < 5));
