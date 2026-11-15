@@ -94,6 +94,7 @@ export function Trainspotter({
   const router = useRouter();
   // ── Changing tape: the title is the switcher, and the two links beside it step through the same list ──
   const [switcher, setSwitcher] = useState<HTMLButtonElement | null>(null);
+  const [tapeNav, setTapeNav] = useState<HTMLElement | null>(null); // the list lines up with the page's edge, not the button's
   const [tapeQuery, setTapeQuery] = useState("");
   const [tapesOpen, setTapesOpen] = useState(false);
   const tapesOpenRef = useRef(false);
@@ -962,7 +963,7 @@ export function Trainspotter({
         presentation="auto"
         autoHighlight
       >
-        <nav aria-label="Tapes" className="ts-nav">
+        <nav aria-label="Tapes" className="ts-nav" ref={setTapeNav}>
           {elsewhere && (
             <Link href={`/proto/trainspotter/${prevTape!.id}`} className="ts-link" aria-label={`Previous tape: ${prevTape!.label}`}>
               ‹ Prev
@@ -993,7 +994,7 @@ export function Trainspotter({
             </Link>
           )}
         </nav>
-        <ComboboxContent anchor={switcher} align="start" className="ts-tapes">
+        <ComboboxContent anchor={tapeNav} align="start" alignOffset={10} sideOffset={4} className="ts-tapes">
           <div className="ts-tapes-search">
             <ComboboxInput autoFocus aria-label="Search tapes" placeholder="Search by DJ or tape" autoComplete="off" spellCheck={false} className="ts-input" />
           </div>
@@ -1022,7 +1023,7 @@ export function Trainspotter({
           Tape page
         </Link>
       </p>
-      <h1 className="mt-2 line-clamp-3 font-display text-4xl leading-[0.95] text-[var(--text)] [text-wrap:balance] sm:text-6xl">
+      <h1 className="mt-2 font-display text-4xl leading-[0.95] text-[var(--text)] [text-wrap:balance] sm:text-6xl">
         {compactTitle ? (
           <>
             {tape.title} <span className="text-[var(--muted)]">{partName ?? `${tape.djCount} DJs`}</span>
@@ -1148,11 +1149,11 @@ export function Trainspotter({
           </>
         ) : (
           <div className="text-sm text-[var(--muted)]">
-            <p className="ts-fine">Click a track to hear and ID it. Drag it to move, or an end to trim. Drag the marker to scrub.</p>
+            <p className="ts-fine">Click a track to play and ID it. Drag it to move it, or drag an edge to resize it. Drag the top marker to skip through the tape.</p>
             <p className="ts-fine mt-1 font-mono text-[11px] uppercase tracking-[0.1em]">
               Space play · M new track · {undoHint.text} undo · ← → next track · Enter ID · Alt ← → nudge · Alt Shift ← → trim · Delete remove
             </p>
-            <p className="ts-coarse">Tap a track to hear it, then “ID it”. Slide the marker to scrub.</p>
+            <p className="ts-coarse">Tap a track to play it, then “ID it”. Slide the top marker to skip through the tape.</p>
           </div>
         )}
       </div>
