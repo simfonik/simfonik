@@ -192,14 +192,15 @@
 /* The backdrop needs a box of its own; the drawer only manages its opacity. Kept light, because the
    track being named sits behind it and should stay readable. */
 .ts-backdrop { position: fixed; inset: 0; z-index: 40; background: rgb(0 0 0 / 0.3); }
-.ts-sheet { z-index: 41; }
 .ts-grip { width: 36px; height: 4px; margin: -0.25rem auto 0.75rem; border-radius: 2px; background: var(--border); }
 .ts-sheet {
   width: 100%;
   max-height: 85dvh;
   overflow-y: auto;
+  z-index: 41;
   border-top: 1.5px solid var(--text);
-  background: var(--bg);
+  /* A step up from the page, so in dark mode the sheet doesn't melt into what's behind it. */
+  background: var(--surface);
   padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom));
 }
 
@@ -335,7 +336,7 @@
     white-space: nowrap;
   }
   .ts-bar-btn:active { transform: scale(0.97); }
-  .ts-bar-btn:disabled { border-color: var(--border); color: var(--border); }
+  .ts-bar-btn:disabled { border-color: var(--border); background: var(--bg); color: var(--muted); }
   .ts-bar-primary { background: var(--text); color: var(--bg); }
   .ts-bar-btn:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 
@@ -351,3 +352,8 @@
 .ts-unknowns li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0.5rem; padding-right: 0.25rem; }
 .ts-unknowns .ts-list-row { min-width: 0; overflow: hidden; }
 .ts-unknowns .ts-chip { white-space: nowrap; }
+
+/* The tape's tracklist, as names waiting for a time. */
+.ts-names li { display: flex; align-items: baseline; gap: 0.6rem; padding: 0.55rem 0.25rem; font-size: 14px; line-height: 1.3; color: var(--text); }
+.ts-names li > span:nth-child(2) { overflow-wrap: anywhere; }
+.ts-names li[data-placed] { color: var(--muted); }

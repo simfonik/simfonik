@@ -29,7 +29,13 @@ type TracklistState = { value: Cue[]; draft: SpansDraft<Cue> | null; focused: st
 export const cueLabel = (cue: Pick<Cue, "artist" | "title" | "known">) =>
   cue.known ? [cue.artist, cue.title].filter(Boolean).join(" — ") || "Untitled" : cue.title ? `Unknown track (“${cue.title}”)` : "Unknown track";
 
-const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}`;
+/** m:ss, the one clock format the page uses. */
+export const clock = (s: number) => {
+  if (!Number.isFinite(s) || s < 0) s = 0;
+  return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+};
+/** Used until a side's audio reports its real length. */
+export const DEFAULT_LENGTH = 47 * 60;
 let made = 0;
 const newId = () => `cue-${Date.now().toString(36)}-${++made}`;
 
@@ -45,7 +51,7 @@ export const tracklist = definePrimitive({
   sync: (options) => (options.value === undefined ? {} : { value: options.value }),
   api: (context) => {
     const change = createChange(context);
-    const length = () => context.options().length ?? 48 * 60;
+    const length = () => context.options().length ?? DEFAULT_LENGTH;
     const sides = () => context.options().sides ?? ["A"];
 
     const spans = createSpans<TracklistState, Cue>(context, {
@@ -127,39 +133,51 @@ export const tracklist = definePrimitive({
       },
       removeCue: (id: string) => spans.remove(String(id)),
       clear: () => change("value", [], { reason: "imperative" }),
-      /** Keyboard beyond what ranges give for free: Alt-arrows jump ten seconds, Page keys walk between tracks. */
+      /**
+       * Keys on a focused track. Plain arrows walk between tracks, because that is what someone who has
+       * just clicked one expects; changing a track's times takes Alt, so it can't happen by accident.
+       * Up and Down are left alone (a track never jumps to the other side of the tape), and Delete is the
+       * page's to handle, so it can confirm and offer an undo.
+       */
       keydown(event: KeyboardEvent, id: string, el: HTMLElement | null) {
         const cue = current().find((c) => c.id === id);
         if (!cue) return;
-        if (event.altKey && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
-          event.preventDefault();
-          const by = event.key === "ArrowLeft" ? -10 : 10;
-          const start = Math.max(0, Math.min(length() - (cue.end - cue.start), cue.start + by));
-          spans.update(id, { start, end: start + (cue.end - cue.start) });
-          return;
-        }
-        if (["PageUp", "PageDown", "Home", "End"].includes(event.key)) {
-          event.preventDefault();
-          const row = current()
-            .filter((c) => c.track === cue.track)
-            .sort((a, b) => a.start - b.start);
-          const i = row.findIndex((c) => c.id === id);
-          const to = event.key === "Home" ? row[0] : event.key === "End" ? row[row.length - 1] : row[i + (event.key === "PageUp" ? -1 : 1)];
+        const row = current()
+          .filter((c) => c.track === cue.track)
+          .sort((a, b) => a.start - b.start);
+        const i = row.findIndex((c) => c.id === id);
+        const go = (to?: Cue) => {
           if (to) (el?.parentElement?.querySelector(`[data-span-id="${CSS.escape(to.id)}"]`) as HTMLElement | null)?.focus();
-          return;
+        };
+        if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+          event.preventDefault();
+          const dir = event.key === "ArrowLeft" ? -1 : 1;
+          if (!event.altKey) return go(row[i + dir]);
+          if (event.shiftKey) {
+            // Alt-Shift: trim where it ends.
+            const end = Math.max(cue.start + 5, Math.min(length(), cue.end + dir));
+            spans.update(id, { end, open: undefined });
+          } else {
+            // Alt: nudge the whole track a second.
+            const start = Math.max(0, Math.min(length() - (cue.end - cue.start), cue.start + dir));
+            spans.update(id, { start, end: start + (cue.end - cue.start) });
+          }
+        } else if (event.key === "Home" || event.key === "End") {
+          event.preventDefault();
+          go(event.key === "Home" ? row[0] : row[row.length - 1]);
+        } else if (event.key === "Escape") {
+          spans.keydown(event, id); // lets go of a drag in progress
         }
-        spans.keydown(event, id);
       },
       focused: (id: string) => context.store.set({ focused: id }),
     };
   },
   slots: (slot) => ({
     // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- the SDK's own signature for "no props"
-    root: slot<{}, { cues: Cue[]; busy: boolean }>({
+    root: slot<{}, { cues: Cue[] }>({
       role: "group",
       // During a drag the draft holds the proposed ranges; render those so the range follows the pointer.
-      state: (state, { api }) => ({ cues: api.spans.spans(state), busy: state.draft !== null }),
-      attrs: (state) => ({ "data-busy": state.draft ? "" : undefined }),
+      state: (state, { api }) => ({ cues: api.spans.spans(state) }),
     }),
     track: slot<{ value: string }>({
       props: { value: "string" },

@@ -50,7 +50,8 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
       return { id: t.id, label: `${t.djs.map((d) => d.name).join(", ")} — ${t.title}`, count: timed + named };
     })
     .filter((t) => t.count > 0)
-    .sort((a, b) => b.count - a.count);
+    .sort((a, b) => b.count - a.count)
+    .map(({ id, label }) => ({ id, label }));
 
   return (
     <Trainspotter

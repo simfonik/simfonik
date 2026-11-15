@@ -1,10 +1,10 @@
 "use client";
 
-// Trainspotter — help name the music on a tape.
+// Trainspotter — help ID the music on a tape.
 // The timeline is one UI SDK primitive (ranges on tracks). It opens showing what listeners have already
-// identified in the comments; a visitor plays the tape and names what they recognise. Every change goes
-// through the SDK's change pipeline, so one history gives undo and redo, and the page is operable by an
-// agent through the same bridge that loads the listeners' tracklist.
+// ID'd in the comments; a visitor plays the tape and IDs what they recognise. Every change goes through the
+// SDK's change pipeline, so one history gives undo and redo, and the page is operable by an agent through
+// the same bridge that loads the listeners' tracklist.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -17,19 +17,12 @@ import { useShortcut, useShortcutHint } from "@ui-sdk/react/shortcuts";
 import { Slider, SliderControl, SliderThumb, SliderTrack } from "@ui-sdk/react/slider";
 import { Toast, ToastAction, ToastClose, ToastDescription, ToastRegion, ToastTitle, createToaster } from "@ui-sdk/react/toast";
 import { Drawer, DrawerBackdrop, DrawerClose, DrawerContent, DrawerTitle } from "@ui-sdk/react/drawer";
-
-// Keyboard hints for typing a proper name: capitalised words, no autocorrect mangling "Sasha" into "Sash".
-// The SDK's hint for a name, minus its autofill: this is a record's artist, not the visitor's own name.
-const nameHints = (enter: "next" | "done") => {
-  const h = inputHints("name", { enter }) as Record<string, string>;
-  return { autoCapitalize: h.autoCapitalize, autoCorrect: h.autoCorrect, spellCheck: h.spellCheck === "true", enterKeyHint: enter, autoComplete: "off" } as const;
-};
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@ui-sdk/react/collapsible";
 import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxLabel, ComboboxList } from "@ui-sdk/react/combobox";
 import { Field, FieldLabel } from "@ui-sdk/react/field";
 import { Input } from "@ui-sdk/react/input";
 import { isSameRecord, reconcile, runningOrders, type Listed, type Proposal, type Sighting } from "./parse";
-import { cueLabel, tracklist, type Cue } from "./tracklist-primitive";
+import { DEFAULT_LENGTH, clock, cueLabel, tracklist, type Cue } from "./tracklist-primitive";
 
 type TapeProp = { id: string; title: string; djs: string; released: string; sides: { key: string; title: string; audio: string | null }[] };
 
@@ -38,14 +31,20 @@ const agent = typeof window === "undefined" ? null : createAgent();
 const pointerKind = createPointerKind();
 const toaster = createToaster();
 
-const clock = (s: number) => {
-  if (!Number.isFinite(s) || s < 0) s = 0;
-  return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
-};
 const stamp = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
-const DEFAULT_LENGTH = 47 * 60;
 const PHONE_PPM = 26; // pixels per minute where the timeline scrolls
-const MIN_FIT_PPM = 18; // below this a fitted timeline is too cramped to read
+const MIN_FIT_PPM = 24; // below this a fitted timeline is too cramped to read
+const GUTTER = 56; // the side label and its gap, to the left of every track
+const UNDO_TOAST = "undo"; // one undo toast at a time: a newer one replaces the older
+
+/** A proposal's signature: where it is and what it says. A later comment that corrects a name is a new one. */
+const sig = (p: Proposal) => `${p.side}|${p.start}|${p.known ? `${p.artist}|${p.title}`.toLowerCase() : "?"}`;
+
+/** The SDK's keyboard hints for a name, minus its autofill: this is a record's artist, not the visitor's own name. */
+const nameHints = (enter: "next" | "done") => {
+  const h = inputHints("name", { enter }) as Record<string, string>;
+  return { autoCapitalize: h.autoCapitalize, autoCorrect: h.autoCorrect, spellCheck: h.spellCheck === "true", enterKeyHint: enter, autoComplete: "off" } as const;
+};
 
 function Track({ value, ...props }: { value: string } & React.ComponentProps<"div">) {
   return usePart(tracklist, "track", { value }, props, "div");
@@ -60,8 +59,8 @@ function describe(e: HistoryEntry): string {
   const after = (Array.isArray(e.value) ? e.value : []) as Cue[];
   const added = after.filter((c) => !before.some((b) => b.id === c.id));
   const removed = before.filter((b) => !after.some((c) => c.id === b.id));
-  if (e.source === "agent") return added.length ? `Added ${added.length} ${added.length === 1 ? "track" : "tracks"} listeners identified` : "Went back to what listeners identified";
-  if (added.length === 1 && !removed.length) return `Marked a new track at ${clock(added[0].start)}, side ${added[0].track}`;
+  if (e.source === "agent") return added.length ? `Added ${added.length} ${added.length === 1 ? "track" : "tracks"} from listeners` : "Went back to what listeners ID’d";
+  if (added.length === 1 && removed.length <= 1) return `Marked a new track at ${clock(added[0].start)}, side ${added[0].track}`;
   if (removed.length === 1 && !added.length) return `Removed ${cueLabel(removed[0])}`;
   if (!added.length && !removed.length) {
     const changed = after.find((c) => {
@@ -70,7 +69,7 @@ function describe(e: HistoryEntry): string {
     });
     const b = changed && before.find((x) => x.id === changed.id);
     if (changed && b) {
-      if (b.artist !== changed.artist || b.title !== changed.title) return `ID’d the track at ${clock(changed.start)}: ${cueLabel(changed)}`;
+      if (b.artist !== changed.artist || b.title !== changed.title) return changed.known ? `ID’d the track at ${clock(changed.start)}: ${cueLabel(changed)}` : `Set the track at ${clock(changed.start)} back to unknown`;
       return `Moved ${cueLabel(changed)} to ${clock(changed.start)}–${clock(changed.end)}`;
     }
   }
@@ -88,7 +87,7 @@ export function Trainspotter({
   sightings: Sighting[];
   listed: Listed[];
   official: Listed[][];
-  others: { id: string; label: string; count: number }[];
+  others: { id: string; label: string }[];
 }) {
   const router = useRouter();
   const sides = useMemo(() => tape.sides.map((s) => s.key), [tape.sides]);
@@ -96,136 +95,37 @@ export function Trainspotter({
   // Behaviour forks on the pointer; styling forks on media queries in the stylesheet.
   const touch = usePreference(pointerKind).pointer === "coarse";
 
-  // ── Audio: one element per side, so every side's real length is known up front ──
+  // ── Audio: one element per side ──
   const audios = useRef<(HTMLAudioElement | null)[]>([]);
-  const [lengths, setLengths] = useState<number[]>(() => tape.sides.map(() => DEFAULT_LENGTH));
-  const [measured, setMeasured] = useState(false);
+  // A side's real length, once its audio has reported it. Until then nothing is assumed about where it ends.
+  const [durations, setDurations] = useState<(number | null)[]>(() => tape.sides.map(() => null));
+  const [failed, setFailed] = useState<boolean[]>(() => tape.sides.map(() => false));
   const [active, setActive] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [now, setNow] = useState(0);
-  const length = Math.max(...lengths);
   const activeRef = useRef(0);
   activeRef.current = active;
 
-  useEffect(() => {
-    let seen = 0;
-    const offs = audios.current.map((a, i) => {
-      if (!a) return () => {};
-      const meta = () => {
-        setLengths((l) => l.map((v, j) => (j === i && Number.isFinite(a.duration) ? Math.round(a.duration) : v)));
-        if (++seen >= audios.current.filter(Boolean).length) setMeasured(true);
-      };
-      // Whichever side's event this is, the button reflects the side that is active now. The side being
-      // left pauses a moment after the switch, and must not leave the button stuck on "Pause".
-      const sync = () => setPlaying(Boolean(audios.current[activeRef.current] && !audios.current[activeRef.current]!.paused));
-      const play = sync;
-      const pause = sync;
-      if (a.readyState >= 1) meta();
-      a.addEventListener("loadedmetadata", meta);
-      a.addEventListener("play", play);
-      a.addEventListener("pause", pause);
-      return () => {
-        a.removeEventListener("loadedmetadata", meta);
-        a.removeEventListener("play", play);
-        a.removeEventListener("pause", pause);
-      };
-    });
-    // If a side's length never arrives, carry on with the estimate.
-    const giveUp = setTimeout(() => setMeasured(true), 4000);
-    return () => {
-      offs.forEach((off) => off());
-      clearTimeout(giveUp);
-    };
-  }, []);
-
-  const playheads = useRef<(HTMLDivElement | null)[]>([]);
-  const scrollerRef = useRef<HTMLDivElement>(null);
-  const lengthRef = useRef(length);
-  lengthRef.current = length;
-  useEffect(() => {
-    // The playhead moves every frame; write it straight to the element and tell React only once a second.
-    let raf = 0;
-    let last = -1;
-    const tick = () => {
-      const a = audios.current[activeRef.current];
-      const t = a?.currentTime ?? 0;
-      let x = 0;
-      playheads.current.forEach((el, i) => {
-        if (!el) return;
-        const px = (t / lengthRef.current) * (el.parentElement?.clientWidth ?? 0);
-        el.style.transform = `translateX(${px}px)`;
-        el.hidden = i !== activeRef.current;
-        if (i === activeRef.current) x = px;
-      });
-      // Where the tape is wider than the screen, follow the playhead while it plays.
-      const sc = scrollerRef.current;
-      if (sc && a && !a.paused && sc.scrollWidth > sc.clientWidth + 4) {
-        const left = x + 56 - sc.scrollLeft;
-        if (left > sc.clientWidth - 48 || left < 56) sc.scrollLeft = Math.max(0, x - 24);
-      }
-      if (Math.floor(t) !== last) {
-        last = Math.floor(t);
-        setNow(t);
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, []);
-
-  const seek = useCallback((side: number, t: number, play?: boolean) => {
-    // Read this before silencing the other side: changing sides mid-play should keep playing.
-    const wasPlaying = audios.current.some((x) => x && !x.paused);
-    audios.current.forEach((a, i) => i !== side && a?.pause());
-    const a = audios.current[side];
-    setActive(side);
-    activeRef.current = side;
-    if (!a) return;
-    a.currentTime = Math.max(0, t);
-    setNow(a.currentTime);
-    if (play ?? wasPlaying) a.play().catch(() => {});
-  }, []);
-  const toggle = useCallback(() => {
-    const a = audios.current[activeRef.current];
-    if (!a) return;
-    if (a.paused) a.play().catch(() => {});
-    else a.pause();
-  }, []);
+  // ── What listeners said in the comments, reconciled into one proposal per moment ──
+  // An unmeasured side is treated as endless, so a slow connection never drops an ID for being "past the end".
+  const proposals = useMemo(() => reconcile(sightings, durations.map((d) => d ?? Infinity)), [sightings, durations]);
+  const toCue = useCallback(
+    (p: Proposal): Cue => ({ id: `crowd-${p.side}-${p.start}`, track: sides[p.side] ?? sides[0], start: p.start, end: p.end, artist: p.artist, title: p.title, known: p.known, by: p.author, open: p.open }),
+    [sides],
+  );
 
   // ── The tracklist value: controlled here, saved in this browser ──
   const [cues, setCues] = useState<Cue[]>([]);
   const cuesRef = useRef(cues);
   cuesRef.current = cues;
   const [restored, setRestored] = useState<"pending" | "saved" | "fresh">("pending");
-  // Which listener IDs this visitor has already been shown, so only new ones are offered next time.
+  // True once the page holds the tracklist it should: saved work, or the listeners' version on a first visit.
+  // Nothing is written to storage before that, so closing the tab mid-load can't save an empty tape.
+  const [ready, setReady] = useState(false);
+  const saveFailed = useRef(false);
+  // Which listener IDs this visitor has already been shown, so only new ones are merged in next time.
   const seen = useRef<Set<string>>(new Set());
-  const seedSeen = useRef(false);
   const [seenTick, setSeenTick] = useState(0);
-  useEffect(() => {
-    let found = false;
-    try {
-      const saved = JSON.parse(window.localStorage.getItem(storageKey) ?? "null");
-      if (Array.isArray(saved)) {
-        setCues(saved);
-        found = true;
-      }
-      const was = JSON.parse(window.localStorage.getItem(`${storageKey}:seen`) ?? "null");
-      if (Array.isArray(was)) seen.current = new Set(was);
-      // Work saved before this page kept track of what had been shown: assume all of it was.
-      else if (found) seedSeen.current = true;
-    } catch {
-      /* nothing saved, or storage is unavailable */
-    }
-    setRestored(found ? "saved" : "fresh");
-  }, [storageKey]);
-  useEffect(() => {
-    if (restored === "pending") return;
-    try {
-      window.localStorage.setItem(storageKey, JSON.stringify(cues));
-    } catch {
-      /* storage is unavailable; the page still works */
-    }
-  }, [cues, restored, storageKey]);
   const markSeen = useCallback(
     (sigs: string[]) => {
       sigs.forEach((x) => seen.current.add(x));
@@ -238,20 +138,165 @@ export function Trainspotter({
     },
     [storageKey],
   );
+  const seedSeen = useRef(false);
+  useEffect(() => {
+    let saved: unknown = null;
+    let was: unknown = null;
+    try {
+      saved = JSON.parse(window.localStorage.getItem(storageKey) ?? "null");
+      was = JSON.parse(window.localStorage.getItem(`${storageKey}:seen`) ?? "null");
+    } catch {
+      /* nothing saved, or storage is unavailable */
+    }
+    // An empty list with no record of what was shown is not saved work; it is a first visit that never finished.
+    const found = Array.isArray(saved) && (saved.length > 0 || Array.isArray(was));
+    if (found) {
+      setCues(saved as Cue[]);
+      if (Array.isArray(was)) seen.current = new Set(was as string[]);
+      // Work saved before this page kept track of what had been shown: assume all of it was.
+      else seedSeen.current = true;
+      setReady(true);
+    }
+    setRestored(found ? "saved" : "fresh");
+  }, [storageKey]);
+  useEffect(() => {
+    if (!ready) return;
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(cues));
+      saveFailed.current = false;
+    } catch {
+      saveFailed.current = true; // private mode, or storage is full; the toasts say so
+    }
+  }, [cues, ready, storageKey]);
+
+  // The timeline is as long as the longest thing it has to show: a measured side, or the last known track.
+  const length = useMemo(() => {
+    const unmeasured = durations.every((d) => d === null) ? DEFAULT_LENGTH : 0;
+    return Math.max(60, unmeasured, ...durations.map((d) => d ?? 0), ...cues.map((c) => c.end), ...proposals.map((p) => p.end));
+  }, [durations, cues, proposals]);
+  const lengthRef = useRef(length);
+  lengthRef.current = length;
+  const sideLength = (i: number) => durations[i] ?? length;
+
+  // ── Playhead: written straight to the element each frame while playing; React hears once a second ──
+  const playheads = useRef<(HTMLDivElement | null)[]>([]);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const handsOff = useRef(0); // until when the visitor's own scrolling is left alone
+  const sheetOpen = useRef(false);
+  const lastSecond = useRef(-1);
+  const paint = useCallback(() => {
+    const a = audios.current[activeRef.current];
+    const t = a?.currentTime ?? 0;
+    let x = 0;
+    playheads.current.forEach((el, i) => {
+      if (!el) return;
+      const px = (t / lengthRef.current) * (el.parentElement?.clientWidth ?? 0);
+      el.style.transform = `translateX(${px}px)`;
+      el.hidden = i !== activeRef.current;
+      if (i === activeRef.current) x = px;
+    });
+    // Where the tape is wider than the screen, follow the playhead as it plays off the edge. Not while the
+    // visitor is looking somewhere else: they scrolled there on purpose, or the ID sheet put them there.
+    const sc = scrollerRef.current;
+    if (sc && a && !a.paused && !sheetOpen.current && performance.now() > handsOff.current && sc.scrollWidth > sc.clientWidth + 4) {
+      const left = x + GUTTER - sc.scrollLeft;
+      if (left > sc.clientWidth - 48 || left < GUTTER) sc.scrollLeft = Math.max(0, x - 24);
+    }
+    if (Math.floor(t) !== lastSecond.current) {
+      lastSecond.current = Math.floor(t);
+      setNow(t);
+    }
+  }, []);
+  const loop = useRef(0);
+  const run = useCallback(() => {
+    cancelAnimationFrame(loop.current);
+    const tick = () => {
+      paint();
+      const a = audios.current[activeRef.current];
+      if (a && !a.paused) loop.current = requestAnimationFrame(tick);
+    };
+    loop.current = requestAnimationFrame(tick);
+  }, [paint]);
+
+  useEffect(() => {
+    const offs = audios.current.map((a, i) => {
+      if (!a) return () => {};
+      const meta = () => {
+        if (Number.isFinite(a.duration)) setDurations((d) => d.map((v, j) => (j === i ? Math.round(a.duration) : v)));
+      };
+      // Whichever side's event this is, the button reflects the side that is active now. The side being
+      // left pauses a moment after the switch, and must not leave the button stuck on "Pause".
+      const sync = () => {
+        setPlaying(Boolean(audios.current[activeRef.current] && !audios.current[activeRef.current]!.paused));
+        run();
+      };
+      const error = () => {
+        if (a.getAttribute("src")) setFailed((f) => f.map((v, j) => (j === i ? true : v)));
+      };
+      if (a.readyState >= 1) meta();
+      if (a.error) error();
+      a.addEventListener("loadedmetadata", meta);
+      a.addEventListener("play", sync);
+      a.addEventListener("pause", sync);
+      a.addEventListener("error", error);
+      return () => {
+        a.removeEventListener("loadedmetadata", meta);
+        a.removeEventListener("play", sync);
+        a.removeEventListener("pause", sync);
+        a.removeEventListener("error", error);
+      };
+    });
+    return () => {
+      offs.forEach((off) => off());
+      cancelAnimationFrame(loop.current);
+    };
+  }, [run]);
+
+  const seek = useCallback(
+    (side: number, t: number, play?: boolean) => {
+      // Read this before silencing the other side: changing sides mid-play should keep playing.
+      const wasPlaying = audios.current.some((x) => x && !x.paused);
+      audios.current.forEach((a, i) => i !== side && a?.pause());
+      const a = audios.current[side];
+      setActive(side);
+      activeRef.current = side;
+      if (!a) return;
+      a.currentTime = Math.max(0, t);
+      lastSecond.current = -1;
+      if (play ?? wasPlaying) a.play().catch(() => {});
+      run();
+    },
+    [run],
+  );
+  const toggle = useCallback(() => {
+    const a = audios.current[activeRef.current];
+    if (!a) return;
+    if (a.paused) a.play().catch(() => {});
+    else a.pause();
+  }, []);
 
   const [selected, setSelected] = useState<string | null>(null);
-  const [sheet, setSheet] = useState(false); // the naming sheet, on phones
+  const [sheet, setSheet] = useState(false); // the ID sheet, on phones
+  sheetOpen.current = sheet;
   const quiet = useRef(false); // true while the page itself is writing, so it doesn't select what it adds
   const wantName = useRef(false);
+  const pageScroll = useRef(0);
   const openSheet = useCallback((id?: string | null) => {
     // Put the timeline at the top of the screen and the track in the middle of it, then open the sheet
-    // below. Otherwise the sheet covers the very thing being named.
+    // below. Otherwise the sheet covers the very thing being ID'd.
+    pageScroll.current = window.scrollY;
+    toaster.dismiss(); // a lingering confirmation would sit on top of the fields
     const frame = document.querySelector(".ts-root") as HTMLElement | null;
     if (frame) window.scrollTo({ top: frame.getBoundingClientRect().top + window.scrollY - 8 });
     const sc = scrollerRef.current;
     const el = id ? (sc?.querySelector(`[data-span-id="${CSS.escape(id)}"]`) as HTMLElement | null) : null;
-    if (sc && el) sc.scrollLeft = Math.max(0, el.offsetLeft + el.offsetWidth / 2 - sc.clientWidth / 2 + 28);
+    if (sc && el) sc.scrollLeft = Math.max(0, el.offsetLeft + el.offsetWidth / 2 - sc.clientWidth / 2 + GUTTER / 2);
     setSheet(true);
+  }, []);
+  const closeSheet = useCallback(() => {
+    setSheet(false);
+    // Back to where the visitor was, such as their place in the unknown list.
+    requestAnimationFrame(() => window.scrollTo({ top: pageScroll.current }));
   }, []);
   const focusName = useCallback(
     (id?: string | null) => {
@@ -264,7 +309,7 @@ export function Trainspotter({
   const handle = usePrimitive(tracklist, {
     value: cues,
     onValueChange: (v: Cue[], details: { source?: string }) => {
-      // A track a person has just marked is the one they want to name next.
+      // A track a person has just marked is the one they want to ID next.
       const added = v.filter((c) => !cuesRef.current.some((b) => b.id === c.id));
       if (added.length === 1 && details?.source !== "agent" && !quiet.current) setSelected(added[0].id);
       setCues(v);
@@ -274,44 +319,36 @@ export function Trainspotter({
   });
   const api = handle.api;
 
-  // ── What listeners said in the comments, reconciled into one proposal per moment ──
-  const proposals = useMemo(() => reconcile(sightings, lengths), [sightings, lengths]);
-  const toCue = useCallback(
-    (p: Proposal): Cue => ({ id: `crowd-${p.side}-${p.start}`, track: sides[p.side] ?? sides[0], start: p.start, end: p.end, artist: p.artist, title: p.title, known: p.known, by: p.author, open: p.open }),
-    [sides],
-  );
-  // A proposal's signature: where it is and what it says. A later comment that corrects a name is a new one.
-  const sig = (p: Proposal) => `${p.side}|${p.start}|${p.known ? `${p.artist}|${p.title}`.toLowerCase() : "?"}`;
-  useEffect(() => {
-    if (restored === "saved" && measured && seedSeen.current) {
-      seedSeen.current = false;
-      markSeen(proposals.map(sig));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restored, measured]);
-  const fresh = useMemo(
-    () => (restored === "saved" && !seedSeen.current ? proposals.filter((p) => !seen.current.has(sig(p))) : []),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [proposals, restored, seenTick],
-  );
-
   // ── History: every change to the timeline, with who made it. It is the undo stack. ──
   const rootRef = useRef<HTMLDivElement>(null);
   const historyRef = useRef<ReturnType<typeof createHistory> | null>(null);
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [position, setPosition] = useState(0);
-  const [floor, setFloor] = useState(0); // undo stops at the listeners' tracklist the page opened with
+  // Undo stops at the listeners' tracklist the page opened with; it never empties the tape.
+  const [floor, setFloorState] = useState(0);
+  const floorRef = useRef(0);
+  const setFloor = (n: number) => {
+    floorRef.current = n;
+    setFloorState(n);
+  };
+  const undoToastAt = useRef<number | null>(null);
   useEffect(() => {
     if (!agent) return;
-    const history = createHistory(agent, { keys: ["value"], within: () => rootRef.current });
+    // One step per action: two separate drags are two undos, not one.
+    const history = createHistory(agent, { keys: ["value"], within: () => rootRef.current, coalesce: false });
     historyRef.current = history;
-    const read = () => {
+    const off = history.subscribe(() => {
       setEntries([...history.entries()]);
       setPosition(history.position());
-    };
-    const off = history.subscribe(read);
-    // Offer the same tools to an assistant built into the browser, where the browser supports WebMCP.
-    const unregister = registerTools(agent, { allow: () => true });
+      // An Undo offered for one change must not outlive it and undo something else.
+      if (undoToastAt.current !== null && history.position() !== undoToastAt.current) {
+        undoToastAt.current = null;
+        toaster.dismiss(UNDO_TOAST);
+      }
+    });
+    // Offer the timeline to an assistant built into the browser, where the browser supports WebMCP. It may add
+    // and ID tracks; replacing, clearing or removing is left to a person.
+    const unregister = registerTools(agent, { allow: (step) => !["setValue", "clear", "removeCue"].includes(step.action) });
     (window as unknown as { simfonikAgent?: unknown }).simfonikAgent = agent;
     return () => {
       off();
@@ -321,32 +358,85 @@ export function Trainspotter({
     };
   }, []);
 
+  const step = useCallback(async (by: number) => {
+    const h = historyRef.current;
+    if (!h) return;
+    await h.seek(Math.max(floorRef.current, h.position() + by));
+  }, []);
+  /** A confirmation whose Undo belongs to the change just made, and to nothing else. */
+  const confirmWithUndo = useCallback((title: string, description?: string) => {
+    // Wait a frame so the history has recorded the change this is about.
+    requestAnimationFrame(() => {
+      const h = historyRef.current;
+      const at = h?.position() ?? 0;
+      undoToastAt.current = at;
+      toaster(title, {
+        id: UNDO_TOAST,
+        description: saveFailed.current ? "Couldn’t save on this device. It will be gone when you leave the page." : description,
+        action: {
+          label: "Undo",
+          onAction: () => {
+            if (h && h.position() === at && at > floorRef.current) void h.seek(at - 1);
+          },
+        },
+      });
+    });
+  }, []);
+
   const target = () => agent?.snapshot().find((c) => c.component === "tracklist")?.ref;
   /** Writes listeners' tracks through the agent bridge, so the history knows they weren't typed here. */
-  const loadFromListeners = useCallback(
-    async (mode: "open" | "reset") => {
-      const ref = target();
-      if (!agent || !ref) return;
-      quiet.current = true;
-      await agent.act({ steps: [{ ref, action: "setValue", args: [proposals.map(toCue)] }] });
+  const writeAsListeners = useCallback(async (next: Cue[]) => {
+    const ref = target();
+    if (!agent || !ref) return false;
+    quiet.current = true;
+    try {
+      await agent.act({ steps: [{ ref, action: "setValue", args: [next] }] });
+    } finally {
       quiet.current = false;
-      markSeen(proposals.map(sig));
-      if (mode === "open") setFloor(historyRef.current?.position() ?? 0);
-      else toaster("Back to what listeners identified.", { action: { label: "Undo", onAction: () => void step(-1) } });
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [proposals, toCue, markSeen],
-  );
+    }
+    return true;
+  }, []);
 
-  // ── Return visit: whatever listeners have posted since is simply added. Nobody approves it. ──
-  // A newer name replaces an older one from listeners, the way a later comment corrects an earlier one.
-  // A track this visitor named or marked themselves is left alone.
+  // First visit to a tape: open with what is already known. This doesn't wait for the audio.
+  const opening = useRef(false);
+  useEffect(() => {
+    if (restored !== "fresh" || opening.current) return;
+    opening.current = true;
+    void (async () => {
+      if (proposals.length && (await writeAsListeners(proposals.map(toCue)))) setFloor(historyRef.current?.position() ?? 0);
+      markSeen(proposals.map(sig));
+      setReady(true);
+    })();
+  }, [restored, proposals, toCue, writeAsListeners, markSeen]);
+
+  // The tracks went in before the audio said how long each side is. Once it does, pull back any listener's
+  // track that runs past the end of its side. Left alone once the visitor has started making changes.
+  useEffect(() => {
+    if (!ready || historyRef.current?.position() !== floorRef.current) return;
+    let changed = false;
+    const next = cuesRef.current.flatMap((c) => {
+      const d = durations[sides.indexOf(c.track)];
+      if (d == null || c.end <= d || !c.by) return [c];
+      changed = true;
+      return c.start > d - 5 ? [] : [{ ...c, end: d }];
+    });
+    if (changed) void writeAsListeners(next).then((ok) => ok && setFloor(historyRef.current?.position() ?? 0));
+  }, [durations, ready, sides, writeAsListeners]);
+
+  // Return visit: whatever listeners have posted since is simply added. Nobody approves it.
+  // A newer ID replaces an older one from listeners, the way a later comment corrects an earlier one.
+  // A track this visitor ID'd or marked themselves is left alone.
   const merged = useRef(false);
   useEffect(() => {
-    if (restored !== "saved" || !measured || !fresh.length || merged.current) return;
-    const ref = target();
-    if (!agent || !ref) return;
+    if (restored !== "saved" || merged.current) return;
     merged.current = true;
+    if (seedSeen.current) {
+      seedSeen.current = false;
+      markSeen(proposals.map(sig));
+      return;
+    }
+    const fresh = proposals.filter((p) => !seen.current.has(sig(p)));
+    if (!fresh.length) return;
     let added = 0;
     let corrected = 0;
     let next = [...cuesRef.current];
@@ -363,31 +453,29 @@ export function Trainspotter({
     }
     markSeen(fresh.map(sig));
     if (!added && !corrected) return;
-    quiet.current = true;
-    void agent.act({ steps: [{ ref, action: "setValue", args: [next] }] }).then(() => {
-      quiet.current = false;
+    void writeAsListeners(next).then((ok) => {
+      if (!ok) return;
       const parts = [added ? `added ${added} ${added === 1 ? "track" : "tracks"}` : "", corrected ? `corrected ${corrected}` : ""].filter(Boolean).join(" and ");
-      toaster(`Since you were last here, listeners ${parts}.`, { action: { label: "Undo", onAction: () => void step(-1) } });
+      confirmWithUndo(`Since you were last here, listeners ${parts}.`);
     });
+    // Runs once, with the proposals as they are when saved work has been restored.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restored, measured, fresh.length]);
+  }, [restored, seenTick]);
 
-  // First visit to a tape: open with what is already known, instead of an empty timeline.
-  const opened = useRef(false);
-  useEffect(() => {
-    if (restored !== "fresh" || !measured || opened.current) return;
-    opened.current = true;
-    if (proposals.length) void loadFromListeners("open");
-  }, [restored, measured, proposals.length, loadFromListeners]);
+  const startOver = async () => {
+    if (await writeAsListeners(proposals.map(toCue))) {
+      markSeen(proposals.map(sig));
+      setSelected(null);
+      confirmWithUndo("Back to what listeners ID’d.");
+    }
+  };
 
-  const step = useCallback(async (by: number) => {
-    const h = historyRef.current;
-    if (h) await h.seek(h.position() + by);
-  }, []);
   const canUndo = position > floor;
   const canRedo = position < entries.length;
-  useShortcut("mod+z", () => canUndo && void step(-1), { description: "Undo" });
-  useShortcut("mod+shift+z", () => canRedo && void step(1), { description: "Redo" });
+  // In a text field these keys belong to the field: they undo typing, not the tracklist.
+  const notTyping = () => !(document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLTextAreaElement);
+  useShortcut("mod+z", () => canUndo && void step(-1), { description: "Undo", when: notTyping });
+  useShortcut("mod+shift+z", () => canRedo && void step(1), { description: "Redo", when: notTyping });
   const undoHint = useShortcutHint("mod+z");
   const redoHint = useShortcutHint("mod+shift+z");
 
@@ -400,7 +488,7 @@ export function Trainspotter({
     [cues, sides, active, now],
   );
 
-  // "A new track starts here": mark it at the playhead and go straight to naming it.
+  // "A new track starts here": mark it at the playhead and go straight to ID'ing it.
   const markHere = useCallback(() => {
     const a = audios.current[activeRef.current];
     const t = Math.floor(a?.currentTime ?? 0);
@@ -420,16 +508,16 @@ export function Trainspotter({
       focusName(selected);
     }
   }, [selected, focusName]);
-  const nameIt = (id: string) => {
+  const idIt = (id: string) => {
     setSelected(id);
     focusName(id);
   };
 
-  // M marks and Space plays, unless the key belongs to a field or a control.
+  // M marks and Space plays, unless the key belongs to a field or a control. A focused track is neither.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
-      if (e.metaKey || e.ctrlKey || e.altKey || t.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(t.tagName) || t.closest("[role=slider],[role=option],[role=dialog],.ts-cue")) return;
+      if (e.metaKey || e.ctrlKey || e.altKey || t.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(t.tagName) || t.closest("[role=slider],[role=option],[role=dialog]")) return;
       if (e.key === "m" || e.key === "M") {
         e.preventDefault();
         markHere();
@@ -445,15 +533,18 @@ export function Trainspotter({
   // ── Names waiting for a time: the site's own tracklist if there is one, else a commenter's running order ──
   const orders = useMemo(() => {
     const fromComments = runningOrders(listed, sides.length);
-    return sides.map((_, i) => (official[i]?.length ? official[i] : fromComments[i]));
+    return sides.map((_, i) => (official[i]?.length ? official[i] : (fromComments[i] ?? [])));
   }, [listed, official, sides]);
+  const fromSite = official.some((o) => o.length > 0);
   const waiting = useMemo(
     () => orders.map((order, side) => order.filter((l) => l.known && !cues.some((c) => c.track === sides[side] && c.known && isSameRecord(c, l)))),
     [orders, cues, sides],
   );
+  const namesTotal = orders.reduce((n, o) => n + o.filter((l) => l.known).length, 0);
+  const namesWaiting = waiting.reduce((n, w) => n + w.length, 0);
 
   const sel = cues.find((c) => c.id === selected) ?? null;
-  // For an unnamed track, the names most likely to belong to it: the ones nearest its place in the order.
+  // For an unknown track, the names most likely to belong to it: the ones nearest its place in the order.
   const nextNames = useMemo(() => {
     if (!sel || sel.known) return [];
     const side = sides.indexOf(sel.track);
@@ -473,27 +564,36 @@ export function Trainspotter({
     return proposals.find((p) => p.side === side && Math.abs(p.start - sel.start) <= 20)?.also ?? [];
   }, [sel, sides, proposals]);
 
-  const [draftName, setDraftName] = useState({ artist: "", title: "" });
-  // An unknown track's "title" is only a listener's hint ("you can't run"), so it never pre-fills the field.
+  // An unknown track's "title" is only a listener's clue ("you can't run"), so it never pre-fills the field.
   const shownTitle = sel?.known ? sel.title : "";
+  const [draft, setDraft] = useState({ artist: "", title: "" });
   useEffect(() => {
-    setDraftName({ artist: sel?.artist ?? "", title: shownTitle });
+    setDraft({ artist: sel?.artist ?? "", title: shownTitle });
   }, [sel?.id, sel?.artist, shownTitle]);
-  const saveName = (artist = draftName.artist, title = draftName.title) => {
+  const saveId = (artist = draft.artist, title = draft.title) => {
     const a = artist.trim();
     const t = title.trim();
     if (!sel || (!a && !t) || (a === sel.artist && t === shownTitle)) return false;
     api.renameCue(sel.id, a, t);
-    toaster(`ID’d: ${[a, t].filter(Boolean).join(" — ")}`, { description: "Saved on this device.", action: { label: "Undo", onAction: () => void step(-1) } });
+    confirmWithUndo(`ID’d: ${[a, t].filter(Boolean).join(" — ")}`, "Saved on this device.");
     return true;
   };
-  const remove = () => {
+  const backToUnknown = () => {
     if (!sel) return;
-    const label = cueLabel(sel);
-    api.removeCue(sel.id);
+    api.renameCue(sel.id, "", "");
+    confirmWithUndo("Set back to unknown.");
+  };
+  const remove = (cue: Cue | null = sel) => {
+    if (!cue) return;
+    // Keep the keyboard somewhere useful: the next track on that side, or the one before.
+    const row = cuesRef.current.filter((c) => c.track === cue.track).sort((a, b) => a.start - b.start);
+    const i = row.findIndex((c) => c.id === cue.id);
+    const neighbour = row[i + 1] ?? row[i - 1];
+    api.removeCue(cue.id);
     setSelected(null);
-    setSheet(false);
-    toaster(`Removed ${label}.`, { action: { label: "Undo", onAction: () => void step(-1) } });
+    if (sheet) closeSheet();
+    else if (neighbour) requestAnimationFrame(() => (scrollerRef.current?.querySelector(`[data-span-id="${CSS.escape(neighbour.id)}"]`) as HTMLElement | null)?.focus());
+    confirmWithUndo(`Removed ${cueLabel(cue)}.`);
   };
 
   // ── Timeline geometry: fill the width on a wide screen, scroll on a narrow one ──
@@ -501,71 +601,153 @@ export function Trainspotter({
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => setAvail(el.clientWidth));
+    const measure = () => {
+      setAvail(el.clientWidth);
+      paint();
+    };
+    const ro = new ResizeObserver(measure);
     ro.observe(el);
-    setAvail(el.clientWidth);
-    return () => ro.disconnect();
-  }, []);
+    measure();
+    // The visitor moving the timeline themselves puts following on hold for a few seconds.
+    const hold = () => {
+      handsOff.current = performance.now() + 5000;
+    };
+    el.addEventListener("pointerdown", hold);
+    el.addEventListener("wheel", hold, { passive: true });
+    el.addEventListener("touchstart", hold, { passive: true });
+    return () => {
+      ro.disconnect();
+      el.removeEventListener("pointerdown", hold);
+      el.removeEventListener("wheel", hold);
+      el.removeEventListener("touchstart", hold);
+    };
+  }, [paint]);
   // Fit the whole side when there is room for it to stay readable; otherwise keep a fixed scale and scroll.
-  const fit = avail - 56 - 2;
+  const fit = avail - GUTTER - 2;
   const width = fit >= (length / 60) * MIN_FIT_PPM ? fit : Math.round((length / 60) * PHONE_PPM);
   const minutes = Math.ceil(length / 60);
+  useEffect(() => {
+    paint(); // the playhead is placed in pixels, so it moves when the scale does
+  }, [width, length, paint]);
 
-  // Scrubbing: the ruler's slider sets the position. On a phone it works within the stretch of tape on
-  // screen; swiping the sides brings more into view. (Scrolling mid-drag would pull the marker out from
-  // under the finger, because the slider measures its track when the drag starts.)
-  const scrub = (v: number | number[]) => seek(activeRef.current, Math.min(v as number, lengths[activeRef.current]));
+  // Scrubbing: the marker follows the finger at once; the audio follows a few times a second and settles on
+  // release, so one drag is a handful of requests to the audio host instead of dozens.
+  const [scrubAt, setScrubAt] = useState<number | null>(null);
+  const lastSeek = useRef(0);
+  const scrub = (v: number | number[]) => {
+    const t = Math.min(v as number, sideLength(activeRef.current));
+    setScrubAt(t);
+    if (performance.now() - lastSeek.current > 120) {
+      lastSeek.current = performance.now();
+      seek(activeRef.current, t);
+    }
+  };
+  const scrubEnd = (v: number | number[]) => {
+    seek(activeRef.current, Math.min(v as number, sideLength(activeRef.current)));
+    setScrubAt(null);
+  };
 
-  // A press that didn't travel is a click: it moves the playhead. A drag is the SDK's to handle.
+  // A press that didn't travel is a click: on bare tape it moves the playhead. A drag is the SDK's to handle.
   const down = useRef<{ x: number; y: number } | null>(null);
   const wasClick = (e: React.MouseEvent) => {
     const d = down.current;
     return !d || Math.hypot(e.clientX - d.x, e.clientY - d.y) < 5;
   };
 
-  const [copied, setCopied] = useState(false);
+  // Only what this visitor ID'd goes in the comment. Pasting everyone's IDs would re-credit the whole tape to them.
+  const mine = cues.filter((c) => c.known && !c.by);
   const asComment = () =>
     tape.sides
       .map((side) => {
-        const rows = cues.filter((c) => c.track === side.key).sort((a, b) => a.start - b.start);
-        return rows.length ? [`Side ${side.key}`, ...rows.map((c) => `[${stamp(c.start)}] ${c.known ? [c.artist, c.title].filter(Boolean).join(" - ") : `?${c.title ? ` ${c.title}` : ""}`}`)].join("\n") : "";
+        const rows = mine.filter((c) => c.track === side.key).sort((a, b) => a.start - b.start);
+        return rows.length ? [`Side ${side.key}`, ...rows.map((c) => `[${stamp(c.start)}] ${[c.artist, c.title].filter(Boolean).join(" - ")}`)].join("\n") : "";
       })
       .filter(Boolean)
       .join("\n\n");
+  const [copied, setCopied] = useState<"no" | "yes" | "failed">("no");
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(asComment());
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      setCopied("yes");
+      setTimeout(() => setCopied("no"), 1500);
     } catch {
-      /* clipboard unavailable */
+      setCopied("failed"); // show the text so it can be copied by hand
     }
   };
 
-  const knownCount = cues.filter((c) => c.known).length;
-  const unknownCount = cues.length - knownCount;
+  // Before the tracklist is in place (the first paint, and the server's HTML), count from what listeners posted.
+  const counted = ready ? cues : proposals;
+  const knownCount = counted.filter((c) => c.known).length;
+  const unknownCount = counted.length - knownCount;
+  const audioFailed = failed[active];
 
-  // The naming form: inline under the timeline with a mouse, in a sheet above the keyboard on a phone.
-  const nameForm = sel && (
+  const markLabel = touch ? "New track" : "A new track starts here";
+  const intro =
+    namesWaiting > 0
+      ? `${namesTotal - namesWaiting} of ${namesTotal} tracks placed. We know what’s on this tape, but not when each one comes in. Press play, and press “${markLabel}” each time one starts.`
+      : counted.length
+        ? unknownCount
+          ? `${knownCount} of ${counted.length} ID’d. ${unknownCount} still unknown. Press play and help ID the unknowns.`
+          : // Every marked track has a name, which says nothing about the stretches nobody has marked.
+            `${knownCount} ${knownCount === 1 ? "track" : "tracks"} ID’d so far. Press play, and when you hear one that isn’t marked, press “${markLabel}” and ID it.`
+        : `Nothing ID’d on this tape yet. Press play, and press “${markLabel}” when you hear a track you know.`;
+
+  // The ID form: inline under the timeline with a mouse, in a sheet above the keyboard on a phone.
+  const chips = nextNames.length > 0 && (
+    <div className="w-full">
+      <p className="ts-label">{fromSite ? "Is it one of these, from the tape’s tracklist?" : `Is it one of these, from ${nextNames[0].author}’s list?`}</p>
+      <div className="flex flex-wrap gap-2">
+        {nextNames.map((l) => (
+          <button
+            key={`${l.side}-${l.n}`}
+            type="button"
+            onClick={() => {
+              saveId(l.artist, l.title);
+              if (touch) closeSheet();
+              else requestAnimationFrame(() => (scrollerRef.current?.querySelector("[data-selected]") as HTMLElement | null)?.focus());
+            }}
+            className="ts-chip"
+          >
+            <span className="font-mono text-[10px] tabular-nums opacity-70">{l.n}</span> {l.artist} — {l.title}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+  const idForm = sel && (
     <form
       className="ts-nameform"
       onSubmit={(e) => {
         e.preventDefault();
-        saveName();
-        setSheet(false);
+        saveId();
+        if (touch) closeSheet();
       }}
       // With a mouse, leaving the form saves. Moving between its two fields does not.
       onBlur={(e) => {
-        if (!touch && !e.currentTarget.contains(e.relatedTarget as Node | null)) saveName();
+        if (!touch && !e.currentTarget.contains(e.relatedTarget as Node | null)) saveId();
+      }}
+      // Escape abandons what was typed.
+      onKeyDown={(e) => {
+        if (e.key === "Escape" && !touch) {
+          setDraft({ artist: sel.artist, title: shownTitle });
+          (scrollerRef.current?.querySelector("[data-selected]") as HTMLElement | null)?.focus();
+        }
       }}
     >
+      {/* One-tap answers come before the fields that need typing. */}
+      {chips}
+      {!sel.known && sel.title && (
+        <p className="w-full text-[15px] text-[var(--text)]">
+          Clue from {sel.by ?? "a listener"}: “{sel.title}”
+        </p>
+      )}
       <Field className="min-w-0 flex-1 basis-40">
         <FieldLabel className="ts-label">Artist</FieldLabel>
         <Input
           id={touch ? "ts-artist-sheet" : "ts-artist"}
-          value={draftName.artist}
-          onValueChange={(v: string) => setDraftName((d) => ({ ...d, artist: v }))}
-          // The keyboard's Next key sends Enter. It should go to Title, not save half a name.
+          value={draft.artist}
+          onValueChange={(v: string) => setDraft((d) => ({ ...d, artist: v }))}
+          // The keyboard's Next key sends Enter. It should go to Title, not save half an ID.
           onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
             if (e.key === "Enter" && !e.nativeEvent.isComposing) {
               e.preventDefault();
@@ -578,7 +760,7 @@ export function Trainspotter({
       </Field>
       <Field className="min-w-0 flex-[1.4] basis-48">
         <FieldLabel className="ts-label">Title</FieldLabel>
-        <Input data-title value={draftName.title} onValueChange={(v: string) => setDraftName((d) => ({ ...d, title: v }))} {...nameHints("done")} className="ts-input" />
+        <Input data-title value={draft.title} onValueChange={(v: string) => setDraft((d) => ({ ...d, title: v }))} {...nameHints("done")} className="ts-input" />
       </Field>
       <div className="flex flex-none flex-wrap items-end gap-2">
         <button type="submit" className="poster-btn min-h-11 !bg-[var(--text)] !text-[var(--bg)]">
@@ -587,54 +769,51 @@ export function Trainspotter({
         <button type="button" onClick={() => seek(sides.indexOf(sel.track), sel.start, true)} className="poster-btn min-h-11">
           Hear it
         </button>
-        <button type="button" onClick={remove} className="poster-btn min-h-11" data-agent-confirm="Remove this track from the tracklist?">
+        <button type="button" onClick={() => remove()} className="poster-btn min-h-11" data-agent-confirm="Remove this track from the tracklist?">
           Remove
         </button>
       </div>
-      {nextNames.length > 0 && (
-        <div className="w-full">
-          <p className="ts-label">{nextNames[0].author === "simfonik" ? "Is it one of these, from the tape’s tracklist?" : `Is it one of these, from ${nextNames[0].author}’s list?`}</p>
-          <div className="flex flex-wrap gap-2">
-            {nextNames.map((l) => (
-              <button
-                key={`${l.side}-${l.n}`}
-                type="button"
-                onClick={() => {
-                  saveName(l.artist, l.title);
-                  setSheet(false);
-                }}
-                className="ts-chip"
-              >
-                <span className="font-mono text-[10px] tabular-nums opacity-70">{l.n}</span> {l.artist} — {l.title}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      {(sel.by || opinions.length > 0) && (
-        <p className="w-full text-sm text-[var(--muted)]">
-          {sel.by ? (sel.known ? `ID’d by ${sel.by}.` : `${sel.by} marked this one as unknown.`) : ""}
-          {opinions.map((o, i) => (
-            <span key={i}>
-              {" "}
-              {o.known ? (
-                <>
-                  {o.author} thought it was{" "}
-                  <button type="button" onClick={() => saveName(o.artist, o.title)} className="inline-flex min-h-11 cursor-pointer items-center text-[var(--text)] underline underline-offset-4">
-                    {[o.artist, o.title].filter(Boolean).join(" — ")}
-                  </button>
-                  .
-                </>
-              ) : (
-                <>
-                  {o.author} heard “{o.title}”.
-                </>
-              )}
-            </span>
-          ))}
-        </p>
-      )}
+      <p className="w-full text-sm text-[var(--muted)]">
+        {sel.known ? (sel.by ? `ID’d by ${sel.by}.` : "ID’d by you.") : !sel.title && sel.by ? `${sel.by} marked this one as unknown.` : ""}
+        {opinions.map((o, i) => (
+          <span key={i}>
+            {" "}
+            {o.known ? (
+              <>
+                {o.author} thought it was{" "}
+                <button type="button" onClick={() => saveId(o.artist, o.title)} className="inline-flex min-h-11 cursor-pointer items-center text-[var(--text)] underline underline-offset-4">
+                  {[o.artist, o.title].filter(Boolean).join(" — ")}
+                </button>
+                .
+              </>
+            ) : (
+              <>
+                {o.author} heard “{o.title}”.
+              </>
+            )}
+          </span>
+        ))}
+        {sel.known && (
+          <>
+            {" "}
+            <button type="button" onClick={backToUnknown} className="inline-flex min-h-11 cursor-pointer items-center underline underline-offset-4 hover:text-[var(--text)]">
+              Not right? Set it back to unknown
+            </button>
+          </>
+        )}
+      </p>
     </form>
+  );
+
+  const undoRedo = (
+    <>
+      <button type="button" onClick={() => void step(-1)} disabled={!canUndo} className="poster-btn min-h-11" aria-keyshortcuts={undoHint.ariaKeyshortcuts} title={`Undo (${undoHint.text})`}>
+        Undo
+      </button>
+      <button type="button" onClick={() => void step(1)} disabled={!canRedo} className="poster-btn min-h-11" aria-keyshortcuts={redoHint.ariaKeyshortcuts} title={`Redo (${redoHint.text})`}>
+        Redo
+      </button>
+    </>
   );
 
   const root = usePart(
@@ -647,62 +826,71 @@ export function Trainspotter({
       className: "ts-rows",
       children: ({ cues: live }: { cues: Cue[] }) => (
         <>
-            {tape.sides.map((side, i) => (
-              <div key={side.key} className="ts-row" data-active={i === active ? "" : undefined}>
-                <button type="button" className="ts-side" onClick={() => seek(i, audios.current[i]?.currentTime ?? 0)} aria-pressed={i === active} aria-label={`Listen to side ${side.key}`}>
-                  {side.key}
-                </button>
-                <Track
-                  value={side.key}
-                  className="ts-track"
-                  style={{ width, backgroundSize: `${(60 / length) * 100}% 100%` }}
-                  onPointerDown={(e: React.PointerEvent) => {
-                    down.current = { x: e.clientX, y: e.clientY };
+          {tape.sides.map((side, i) => (
+            <div key={side.key} className="ts-row">
+              <button type="button" className="ts-side" onClick={() => seek(i, audios.current[i]?.currentTime ?? 0)} aria-pressed={i === active} aria-label={`Listen to side ${side.key}${side.title && side.title !== `Side ${side.key}` ? `, ${side.title}` : ""}`}>
+                {side.key}
+              </button>
+              <Track
+                value={side.key}
+                className="ts-track"
+                style={{ width, backgroundSize: `${(60 / length) * 100}% 100%` }}
+                onPointerDown={(e: React.PointerEvent) => {
+                  down.current = { x: e.clientX, y: e.clientY };
+                }}
+                onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+                  // Click bare tape to go there.
+                  if (wasClick(e)) seek(i, Math.min(api.spans.valueAt(side.key, e.clientX, e.clientY), sideLength(i)));
+                }}
+              >
+                {durations[i] !== null && durations[i]! < length && <div className="ts-beyond" style={{ left: `${(durations[i]! / length) * 100}%` }} aria-hidden />}
+                {live
+                  .filter((c) => c.track === side.key)
+                  .map((c) => (
+                    <CuePart
+                      key={c.id}
+                      value={c.id}
+                      className="ts-cue"
+                      data-selected={c.id === selected ? "" : undefined}
+                      aria-current={c.id === selected ? "true" : undefined}
+                      onClick={(e: React.MouseEvent) => {
+                        // A click on a track picks it and plays it from its start, whichever side it is on.
+                        // It stops here so the tape underneath doesn't also seek to wherever the click landed.
+                        e.stopPropagation();
+                        if (!wasClick(e)) return;
+                        setSelected(c.id);
+                        seek(i, c.start, true);
+                      }}
+                      onFocus={() => setSelected(c.id)}
+                      onKeyDown={(e: React.KeyboardEvent) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          idIt(c.id);
+                        } else if (e.key === "Delete" || e.key === "Backspace") {
+                          e.preventDefault();
+                          remove(c);
+                        }
+                      }}
+                    >
+                      <span className="ts-edge" data-span-edge="start" aria-hidden />
+                      <span className="ts-cue-text">
+                        <b>{c.known ? c.artist || c.title : "Unknown"}</b>
+                        <i>{c.known ? (c.artist ? c.title : "") : c.title ? `“${c.title}”` : "ID it?"}</i>
+                      </span>
+                      <span className="ts-edge" data-span-edge="end" aria-hidden />
+                    </CuePart>
+                  ))}
+                <div
+                  ref={(el) => {
+                    playheads.current[i] = el;
                   }}
-                  onClick={(e: React.MouseEvent<HTMLDivElement>) => {
-                    // Click anywhere on the tape to go there.
-                    if (wasClick(e)) seek(i, api.spans.valueAt(side.key, e.clientX, e.clientY));
-                  }}
-                >
-                  <div className="ts-beyond" style={{ left: `${(lengths[i] / length) * 100}%` }} aria-hidden />
-                  {live
-                    .filter((c) => c.track === side.key)
-                    .map((c) => (
-                      <CuePart
-                        key={c.id}
-                        value={c.id}
-                        className="ts-cue"
-                        data-selected={c.id === selected ? "" : undefined}
-                        onClick={(e: React.MouseEvent) => {
-                          if (wasClick(e)) setSelected(c.id);
-                        }}
-                        onFocus={() => setSelected(c.id)}
-                        onKeyDown={(e: React.KeyboardEvent) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            nameIt(c.id);
-                          }
-                        }}
-                      >
-                        <span className="ts-edge" data-span-edge="start" aria-hidden />
-                        <span className="ts-cue-text">
-                          <b>{c.known ? c.artist || c.title : "Unknown"}</b>
-                          <i>{c.known ? (c.artist ? c.title : "") : c.title || "Know it?"}</i>
-                        </span>
-                        <span className="ts-edge" data-span-edge="end" aria-hidden />
-                      </CuePart>
-                    ))}
-                  <div
-                    ref={(el) => {
-                      playheads.current[i] = el;
-                    }}
-                    className="ts-playhead"
-                    hidden
-                    aria-hidden
-                  />
-                </Track>
-              </div>
-            ))}
+                  className="ts-playhead"
+                  hidden={i !== active}
+                  aria-hidden
+                />
+              </Track>
+            </div>
+          ))}
         </>
       ),
     },
@@ -710,7 +898,7 @@ export function Trainspotter({
   );
 
   return (
-    <section className="ts-page mx-auto max-w-7xl px-4 pb-24 pt-8 sm:px-6 sm:pt-12" aria-label="Help name the tracks on this tape">
+    <section className="ts-page mx-auto max-w-7xl px-4 pb-24 pt-8 sm:px-6 sm:pt-12" aria-label="Help ID the tracks on this tape">
       {tape.sides.map((s, i) => (
         <audio
           key={s.key}
@@ -723,57 +911,52 @@ export function Trainspotter({
         />
       ))}
 
-      <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">Name that tune · {tape.released}</p>
-      <h1 className="mt-2 font-display text-4xl leading-[0.95] text-[var(--text)] [text-wrap:balance] sm:text-6xl">
+      <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
+        Released {tape.released} ·{" "}
+        <Link href={`/tapes/${tape.id}`} className="cursor-pointer underline underline-offset-4 hover:text-[var(--text)]">
+          Tape page
+        </Link>
+      </p>
+      <h1 className="mt-2 line-clamp-3 font-display text-4xl leading-[0.95] text-[var(--text)] [text-wrap:balance] sm:text-6xl">
         {tape.djs} <span className="text-[var(--muted)]">{tape.title}</span>
       </h1>
-      <p className="mt-3 max-w-[60ch] text-[17px] text-[var(--text)]">
-        {cues.length
-          ? unknownCount
-            ? `${knownCount} of ${cues.length} ID’d. ${unknownCount} still unknown. Press play and help ID the unknowns.`
-            : `All ${cues.length} ID’d. Press play, and if one is wrong or missing, fix it.`
-          : waiting.some((w) => w.length)
-            ? "We know what’s on this tape, but not when each track comes in. Press play, and press the button each time a new one starts."
-            : "Nothing ID’d on this tape yet. Press play and be the first to ID one."}
-      </p>
+      <p className="mt-3 max-w-[60ch] text-[17px] text-[var(--text)]">{intro}</p>
 
-      <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 border-t-[1.5px] border-[var(--text)] pt-4">
-        <button type="button" onClick={toggle} className="ts-fine-only poster-btn min-h-11 min-w-[6rem] !bg-[var(--text)] !text-[var(--bg)]" aria-keyshortcuts="Space">
-          {playing ? "Pause" : "Play"}
-        </button>
-        <p className="ts-fine-only font-mono text-sm tabular-nums text-[var(--text)]">
-          Side {sides[active]} · {clock(now)} <span className="text-[var(--muted)]">/ {clock(lengths[active])}</span>
-        </p>
-        <div className="ml-auto flex gap-2">
-          <button type="button" onClick={() => void step(-1)} disabled={!canUndo} className="poster-btn min-h-11" aria-keyshortcuts={undoHint.ariaKeyshortcuts} title={`Undo (${undoHint.text})`}>
-            Undo
+      {!touch && (
+        <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 border-t-[1.5px] border-[var(--text)] pt-4">
+          <button type="button" onClick={toggle} disabled={audioFailed} className="ts-fine-only poster-btn min-h-11 min-w-[6rem] !bg-[var(--text)] !text-[var(--bg)]" aria-keyshortcuts="Space">
+            {playing ? "Pause" : "Play"}
           </button>
-          <button type="button" onClick={() => void step(1)} disabled={!canRedo} className="poster-btn min-h-11" aria-keyshortcuts={redoHint.ariaKeyshortcuts} title={`Redo (${redoHint.text})`}>
-            Redo
-          </button>
+          <p className="ts-fine-only font-mono text-sm tabular-nums text-[var(--text)]">
+            Side {sides[active]} · {clock(now)} <span className="text-[var(--muted)]">/ {durations[active] === null ? "–:––" : clock(durations[active]!)}</span>
+          </p>
+          <div className="ml-auto flex gap-2">{undoRedo}</div>
         </div>
-      </div>
+      )}
 
-      <div className="mt-5 flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
+      {/* With a mouse, what's playing and what to do about it. On a phone the pinned bar says the same thing. */}
+      <div className="ts-fine-only mt-5 flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
         <div className="min-w-0 flex-1 basis-72">
           <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">{playing ? "Now playing" : `Paused at ${clock(now)}`}</p>
           <p className="mt-1 truncate font-display text-3xl leading-tight text-[var(--text)] sm:text-4xl">{playingCue ? (playingCue.known ? cueLabel(playingCue) : "Unknown track") : "Nothing ID’d here yet"}</p>
           <p className="mt-1 min-h-[1.25rem] truncate text-sm text-[var(--muted)]">
-            {playingCue
-              ? playingCue.known
-                ? playingCue.by
-                  ? `ID’d by ${playingCue.by}`
-                  : "ID’d by you"
-                : playingCue.title
-                  ? `Nobody has ID’d it. Clue: “${playingCue.title}”`
-                  : "Nobody has ID’d this one. Do you know it?"
-              : "If a track is playing here, press the button and name it."}
+            {audioFailed
+              ? `Side ${sides[active]}’s audio didn’t load. Check your connection and reload the page.`
+              : playingCue
+                ? playingCue.known
+                  ? playingCue.by
+                    ? `ID’d by ${playingCue.by}`
+                    : "ID’d by you"
+                  : playingCue.title
+                    ? `Nobody has ID’d it. Clue: “${playingCue.title}”`
+                    : "Nobody has ID’d this one. Do you know it?"
+                : `If a track is playing here, press “${markLabel}” and ID it.`}
           </p>
         </div>
-        <div className="ts-fine-only flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2">
           {playingCue && (
-            <button type="button" onClick={() => nameIt(playingCue.id)} className={`poster-btn min-h-11 ${playingCue.known ? "" : "!bg-[var(--text)] !text-[var(--bg)]"}`}>
-              {playingCue.known ? "Fix this name" : "I know this one"}
+            <button type="button" onClick={() => idIt(playingCue.id)} className={`poster-btn min-h-11 ${playingCue.known || playingCue.id === selected ? "" : "!bg-[var(--text)] !text-[var(--bg)]"}`}>
+              {playingCue.known ? "Fix this ID" : "ID this track"}
             </button>
           )}
           <button type="button" onClick={markHere} className={`poster-btn min-h-11 ${playingCue ? "" : "!bg-[var(--text)] !text-[var(--bg)]"}`} aria-keyshortcuts="M">
@@ -784,11 +967,11 @@ export function Trainspotter({
 
       <div className="ts-root mt-4">
         <div className="ts-scroller" ref={scrollerRef} data-proto-keys>
-          <div className="ts-canvas" style={{ width: width + 56 }}>
+          <div className="ts-canvas" style={{ width: width + GUTTER }}>
             {/* The ruler is the scrubber: a slider the width of the tape. It sits outside the tracklist
                 so that moving through the audio is never recorded as a change to the tracklist. */}
-            <div className="ts-ruler" style={{ marginLeft: 56, width }}>
-              <Slider value={Math.min(now, length)} onValueChange={scrub} min={0} max={length} step={1} largeStep={15} format={(v: number) => clock(v)}>
+            <div className="ts-ruler" style={{ marginLeft: GUTTER, width }}>
+              <Slider value={Math.min(scrubAt ?? now, length)} onValueChange={scrub} onValueCommit={scrubEnd} min={0} max={length} step={1} largeStep={15} format={(v: number) => clock(v)}>
                 <SliderControl className="ts-scrub">
                   <SliderTrack className="ts-scrub-track">
                     {Array.from({ length: Math.floor(minutes / 5) + 1 }, (_, i) => (
@@ -806,55 +989,62 @@ export function Trainspotter({
         </div>
       </div>
 
-      {/* With a mouse the name fields sit under the timeline. On a phone they open in a sheet that stays above the keyboard. */}
+      {/* With a mouse the ID fields sit under the timeline. On a phone they open in a sheet that stays above the keyboard. */}
       <div className="ts-namebar">
         {sel ? (
           <>
             <p className="w-full font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] tabular-nums">
-              Side {sel.track} · {clock(sel.start)} to {clock(sel.end)} · {sel.known ? "what should this be called?" : "what is this track?"}
+              Side {sel.track} · {clock(sel.start)} to {clock(sel.end)} · {sel.known ? "is this right?" : "what is this track?"}
             </p>
             {touch ? (
               <div className="flex w-full items-center gap-3">
                 <p className="min-w-0 flex-1 truncate text-[15px] font-medium text-[var(--text)]">{cueLabel(sel)}</p>
+                <button type="button" onClick={() => seek(sides.indexOf(sel.track), sel.start, true)} className="poster-btn min-h-11 flex-none">
+                  Hear it
+                </button>
                 <button type="button" onClick={() => openSheet(sel.id)} className="poster-btn min-h-11 flex-none !bg-[var(--text)] !text-[var(--bg)]">
-                  {sel.known ? "Fix name" : "Name it"}
+                  {sel.known ? "Fix ID" : "ID it"}
                 </button>
               </div>
             ) : (
-              nameForm
+              idForm
             )}
           </>
         ) : (
-          <p className="text-sm text-[var(--muted)]">
-            <span className="ts-fine">
-              Drag the marker along the top to scrub, or click anywhere on the tape to go there. Click a track to name it. Drag a track to move it, or an end to trim it. Keys: Space plays, M marks a new track, {undoHint.text} undoes.
-            </span>
-            <span className="ts-coarse">Slide the marker along the top to scrub, or tap anywhere on the tape to go there. Tap a track to name it.</span>
-          </p>
+          <div className="text-sm text-[var(--muted)]">
+            <p className="ts-fine">Drag the marker along the top to scrub, or click bare tape to go there. Click a track to hear it from its start and ID it. Drag a track to move it, or an end to trim it.</p>
+            <p className="ts-fine mt-1">
+              Keys: Space plays · M marks a new track · {undoHint.text} undoes. On a track: ← → move between tracks · Enter IDs it · Alt ← → nudges it a second · Alt Shift ← → trims its end · Delete removes it.
+            </p>
+            <p className="ts-coarse">Slide the marker along the top to scrub, or tap bare tape to go there. Tap a track to hear it, then “ID it”.</p>
+          </div>
         )}
       </div>
 
-      <Drawer open={sheet && Boolean(sel) && touch} onOpenChange={(open: boolean) => setSheet(open)}>
+      {/* On a phone, undo appears under the timeline once there is something to undo, so the timeline never moves. */}
+      {touch && (canUndo || canRedo) && <div className="mt-3 flex justify-end gap-2">{undoRedo}</div>}
+
+      <Drawer open={sheet && Boolean(sel) && touch} onOpenChange={(open: boolean) => (open ? setSheet(true) : closeSheet())}>
         <DrawerBackdrop className="ts-backdrop" />
         <DrawerContent className="ts-sheet">
           <div data-slot="grip" className="ts-grip" aria-hidden />
           {sel && (
             <>
               <div className="flex items-start justify-between gap-3">
-                <DrawerTitle className="font-display text-2xl leading-tight text-[var(--text)]">{sel.known ? "Fix this name" : "What is this track?"}</DrawerTitle>
+                <DrawerTitle className="font-display text-2xl leading-tight text-[var(--text)]">{sel.known ? "Fix this ID" : "What is this track?"}</DrawerTitle>
                 <DrawerClose className="poster-btn min-h-11 flex-none">Close</DrawerClose>
               </div>
               <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] tabular-nums">
                 Side {sel.track} · {clock(sel.start)} to {clock(sel.end)}
               </p>
-              <div className="mt-3">{nameForm}</div>
+              <div className="mt-3">{idForm}</div>
             </>
           )}
         </DrawerContent>
       </Drawer>
 
-      {/* The job, as a list: every track nobody has named. Easier to hit than a narrow block on the timeline. */}
-      {unknownCount > 0 && (
+      {/* The job, as a list: every track nobody has ID'd. Easier to hit than a narrow block on the timeline. */}
+      {ready && unknownCount > 0 && (
         <div className="mt-8">
           <h2 className="font-display text-2xl leading-none text-[var(--text)]">Still unknown</h2>
           <ul className="ts-list ts-unknowns mt-3">
@@ -863,15 +1053,15 @@ export function Trainspotter({
               .sort((a, b) => a.track.localeCompare(b.track) || a.start - b.start)
               .map((c) => (
                 <li key={c.id}>
-                  <button type="button" onClick={() => seek(sides.indexOf(c.track), c.start, true)} className="ts-list-row" aria-label={`Hear side ${c.track} from ${clock(c.start)}`}>
+                  <button type="button" onClick={() => seek(sides.indexOf(c.track), c.start, true)} className="ts-list-row" aria-label={`Hear side ${c.track} from ${clock(c.start)}${c.title ? `. Clue: ${c.title}` : ""}`}>
                     <span className="flex-none font-mono text-[11px] tabular-nums text-[var(--muted)]">
                       {c.track} {clock(c.start)}
                     </span>
                     <span className="min-w-0 flex-1 truncate">{c.title ? `Clue: “${c.title}”` : "No clues yet"}</span>
                     <span className="flex-none text-[12px] text-[var(--muted)]">Hear it</span>
                   </button>
-                  <button type="button" onClick={() => nameIt(c.id)} className="ts-chip flex-none">
-                    I know it
+                  <button type="button" onClick={() => idIt(c.id)} className="ts-chip flex-none" aria-label={`ID the track at ${clock(c.start)}, side ${c.track}`}>
+                    ID it
                   </button>
                 </li>
               ))}
@@ -883,27 +1073,59 @@ export function Trainspotter({
         <div className="min-w-0">
           <h2 className="font-display text-2xl leading-none text-[var(--text)]">Send it in</h2>
           <p className="mt-2 max-w-[52ch] text-[15px] text-[var(--muted)]">
-            What you name here is saved on this device. To add it to the archive, copy your tracklist and post it as a comment on the tape’s page. That is where every name on this timeline came from.
+            What you ID here is saved on this device. To add it to the archive, copy your IDs and post them as a comment on the tape’s page. Listeners’ IDs on this timeline came from the same place.
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <button type="button" onClick={copy} disabled={!cues.length} className="poster-btn min-h-11 min-w-[12.5rem]">
-              {copied ? "Copied ✓" : "Copy my tracklist"}
+            <button type="button" onClick={copy} disabled={!mine.length} className="poster-btn min-h-11 min-w-[12.5rem]">
+              {copied === "yes" ? "Copied ✓" : mine.length ? `Copy my IDs (${mine.length})` : "Copy my IDs"}
             </button>
             <Link href={`/tapes/${tape.id}`} className="inline-flex min-h-11 cursor-pointer items-center text-[15px] text-[var(--text)] underline underline-offset-4">
               Go to the tape’s page
             </Link>
           </div>
-          {proposals.length > 0 && (
-            <button type="button" onClick={() => void loadFromListeners("reset")} className="mt-4 inline-flex min-h-11 cursor-pointer items-center text-sm text-[var(--muted)] underline underline-offset-4 hover:text-[var(--text)]">
-              Start over from what listeners identified
-            </button>
+          {!mine.length && <p className="mt-2 text-sm text-[var(--muted)]">Nothing to copy yet. ID a track and it will appear here.</p>}
+          {copied === "failed" && (
+            <label className="mt-3 block">
+              <span className="ts-label">Your browser wouldn’t copy it. Select this and copy it yourself:</span>
+              <textarea readOnly value={asComment()} rows={Math.min(8, mine.length + 2)} onFocus={(e) => e.currentTarget.select()} className="ts-input h-auto py-2 font-mono text-sm" />
+            </label>
           )}
         </div>
 
         <div className="min-w-0">
+          {namesTotal > 0 && (
+            <Collapsible className="ts-fold" defaultOpen={namesWaiting === namesTotal}>
+              <CollapsibleTrigger className="ts-fold-trigger">
+                <span>{fromSite ? "The tape’s tracklist" : "A listener’s tracklist, in order"}</span>
+                <span className="font-mono text-[11px] tabular-nums text-[var(--muted)]">{namesWaiting} still to place</span>
+              </CollapsibleTrigger>
+              <CollapsiblePanel className="ts-fold-panel">
+                <ol className="ts-list ts-names">
+                  {orders.flatMap((order, side) =>
+                    order
+                      .filter((l) => l.known)
+                      .map((l) => {
+                        const placed = !waiting[side].includes(l);
+                        return (
+                          <li key={`${side}-${l.n}`} data-placed={placed ? "" : undefined}>
+                            <span className="flex-none font-mono text-[11px] tabular-nums text-[var(--muted)]">
+                              {sides[side]} {l.n}
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              {l.artist} — {l.title}
+                            </span>
+                            {placed && <span className="flex-none text-[12px] text-[var(--muted)]">placed</span>}
+                          </li>
+                        );
+                      }),
+                  )}
+                </ol>
+              </CollapsiblePanel>
+            </Collapsible>
+          )}
           <Collapsible className="ts-fold">
             <CollapsibleTrigger className="ts-fold-trigger">
-              <span>Where these names came from</span>
+              <span>Where listeners’ IDs came from</span>
               <span className="font-mono text-[11px] tabular-nums text-[var(--muted)]">{proposals.length}</span>
             </CollapsibleTrigger>
             <CollapsiblePanel className="ts-fold-panel">
@@ -924,30 +1146,42 @@ export function Trainspotter({
                   ))}
                 </ul>
               ) : (
-                <p className="py-3 text-sm text-[var(--muted)]">Nobody has posted a timed track name in this tape’s comments yet.</p>
+                <p className="py-3 text-sm text-[var(--muted)]">Nobody has posted a timed ID in this tape’s comments yet.</p>
               )}
             </CollapsiblePanel>
           </Collapsible>
           <Collapsible className="ts-fold">
             <CollapsibleTrigger className="ts-fold-trigger">
-              <span>What’s changed since you opened this</span>
-              <span className="font-mono text-[11px] tabular-nums text-[var(--muted)]">{entries.length}</span>
+              <span>What you’ve changed</span>
+              <span className="font-mono text-[11px] tabular-nums text-[var(--muted)]">{Math.max(0, entries.length - floor)}</span>
             </CollapsibleTrigger>
             <CollapsiblePanel className="ts-fold-panel">
-              {entries.length ? (
+              {entries.length > floor ? (
                 <ol className="ts-list">
-                  {[...entries].reverse().map((e, i) => (
-                    <li key={e.id} className="ts-history-row" data-undone={entries.length - i > position || e.reverted ? "" : undefined}>
-                      <span className="ts-source">{e.source === "agent" ? "Listeners" : "You"}</span>
-                      <span className="min-w-0 flex-1">{describe(e)}</span>
-                    </li>
-                  ))}
+                  {entries
+                    .map((e, i) => ({ e, n: i + 1 }))
+                    .filter((x) => x.n > floor)
+                    .reverse()
+                    .map(({ e, n }) => (
+                      <li key={e.id} className="ts-history-row" data-undone={n > position || e.reverted ? "" : undefined}>
+                        <span className="ts-source">{e.source === "agent" ? "Listeners" : "You"}</span>
+                        <span className="min-w-0 flex-1">
+                          {describe(e)}
+                          {n > position || e.reverted ? " (undone)" : ""}
+                        </span>
+                      </li>
+                    ))}
                 </ol>
               ) : (
                 <p className="py-3 text-sm text-[var(--muted)]">Nothing yet.</p>
               )}
             </CollapsiblePanel>
           </Collapsible>
+          {proposals.length > 0 && (
+            <button type="button" onClick={() => void startOver()} className="mt-2 inline-flex min-h-11 cursor-pointer items-center text-sm text-[var(--muted)] underline underline-offset-4 hover:text-[var(--text)]">
+              Start over from what listeners ID’d
+            </button>
+          )}
         </div>
       </div>
 
@@ -970,26 +1204,26 @@ export function Trainspotter({
                 </ComboboxItem>
               ))}
             </ComboboxList>
-            <ComboboxEmpty className="px-3 py-3 text-sm text-[var(--muted)]">No tape by that name has track names to work with yet.</ComboboxEmpty>
+            <ComboboxEmpty className="px-3 py-3 text-sm text-[var(--muted)]">No tape by that name has track IDs to work with yet.</ComboboxEmpty>
           </ComboboxContent>
         </Combobox>
       </div>
 
-      {/* Phone: play, the clock and the two naming actions stay under the thumb wherever the page is scrolled. */}
-      <div className="ts-bar" aria-label="Player">
+      {/* Phone: play, the clock and the two ID actions stay under the thumb wherever the page is scrolled. */}
+      <div className="ts-bar" role="group" aria-label="Player">
         <p className="ts-bar-now">
-          <span className="min-w-0 flex-1 truncate">{playingCue ? (playingCue.known ? cueLabel(playingCue) : "Unknown track") : "Nothing ID’d here yet"}</span>
+          <span className="min-w-0 flex-1 truncate">{audioFailed ? "This side’s audio didn’t load" : playingCue ? (playingCue.known ? cueLabel(playingCue) : "Unknown track") : "Nothing ID’d here yet"}</span>
           <span className="flex-none font-mono text-[12px] tabular-nums text-[var(--muted)]">
             {sides[active]} {clock(now)}
           </span>
         </p>
         <div className="ts-bar-row">
-          <button type="button" onClick={toggle} className="ts-bar-btn ts-bar-primary">
+          <button type="button" onClick={toggle} disabled={audioFailed} className="ts-bar-btn ts-bar-primary">
             {playing ? "Pause" : "Play"}
           </button>
           {/* Always here, so the button beside it never moves under the thumb. */}
-          <button type="button" onClick={() => playingCue && nameIt(playingCue.id)} disabled={!playingCue} className="ts-bar-btn">
-            {playingCue?.known ? "Fix name" : "I know it"}
+          <button type="button" onClick={() => playingCue && idIt(playingCue.id)} disabled={!playingCue} className="ts-bar-btn">
+            {playingCue?.known ? "Fix ID" : "ID it"}
           </button>
           <button type="button" onClick={markHere} className="ts-bar-btn">
             New track
