@@ -51,6 +51,21 @@ describe('PlaylistPlayer Integration', () => {
     expect(audioNode?.src).toContain('track2.mp3');
   });
 
+  it('credits a side to its DJ once: not again under a side that is named after them', () => {
+    render(
+      <PlaylistPlayer
+        tapeId="tape-1"
+        sideCount={2}
+        tracks={[
+          { title: 'Scott Hardkiss', url: 'a.mp3', position: 'A', index: 0, djs: [{ name: 'Scott Hardkiss', slug: 'scott-hardkiss' }] },
+          { title: 'Side B', url: 'b.mp3', position: 'B', index: 1, djs: [{ name: 'Doc Martin', slug: 'doc-martin' }] },
+        ]}
+      />,
+    );
+    expect(screen.getAllByText('Scott Hardkiss')).toHaveLength(1);
+    expect(screen.getByText('Doc Martin')).toBeInTheDocument();
+  });
+
   it('says the times on the rows: each side\'s length, and how far in the loaded side is once it has started', async () => {
     const timed = [
       { ...mockTracks[0], length: 1831 },

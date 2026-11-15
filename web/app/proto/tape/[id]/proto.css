@@ -1,43 +1,11 @@
 /* PROTOTYPE (SIM-43). Throwaway. */
 
-/* Where the bar runs the full width of the page it is taller, and the play button sits at its middle. */
+/* On a wide screen the bar is taller than the real page's, and the play button sits at its middle. */
 .proto-wide .player-wave { height: 4.5rem; }
 .proto-wide .player-play { margin-top: 0.875rem; }
 @media (max-width: 63.99rem) {
   .proto-wide .player-wave { height: 2.75rem; }
   .proto-wide .player-play { margin-top: 0; }
-}
-
-/* "Bars": the waveform drawn as fine upright bars, the way the home page's is, in place of one solid shape.
-   The gaps are painted over the shape in the page's own colour, inside the shape's outline. */
-.proto-bars .player-wave-shape:not([data-flat])::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(to right, transparent 0 2px, var(--bg) 2px 4px);
-}
-
-/* "Spare": the sides as one quiet line of names, the loaded one in full colour. */
-.proto-side-link {
-  position: relative;
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: var(--muted);
-  text-underline-offset: 5px;
-  cursor: pointer;
-  transition: color 0.15s ease-out;
-}
-.proto-side-link::before { content: ""; position: absolute; inset: -14px -6px; }
-.proto-side-link[aria-pressed="true"] { color: var(--text); text-decoration: underline; text-decoration-thickness: 1.5px; }
-@media (hover: hover) and (pointer: fine) {
-  .proto-side-link:hover { color: var(--text); }
-}
-.proto-side-link:active { opacity: 0.6; }
-.proto-side-link:focus-visible { outline: 2px solid var(--text); outline-offset: 4px; }
-@media (prefers-reduced-motion: reduce) {
-  .proto-side-link { transition: none; }
 }
 
 /* A thumbnail under the cover: the one in the box is at full strength, the others are held back. */

@@ -1,6 +1,6 @@
 "use client";
 
-// PROTOTYPE (SIM-43): what the four directions share. Throwaway.
+// PROTOTYPE (SIM-43): the parts of the page that every variant uses. Throwaway.
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -24,16 +24,11 @@ export type TapeView = {
   tracks: Track[];
 };
 
-/**
- * The tape's name, who made it, and the small print. `big` is for where the words lead the page. `spread`
- * is for when nothing else shares their column: the name keeps the top, level with the top of the cover, and
- * the rest goes to the foot, level with its bottom, so the column is held at both ends and not left half empty.
- */
-export function Words({ tape, big = false, spread = false }: { tape: TapeView; big?: boolean; spread?: boolean }) {
+/** The tape's name, who made it, and the small print. */
+export function Words({ tape }: { tape: TapeView }) {
   return (
-    <header className={spread ? "lg:flex lg:h-full lg:flex-col lg:justify-between" : undefined}>
-      <h1 className={`font-display text-4xl sm:text-5xl ${big ? "lg:text-6xl" : ""} leading-[0.95] text-[var(--text)] mb-6 text-balance`}>{tape.title}</h1>
-      <div>
+    <header>
+      <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl leading-[0.95] text-[var(--text)] mb-6 text-balance">{tape.title}</h1>
       <div className="flex gap-2 flex-wrap mb-6">
         {tape.djs.map((dj) =>
           dj.link ? (
@@ -74,7 +69,6 @@ export function Words({ tape, big = false, spread = false }: { tape: TapeView; b
             )}
           </p>
         )}
-      </div>
       </div>
     </header>
   );

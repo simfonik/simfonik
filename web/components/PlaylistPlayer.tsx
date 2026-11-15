@@ -30,6 +30,15 @@ interface PlaylistPlayerProps {
   sideCount: number;
 }
 
+/**
+ * Who played a side, for the line under its name. Nothing when the side is named after them: on a set where
+ * each side is one DJ's ("Scott Hardkiss", by Scott Hardkiss) the credit would only say the name twice.
+ */
+export function sideCredit({ title, djs }: Pick<Track, 'title' | 'djs'>): string | null {
+  const names = djs?.map((dj) => dj.name).join(', ');
+  return names && names.toLowerCase() !== title.trim().toLowerCase() ? names : null;
+}
+
 export function PlaylistPlayer({ tracks, tapeId, sideCount }: PlaylistPlayerProps) {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const currentTrack = tracks[currentTrackIndex];
@@ -158,9 +167,9 @@ export function PlaylistPlayer({ tracks, tapeId, sideCount }: PlaylistPlayerProp
               {/* A name too long for one line breaks into even lines, not a full line and a stray word. */}
               <span className="min-w-0 text-balance">
                 <span className="font-display text-base leading-tight">{track.title}</span>
-                {track.djs && track.djs.length > 0 && (
+                {sideCredit(track) && (
                   <span className="block font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mt-0.5">
-                    {track.djs.map((dj) => dj.name).join(', ')}
+                    {sideCredit(track)}
                   </span>
                 )}
               </span>

@@ -4,17 +4,20 @@
 // skill's spec, unchanged: 1–4 and ←/→ switch, the choice is kept in the address as ?v=.
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import "./proto.css";
-import { Band, Bars } from "./band";
-import { Contents } from "./contents";
+import { Contents, type Single } from "./contents";
 import type { TapeView } from "./shared";
-import { Spare } from "./spare";
 
-// Round 2: riffs on "Band", the direction chosen from round 1 (Column, Sides and Sheet are out).
+// Round 3. "Contents" was chosen from round 2 (Band, Bars and Spare are out). These are four ways to fill
+// the column beside the cover on a tape with one recording; on a tape with sides they are all the same page.
+const variant = (single: Single) =>
+  function Variant({ tape }: { tape: TapeView }) {
+    return <Contents tape={tape} single={single} />;
+  };
 const VARIANTS = [
-  { name: "Band", Component: Band },
-  { name: "Bars", Component: Bars },
-  { name: "Contents", Component: Contents },
-  { name: "Spare", Component: Spare },
+  { name: "Top", Component: variant("top") },
+  { name: "Foot", Component: variant("foot") },
+  { name: "Middle", Component: variant("middle") },
+  { name: "Beside", Component: variant("beside") },
 ];
 
 export function Harness({ tape }: { tape: TapeView }) {
