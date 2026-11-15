@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useMemo, useRef, useSyncExternalStore, useTransition } from 'react';
+import { useState, useCallback, useEffect, useMemo, useSyncExternalStore, useTransition } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { TapeListSubset } from '../types/tape';
@@ -19,10 +19,6 @@ interface TapeGalleryWithSearchProps {
 const FIRST = 6;
 /** Tapes added each time the end of the list comes near. */
 const STEP = 12;
-/** Past this many the list stops growing by itself and offers a button, so the footer can be reached. */
-const AUTO = 30;
-/** Tapes added by each press of that button. */
-const MORE = 48;
 
 type Kept = { count: number; query: string };
 
@@ -83,22 +79,6 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
   }, [tapes, searchQuery]);
 
   const visibleTapes = filteredTapes.slice(0, visibleCount);
-  const waiting = filteredTapes.length - visibleTapes.length;
-
-  // "Show more" puts the keyboard on the first tape it added, so a keyboard carries on from there instead of
-  // from a button that has moved to the bottom of a longer list.
-  const grid = useRef<HTMLDivElement>(null);
-  const firstAdded = useRef<number | null>(null);
-  const showMore = () => {
-    firstAdded.current = visibleTapes.length;
-    setVisibleCount((prev) => prev + MORE);
-  };
-  useEffect(() => {
-    if (firstAdded.current === null) return;
-    const link = grid.current?.children[firstAdded.current]?.querySelector('a');
-    firstAdded.current = null;
-    link?.focus({ preventScroll: true });
-  }, [visibleCount]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -145,7 +125,7 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
       </div>
 
       {/* Tape grid */}
-      <div ref={grid} className="grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
         {visibleTapes.map((tape, index) => {
           const isAboveFold = index < 3;
           return (
@@ -210,19 +190,8 @@ export function TapeGalleryWithSearch({ tapes }: TapeGalleryWithSearchProps) {
         })}
       </div>
 
-      {waiting > 0 && visibleCount < AUTO && (
+      {visibleTapes.length < filteredTapes.length && (
         <div ref={loadMoreRef} className="h-10 mt-8 w-full" aria-hidden="true" />
-      )}
-
-      {waiting > 0 && visibleCount >= AUTO && (
-        <div className="mt-16 flex flex-col items-center gap-5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-[var(--muted)] tabular-nums">
-            {visibleTapes.length} of {filteredTapes.length}
-          </p>
-          <button type="button" onClick={showMore} className="poster-btn h-11">
-            Show more
-          </button>
-        </div>
       )}
 
       {filteredTapes.length === 0 && (
