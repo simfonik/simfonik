@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import sharp from "sharp";
 import sideLengths from "../../../../data/side-lengths.json";
 import { getAllSeries, getTapeById } from "../../../../lib/data";
 import { hasOptimizedImages, isOptimizableImagePath } from "../../../../lib/image-utils";
@@ -31,17 +32,24 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   );
   const allSeries = getAllSeries();
 
-  const images: TapeView["images"] = [];
+  const found: Omit<TapeView["images"][number], "width" | "height">[] = [];
   if (tape.images?.cover) {
-    images.push({ src: tape.images.cover, label: `${tape.title} mixtape by ${tape.djs.map((dj) => dj.name).join(", ")}`, tapeId: hasOptimizedImages(tape) ? tape.id : undefined });
+    found.push({ src: tape.images.cover, label: `${tape.title} mixtape by ${tape.djs.map((dj) => dj.name).join(", ")}`, tapeId: hasOptimizedImages(tape) ? tape.id : undefined });
   }
   tape.sides.forEach((side) => {
     if (!side.image) return;
     const optimizable = isOptimizableImagePath(side.image);
-    images.push({ src: side.image, label: `${tape.title} – ${side.title ?? `Side ${side.position}`} image`, tapeId: optimizable ? tape.id : undefined, sidePosition: optimizable ? side.position.toLowerCase() : undefined });
+    found.push({ src: side.image, label: `${tape.title} – ${side.title ?? `Side ${side.position}`} image`, tapeId: optimizable ? tape.id : undefined, sidePosition: optimizable ? side.position.toLowerCase() : undefined });
   });
-  if (images.length === 0) images.push({ src: "/media/site/blank-tape.svg", label: "Blank cassette tape placeholder" });
-  const usesPlaceholder = images.length === 1 && images[0].src.includes("/generated/placeholders/");
+  if (found.length === 0) found.push({ src: "/media/site/blank-tape.svg", label: "Blank cassette tape placeholder" });
+  const usesPlaceholder = found.length === 1 && found[0].src.includes("/generated/placeholders/");
+  // Each image's own size, so a picture's place on the page is known before the picture has loaded.
+  const images: TapeView["images"] = await Promise.all(
+    found.map(async (img) => {
+      const { width, height } = await sharp(path.join(process.cwd(), "public", img.src)).metadata();
+      return { ...img, width, height };
+    }),
+  );
 
   const view: TapeView = {
     id: tape.id,

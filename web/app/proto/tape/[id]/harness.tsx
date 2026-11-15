@@ -26,7 +26,7 @@ const VARIANTS = [
     the tallest it lets a picture be. */
 const LIVE = { image: 708, thumb: 80, tall: 650 };
 /** Where the controls start: the settings chosen on 2026-11-15 to try on other tapes. proto.css has them too. */
-const CHOSEN = { image: 560, thumb: 60, tall: 500, flipped: false, under: false };
+const CHOSEN = { image: 560, thumb: 60, tall: 500, flipped: false, under: false, single: true };
 const KEPT = "simfonik:proto-today";
 
 /** The settings last used in this browser, so a change made on one tape is still there on the next. */
@@ -40,14 +40,14 @@ function kept(): typeof CHOSEN {
 }
 
 /**
- * "Today" has five things to settle: how wide the image column is, which side it is on, how big the gallery's
- * thumbnails are, whether they run down the side of the picture (as on the live page) or under it, and how
- * tall a picture may be. The sliders write to CSS variables on the page and the buttons set attributes on it,
- * so the page is not rendered again as they change; proto.css does the rest. The numbers are shown so the
- * right ones can be kept.
+ * "Today" has these to settle: how wide the image column is, which side it is on, how tall a picture may be,
+ * and whether the tape's images are one picture that opens them all or the live gallery with its thumbnails
+ * (and then how big those are, and whether they run down the side of the picture or under it). The sliders
+ * write to CSS variables on the page and the buttons set attributes on it, so the page is not rendered again
+ * as they change; proto.css does the rest. The numbers are shown so the right ones can be kept.
  */
 function Split() {
-  const [{ image, thumb, tall, flipped, under }, setSettings] = useState(kept);
+  const [{ image, thumb, tall, flipped, under, single }, setSettings] = useState(kept);
   const change = (to: Partial<typeof CHOSEN>) => setSettings((now) => ({ ...now, ...to }));
   const [words, setWords] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
@@ -59,8 +59,9 @@ function Split() {
     page.style.setProperty("--image-max", `${tall}px`);
     page.toggleAttribute("data-proto-flip", flipped);
     page.toggleAttribute("data-proto-under", under);
+    page.toggleAttribute("data-proto-thumbs", !single);
     try {
-      localStorage.setItem(KEPT, JSON.stringify({ image, thumb, tall, flipped, under }));
+      localStorage.setItem(KEPT, JSON.stringify({ image, thumb, tall, flipped, under, single }));
     } catch {
       // As above: without storage the settings last until the page is left.
     }
@@ -71,7 +72,7 @@ function Split() {
       cancelAnimationFrame(frame);
       window.removeEventListener("resize", measure);
     };
-  }, [image, thumb, tall, flipped, under]);
+  }, [image, thumb, tall, flipped, under, single]);
   useEffect(() => {
     if (!copied) return;
     const timer = setTimeout(() => setCopied(false), 1500);
@@ -79,7 +80,7 @@ function Split() {
   }, [copied]);
 
   const live = (value: number, top: number) => `${value}px${value === top ? " (live)" : ""}`;
-  const summary = `image column ${image}px, on the ${flipped ? "right" : "left"} · words column ${words ?? "?"}px · thumbnails ${thumb}px, ${under ? "under the picture" : "at the side"} · picture up to ${tall}px tall`;
+  const summary = `image column ${image}px, on the ${flipped ? "right" : "left"} · words column ${words ?? "?"}px · ${single ? "one picture" : `thumbnails ${thumb}px, ${under ? "under the picture" : "at the side"}`} · picture up to ${tall}px tall`;
   return (
     <div className="proto-panel">
       <label htmlFor="proto-split">Image column</label>
@@ -91,10 +92,13 @@ function Split() {
       <input id="proto-tall" type="range" min={280} max={LIVE.tall} step={10} value={tall} onChange={(e) => change({ tall: Number(e.target.value) })} />
       <output htmlFor="proto-tall">{live(tall, LIVE.tall)}</output>
       <label htmlFor="proto-thumb">Thumbnails</label>
-      <input id="proto-thumb" type="range" min={32} max={LIVE.thumb} step={4} value={thumb} onChange={(e) => change({ thumb: Number(e.target.value) })} />
+      <input id="proto-thumb" type="range" min={32} max={LIVE.thumb} step={4} value={thumb} disabled={single} onChange={(e) => change({ thumb: Number(e.target.value) })} />
       <output htmlFor="proto-thumb">{live(thumb, LIVE.thumb)}</output>
       <div>
-        <button type="button" aria-pressed={under} onClick={() => change({ under: !under })}>
+        <button type="button" aria-pressed={single} onClick={() => change({ single: !single })}>
+          One picture
+        </button>
+        <button type="button" aria-pressed={under} disabled={single} onClick={() => change({ under: !under })}>
           Thumbnails under
         </button>
         <button type="button" aria-pressed={flipped} onClick={() => change({ flipped: !flipped })}>
@@ -147,6 +151,8 @@ export function Harness({ tape }: { tape: TapeView }) {
       const target = e.target as HTMLElement;
       if (/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || target.isContentEditable) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      // The image viewer has the arrows while it is open.
+      if (document.querySelector("dialog[open]")) return;
       const num = parseInt(e.key, 10);
       if (num >= 1 && num <= VARIANTS.length) choose(num - 1);
       else if (e.key === "ArrowRight") choose((current + 1) % VARIANTS.length);

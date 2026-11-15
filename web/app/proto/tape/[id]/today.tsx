@@ -1,18 +1,18 @@
 "use client";
 
-// PROTOTYPE (SIM-43), round 3: "Today". The live page as it is, images included: the live gallery with its
-// strip of thumbnails down the side and each picture at its own shape, and the live player. Only the split
-// between the two columns is different. The live page gives the words 500px and the image the rest (about
-// 700px); here the image column's width is `--image-column`, and the panel in harness.tsx sets it. The panel
-// can also flip the two columns, which proto.css does by reordering them (a real flip would reorder the
-// markup), set the size of the gallery's thumbnails (`--thumb`; the live page's are 80px), put them under the
-// picture where the live page has them down its side (proto.css again, over the gallery's own layout), and set how tall
-// a picture may be (`--image-max`; 650px on the live page). A picture held to that height is centred in the
-// column by the gallery itself, as a tall one is on the live page today.
+// PROTOTYPE (SIM-43), round 3: "Today". The live page as it is, with the live player. What the panel in
+// harness.tsx can change, all of it in proto.css through variables and attributes on the page:
+//   - the split between the two columns (`--image-column`; the live page gives the words 500px and the image
+//     the rest, about 700px), and which side the image is on (a real flip would reorder the markup);
+//   - how the images are shown: one picture that opens them all at full size (frame.tsx), or the live
+//     gallery with its thumbnails, at the side as they are live or under the picture, at `--thumb` wide;
+//   - how tall a picture may be (`--image-max`; 650px on the live page).
+// Both ways of showing the images are in the page, and the one not chosen is hidden.
 import { AudioPlayer } from "../../../../components/AudioPlayer";
 import { PlaceholderCassetteLive } from "../../../../components/PlaceholderCassetteLive";
 import { PlaylistPlayer } from "../../../../components/PlaylistPlayer";
 import { TapeGallery } from "../../../../components/TapeGallery";
+import { Frame } from "./frame";
 import { Words, type TapeView } from "./shared";
 
 function Player({ tape }: { tape: TapeView }) {
@@ -28,11 +28,22 @@ function Player({ tape }: { tape: TapeView }) {
 }
 
 export function Today({ tape }: { tape: TapeView }) {
-  const images = tape.placeholderLabel ? <PlaceholderCassetteLive tapeId={tape.id} labelDataUri={tape.placeholderLabel} /> : <TapeGallery allImages={tape.images} />;
+  const images = tape.placeholderLabel ? (
+    <PlaceholderCassetteLive tapeId={tape.id} labelDataUri={tape.placeholderLabel} />
+  ) : (
+    <>
+      <div className="proto-one">
+        <Frame images={tape.images} />
+      </div>
+      <div className="proto-many">
+        <TapeGallery allImages={tape.images} />
+      </div>
+    </>
+  );
   return (
     <>
       <div className="proto-today mb-12 lg:grid lg:grid-cols-[var(--image-column)_minmax(0,1fr)] lg:items-start lg:gap-8">
-        <div className="proto-gallery hidden lg:block">{images}</div>
+        <div className="hidden lg:block">{images}</div>
         <div data-proto-words>
           <Words tape={tape} />
           <div className="mt-8">
@@ -40,7 +51,7 @@ export function Today({ tape }: { tape: TapeView }) {
           </div>
         </div>
       </div>
-      <div className="proto-gallery mb-12 lg:hidden">{images}</div>
+      <div className="mb-12 lg:hidden">{images}</div>
     </>
   );
 }

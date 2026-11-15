@@ -17,7 +17,8 @@ export type TapeView = {
   released: string | null;
   series: { slug: string; name: string }[];
   source: { name: string; url: string | null } | null;
-  images: { src: string; label: string; tapeId?: string; sidePosition?: string }[];
+  /** `width` and `height` are the scan's own, in pixels, read from the file when the page is built. */
+  images: { src: string; label: string; tapeId?: string; sidePosition?: string; width: number; height: number }[];
   placeholderLabel: string | null;
   sideCount: number;
   unlabelled: boolean;
