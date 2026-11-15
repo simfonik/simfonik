@@ -8,6 +8,7 @@ import Link from "next/link";
 import type { HistoryEntry } from "@ui-sdk/react/history";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@ui-sdk/react/collapsible";
 import type { Listed, Proposal } from "./parse";
+import { describe, madeBy } from "./changes";
 import { clock, cueLabel, type Cue } from "./tracklist-primitive";
 
 /** The job, as a list: every track nobody has ID'd. Easier to hit than a narrow block on the timeline. */
@@ -199,29 +200,6 @@ export function CommentsFold({ proposals, sides, onHear }: { proposals: Proposal
   );
 }
 
-/** A plain-language line for one history entry, worked out from what changed in the list. */
-function describe(e: HistoryEntry): string {
-  const before = (Array.isArray(e.previous) ? e.previous : []) as Cue[];
-  const after = (Array.isArray(e.value) ? e.value : []) as Cue[];
-  const added = after.filter((c) => !before.some((b) => b.id === c.id));
-  const removed = before.filter((b) => !after.some((c) => c.id === b.id));
-  if (e.source === "agent") return added.length ? `Added ${added.length} ${added.length === 1 ? "track" : "tracks"} from the comments` : "Went back to the IDs from the comments";
-  if (added.length === 1 && removed.length <= 1) return `Marked a new track at ${clock(added[0].start)}, side ${added[0].track}`;
-  if (removed.length === 1 && !added.length) return `Removed ${cueLabel(removed[0])}`;
-  if (!added.length && !removed.length) {
-    const changed = after.find((c) => {
-      const b = before.find((x) => x.id === c.id);
-      return b && (b.start !== c.start || b.end !== c.end || b.track !== c.track || b.artist !== c.artist || b.title !== c.title);
-    });
-    const b = changed && before.find((x) => x.id === changed.id);
-    if (changed && b) {
-      if (b.artist !== changed.artist || b.title !== changed.title) return changed.known ? `ID’d the track at ${clock(changed.start)}: ${cueLabel(changed)}` : `Set the track at ${clock(changed.start)} back to unknown`;
-      return `Moved ${cueLabel(changed)} to ${clock(changed.start)}–${clock(changed.end)}`;
-    }
-  }
-  return `Changed the tracklist (${after.length} ${after.length === 1 ? "track" : "tracks"})`;
-}
-
 /** This visitor's changes, newest first. It is the undo stack, read out. */
 export function ChangesFold({ entries, floor, position }: { entries: HistoryEntry[]; /** How many entries were the page's own setting up, not the visitor's. */ floor: number; position: number }) {
   return (
@@ -239,7 +217,7 @@ export function ChangesFold({ entries, floor, position }: { entries: HistoryEntr
               .reverse()
               .map(({ e, n }) => (
                 <li key={e.id} className="ts-history-row" data-undone={n > position || e.reverted ? "" : undefined}>
-                  <span className="ts-source">{e.source === "agent" ? "Comments" : "You"}</span>
+                  <span className="ts-source">{madeBy(e)}</span>
                   <span className="min-w-0 flex-1">
                     {describe(e)}
                     {n > position || e.reverted ? " (undone)" : ""}

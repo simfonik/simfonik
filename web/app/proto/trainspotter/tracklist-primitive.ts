@@ -34,6 +34,8 @@ export const clock = (s: number) => {
   if (!Number.isFinite(s) || s < 0) s = 0;
   return `${Math.floor(s / 3600)}:${String(Math.floor((s % 3600) / 60)).padStart(2, "0")}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 };
+/** The reason `setValue` reports: the whole tracklist was put in place at once, not edited. */
+export const REPLACED = "replace";
 /** Used until a side's audio reports its real length. */
 export const DEFAULT_LENGTH = 47 * 60;
 let made = 0;
@@ -102,9 +104,9 @@ export const tracklist = definePrimitive({
 
     return {
       spans,
-      /** Replaces the whole tracklist. */
+      /** Replaces the whole tracklist. It reports a reason of its own, so a history can tell it from an edit. */
       setValue: (value: Partial<Cue>[]) =>
-        change("value", (Array.isArray(value) ? value : []).map(tidy).filter((c): c is Cue => c !== null), { reason: "imperative" }),
+        change("value", (Array.isArray(value) ? value : []).map(tidy).filter((c): c is Cue => c !== null), { reason: REPLACED }),
       /** Marks one track: `{ track, start, end, artist, title }`, times in seconds. */
       addCue: (cue: Partial<Cue>) => {
         const next = tidy(cue);
@@ -145,7 +147,6 @@ export const tracklist = definePrimitive({
         return spans.update(String(id), { artist: a, title: t, known: Boolean(a || t), by: undefined });
       },
       removeCue: (id: string) => spans.remove(String(id)),
-      clear: () => change("value", [], { reason: "imperative" }),
       /**
        * Keys on a focused track. Changing a track's times takes Alt, so it can't happen by accident. Plain
        * arrows are left to the page, which uses them to step between tracks and move the audio with them.
@@ -233,5 +234,6 @@ export const tracklist = definePrimitive({
       bind: (el, part) => part.api.spans.bindSpan(el, part.key),
     }),
   }),
-  agent: { actions: ["setValue", "addCue", "markAt", "renameCue", "removeCue", "clear"] },
+  // What the bridge offers. Removing a track and clearing the tape are not on it: those are a person's to do.
+  agent: { actions: ["setValue", "addCue", "markAt", "renameCue"] },
 });

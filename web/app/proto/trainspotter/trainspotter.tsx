@@ -3,8 +3,8 @@
 // Trainspotter — help ID the music on a tape.
 // The timeline is one UI SDK primitive (ranges on tracks). It opens showing what listeners have already
 // ID'd in the comments; a visitor plays the tape and IDs what they recognise. Every change goes through the
-// SDK's change pipeline, so one history gives undo and redo, and the page is operable by an agent through
-// the same bridge that loads the listeners' tracklist.
+// SDK's change pipeline, so one history gives undo and redo and knows who made each change. The page is
+// operable by a browser's own assistant through the same bridge that loads the listeners' tracklist.
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { createPointerKind } from "@ui-sdk/core";
@@ -21,6 +21,7 @@ import { reconcile, type Listed, type Proposal, type Sighting } from "./parse";
 import { DEFAULT_LENGTH, clock, cueLabel, tracklist, type Cue } from "./tracklist-primitive";
 import { ordersFor, placeNames, suggestNames } from "./names";
 import { ChangesFold, CommentsFold, NamesFold, SendItIn, StillUnknown } from "./below-the-tape";
+import { describe, madeBy } from "./changes";
 import { IdBar, IdSheetForm, Shortcuts, UndoRedo, type IdDraft } from "./id-form";
 import { awayFrom } from "./keys";
 import { PhoneBar, Player } from "./player";
@@ -202,36 +203,6 @@ export function Trainspotter({
     setFloorState(n);
   };
   const undoToastAt = useRef<number | null>(null);
-  useEffect(() => {
-    if (!agent) return;
-    // One step per action: two separate drags are two undos, not one.
-    const history = createHistory(agent, { keys: ["value"], within: () => rootRef.current, coalesce: false });
-    historyRef.current = history;
-    const off = history.subscribe(() => {
-      setEntries([...history.entries()]);
-      setPosition(history.position());
-      // An Undo offered for one change must not outlive it and undo something else.
-      if (undoToastAt.current !== null && history.position() !== undoToastAt.current) {
-        undoToastAt.current = null;
-        toaster.dismiss(UNDO_TOAST);
-      }
-    });
-    // Offer the timeline to an assistant built into the browser, where the browser supports WebMCP. It may add
-    // and ID tracks; replacing, clearing or removing is left to a person.
-    const unregister = registerTools(agent, { allow: (step) => !["setValue", "clear", "removeCue"].includes(step.action) });
-    return () => {
-      off();
-      unregister?.();
-      history.destroy();
-      toaster.dismiss();
-    };
-  }, []);
-
-  const step = useCallback(async (by: number) => {
-    const h = historyRef.current;
-    if (!h) return;
-    await h.seek(Math.max(floorRef.current, h.position() + by));
-  }, []);
   /** A confirmation whose Undo belongs to the change just made, and to nothing else. */
   const confirmWithUndo = useCallback((title: string, description?: string) => {
     // Wait a frame so the history has recorded the change this is about.
@@ -252,6 +223,43 @@ export function Trainspotter({
     });
   }, []);
 
+  useEffect(() => {
+    if (!agent) return;
+    // One step per action: two separate drags are two undos, not one.
+    const history = createHistory(agent, { keys: ["value"], within: () => rootRef.current, coalesce: false });
+    historyRef.current = history;
+    let newest: string | undefined;
+    const off = history.subscribe(() => {
+      setEntries([...history.entries()]);
+      setPosition(history.position());
+      // A change the visitor didn't make with their own hands is said out loud, with a way back.
+      const last = history.entries().at(-1);
+      if (last && last.id !== newest && history.position() === history.entries().length) {
+        newest = last.id;
+        if (madeBy(last) === "Assistant") confirmWithUndo("Changed by your browser’s assistant", describe(last));
+      }
+      // An Undo offered for one change must not outlive it and undo something else.
+      if (undoToastAt.current !== null && history.position() !== undoToastAt.current) {
+        undoToastAt.current = null;
+        toaster.dismiss(UNDO_TOAST);
+      }
+    });
+    // Offer the timeline to an assistant built into the browser, where the browser supports WebMCP. It may mark
+    // and ID tracks. Replacing the whole tracklist is the page's own way of loading the comments, and refused.
+    const unregister = registerTools(agent, { allow: (step) => step.action !== "setValue" });
+    return () => {
+      off();
+      unregister?.();
+      history.destroy();
+      toaster.dismiss();
+    };
+  }, [confirmWithUndo]);
+
+  const step = useCallback(async (by: number) => {
+    const h = historyRef.current;
+    if (!h) return;
+    await h.seek(Math.max(floorRef.current, h.position() + by));
+  }, []);
   // The timeline as the bridge lists it. A timeline that has left the page (the tape before this one) can
   // still be listed, marked as gone, and can't be written to.
   const target = () => agent?.snapshot().find((c) => c.component === "tracklist" && !c.offPage)?.ref;
