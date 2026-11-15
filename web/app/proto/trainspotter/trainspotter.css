@@ -466,6 +466,11 @@
   /* A step up from the page, so in dark mode the sheet doesn't melt into what's behind it. */
   background: var(--surface);
   padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom));
+  /* Pulled up past where it rests, a phone lets the sheet stretch and spring back. Its surface carries on
+     below its edge, so the pull shows more sheet and never the page underneath. A shadow, not an element:
+     the sheet scrolls its own contents, which would clip one. Offset and spread are equal, so it starts
+     exactly at the sheet's top edge. */
+  box-shadow: 0 50vh 0 50vh var(--surface);
 }
 
 /* ── Folds, lists ── */
