@@ -209,14 +209,30 @@ export function useTimeline({
     paint(); // the playhead is placed in pixels, so it moves when the scale does
     frame();
   }, [width, length, paint, frame, scrolls, active]);
-  // Press or drag on the overview: bring that part of the tape to the middle of the screen.
-  const mapTo = (e: React.PointerEvent<HTMLDivElement>, released = false) => {
+  // The overview works like a scrollbar. A press on the band that marks what is on screen takes hold of it
+  // there, and it moves with the pointer from that point. A press anywhere else brings that part of the tape
+  // to the middle of the screen first, as near as the ends of the tape allow, and takes hold of the band there.
+  const mapGrab = useRef(0); // where the band is held: how far from its middle, as a share of the strip
+  const mapPlace = (e: React.PointerEvent<HTMLDivElement>) => {
     const sc = scrollerRef.current;
-    if (!sc || !(released || e.buttons & 1)) return;
+    if (!sc) return null;
     const box = e.currentTarget.getBoundingClientRect();
-    const at = Math.max(0, Math.min(1, (e.clientX - box.left) / box.width));
+    const tape = sc.scrollWidth - GUTTER;
+    const half = (sc.clientWidth - GUTTER) / 2;
+    return { sc, tape, half, at: Math.max(0, Math.min(1, (e.clientX - box.left) / box.width)), middle: () => (sc.scrollLeft + half) / tape };
+  };
+  const mapHold = (e: React.PointerEvent<HTMLDivElement>) => {
+    const m = mapPlace(e);
+    if (!m) return;
     handsOff.current = performance.now() + 5000; // the visitor is steering; don't snap back to the playhead
-    sc.scrollLeft = at * (sc.scrollWidth - GUTTER) - (sc.clientWidth - GUTTER) / 2;
+    if (Math.abs(m.at - m.middle()) > m.half / m.tape) m.sc.scrollLeft = m.at * m.tape - m.half;
+    mapGrab.current = m.at - m.middle();
+  };
+  const mapDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    const m = mapPlace(e);
+    if (!m || !(e.buttons & 1)) return;
+    handsOff.current = performance.now() + 5000;
+    m.sc.scrollLeft = (m.at - mapGrab.current) * m.tape - m.half;
   };
   // A finger on the overview may be on its way down the page. The strip takes a sideways drag, or a tap (on
   // release); a swipe up or down is the page's, and the browser tells us so by cancelling the touch.
@@ -227,10 +243,10 @@ export function useTimeline({
       return;
     }
     e.currentTarget.setPointerCapture(e.pointerId);
-    mapTo(e);
+    mapHold(e);
   };
   const mapMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.pointerType !== "touch") return mapTo(e);
+    if (e.pointerType !== "touch") return mapDrag(e);
     const t = mapTouch.current;
     if (!t || t.id !== e.pointerId) return;
     if (!t.dragging) {
@@ -238,13 +254,14 @@ export function useTimeline({
       if (dx < 6 || dx <= Math.abs(e.clientY - t.y)) return;
       t.dragging = true;
       e.currentTarget.setPointerCapture(e.pointerId);
+      return mapHold(e);
     }
-    mapTo(e);
+    mapDrag(e);
   };
   const mapUp = (e: React.PointerEvent<HTMLDivElement>) => {
     const t = mapTouch.current;
     mapTouch.current = null;
-    if (t && t.id === e.pointerId && !t.dragging && Math.hypot(e.clientX - t.x, e.clientY - t.y) < 6) mapTo(e, true);
+    if (t && t.id === e.pointerId && !t.dragging && Math.hypot(e.clientX - t.x, e.clientY - t.y) < 6) mapHold(e);
   };
   const mapCancel = () => {
     mapTouch.current = null;
