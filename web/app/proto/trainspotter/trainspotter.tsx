@@ -1011,8 +1011,12 @@ export function Trainspotter({
                             <i>{c.artist ? c.title : ""}</i>
                           </>
                         ) : (
-                          // Always rendered: empty, it is the blank tape over the name; with a clue, the clue is written on it.
-                          <i className="ts-clue">{c.title ? `“${c.title}”` : ""}</i>
+                          // The block's own label already says "Unknown"; this is the mark you can see from
+                          // across the room. A listener's clue is not shown here: it is in the pointer's label,
+                          // the list below and the ID form.
+                          <b className="ts-q" aria-hidden>
+                            ?
+                          </b>
                         )}
                       </span>
                       <span className="ts-edge" data-span-edge="end" aria-hidden />

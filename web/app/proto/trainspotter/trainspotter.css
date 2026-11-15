@@ -258,14 +258,15 @@
 .ts-side:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 /* ── The tape ──
    Three things can be on a side, and each is drawn so it can't be mistaken for another:
-   bare tape is nothing but a baseline; a track is a calm filled block; an ID'd track has its name on it,
-   and an unknown one has its name taped over, the way DJs covered their labels to keep trainspotters
-   guessing. The tape is the brightest mark on a row, because unknowns are what the page is for. No
-   outlines: an outline is how a selected track is shown, and a row of outlined boxes shouts over
-   everything else. The one track that is playing is the only solid block on the tape. */
+   bare tape is nothing but a baseline; an ID'd track is a calm filled block you can read; an unknown track
+   is hatched and carries a big question mark and nothing else, because unknowns are what the page is for
+   and a clue is detail for whoever stops on one (the pointer's label, the list below, the ID form). No outlines: an
+   outline is how a selected track is shown, and a row of outlined boxes shouts over everything else.
+   The one track that is playing is the only solid block on the tape. */
 .ts-root {
   --clip: color-mix(in oklch, var(--text) 17%, var(--bg));
   --clip-hover: color-mix(in oklch, var(--text) 25%, var(--bg));
+  --hatch: color-mix(in oklch, var(--text) 30%, transparent);
 }
 /* The baseline sits under the lane, not inside it, so every block stands on the same unbroken line. */
 .ts-track { position: relative; flex: none; height: 96px; cursor: pointer; box-shadow: 0 1px 0 color-mix(in oklch, var(--text) 22%, transparent); }
@@ -283,16 +284,22 @@
   /* A hairline of tape shows between neighbours without moving where a track starts or ends. */
   border-inline: 1px solid transparent;
   background-clip: padding-box;
-  background-color: var(--clip);
+  background-image: repeating-linear-gradient(135deg, transparent 0 5px, var(--hatch) 5px 6px);
   box-shadow: var(--cue-ring);
   color: var(--text);
   font-size: 12px;
   line-height: 1.25;
   transition: background-color 120ms ease-out;
 }
-@media (hover: hover) { .ts-cue:hover { background-color: var(--clip-hover); } }
-/* After the hover rule, so it holds under the pointer. */
-.ts-cue[data-playing] { background-color: var(--text); color: var(--bg); }
+.ts-cue[data-known] { background-color: var(--clip); background-image: none; }
+@media (hover: hover) {
+  .ts-cue[data-known]:hover { background-color: var(--clip-hover); }
+  .ts-cue:not([data-known]):hover { --hatch: color-mix(in oklch, var(--text) 48%, transparent); }
+}
+/* Playing: the only solid block. An unknown keeps its hatching, cut out of the fill. */
+.ts-cue[data-playing] { background-color: var(--text); background-image: none; color: var(--bg); }
+.ts-cue[data-playing]:not([data-known]) { background-image: repeating-linear-gradient(135deg, transparent 0 5px, color-mix(in oklch, var(--bg) 28%, transparent) 5px 6px); }
+@media (hover: hover) { .ts-cue[data-playing]:hover { background-color: var(--text); } }
 .ts-cue[data-selected] { z-index: 2; --cue-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--text); }
 .ts-cue:focus-visible { z-index: 2; --cue-ring: 0 0 0 2px var(--bg), 0 0 0 4.5px var(--text); }
 .ts-cue[data-dragging], .ts-cue[data-resizing], .ts-cue[data-drawing] { cursor: grabbing; z-index: 2; opacity: 0.85; }
@@ -304,43 +311,21 @@
 .ts-cue-text b { -webkit-line-clamp: 2; font-weight: 600; }
 .ts-cue-text i { -webkit-line-clamp: 3; opacity: 0.7; }
 .ts-cue-text i:empty { display: none; }
-/* The tape over an unknown's name: a strip across the block where an ID'd track's artist sits, 4px in from
-   each end so a run of unknowns stays a run of separate tracks. A listener's clue is written on it. */
-.ts-cue-text i.ts-clue {
-  position: absolute;
-  top: 7px;
-  inset-inline: 3px;
-  display: block;
-  height: 20px;
-  padding-inline: 6px;
-  background: var(--text);
-  color: var(--bg);
-  font-style: italic;
-  line-height: 20px;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  opacity: 1;
-  /* Torn across at each end, the way tape comes off the roll. */
-  clip-path: polygon(2px 0, calc(100% - 1px) 0, 100% 30%, calc(100% - 2px) 55%, calc(100% - 0.5px) 80%, calc(100% - 2px) 100%, 1px 100%, 0 70%, 2px 45%, 0.5px 20%);
-}
-/* On the playing block the tape flips with it. */
-.ts-cue[data-playing] .ts-cue-text i.ts-clue { background: var(--bg); color: var(--text); }
+.ts-cue-text .ts-q { display: block; font-family: var(--font-anton), sans-serif; font-size: 26px; font-weight: 400; line-height: 0.9; }
 /* A thin track gets one short line each and is allowed to cut off. The full name is one glance away: big
    in Now playing while it plays, and beside the time under the pointer. */
 @container (max-width: 84px) {
-  .ts-cue-text :is(b, i) { display: block; white-space: nowrap; text-overflow: ellipsis; }
+  .ts-cue-text :is(b, i):not(.ts-q) { display: block; white-space: nowrap; text-overflow: ellipsis; }
   .ts-edge { width: 5px; }
 }
-/* Thinner than a few letters: a plain block says more than "B…". The tape stays, blank, and too short to
-   show a tear. */
+/* Thinner than a few letters: a plain block says more than "B…". */
 @container (max-width: 48px) {
-  .ts-cue-text b, .ts-cue-text i:not(.ts-clue) { display: none; }
-  .ts-cue-text i.ts-clue { padding: 0; color: transparent; clip-path: none; }
+  .ts-cue-text :is(b, i):not(.ts-q) { display: none; }
+  .ts-cue:not([data-known]) .ts-cue-text { align-items: center; padding-inline: 0; }
   .ts-edge { width: 3px; }
 }
-/* A sliver: the tape runs edge to edge. */
 @container (max-width: 20px) {
-  .ts-cue-text i.ts-clue { inset-inline: 0; }
+  .ts-cue-text .ts-q { display: none; }
 }
 /* Trim handles: a grip that appears at each end when the pointer is on the track. */
 .ts-edge { position: relative; flex: none; align-self: stretch; width: 8px; }
