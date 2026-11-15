@@ -70,7 +70,7 @@ function describe(e: HistoryEntry): string {
     });
     const b = changed && before.find((x) => x.id === changed.id);
     if (changed && b) {
-      if (b.artist !== changed.artist || b.title !== changed.title) return `Named the track at ${clock(changed.start)}: ${cueLabel(changed)}`;
+      if (b.artist !== changed.artist || b.title !== changed.title) return `ID’d the track at ${clock(changed.start)}: ${cueLabel(changed)}`;
       return `Moved ${cueLabel(changed)} to ${clock(changed.start)}–${clock(changed.end)}`;
     }
   }
@@ -484,7 +484,7 @@ export function Trainspotter({
     const t = title.trim();
     if (!sel || (!a && !t) || (a === sel.artist && t === shownTitle)) return false;
     api.renameCue(sel.id, a, t);
-    toaster(`Named: ${[a, t].filter(Boolean).join(" — ")}`, { description: "Saved on this device.", action: { label: "Undo", onAction: () => void step(-1) } });
+    toaster(`ID’d: ${[a, t].filter(Boolean).join(" — ")}`, { description: "Saved on this device.", action: { label: "Undo", onAction: () => void step(-1) } });
     return true;
   };
   const remove = () => {
@@ -613,7 +613,7 @@ export function Trainspotter({
       )}
       {(sel.by || opinions.length > 0) && (
         <p className="w-full text-sm text-[var(--muted)]">
-          {sel.by ? (sel.known ? `Named by ${sel.by}.` : `${sel.by} marked this one as unknown.`) : ""}
+          {sel.by ? (sel.known ? `ID’d by ${sel.by}.` : `${sel.by} marked this one as unknown.`) : ""}
           {opinions.map((o, i) => (
             <span key={i}>
               {" "}
@@ -757,16 +757,16 @@ export function Trainspotter({
       <div className="mt-5 flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
         <div className="min-w-0 flex-1 basis-72">
           <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">{playing ? "Now playing" : `Paused at ${clock(now)}`}</p>
-          <p className="mt-1 truncate font-display text-3xl leading-tight text-[var(--text)] sm:text-4xl">{playingCue ? (playingCue.known ? cueLabel(playingCue) : "Unknown track") : "Nothing named here yet"}</p>
+          <p className="mt-1 truncate font-display text-3xl leading-tight text-[var(--text)] sm:text-4xl">{playingCue ? (playingCue.known ? cueLabel(playingCue) : "Unknown track") : "Nothing ID’d here yet"}</p>
           <p className="mt-1 min-h-[1.25rem] truncate text-sm text-[var(--muted)]">
             {playingCue
               ? playingCue.known
                 ? playingCue.by
-                  ? `Named by ${playingCue.by}`
-                  : "Named by you"
+                  ? `ID’d by ${playingCue.by}`
+                  : "ID’d by you"
                 : playingCue.title
-                  ? `Nobody has named it. Someone heard: “${playingCue.title}”`
-                  : "Nobody has named this one. Do you know it?"
+                  ? `Nobody has ID’d it. Clue: “${playingCue.title}”`
+                  : "Nobody has ID’d this one. Do you know it?"
               : "If a track is playing here, press the button and name it."}
           </p>
         </div>
@@ -978,7 +978,7 @@ export function Trainspotter({
       {/* Phone: play, the clock and the two naming actions stay under the thumb wherever the page is scrolled. */}
       <div className="ts-bar" aria-label="Player">
         <p className="ts-bar-now">
-          <span className="min-w-0 flex-1 truncate">{playingCue ? (playingCue.known ? cueLabel(playingCue) : "Unknown track") : "Nothing named here yet"}</span>
+          <span className="min-w-0 flex-1 truncate">{playingCue ? (playingCue.known ? cueLabel(playingCue) : "Unknown track") : "Nothing ID’d here yet"}</span>
           <span className="flex-none font-mono text-[12px] tabular-nums text-[var(--muted)]">
             {sides[active]} {clock(now)}
           </span>
