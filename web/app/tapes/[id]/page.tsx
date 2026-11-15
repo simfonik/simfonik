@@ -54,9 +54,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // Make absolute URL for social sharing
   const ogImageUrl = `https://simfonik.com${ogImagePath}`;
 
-  // Truncate DJ names for titles: show first 2 DJs + "..." if 3+
+  // Truncate DJ names for titles: show first 2 DJs + "…" if 3+
   const djNames = tape.djs.length > 2 
-    ? `${tape.djs[0].name}, ${tape.djs[1].name}, ...`
+    ? `${tape.djs[0].name}, ${tape.djs[1].name}, …`
     : tape.djs.map(dj => dj.name).join(', ');
   
   // Full DJ list for description
@@ -184,7 +184,10 @@ export default async function Page({ params }: Props) {
       
       {/* Mobile-only Header */}
       <header className="mb-8 lg:hidden">
-        <h1 className="font-display text-4xl sm:text-5xl leading-[0.95] text-[var(--text)] mb-6">
+        {/* A title often runs to two lines. Under a leading of about 1 the display face's g, p and y reach
+            the tall letters of the line below, so the title is set a little looser than the site's one-line
+            headings, and its lines are kept even. */}
+        <h1 className="font-display text-4xl sm:text-5xl leading-[1.05] text-[var(--text)] mb-6 text-balance">
           {tape.title}
         </h1>
         <div className="flex gap-2 flex-wrap mb-6">
@@ -268,7 +271,7 @@ export default async function Page({ params }: Props) {
           <div>
             {/* Desktop-only Header */}
             <header className="mb-8 hidden lg:block">
-              <h1 className="font-display text-6xl leading-[0.95] text-[var(--text)] mb-6 text-balance">
+              <h1 className="font-display text-6xl leading-[1.05] text-[var(--text)] mb-6 text-balance">
                 {tape.title}
               </h1>
               <div className="flex gap-2 flex-wrap mb-6">

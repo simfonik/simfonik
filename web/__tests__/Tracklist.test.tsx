@@ -133,6 +133,17 @@ describe('the tape page’s tracklist', () => {
       expect(rows().join(' ')).not.toMatch(/Josh|Softboiled/);
     });
 
+    it('lists three and more with a comma before the "and", and counts those past the third', async () => {
+      sides = [[id(0, 'Orbital', 'Chime', 'Josh McClintock'), id(300, 'Joey Beltram', 'Energy Flash', 'Softboiled'), id(600, 'Altern 8', 'Infiltrate 202', 'Rents')]];
+      const first = page([{ position: 'A' }]);
+      expect(await screen.findByText('Josh McClintock, Rents, and Softboiled')).toBeInTheDocument();
+      first.unmount();
+
+      sides = [[...sides[0], id(900, 'LFO', 'LFO', 'Dana'), id(1200, 'Moby', 'Go', 'Cooper')]];
+      page([{ position: 'A' }]);
+      expect(await screen.findByText('Cooper, Dana, Josh McClintock, and 2 others')).toBeInTheDocument();
+    });
+
     it('shows a long side’s first twenty tracks and a way to the rest', async () => {
       const user = userEvent.setup();
       const long = Array.from({ length: 23 }, (_, k) => ({ artist: `Artist ${k + 1}`, title: `Title ${k + 1}` }));

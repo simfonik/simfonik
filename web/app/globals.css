@@ -368,7 +368,7 @@ body::before {
   padding: 13px 0;
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 12px;
-  line-height: 18px;
+  line-height: 1.5;
   text-align: left;
   text-underline-offset: 4px;
   cursor: pointer;
@@ -392,7 +392,7 @@ body::before {
   flex: none;
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 12px;
-  line-height: 18px;
+  line-height: 1.5;
   font-variant-numeric: tabular-nums;
   color: var(--muted);
 }
@@ -442,7 +442,7 @@ body::before {
   gap: 0 1.5rem;
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 12px;
-  line-height: 18px;
+  line-height: 1.5;
 }
 .track-ids-offer {
   padding: 6px 0;
@@ -516,7 +516,7 @@ html:has(.id-sheet[open]) { overflow: hidden; }
 .id-sheet-label {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 11px;
-  line-height: 16px;
+  line-height: calc(16 / 11);
   text-transform: uppercase;
   letter-spacing: 0.22em;
   color: var(--muted);
@@ -621,11 +621,11 @@ html:has(.id-sheet[open]) { overflow: hidden; }
 /* A place to press 44px tall about the words, whatever their height, and as wide as the column. */
 .tracklist-time::before, .tracklist-mark::before { content: ""; position: absolute; inset: calc((100% - 2.75rem) / 2) -0.5rem; }
 .tracklist-mark { min-width: 3rem; font-size: 17px; line-height: 1; text-align: left; }
-/* The visitor's own time, not posted yet. */
-.tracklist-time[data-pending] { color: var(--text); text-decoration: underline dotted; text-underline-offset: 4px; }
+/* The visitor's own time, not posted yet: in full colour, with the way to take it back beside it. */
+.tracklist-time[data-pending] { color: var(--text); }
 @media (hover: hover) and (pointer: fine) {
   .tracklist-time:hover, .tracklist-mark:hover { color: var(--text); }
-  .tracklist-time:not([data-pending]):hover { text-decoration: underline; text-underline-offset: 4px; }
+  .tracklist-time:hover { text-decoration: underline; text-underline-offset: 4px; }
   .tracklist-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 }
 .tracklist-time:active, .tracklist-mark:active, .tracklist-cue:active { opacity: 0.6; }
@@ -680,8 +680,8 @@ html:has(.id-sheet[open]) { overflow: hidden; }
   overflow-wrap: anywhere;
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 10px;
-  /* The ID line's own height, so an entry with both on one line is one line tall. */
-  line-height: 1.3rem;
+  /* The ID line's own height (13px at 1.6), so an entry with both on one line is one line tall. */
+  line-height: 2.08;
   text-transform: uppercase;
   letter-spacing: 0.22em;
   color: var(--muted);

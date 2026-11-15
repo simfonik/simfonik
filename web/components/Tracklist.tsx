@@ -52,8 +52,8 @@ type Row = TracklistRow & { /** The visitor's own time, not posted yet. */ pendi
 
 const names = (people: string[]) => {
   const [a, b, c, ...rest] = people;
-  if (rest.length) return `${a}, ${b}, ${c} and ${rest.length} ${rest.length === 1 ? 'other' : 'others'}`;
-  return c ? `${a}, ${b} and ${c}` : b ? `${a} and ${b}` : a;
+  if (rest.length) return `${a}, ${b}, ${c}, and ${rest.length} ${rest.length === 1 ? 'other' : 'others'}`;
+  return c ? `${a}, ${b}, and ${c}` : b ? `${a} and ${b}` : a;
 };
 
 /** How far along a side is, in a few words. */
@@ -70,7 +70,7 @@ function progress(rows: Row[], order: RunningOrder | null) {
 
 const day = (posted: string) => new Date(posted).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
-const small = 'font-mono text-[11px] uppercase leading-4 tracking-[0.22em] text-[var(--muted)]';
+const small = 'font-mono text-[11px] uppercase leading-[1.45] tracking-[0.22em] text-balance text-[var(--muted)]';
 const chevron = (
   <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} aria-hidden>
     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -277,7 +277,7 @@ export function Tracklist({ tapeId, sides }: { tapeId: string; sides: Pick<Side,
             <button type="submit" aria-disabled={status === 'sending'} className="poster-btn id-sheet-post">
               {status === 'sending' ? '…' : 'Post'}
             </button>
-            <p id={messageId} role="alert" className="w-full font-mono text-[10px] uppercase leading-4 tracking-[0.22em] text-pretty text-red-500 empty:hidden">
+            <p id={messageId} role="alert" className="w-full font-mono text-[10px] uppercase leading-[1.6] tracking-[0.22em] text-pretty text-red-500 empty:hidden">
               {message}
             </p>
           </form>

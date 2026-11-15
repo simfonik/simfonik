@@ -297,7 +297,7 @@ export function TrackIds({ tapeId, position, ids, time, order = null, length = n
     </svg>
   );
   const complaint = (
-    <p id={messageId} role="alert" className="font-mono text-[10px] uppercase leading-4 tracking-[0.22em] text-pretty text-red-500 empty:hidden mt-2">
+    <p id={messageId} role="alert" className="font-mono text-[10px] uppercase leading-[1.6] tracking-[0.22em] text-pretty text-red-500 empty:hidden mt-2">
       {message}
     </p>
   );
