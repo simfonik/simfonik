@@ -7,7 +7,7 @@
 import { describe, expect, it } from 'vitest';
 import comments from '@/data/tape-comments.json';
 import tapes from '@/data/tapes.json';
-import { digest, parseComment, reconcile, runningOrders, type Said } from '@/app/proto/trainspotter/parse';
+import { digest, parseComment, reconcile, runningOrders, splitWholeTape, type Said, type Sighting } from '@/app/proto/trainspotter/parse';
 
 const clock = (s: number) => `${Math.floor(s / 3600)}:${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
@@ -181,5 +181,59 @@ describe('single comments', () => {
   it('does not read a hyphenated artist as a track number and a minute', () => {
     const lines = shown([say(['Side 1', 'Alpha - One', 'Bravo - Two', '9-10-Boy - Revenge of the Gatorade', 'Charlie - Three', 'Delta - Four'].join('\n'))], AB);
     expect(lines).toContain('order side 0 no.3 9-10-Boy — Revenge of the Gatorade [Keeper]');
+  });
+});
+
+describe('a list that times a two-sided tape as one recording', () => {
+  const A = 47 * 60 + 46; // our side A
+  const B = 47 * 60 + 7;
+  const at = (side: number, start: number, title: string, rest: Partial<Sighting> = {}): Sighting => ({ side, start, artist: 'Someone', title, known: true, author: 'Rents', date: '2026-01-21', ...rest });
+  const where = (list: Sighting[]) => splitWholeTape(list, [A, B]).map((s) => `${'AB'[s.side]} ${clock(s.start)} ${s.title}`);
+
+  it('is split where its own clock says side B starts: the entry nearest the end of our side A', () => {
+    // No side headings; the clock runs on. 47:19 is 27 seconds before our side A ends: the opener of side B.
+    const list = [at(0, 0, 'First'), at(0, 2340, 'Late on A'), at(0, 47 * 60 + 19, 'Opens B'), at(0, 53 * 60 + 35, 'Second on B'), at(0, 3600 + 30 * 60 + 20, 'Last')];
+    expect(where(list)).toEqual(['A 0:00:00 First', 'A 0:39:00 Late on A', 'B 0:00:00 Opens B', 'B 0:06:16 Second on B', 'B 0:43:01 Last']);
+  });
+
+  it('does the same under a "Side B" heading, where only the times past the end of side B looked wrong', () => {
+    const list = [at(0, 0, 'First'), at(0, 42 * 60 + 25, 'Last on A'), at(1, 47 * 60 + 4, 'Opens B'), at(1, 51 * 60 + 8, 'Second on B'), at(1, 3600 + 8 * 60 + 20, 'Last')];
+    expect(where(list)).toEqual(['A 0:00:00 First', 'A 0:42:25 Last on A', 'B 0:00:00 Opens B', 'B 0:04:04 Second on B', 'B 0:21:16 Last']);
+  });
+
+  it('falls back on our side A’s length when no entry is near the turn', () => {
+    const list = [at(0, 768, 'On A'), at(1, 3600 + 17 * 60 + 58, 'On B'), at(1, 3600 + 30 * 60 + 18, 'Later on B')];
+    expect(where(list)).toEqual(['A 0:12:48 On A', 'B 0:30:12 On B', 'B 0:42:32 Later on B']);
+  });
+
+  it('gives side A back its tracks when the whole list was read onto side B', () => {
+    const list = [at(1, 0, 'First'), at(1, 43 * 60 + 37, 'Last on A'), at(1, 46 * 60 + 44, 'Opens B'), at(1, 55 * 60 + 38, 'Second on B'), at(1, 3600 + 27 * 60 + 43, 'Last')];
+    expect(where(list)).toEqual(['A 0:00:00 First', 'A 0:43:37 Last on A', 'B 0:00:00 Opens B', 'B 0:08:54 Second on B', 'B 0:40:59 Last']);
+  });
+
+  it('is not thrown by a list of names the same person posted that day', () => {
+    // Its first row under each heading is only taken to open that side; it was never timed.
+    const names = [at(0, 0, 'First', { weak: true }), at(1, 0, 'Opens B', { weak: true })];
+    const list = [at(1, 0, 'First'), at(1, 43 * 60 + 37, 'Last on A'), at(1, 46 * 60 + 44, 'Opens B'), at(1, 55 * 60 + 38, 'Second on B'), at(1, 3600 + 27 * 60 + 43, 'Last')];
+    expect(where([...names, ...list])).toEqual(['A 0:00:00 First', 'B 0:00:00 Opens B', 'A 0:00:00 First', 'A 0:43:37 Last on A', 'B 0:00:00 Opens B', 'B 0:08:54 Second on B', 'B 0:40:59 Last']);
+  });
+
+  it('leaves one time past the end alone, and two that are only just past it: those are slips', () => {
+    const one = [at(0, 0, 'First'), at(0, 49 * 60, 'Slip')];
+    expect(where(one)).toEqual(['A 0:00:00 First', 'A 0:49:00 Slip']);
+    const two = [at(1, 0, 'First on B'), at(1, 1200, 'Mid B'), at(1, 49 * 60, 'Slip'), at(1, 52 * 60, 'Slip too')];
+    expect(where(two)).toEqual(['B 0:00:00 First on B', 'B 0:20:00 Mid B', 'B 0:49:00 Slip', 'B 0:52:00 Slip too']);
+  });
+
+  it('touches nothing until both sides’ lengths are known, or on a set of more than two', () => {
+    const list = [at(0, 0, 'First'), at(0, 53 * 60, 'x'), at(0, 80 * 60, 'y')];
+    expect(splitWholeTape(list, [A, Infinity])).toBe(list);
+    expect(splitWholeTape(list, [A, B, B])).toBe(list);
+  });
+
+  it('keeps each commenter’s list to itself', () => {
+    const theirs = [at(0, 53 * 60, 'x'), at(0, 80 * 60, 'y')];
+    const other = at(1, 600, 'Someone else on B', { author: 'Omar', date: '2024-05-01' });
+    expect(where([...theirs, other])).toContain('B 0:10:00 Someone else on B');
   });
 });

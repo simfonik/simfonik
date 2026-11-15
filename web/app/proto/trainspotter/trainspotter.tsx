@@ -230,43 +230,42 @@ export function Trainspotter({
     if (restored === "fresh") setReady(true);
   }, [restored]);
 
-  // A comment's track can't run past the end of its side. The tracks went in before the audio said how long
-  // each side is; whenever a side's length becomes known, a comment's track that runs past it is pulled back,
-  // and one that starts past it goes. Before the visitor has changed anything this is part of setting up.
+  // The timeline follows the comments as the page comes to know more. The comments are read against how long
+  // each side is, which is known once the audio says (or was remembered from an earlier visit): a track can't
+  // run past the end of its side, and a list that timed the tape as one recording is split between the sides.
+  //  · A first visit nobody has touched takes the comments' tracklist as it now reads. That is still part of
+  //    setting up, so undo stops after it.
+  //  · Otherwise the timeline is brought in line the way a return visit is (the rules are in
+  //    `followComments`), which keeps everything the visitor did, and says so if tracks came or went.
+  // Not from a reading that is missing the newer comments, on a return visit: their tracks would look "gone".
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || (restored === "saved" && !complete)) return;
     let settingUp = false;
-    void rewrite(() => {
-      settingUp = untouched();
-      let changed = false;
-      const next = cuesRef.current.flatMap((c) => {
-        const d = lengths[sides.indexOf(c.track)];
-        if (d == null || c.end <= d || !c.by) return [c];
-        changed = true;
-        return c.start > d - 5 ? [] : [{ ...c, end: d }];
-      });
-      return changed ? next : null;
-    }).then((ok) => ok && settingUp && settle());
-  }, [lengths, ready, sides, rewrite, untouched, settle]);
-
-  // Return visit: the saved timeline is brought back in line with the comments (the rules are in `followComments`).
-  const merged = useRef(false);
-  useEffect(() => {
-    // Not from a reading that is missing the newer comments: their tracks would look "gone" and be removed.
-    if (restored !== "saved" || merged.current || !complete) return;
-    merged.current = true;
     let found: ReturnType<typeof followComments> = null;
     void rewrite(() => {
+      settingUp = restored === "fresh" && untouched();
+      if (settingUp) {
+        const next = proposals.map(toCue);
+        return JSON.stringify(next) === JSON.stringify(cuesRef.current) ? null : next;
+      }
       found = followComments({ cues: cuesRef.current, removed: gone.current, moved: moved.current }, proposals, sides);
-      return found?.cues ?? null;
+      // `followComments` leaves the end of the last track on a side alone; the side's length does not.
+      let cut = false;
+      const next = (found?.cues ?? cuesRef.current).flatMap((c) => {
+        const d = lengths[sides.indexOf(c.track)];
+        if (d == null || c.end <= d || !c.by) return [c];
+        cut = true;
+        return c.start > d - 5 ? [] : [{ ...c, end: d }];
+      });
+      return found || cut ? next : null;
     }).then((ok) => {
-      if (!ok || !found) return;
+      if (!ok) return;
+      if (settingUp) return settle();
+      if (!found) return;
       const parts = [found.added ? `added ${found.added}` : "", found.corrected ? `corrected ${found.corrected}` : "", found.removed ? `removed ${found.removed} misread` : ""].filter(Boolean).join(", ");
       confirmWithUndo(`Updated from the comments: ${parts}.`);
     });
-    // Runs once, with the comments as they are when saved work has been restored.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restored]);
+  }, [proposals, lengths, ready, restored, complete, sides, toCue, rewrite, untouched, settle, confirmWithUndo]);
 
   const startOver = async () => {
     gone.current = []; // starting over forgets what was removed, too

@@ -326,8 +326,47 @@ function sameTrack(a: Named, b: Named) {
   return hit / small.size >= 0.7;
 }
 
+/**
+ * Some lists time a two-sided tape as one recording: the clock runs on through side B, whose tracks are then
+ * at 47:04, 51:08 … 1:27:43. Those times mean nothing on a side that starts again at 0:00, so once the page
+ * knows how long the sides are, such a list is split. What comes before side B's first track is side A's; the
+ * rest is side B's, timed from that track.
+ *
+ * Where side B starts on the commenter's clock is read from their list, because their recording is rarely as
+ * long as ours to the second (on two tapes it differs by more than a minute). A list of a tape's tracks has
+ * an entry for the one that opens side B, so it is the entry nearest the end of our side A. Failing one
+ * within two minutes of it, our side A's length stands in.
+ *
+ * A list is taken to be on the whole tape's clock only when at least two of its times are past the end of the
+ * side they were read onto, they reach a quarter of the way into side B, and all of them fit on it. One time
+ * past the end is a slip, and so are two just past it.
+ */
+export function splitWholeTape(sightings: Sighting[], lengths: number[]): Sighting[] {
+  if (lengths.length !== 2 || !lengths.every(Number.isFinite)) return sightings;
+  const [a, b] = lengths;
+  const lists = new Map<string, Sighting[]>();
+  for (const s of sightings) {
+    const posted = `${s.author}\n${s.date}`;
+    lists.set(posted, [...(lists.get(posted) ?? []), s]);
+  }
+  return [...lists.values()].flatMap((posted) => {
+    // Only what the commenter timed: a track taken to open a side because it heads a list has no clock to be on.
+    const list = posted.filter((s) => !s.weak);
+    const past = list.filter((s) => s.start >= lengths[s.side]);
+    if (past.length < 2) return posted;
+    const opener = list.filter((s) => Math.abs(s.start - a) <= 120).sort((x, y) => Math.abs(x.start - a) - Math.abs(y.start - a))[0];
+    const zero = opener?.start ?? a;
+    const reach = Math.max(...past.map((s) => s.start)) - zero;
+    if (past.some((s) => s.start < zero) || reach < b / 4 || reach >= b) return posted;
+    // Read onto side B from top to bottom (nothing above the list said "side A"): its first part is side A's.
+    const allOnB = list.every((s) => s.side === 1);
+    return posted.map((s) => (s.weak ? s : s.start >= zero ? { ...s, side: 1, start: s.start - zero, end: s.end === undefined ? undefined : s.end - zero } : allOnB ? { ...s, side: 0 } : s));
+  });
+}
+
 /** One proposal per moment: the newest identification wins, and an ID always beats a question mark. */
-export function reconcile(sightings: Sighting[], lengths: number[]): Proposal[] {
+export function reconcile(read: Sighting[], lengths: number[]): Proposal[] {
+  const sightings = splitWholeTape(read, lengths);
   const out: Proposal[] = [];
   lengths.forEach((length, side) => {
     const here = sightings.filter((s) => s.side === side && s.start < length).sort((a, b) => a.start - b.start || a.date.localeCompare(b.date));
