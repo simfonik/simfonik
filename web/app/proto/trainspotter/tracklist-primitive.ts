@@ -29,13 +29,10 @@ type TracklistState = { value: Cue[]; draft: SpansDraft<Cue> | null; focused: st
 export const cueLabel = (cue: Pick<Cue, "artist" | "title" | "known">) =>
   cue.known ? [cue.artist, cue.title].filter(Boolean).join(" — ") || "Untitled" : cue.title ? `Unknown track (“${cue.title}”)` : "Unknown track";
 
-/** A time on the tape: m:ss, or h:mm:ss where the page asks for hours. */
-export const clock = (s: number, hours = false) => {
+/** A time on the tape, always h:mm:ss with its zeros (0:05:15), the one format the page uses. */
+export const clock = (s: number) => {
   if (!Number.isFinite(s) || s < 0) s = 0;
-  const ss = String(Math.floor(s % 60)).padStart(2, "0");
-  // With hours: 1:23:25, the way people write a time on a side longer than an hour.
-  if (hours) return `${Math.floor(s / 3600)}:${String(Math.floor((s % 3600) / 60)).padStart(2, "0")}:${ss}`;
-  return `${Math.floor(s / 60)}:${ss}`;
+  return `${Math.floor(s / 3600)}:${String(Math.floor((s % 3600) / 60)).padStart(2, "0")}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 };
 /** Used until a side's audio reports its real length. */
 export const DEFAULT_LENGTH = 47 * 60;
