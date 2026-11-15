@@ -19,8 +19,13 @@ export function useAudioPlayer({ src, tapeId, sidePosition, onEnded }: UseAudioP
   // Track the src we've already fired an API tracking event for, to prevent rapid-toggle spam
   const trackedSrcRef = useRef<string | null>(null);
 
+  // A place asked for before the audio has loaded. There is nowhere to go yet, so it is kept, shown as the
+  // current time, and gone to as soon as the audio's length is in.
+  const pendingSeek = useRef<number | null>(null);
+
   // Handle source transition: reset transient state when `src` changes
   useEffect(() => {
+    pendingSeek.current = null;
     setCurrentTime(0);
     setError(null);
     setIsLoading(false);
@@ -29,24 +34,28 @@ export function useAudioPlayer({ src, tapeId, sidePosition, onEnded }: UseAudioP
     // seamless auto-play transitions between playlist tracks
   }, [src]);
 
-  // Handle auto-play intent when src changes while playing
+  // Carry on into a new source when the one before it was playing: the next side of a playlist. Only a
+  // change of source sets this off. A press of play is the control's own business, below; run from here as
+  // well, every press called the browser's play twice.
+  const wasPlaying = useRef(false);
+  useEffect(() => {
+    wasPlaying.current = isPlaying;
+  }, [isPlaying]);
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || !wasPlaying.current || !audio.src) return;
 
-    if (isPlaying && audio.src) {
-      setIsLoading(true);
-      audio.play().catch((err) => {
-        // Ignore AbortError: it happens naturally if src changes again rapidly
-        if (err.name !== 'AbortError') {
-          console.error('Auto-play failed after source change:', err);
-          setIsPlaying(false);
-        }
-      }).finally(() => {
-        setIsLoading(false);
-      });
-    }
-  }, [src, isPlaying]);
+    setIsLoading(true);
+    audio.play().catch((err) => {
+      // AbortError comes naturally when the source changes again quickly. NotAllowedError is the browser
+      // wanting a tap first: nothing is broken, and the controls go back to rest.
+      if (err.name === 'AbortError') return;
+      if (err.name !== 'NotAllowedError') console.error('Auto-play failed after source change:', err);
+      setIsPlaying(false);
+    }).finally(() => {
+      setIsLoading(false);
+    });
+  }, [src]);
 
   // Bind audio events
   useEffect(() => {
@@ -58,9 +67,16 @@ export function useAudioPlayer({ src, tapeId, sidePosition, onEnded }: UseAudioP
       setDuration(audio.duration);
     }
 
-    const handleLoadedMetadata = () => setDuration(audio.duration);
-    
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration);
+      if (pendingSeek.current !== null) {
+        audio.currentTime = Number.isFinite(audio.duration) ? Math.min(pendingSeek.current, audio.duration) : pendingSeek.current;
+        pendingSeek.current = null;
+      }
+    };
+
+    // Until a kept place has been gone to, it is the time shown, not the audio's own zero.
+    const handleTimeUpdate = () => setCurrentTime(pendingSeek.current ?? audio.currentTime);
     const handleSeeking = () => setCurrentTime(audio.currentTime);
     
     const handlePlay = () => {
@@ -86,7 +102,7 @@ export function useAudioPlayer({ src, tapeId, sidePosition, onEnded }: UseAudioP
 
     const handlePause = () => {
       setIsPlaying(false);
-      setCurrentTime(audio.currentTime);
+      setCurrentTime(pendingSeek.current ?? audio.currentTime);
     };
 
     const handleEnded = () => {
@@ -156,7 +172,8 @@ export function useAudioPlayer({ src, tapeId, sidePosition, onEnded }: UseAudioP
   const seek = useCallback((time: number) => {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.currentTime = time;
+    if (audio.readyState < 1) pendingSeek.current = time;
+    else audio.currentTime = time;
     setCurrentTime(time);
   }, []);
 

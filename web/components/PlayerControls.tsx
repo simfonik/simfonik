@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { outline } from '../lib/waveform';
 
 export interface PlayerControlsProps {
@@ -42,53 +42,56 @@ export function PlayerControls({
 }: PlayerControlsProps) {
 
   const shape = useMemo(() => (wave ? outline(wave) : null), [wave]);
-  // The audio isn't fetched until it is played, so before that its length isn't known. A press on the bar
-  // then starts the tape, and the place pressed (a share of the bar, 0 to 1) is gone to once the length is in.
-  const [wanted, setWanted] = useState<number | null>(null);
-  useEffect(() => {
-    if (wanted === null || !(duration > 0)) return;
-    onSeek(wanted * duration);
-    setWanted(null);
-  }, [wanted, duration, onSeek]);
-  // A phone lets audio start only from inside a finished tap, click or key press. The slider reports its new
-  // value the moment a finger lands, which is too early: started from there, an iPhone refuses to play. So
-  // before the audio has loaded, the tape is started when the press ends, at the place pressed.
-  const press = useRef<{ x: number; y: number; dragging: boolean } | null>(null);
-  const startAt = (x: number, bar: DOMRect) => {
-    if (duration || isPlaying || isLoading) return;
-    setWanted(wanted ?? Math.max(0, Math.min(1, (x - bar.left) / bar.width)));
-    onPlay();
-  };
-  const played = wanted !== null ? wanted * 100 : duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
-
   // The side's length: what the audio says once it has loaded, and before that what was read ahead of time.
   const whole = duration > 0 ? duration : length ?? 0;
+  const played = whole > 0 ? Math.min(100, (currentTime / whole) * 100) : 0;
+  /** Nothing has been asked of the audio yet, so the first press on the bar is also what starts the tape. */
+  const unstarted = !duration && !isPlaying && !isLoading;
+
+  /** The time at a place across the bar, or null while the side's length isn't known. */
+  const timeAt = (x: number, bar: DOMRect) =>
+    whole > 0 ? Math.max(0, Math.min(1, (x - bar.left) / bar.width)) * whole : null;
+
+  // A press on the bar goes to that place, and before the tape has been started it starts it too. A phone
+  // lets audio start only from inside a finished tap or click, so that is where this is called from: not
+  // from the slider's own change, which comes as the finger lands, and not from the end of a drag, which an
+  // iPhone doesn't count as a tap. A drag only chooses the place; play starts the tape from it.
+  const pressAt = (x: number, bar: DOMRect) => {
+    const time = timeAt(x, bar);
+    if (time !== null) onSeek(time);
+    if (unstarted) onPlay();
+  };
+
+  // A finger on the bar is followed here, not by the slider underneath. An iPhone's slider only follows a
+  // drag that starts on its handle, which on this bar can't be seen; and a slider that did follow would give
+  // a second, slightly different answer. So while a finger is down, and for a moment after it lifts (when a
+  // phone sends its imitation of a mouse click), what the slider reports is left alone.
+  const press = useRef<{ x: number; y: number; dragging: boolean } | null>(null);
+  const lifted = useRef(0);
+  const fingerJustHere = () => press.current !== null || performance.now() - lifted.current < 700;
 
   // A line on the bar with a time over it, written straight to the element: a pointer moves far more often
   // than the page needs to re-render. Under a mouse it is where a click would land. Under a finger dragging
   // the bar it is where the tape is being taken, said beside the finger because the times may be rows away.
   const ghost = useRef<HTMLDivElement>(null);
-  const point = (x: number, width: number) => {
+  const point = (x: number, bar: DOMRect) => {
     const el = ghost.current;
     if (!el) return;
-    el.style.setProperty('--at', `${x}px`);
+    const at = Math.max(0, Math.min(bar.width, x - bar.left));
+    el.style.setProperty('--at', `${at}px`);
     // The label stays inside the bar's ends.
-    el.style.setProperty('--label', `${Math.max(30, Math.min(width - 30, x))}px`);
-    el.firstElementChild!.textContent = whole > 0 ? formatTime((x / width) * whole) : '';
+    el.style.setProperty('--label', `${Math.max(30, Math.min(bar.width - 30, at))}px`);
+    const time = timeAt(x, bar);
+    el.firstElementChild!.textContent = time === null ? '' : formatTime(time);
   };
   const preview = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== 'mouse') return;
-    const bar = e.currentTarget.getBoundingClientRect();
-    point(Math.max(0, Math.min(bar.width, e.clientX - bar.left)), bar.width);
+    point(e.clientX, e.currentTarget.getBoundingClientRect());
     ghost.current?.setAttribute('data-on', '');
-  };
-  /** The slider's own value, as a place on the bar. */
-  const pointAtValue = (slider: HTMLInputElement) => {
-    const width = slider.getBoundingClientRect().width;
-    point((parseFloat(slider.value) / parseFloat(slider.max)) * width, width);
   };
   const endTouch = () => {
     press.current = null;
+    lifted.current = performance.now();
     ghost.current?.removeAttribute('data-drag');
   };
 
@@ -140,19 +143,11 @@ export function PlayerControls({
           <input
             type="range"
             min="0"
-            max={duration || 1}
-            step={duration ? 1 : 0.001}
-            value={duration ? currentTime : wanted ?? 0}
+            max={whole || 1}
+            step="1"
+            value={whole ? currentTime : 0}
             onChange={(e) => {
-              const value = parseFloat(e.target.value);
-              // Shown only once a drag is moving the slider: on an iPhone a drag that starts away from the
-              // playhead moves nothing, and a label there would say the tape was being taken somewhere.
-              if (press.current?.dragging) {
-                pointAtValue(e.target);
-                ghost.current?.setAttribute('data-drag', '');
-              }
-              if (duration) return onSeek(value);
-              setWanted(value);
+              if (whole && !fingerJustHere()) onSeek(parseFloat(e.target.value));
             }}
             onTouchStart={(e) => {
               press.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, dragging: false };
@@ -160,33 +155,40 @@ export function PlayerControls({
             onTouchMove={(e) => {
               const from = press.current;
               const to = e.touches[0];
-              if (!from || from.dragging || !to) return;
-              // A tap shows nothing; a finger that has set off along the bar is dragging it.
-              const across = Math.abs(to.clientX - from.x);
-              if (across <= 6 || across <= Math.abs(to.clientY - from.y)) return;
-              from.dragging = true;
+              if (!from || !to) return;
+              if (!from.dragging) {
+                // A finger that has set off along the bar is dragging it. One going up or down is scrolling
+                // the page past it.
+                const across = Math.abs(to.clientX - from.x);
+                if (across <= 6 || across <= Math.abs(to.clientY - from.y)) return;
+                from.dragging = true;
+              }
+              const bar = e.currentTarget.getBoundingClientRect();
+              const time = timeAt(to.clientX, bar);
+              if (time === null) return;
+              onSeek(time);
+              point(to.clientX, bar);
+              ghost.current?.setAttribute('data-drag', '');
             }}
-            onTouchCancel={() => {
-              endTouch();
-              setWanted(null);
-            }}
+            onTouchCancel={endTouch}
             onTouchEnd={(e) => {
               const from = press.current;
               const to = e.changedTouches[0];
               endTouch();
-              if (!from || !to) return;
-              // A finger that travelled up or down was scrolling the page past the bar, not pressing it.
-              const across = Math.abs(to.clientX - from.x);
-              const down = Math.abs(to.clientY - from.y);
-              if (down > 10 && down > across) return setWanted(null);
-              startAt(to.clientX, e.currentTarget.getBoundingClientRect());
+              // The end of a drag has nothing left to do, and a finger that wandered wasn't pressing the bar.
+              if (!from || !to || from.dragging) return;
+              if (Math.hypot(to.clientX - from.x, to.clientY - from.y) > 10) return;
+              pressAt(to.clientX, e.currentTarget.getBoundingClientRect());
             }}
-            onClick={(e) => startAt(e.clientX, e.currentTarget.getBoundingClientRect())}
-            onKeyUp={() => {
-              if (wanted !== null && !duration && !isPlaying && !isLoading) onPlay();
+            // With a mouse the slider has already gone to the place; what is left is starting the tape.
+            onClick={(e) => {
+              if (unstarted && !fingerJustHere()) pressAt(e.clientX, e.currentTarget.getBoundingClientRect());
+            }}
+            onKeyUp={(e) => {
+              if (unstarted && currentTime > 0 && /^(Arrow|Page|Home|End)/.test(e.key)) onPlay();
             }}
             aria-label={`Seek audio${title ? `: ${title}` : ''}`}
-            aria-valuetext={duration ? `${formatTime(currentTime)} of ${formatTime(duration)}` : 'Not loaded yet'}
+            aria-valuetext={whole ? `${formatTime(currentTime)} of ${formatTime(whole)}` : 'Not loaded yet'}
           />
         </div>
         {showTimes && (

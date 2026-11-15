@@ -175,6 +175,40 @@ describe('useAudioPlayer', () => {
     consoleErrorSpy.mockRestore();
   });
 
+  it('asks the browser to play once for one press of play', async () => {
+    // As on the page, where the element carries the source.
+    audioNode.src = 'test.mp3';
+    const { result } = setupHook({ src: 'test.mp3' });
+
+    await act(async () => {
+      result.current.controls.play();
+    });
+
+    expect(audioNode.play).toHaveBeenCalledTimes(1);
+    expect(result.current.state.isPlaying).toBe(true);
+  });
+
+  it('keeps a place asked for before the audio has loaded, and goes to it once it has', async () => {
+    const { result } = setupHook({ src: 'test.mp3' });
+    expect(audioNode.readyState).toBe(0);
+
+    await act(async () => {
+      result.current.controls.seek(900);
+    });
+
+    // Shown at once, though the audio itself has nowhere to go yet.
+    expect(result.current.state.currentTime).toBe(900);
+    expect(audioNode.currentTime).toBe(0);
+
+    await act(async () => {
+      Object.defineProperty(audioNode, 'duration', { value: 1800, configurable: true });
+      audioNode.dispatchEvent(new Event('loadedmetadata'));
+    });
+
+    expect(audioNode.currentTime).toBe(900);
+    expect(result.current.state.duration).toBe(1800);
+  });
+
   it('cleans up event listeners on unmount', () => {
     const { unmount } = setupHook({ src: 'test.mp3' });
 

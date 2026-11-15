@@ -276,6 +276,8 @@ body::before {
   margin: 0;
   opacity: 0;
   cursor: pointer;
+  /* A finger moving along the bar drags the tape; the browser keeps up-and-down for scrolling the page. */
+  touch-action: pan-y;
 }
 /* A browser places a click by the middle of the slider's handle, and keeps the handle inside the bar: with a
    handle of ordinary width, a click near either end of a half-hour side lands half a minute from the pointer.
