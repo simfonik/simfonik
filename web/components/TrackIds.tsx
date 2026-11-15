@@ -27,7 +27,7 @@ type Props = {
 
 /**
  * One line under the bar. It says the track playing now, as the comments have ID'd it; where they haven't, it
- * asks. Pressed, the line becomes two fields in its own place, and Enter posts what was typed as an ordinary
+ * asks. Pressed, the line becomes two blanks in its own place, and Enter posts what was typed as an ordinary
  * comment that carries the side and the time (see lib/track-ids/compose.ts), through the same route as any
  * comment. A name already there can be pressed to put it right. Nothing is kept anywhere else.
  */
@@ -123,8 +123,6 @@ export function TrackIds({ tapeId, position, ids, time, onPosted }: Props) {
     shut();
   }
 
-  const fieldClasses =
-    'text-field font-mono h-11 w-full min-w-0 border-[1.5px] border-[var(--text)] bg-[var(--bg)] px-3 text-sm text-[var(--text)] placeholder:text-[var(--muted)]';
   const where = `${position ? `${position} · ` : ''}${clock(at ?? 0)}`;
   const sending = status === 'sending';
 
@@ -152,25 +150,30 @@ export function TrackIds({ tapeId, position, ids, time, onPosted }: Props) {
         </div>
       ) : (
         <form onSubmit={post} noValidate onKeyDown={(e) => e.key === 'Escape' && shut()} aria-label={`ID the track at ${where}`}>
-          <div className="grid items-center gap-3 sm:grid-cols-[auto_1fr_1fr_auto_auto]">
-            <span className="font-mono text-[12px] tabular-nums text-[var(--text)]">{where}</span>
+          {/* The line itself, with blanks where the names go: the same type in the same place, a rule under
+              each blank, and no boxes. On a phone the blanks are a row each. */}
+          <div className="flex min-h-11 flex-col gap-x-3 sm:flex-row sm:items-center">
+            <span className="track-ids-where">{where}</span>
             {step === 'track' ? (
               <>
-                <input ref={artistField} value={artist} onChange={typed(setArtist)} placeholder="Artist" aria-label="Artist" aria-describedby={message ? messageId : undefined} autoComplete="off" autoCapitalize="words" enterKeyHint="send" className={fieldClasses} />
-                <input value={title} onChange={typed(setTitle)} placeholder="Title" aria-label="Title" autoComplete="off" autoCapitalize="words" enterKeyHint="send" className={fieldClasses} />
+                <input ref={artistField} value={artist} onChange={typed(setArtist)} placeholder="Artist" aria-label="Artist" aria-describedby={message ? messageId : undefined} autoComplete="off" autoCapitalize="words" enterKeyHint="send" className="track-ids-field" />
+                <span aria-hidden className="hidden text-[var(--muted)] sm:inline">
+                  —
+                </span>
+                <input value={title} onChange={typed(setTitle)} placeholder="Title" aria-label="Title" autoComplete="off" autoCapitalize="words" enterKeyHint="send" className="track-ids-field" />
               </>
             ) : (
-              <input ref={nameField} value={name} onChange={typed(setName)} placeholder="Your name" aria-label="Your name" aria-describedby={message ? messageId : undefined} autoComplete="name" maxLength={100} enterKeyHint="send" className={`${fieldClasses} sm:col-span-2`} />
+              <input ref={nameField} value={name} onChange={typed(setName)} placeholder="Your name" aria-label="Your name" aria-describedby={message ? messageId : undefined} autoComplete="name" maxLength={100} enterKeyHint="send" className="track-ids-field" />
             )}
-            <div className="flex items-center gap-1">
-              <button type="submit" aria-disabled={sending} className="poster-btn h-11 flex-1 whitespace-nowrap">
+            <div className="flex items-center">
+              <button type="submit" aria-disabled={sending} className="track-ids-post">
                 <span className="grid place-items-center">
                   <span className={`col-start-1 row-start-1 ${sending ? 'invisible' : ''}`}>Post</span>
                   <span className={`col-start-1 row-start-1 ${sending ? '' : 'invisible'}`}>…</span>
                 </span>
               </button>
               <button type="button" onClick={shut} aria-label="Cancel" className="track-ids-shut">
-                <svg className="h-3.5 w-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+                <svg className="h-3 w-3" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                   <path d="M1 1l12 12M13 1L1 13" />
                 </svg>
               </button>

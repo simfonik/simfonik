@@ -384,6 +384,58 @@ body::before {
 }
 .track-ids-line:active { opacity: 0.6; }
 .track-ids-line:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+/* The line with its blanks open. Everything is the line's own type, so ID'ing a track reads as writing on the
+   line and not as filling in a form: the place on the tape said quietly, a rule under each blank that comes
+   up to full colour where the typing is, and the word that posts it. */
+.track-ids-where {
+  flex: none;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+/* A full-size place to press, with its rule drawn just under the words and not at its foot. On a phone the
+   blanks are a row each, and keep their height; side by side they share the width. */
+.track-ids-field {
+  --rule: color-mix(in srgb, var(--muted) 45%, transparent);
+  flex: none;
+  width: 100%;
+  min-width: 0;
+  height: 2.75rem;
+  padding: 0;
+  border-radius: 0;
+  background: linear-gradient(var(--rule), var(--rule)) left 0 bottom 0.5625rem / 100% 1px no-repeat;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  /* 16px where a finger types, or the phone zooms the page in. */
+  font-size: 16px;
+  color: var(--text);
+  outline: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .track-ids-field { font-size: 12px; }
+}
+@media (min-width: 40rem) {
+  .track-ids-field { flex: 1; }
+}
+.track-ids-field::placeholder { color: var(--muted); }
+.track-ids-field:focus-visible { --rule: var(--text); background-size: 100% 1.5px; }
+.track-ids-post {
+  height: 2.75rem;
+  flex: none;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  text-underline-offset: 4px;
+  color: var(--text);
+  cursor: pointer;
+}
+@media (hover: hover) and (pointer: fine) {
+  .track-ids-post:not([aria-disabled="true"]):hover { text-decoration: underline; }
+}
+.track-ids-post:active { opacity: 0.6; }
+.track-ids-post:focus-visible { outline: 2px solid var(--text); outline-offset: -4px; }
 /* The cross that shuts the fields: a small mark in a full-size place to press. */
 .track-ids-shut {
   display: grid;
