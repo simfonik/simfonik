@@ -28,9 +28,10 @@
   .proto-thumb { transition: none; }
 }
 
-/* "Today": what the panel's controls set, until they are moved. The live gallery sizes its thumbnails and caps
-   its picture with its own classes, so both are set over them from here. */
-:root { --image-column: 640px; --thumb: 80px; --image-max: 650px; }
+/* "Today": what the panel's controls set, until they are moved (the same numbers as CHOSEN in harness.tsx).
+   The live gallery sizes its thumbnails and caps its picture with its own classes, so both are set over them
+   from here. */
+:root { --image-column: 560px; --thumb: 60px; --image-max: 500px; }
 .proto-gallery > .flex > .flex-col > button { width: var(--thumb); height: var(--thumb); }
 .proto-gallery img[alt="Tape image"] { max-height: var(--image-max); }
 

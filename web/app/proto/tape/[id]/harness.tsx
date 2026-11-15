@@ -25,22 +25,29 @@ const VARIANTS = [
 /** The live page's numbers, the top of each slider: its image column at a 1280px window, its thumbnails, and
     the tallest it lets a picture be. */
 const LIVE = { image: 708, thumb: 80, tall: 650 };
-const START = 640;
+/** Where the controls start: the settings chosen on 2026-11-15 to try on other tapes. proto.css has them too. */
+const CHOSEN = { image: 560, thumb: 60, tall: 500, flipped: false };
+const KEPT = "simfonik:proto-today";
 
-const kept = (name: string, otherwise: number) => parseInt(document.documentElement.style.getPropertyValue(name), 10) || otherwise;
+/** The settings last used in this browser, so a change made on one tape is still there on the next. */
+function kept(): typeof CHOSEN {
+  try {
+    return { ...CHOSEN, ...JSON.parse(localStorage.getItem(KEPT) ?? "{}") };
+  } catch {
+    // Storage is refused in a private window; the chosen settings stand.
+    return CHOSEN;
+  }
+}
 
 /**
- * "Today" has four things nobody has chosen yet: how wide the image column is, which side it is on, how big
- * the gallery's thumbnails are, and how tall a picture may be. The sliders write to CSS variables on the page
- * and the button sets an attribute on it, so the page is not rendered again as they change; proto.css does
- * the rest. All are read back from the page when the panel returns, so they survive a look at another
- * variant. The numbers are shown so the right ones can be kept.
+ * "Today" has four things to settle: how wide the image column is, which side it is on, how big the gallery's
+ * thumbnails are, and how tall a picture may be. The sliders write to CSS variables on the page and the
+ * button sets an attribute on it, so the page is not rendered again as they change; proto.css does the rest.
+ * The numbers are shown so the right ones can be kept.
  */
 function Split() {
-  const [image, setImage] = useState(() => kept("--image-column", START));
-  const [thumb, setThumb] = useState(() => kept("--thumb", LIVE.thumb));
-  const [tall, setTall] = useState(() => kept("--image-max", LIVE.tall));
-  const [flipped, setFlipped] = useState(() => document.documentElement.hasAttribute("data-proto-flip"));
+  const [{ image, thumb, tall, flipped }, setSettings] = useState(kept);
+  const change = (to: Partial<typeof CHOSEN>) => setSettings((now) => ({ ...now, ...to }));
   const [words, setWords] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -50,6 +57,11 @@ function Split() {
     page.style.setProperty("--thumb", `${thumb}px`);
     page.style.setProperty("--image-max", `${tall}px`);
     page.toggleAttribute("data-proto-flip", flipped);
+    try {
+      localStorage.setItem(KEPT, JSON.stringify({ image, thumb, tall, flipped }));
+    } catch {
+      // As above: without storage the settings last until the page is left.
+    }
     const measure = () => setWords(Math.round(document.querySelector("[data-proto-words]")?.getBoundingClientRect().width ?? 0) || null);
     const frame = requestAnimationFrame(measure);
     window.addEventListener("resize", measure);
@@ -69,18 +81,18 @@ function Split() {
   return (
     <div className="proto-panel">
       <label htmlFor="proto-split">Image column</label>
-      <input id="proto-split" type="range" min={280} max={LIVE.image} step={4} value={image} onChange={(e) => setImage(Number(e.target.value))} />
+      <input id="proto-split" type="range" min={280} max={LIVE.image} step={4} value={image} onChange={(e) => change({ image: Number(e.target.value) })} />
       <output htmlFor="proto-split">
         {live(image, LIVE.image)} · words {words ?? "…"}px
       </output>
       <label htmlFor="proto-tall">Picture height, at most</label>
-      <input id="proto-tall" type="range" min={280} max={LIVE.tall} step={10} value={tall} onChange={(e) => setTall(Number(e.target.value))} />
+      <input id="proto-tall" type="range" min={280} max={LIVE.tall} step={10} value={tall} onChange={(e) => change({ tall: Number(e.target.value) })} />
       <output htmlFor="proto-tall">{live(tall, LIVE.tall)}</output>
       <label htmlFor="proto-thumb">Thumbnails</label>
-      <input id="proto-thumb" type="range" min={32} max={LIVE.thumb} step={4} value={thumb} onChange={(e) => setThumb(Number(e.target.value))} />
+      <input id="proto-thumb" type="range" min={32} max={LIVE.thumb} step={4} value={thumb} onChange={(e) => change({ thumb: Number(e.target.value) })} />
       <output htmlFor="proto-thumb">{live(thumb, LIVE.thumb)}</output>
       <div>
-        <button type="button" aria-pressed={flipped} onClick={() => setFlipped((f) => !f)}>
+        <button type="button" aria-pressed={flipped} onClick={() => change({ flipped: !flipped })}>
           Flip
         </button>
         <button type="button" onClick={() => navigator.clipboard.writeText(summary).then(() => setCopied(true))}>
