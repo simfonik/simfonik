@@ -556,10 +556,43 @@ export function Trainspotter({
     if (many) setSelected((id) => (cuesRef.current.find((c) => c.id === id)?.track === sides[active] ? id : null));
   }, [many, active, sides]);
 
+  // ← and →: the previous or next track, from wherever the keyboard is. The audio goes with it, and keeps
+  // playing if it was playing. With no track picked, it steps from the one under the playhead.
+  const selectedRef = useRef(selected);
+  selectedRef.current = selected;
+  const stepTrack = useCallback(
+    (dir: -1 | 1) => {
+      const picked = cuesRef.current.find((c) => c.id === selectedRef.current);
+      const side = picked ? sides.indexOf(picked.track) : activeRef.current;
+      const row = cuesRef.current.filter((c) => c.track === sides[side]).sort((a, b) => a.start - b.start);
+      let to: Cue | undefined;
+      if (picked) to = row[row.indexOf(picked) + dir];
+      else {
+        const t = audios.current[side]?.currentTime ?? 0;
+        const sofar = row.filter((c) => c.start <= t);
+        to = dir > 0 ? row.find((c) => c.start > t) : (sofar[sofar.length - 2] ?? sofar[0]);
+      }
+      if (!to) return;
+      const id = to.id;
+      setSelected(id);
+      seek(side, to.start);
+      // Focus the block: it scrolls into view, and the keys that act on a track now act on this one.
+      requestAnimationFrame(() => (scrollerRef.current?.querySelector(`[data-span-id="${CSS.escape(id)}"]`) as HTMLElement | null)?.focus());
+    },
+    [sides, seek],
+  );
+
   // M marks and Space plays, unless the key belongs to a field or a control. A focused track is neither.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
+      if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && !(e.metaKey || e.ctrlKey || e.altKey || e.shiftKey)) {
+        // Not where arrows already mean something: a text field, the scrubber, the part picker, an open list.
+        if (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.closest("[role=slider],[role=radio],[role=radiogroup],[role=option],[role=listbox],[role=combobox],[role=dialog]")) return;
+        e.preventDefault();
+        stepTrack(e.key === "ArrowLeft" ? -1 : 1);
+        return;
+      }
       if (e.metaKey || e.ctrlKey || e.altKey || t.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(t.tagName) || t.closest("[role=slider],[role=option],[role=dialog]")) return;
       if (e.key === "m" || e.key === "M") {
         e.preventDefault();
@@ -571,7 +604,7 @@ export function Trainspotter({
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [markHere, toggle]);
+  }, [markHere, toggle, stepTrack]);
 
   // ── Names waiting for a time: the site's own tracklist if there is one, else a commenter's running order ──
   const orders = useMemo(() => {
@@ -1170,7 +1203,7 @@ export function Trainspotter({
           <div className="text-sm text-[var(--muted)]">
             <p className="ts-fine">Click a track to play and ID it. Drag it to move it, or drag an edge to resize it. Drag the top marker to skip through the tape.</p>
             <p className="ts-fine mt-1 font-mono text-[11px] uppercase tracking-[0.1em]">
-              Space play · M new track · {undoHint.text} undo · ← → next track · Enter ID · Alt ← → nudge · Alt Shift ← → trim · Delete remove
+              Space play · ← → previous / next track · M new track · Enter ID · Delete remove · Alt ← → nudge · Alt Shift ← → trim · {undoHint.text} undo
             </p>
             <p className="ts-coarse">Tap a track to play it, then “ID it”. Slide the top marker to skip through the tape.</p>
           </div>

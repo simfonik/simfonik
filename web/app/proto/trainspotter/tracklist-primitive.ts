@@ -134,8 +134,8 @@ export const tracklist = definePrimitive({
       removeCue: (id: string) => spans.remove(String(id)),
       clear: () => change("value", [], { reason: "imperative" }),
       /**
-       * Keys on a focused track. Plain arrows walk between tracks, because that is what someone who has
-       * just clicked one expects; changing a track's times takes Alt, so it can't happen by accident.
+       * Keys on a focused track. Changing a track's times takes Alt, so it can't happen by accident. Plain
+       * arrows are left to the page, which uses them to step between tracks and move the audio with them.
        * Up and Down are left alone (a track never jumps to the other side of the tape), and Delete is the
        * page's to handle, so it can confirm and offer an undo.
        */
@@ -145,14 +145,13 @@ export const tracklist = definePrimitive({
         const row = current()
           .filter((c) => c.track === cue.track)
           .sort((a, b) => a.start - b.start);
-        const i = row.findIndex((c) => c.id === id);
         const go = (to?: Cue) => {
           if (to) (el?.parentElement?.querySelector(`[data-span-id="${CSS.escape(to.id)}"]`) as HTMLElement | null)?.focus();
         };
         if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+          if (!event.altKey) return;
           event.preventDefault();
           const dir = event.key === "ArrowLeft" ? -1 : 1;
-          if (!event.altKey) return go(row[i + dir]);
           if (event.shiftKey) {
             // Alt-Shift: trim where it ends.
             const end = Math.max(cue.start + 5, Math.min(length(), cue.end + dir));
