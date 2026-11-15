@@ -260,7 +260,6 @@
   width: 48px;
   margin-right: 8px;
   cursor: pointer;
-  box-shadow: 0 1px 0 color-mix(in oklch, var(--text) 22%, transparent); /* level with the tape's baseline */
   color: var(--muted);
   font-family: var(--font-anton), sans-serif;
   font-size: 1.5rem;
@@ -268,7 +267,7 @@
   transition: color 120ms ease-out;
 }
 @media (hover: hover) { .ts-side:hover { color: var(--text); } }
-.ts-side[aria-pressed="true"] { background: var(--text); box-shadow: none; color: var(--bg); }
+.ts-side[aria-pressed="true"] { background: var(--text); color: var(--bg); }
 .ts-side:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 /* ── The tape ──
    Three things can be on a side, and each is drawn so it can't be mistaken for another:
