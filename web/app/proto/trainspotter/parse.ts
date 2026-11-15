@@ -12,6 +12,11 @@ export type Sighting = {
   layer?: boolean;
   /** Read out of a sentence that didn't say which side. Only trusted on a tape with one side. */
   unsure?: boolean;
+  /** No side was said on its line or above it, so it sits on the first side for want of anything better. */
+  sideless?: boolean;
+  /** Worked out, not stated: the first track in a list of a side, taken to start the side. Anything someone
+      actually timed at that moment is believed over it. */
+  weak?: boolean;
   author: string;
   date: string;
 };
@@ -22,11 +27,11 @@ const seconds = (t: string) => {
 };
 
 // "Side A", "side-b", "Part 2", and "Side.A" (a dot only when nothing follows it, so "that side. A friend" is not a side).
-const SIDE = /\b(?:side|part)(?:[\s-]*|\.)(a|b|c|d|1|2|3|4|one|two)\b/i;
+const SIDE = /\b(?:side|part)(?:[\s-]*|\.)(a|b|c|d|1|2|3|4|one|two|uno|dos)\b/i;
 const sideIndex = (s: string) =>
-  ({ a: 0, "1": 0, "1st": 0, first: 0, one: 0, b: 1, "2": 1, "2nd": 1, second: 1, two: 1, c: 2, "3": 2, "3rd": 2, third: 2, d: 3, "4": 3, "4th": 3, fourth: 3 })[s.toLowerCase()] ?? 0;
+  ({ a: 0, "1": 0, "1st": 0, first: 0, one: 0, uno: 0, b: 1, "2": 1, "2nd": 1, second: 1, two: 1, dos: 1, c: 2, "3": 2, "3rd": 2, third: 2, d: 3, "4": 3, "4th": 3, fourth: 3 })[s.toLowerCase()] ?? 0;
 // "the second side", "1st side"
-const SIDE_ORD = /\b(1st|2nd|3rd|4th|first|second|third|fourth)[\s-]+side\b/i;
+const SIDE_ORD = /\b(1st|2nd|3rd|4th|first|second|third|fourth|uno|dos)[\s-]+side\b/i;
 const squash = (s: string) => s.toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, " ").trim();
 // The name of a side as people write it: "Technology Has Its Subliminal Side" is "Technology Has Its Subliminal".
 const stem = (s: string) => squash(s).replace(/ side$/, "");
@@ -61,7 +66,7 @@ export function sideNamed(text: string, titles: string[], heading = false): numb
   titles.forEach((title, i) => {
     const t = stem(title);
     if (t.length < 3 || /^side\b/.test(t)) return;
-    const hit = ` ${n} `.includes(` ${t} side `) || ` ${n} `.includes(` side ${t} `) || (heading && (alike(bare, t) || (bare.includes(" ") && t.startsWith(`${bare} `))));
+    const hit = ` ${n} `.includes(` ${t} side `) || ` ${n} `.includes(` side ${t} `) || (heading && (alike(bare, t) || (bare.includes(" ") && t.startsWith(`${bare} `)) || (n.startsWith(`${t} `) && n.endsWith(" side"))));
     if (!hit) return;
     if (t.length > best) found.clear();
     if (t.length >= best) {
@@ -83,13 +88,23 @@ const whichSide = (line: string, titles: string[] = []): number | null => {
   const m = line.match(SIDE) ?? line.match(SIDE_ALT) ?? line.match(SIDE_ORD);
   return m ? sideIndex(m[1]) : null;
 };
+// The shape of a record's name: something, a dash with a space after it, something.
+const NAMED = new RegExp(String.raw`\S\s*${DASH}\s+\S`);
 /** A line that is only a side: "Side B", "Side 1 - Technology Has Its Subliminal", "Planet Earth", "the second side". */
 const headingSide = (line: string, titles: string[]): number | null => {
   if (line.length >= 60 || new RegExp(TIME).test(line)) return null;
   const named = sideNamed(line, titles, true);
   if (named !== null) return named;
-  const m = line.match(SIDE) ?? line.match(/^\W*(?:the\s+)?(1st|2nd|3rd|4th|first|second|third|fourth)[\s-]+side\W*$/i);
-  return m ? sideIndex(m[1]) : null;
+  const m = line.match(SIDE) ?? line.match(/^\W*(?:the\s+)?(1st|2nd|3rd|4th|first|second|third|fourth|uno|dos)[\s-]+side\W*$/i);
+  if (!m) return null;
+  // "Acid Junkies Part 1 - Sector 9" and "Dreams Of Avarice (Part2)" are records, not the start of a side.
+  // "Part 2" is a heading only at the start of its line; "Side B" in a line shaped like a name ("DJ Trance -
+  // Side A") only at the start or the end of it.
+  const at = m.index ?? 0;
+  const opens = !/[a-z0-9]/i.test(line.slice(0, at));
+  const closes = !/[a-z0-9]/i.test(line.slice(at + m[0].length));
+  if (/^part/i.test(m[0]) ? !opens : NAMED.test(line) && !opens && !closes) return null;
+  return sideIndex(m[1]);
 };
 // Someone asking what a track is. The time they give marks a track nobody has ID'd.
 const ASK = /\?|\b(?:anyone|anybody|someone|somebody)\b|\bid\b.*\bplease\b|\bwant(?:ed)? to know\b|\bneed\b.*\b(?:id|name|track)\b|\blooking for\b/i;
@@ -107,18 +122,26 @@ export const plain = (s: string) =>
     .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
     .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
     .replace(/&([a-z]+);/gi, (m, name) => ENTITIES[name.toLowerCase()] ?? m);
-const clean = (s: string) =>
+const clean = (s: string, whole = true) =>
   s
     .replace(/https?:\/\/\S+/g, "")
-    .replace(/[“”"‎]|''/g, "")
+    .replace(/(?<!\b(?:7|10|12))"|[“”‎]|''/g, "") // quotes go; the inch mark in 12" stays
     .replace(/\s+/g, " ")
     .replace(new RegExp(String.raw`^[\s:,.${"\\-"}–—]+|[\s:,${"\\-"}–—]+$`, "g"), "")
     // "16:09 is Acid Masters - Voodoo Acid" and a trailing aside such as "(More accurate ID?)" are the
     // commenter talking, not part of the name.
     // "Pot Of Gold discogs: http…": the link is gone by now, its label is left behind.
     .replace(/\s*\bdiscogs\b:?\s*$/i, "")
-    .replace(/^is\s+/i, "")
+    // Only off the front of the whole name. An artist or a title of its own may begin with it: "Is This Real".
+    .replace(whole ? /^is\s+/i : /^$/, "")
     .replace(/\s*\([^()]*\?\)\s*$/, "")
+    .trim();
+
+/** What someone said about a track they couldn't name, without the question marks and brackets around it. */
+const hint = (t: string) =>
+  clean(t.replace(/^\?+/, ""))
+    .replace(/^\(([^()]*)\)$/, "$1")
+    .replace(/^['‘’]|['‘’]$/g, "")
     .trim();
 
 function split(text: string, prose = false): { artist: string; title: string; known: boolean; quoted?: boolean } | null {
@@ -128,20 +151,34 @@ function split(text: string, prose = false): { artist: string; title: string; kn
   if (q && !/^[\s?]*$/.test(q[1]) && !new RegExp(String.raw`\s${DASH}\s`).test(q[1])) {
     const artist = clean(q[1]).replace(/[’']s$/, "");
     // "I 1st heard that "Original Style" from…" is someone talking, not an artist.
-    if (artist && artist.split(" ").length <= 5 && !/^(?:i|it|this|that|he|she|they|we|the track|the song)\b/i.test(artist) && !CHATTER.test(artist)) return { artist, title: clean(q[2]), known: true, quoted: true };
+    // 'Keep On Pumpin' (Acapella): a bracket naming the mix belongs to the title. "(Pork Recordings)" doesn't.
+    const mix = text.slice((q.index ?? 0) + q[0].length).match(/^\s*(\([^()?]{0,30}\b(?:mix|remix|dub|version|edit|a+c+apella|instrumental|vocal|original)\b[^()?]{0,12}\))/i);
+    if (artist && artist.split(" ").length <= 5 && !/^(?:i|it|this|that|he|she|they|we|the track|the song)\b/i.test(artist) && !CHATTER.test(artist))
+      return { artist, title: clean(mix ? `${q[2]} ${mix[1]}` : q[2]), known: true, quoted: true };
   }
   const t = clean(text);
   if (t.length > 140) return null; // a sentence, not a track name
-  if (!t || /^\?+/.test(t)) return { artist: "", title: clean(t.replace(/^\?+/, "")).replace(/^['‘’]|['‘’]$/g, ""), known: false };
+  // "30:15 ?? (ambient)" and "17:06 (ambient)": nobody has named it, and the remark is the clue.
+  if (!t || /^\?+/.test(t) || /^\([^()]*\)$/.test(t)) return { artist: "", title: hint(t), known: false };
   const m = t.match(new RegExp(String.raw`^(.+?)\s*${DASH}\s+(.+)$`));
-  if (m) return { artist: clean(m[1]), title: clean(m[2]), known: true };
+  if (m) return { artist: clean(m[1], false), title: clean(m[2], false), known: true };
   // "Shoot by Way Out West": only in a sentence, where a bare title is not otherwise accepted.
   const by = prose ? t.match(/^(.{2,70}?)\s+by\s+(.{2,60}?)(?:\s+on\s+.+)?$/i) : null;
   if (by) return { artist: clean(by[2]), title: clean(by[1]), known: true, quoted: true };
   return { artist: "", title: t, known: true };
 }
 
-export function parseComment(content: string, author: string, date: string, titles: string[] = []): Sighting[] {
+// Where one sentence ends and the next begins, for a name that is followed by more talk. "Dr. Motte" is one name.
+const SENTENCE = /(?<=[)\w"”'’])(?<!\b(?:Dr|Mr|Mrs|Ms|St|vs|feat|ft|Vol|No|Pt))[.!]\s+(?=[A-Z@])/;
+const firstSentence = (s: string) => s.replace(/https?:\/\/\S+/g, "").split(SENTENCE)[0].replace(/[.!:\s]+$/, "");
+// "The first track on Side A is…": said about a side, that is a time, 0:00.
+const FIRST = /\b(?:first|1st|opening)\s+(?:track|song|tune|record|cut)\b([^.?!:]{0,40}?)(?:\bis\b\s*:?|:)\s*(.{3,})$/i;
+
+/**
+ * The timed tracks in one comment. `listing` says the comment is known to be a tracklist (see `digest`), so its
+ * lines are taken at their word however few of them carry a time.
+ */
+export function parseComment(content: string, author: string, date: string, titles: string[] = [], listing = false): Sighting[] {
   const out: Sighting[] = [];
   let side = 0;
   let sideGiven = false;
@@ -163,12 +200,26 @@ export function parseComment(content: string, author: string, date: string, titl
     if (listed && !parts.artist && (CHATTER.test(text) || parts.title.length > 60 || /[,.]\s|\.$/.test(parts.title))) return;
     out.push({ side: s, start, end, ...parts, author, date });
   };
-  const lines = plain(content).split(/\r?\n/);
+  // "…the B side at 21:15 is! It's Signs of Chaos - Funky Frequencies. And 15:28 on Side B is Funky Junky -
+  // Rushin": two statements on one line. Each sentence that carries a time is read on its own, with the
+  // sentences after it that don't.
+  const lines = plain(content)
+    .split(/\r?\n/)
+    .flatMap((l) => {
+      if ((l.match(new RegExp(TIME, "g")) ?? []).length < 2 || new RegExp(String.raw`^\s*(?:\d{1,2}\s*[.)]\s*)?\[?${TIME}`).test(l)) return [{ text: l, of: l }];
+      const parts: string[] = [];
+      for (const piece of l.split(SENTENCE)) {
+        if (parts.length && !new RegExp(TIME).test(piece)) parts[parts.length - 1] += `. ${piece}`;
+        else parts.push(piece.replace(/^\s*(?:and|also|then|plus)\s+/i, ""));
+      }
+      // Each keeps the line it came from: a side named in the first sentence holds for the rest.
+      return parts.map((text) => ({ text, of: l }));
+    });
   // Three or more lines that open with a time make a tracklist. Its lines are taken at their word, where a
   // lone line with a time in it has to look like a record before it counts: "Call It What You Want!" is a
   // title in a list and would be a question anywhere else.
-  const list = lines.filter((l) => new RegExp(String.raw`^\s*\[?${TIME}\b`).test(l)).length >= 3;
-  for (const raw of lines) {
+  const list = listing || lines.filter((l) => new RegExp(String.raw`^\s*\[?${TIME}\b`).test(l.text)).length >= 3;
+  for (const { text: raw, of } of lines) {
     let line = raw.trim();
     if (!line) continue;
     // "+ [11:56] Tangerine Dream - Love On A Real Train": layered over the track before it.
@@ -186,7 +237,7 @@ export function parseComment(content: string, author: string, date: string, titl
 
     let m: RegExpMatchArray | null;
     // The side is known if this line names it, or a heading above it did.
-    const sideHere = whichSide(line, titles);
+    const sideHere = whichSide(line, titles) ?? (of === raw ? null : whichSide(of, titles));
     const unsure = sideHere === null && !sideGiven ? true : undefined;
     // "The track playing from [10:20] - [16:37] is Artist - Title"
     if ((m = line.match(new RegExp(String.raw`\[?(${TIME})\]?\s*(?:${DASH}|to)\s*\[?(${TIME})\]?\s+is\s+(.+)$`, "i")))) {
@@ -229,7 +280,8 @@ export function parseComment(content: string, author: string, date: string, titl
     // "The song at 28:25 is Artist - Title."   "Then at the 17:30 mark is: Artist "Title"."
     else if ((m = line.match(new RegExp(String.raw`(?:\bat|@)\s*(?:about|around|approx\.?)?\s*(?:the\s+)?@?\s*(${TIME})(?:\s*(?:minute\s+)?mark)?\b[^.?!]{0,40}?\bis\s*:?\s*(?:called\s+|by\s+)?(.{3,})$`, "i")))) {
       // Only the first sentence is the name.
-      const name = m[2].split(/(?<=[)\w"”'’])[.!]\s+(?=[A-Z@])/)[0].replace(/[.!:]+$/, "");
+      // "…at 21:15 is! It's Signs of Chaos - Funky Frequencies": the name starts after the commenter's "It's".
+      const name = firstSentence(m[2].replace(/^[\s!?.]*(?:it['’]?s|that['’]?s)\s+/i, ""));
       push(sideHere ?? side, seconds(m[1]), name, undefined, true);
       if (unsure) for (let i = before; i < out.length; i++) out[i].unsure = true;
     }
@@ -238,6 +290,11 @@ export function parseComment(content: string, author: string, date: string, titl
       const s = line.match(SIDE);
       push(s ? sideIndex(s[1]) : side, seconds(m[2]), m[1], undefined, true);
     }
+    // "The first track on Side A is "The Camonist" by 3 Phase": the start of a side is a time. Only when the
+    // side is said (or the tape has one), and not "the first track after the intro".
+    else if (!new RegExp(TIME).test(line) && (m = line.match(FIRST)) && !/\bafter\b/i.test(m[1]) && (sideHere !== null || titles.length === 1)) {
+      push(sideHere ?? 0, 0, firstSentence(m[2].replace(/^(?:(?:indeed|actually|definitely|probably|certainly)\s+)?(?:(?:a\s+)?(?:re)?mix\s+of\s+)?/i, "")), undefined, true);
+    }
     // "Anyone know the track @40:05?"   "What is the track from 1:00-4:43"   Nothing above found a name in
     // this line, and it is asking for one: the time marks a track nobody has ID'd.
     if (out.length === before && ASK.test(line) && !NOT_TAPE.test(line) && (m = line.match(new RegExp(String.raw`(${TIME})(?:\s*(?:${DASH}|to|thru|through|until|till)\s*(?:around\s+|about\s+)?(${TIME}))?`, "i")))) {
@@ -245,6 +302,7 @@ export function parseComment(content: string, author: string, date: string, titl
       out.push({ side: sideHere ?? side, start: seconds(m[1]), end: end && end > seconds(m[1]) ? end : undefined, artist: "", title: "", known: false, unsure, author, date });
     }
     if (layer) for (let i = before; i < out.length; i++) out[i].layer = true;
+    if (sideHere === null && !sideGiven) for (let i = before; i < out.length; i++) out[i].sideless = true;
   }
   return out;
 }
@@ -280,7 +338,8 @@ export function reconcile(sightings: Sighting[], lengths: number[]): Proposal[] 
     }
     groups.forEach((g, i) => {
       const known = g.filter((s) => s.known && (s.artist || s.title));
-      const best = (known.length ? known : g).reduce((a, b) => (b.date >= a.date ? b : a));
+      const stated = known.filter((s) => !s.weak);
+      const best = (stated.length ? stated : known.length ? known : g).reduce((a, b) => (b.date >= a.date ? b : a));
       // A layered record runs to whatever starts next; the record under it runs on to the next one that isn't a layer.
       const isLayer = (grp?: Sighting[]) => Boolean(grp?.length && grp.every((x) => x.layer));
       let j = i + 1;
@@ -305,7 +364,7 @@ export function reconcile(sightings: Sighting[], lengths: number[]): Proposal[] 
         also.push({ artist: s.artist, title: s.title, known: s.known, author: s.author, date: s.date });
       }
       const open = !(best.end && best.end > best.start) && !groups[j];
-      if (end - best.start >= 5) out.push({ ...best, start: g[0].start, end, voices: new Set(g.map((s) => s.author)).size, also, open: open || undefined });
+      if (end - best.start >= 5) out.push({ ...best, start: (g.find((s) => !s.weak) ?? g[0]).start, end, voices: new Set(g.map((s) => s.author)).size, also, open: open || undefined });
     });
   });
   return out;
@@ -313,7 +372,19 @@ export function reconcile(sightings: Sighting[], lengths: number[]): Proposal[] 
 
 // ── Running orders: tracklists people posted in order but without times ──
 
-export type Listed = { side: number; n: number; artist: string; title: string; known: boolean; author: string; date: string };
+export type Listed = {
+  side: number;
+  n: number;
+  artist: string;
+  title: string;
+  known: boolean;
+  author: string;
+  date: string;
+  /** From a whole side written out in order (see `digest`), where `n` is the track's place on the side. */
+  running?: boolean;
+  /** When the list itself says this line plays, in seconds: written beside it, or in an earlier version. */
+  at?: number;
+};
 
 /** Numbered lines with a name and no time, e.g. "6. Moby - Go" under a "Side 1" heading. */
 export function parseListing(content: string, author: string, date: string, titles: string[] = []): Listed[] {
@@ -340,10 +411,15 @@ export function parseListing(content: string, author: string, date: string, titl
 /** The fullest, newest running order for each side. */
 export function runningOrders(listed: Listed[], sides: number): Listed[][] {
   return Array.from({ length: sides }, (_, side) => {
+    // A side someone keeps written out in full is the order: the fullest such list, and of two as full, the newer.
+    const kept = new Map<string, Listed[]>();
+    for (const l of listed) if (l.running && l.side === side) kept.set(`${l.date} ${l.author}`, [...(kept.get(`${l.date} ${l.author}`) ?? []), l]);
+    const fullest = [...kept.entries()].sort((a, b) => b[1].length - a[1].length || b[0].localeCompare(a[0]))[0]?.[1];
+    if (fullest) return [...fullest].sort((a, b) => a.n - b.n);
     // One list per run of rising numbers. Someone who posts a corrected list the same day starts again at 1,
     // and that is a second list, not more of the first.
     const lists: Listed[][] = [];
-    for (const l of listed.filter((x) => x.side === side)) {
+    for (const l of listed.filter((x) => x.side === side && !x.running)) {
       const run = lists[lists.length - 1];
       const last = run?.[run.length - 1];
       if (run && last.author === l.author && last.date === l.date && l.n > last.n) run.push(l);
@@ -358,3 +434,273 @@ export function runningOrders(listed: Listed[], sides: number): Listed[][] {
 export const isSameRecord = (a: { artist: string; title: string }, b: { artist: string; title: string }) =>
   sameTrack({ ...a, known: true } as Sighting, { ...b, known: true } as Sighting);
 
+
+// ── Running tracklists: a side written out in order, and written out again each time a track is ID'd ──
+//
+// Some tapes have a keeper. They post each side as a list, a name where the track is known and a time with
+// "??" where it isn't, and when someone IDs one they post the whole list again with that line changed:
+//
+//     7:48 ??                          THC - Nice Up the Land
+//     S.E.T.I. - Twister       then    S.E.T.I. - Twister
+//     10:18 ??                         10:18 ??
+//
+// Read one comment at a time, that is a pile of question marks that were answered long ago, and names with
+// no times. Read as versions of one list: the newest version is what its keeper believes now, a name that
+// replaced a timed "??" takes that time, and the list is the side's running order.
+
+/** One line of such a list. `n` is its number: the one it was written with, or its place on the side. */
+type Row = { side: number; n: number; /** The line as written. */ raw?: string; numbered?: boolean; start?: number; end?: number; artist: string; title: string; known: boolean; layer?: boolean; /** Not a track anyone named or timed: "(Voice mail montage)". It still has a place in the order. */ note?: boolean };
+// A time as these lists write it, including ":58" for under a minute.
+const ROW_TIME = String.raw`(?:\d{1,2}:\d{2}(?::\d{2})?|:\d{2})`;
+const ABBREVIATION = /\b(?:Dr|Mr|Mrs|Ms|St|vs|feat|ft|Vol|No|Pt)\.\s/gi;
+const NO_NAME = /^(?:unknown|unidentified|(?:track\s*)?id\s*\?*)$/i;
+
+/** `expect` is the number this line should carry if the list is numbered, so "17 Dance 2 Trance - Atlantis"
+    after a "16." is read as the seventeenth line with its dot left off. */
+function rowOf(raw: string, expect?: number): (Omit<Row, "side" | "n"> & { n?: number }) | null {
+  let line = raw.trim();
+  if (NOT_TAPE.test(line)) return null; // "DECEMBER 18, 2013 12:23 AM" is when someone posted, not a place on the tape
+  const layer = /^\+\s*\S/.test(line) || undefined;
+  line = line.replace(/^\+\s*/, "");
+  // "12. Name"   "12.Name"   "12) Name"   "12 - 1:55 - Name"
+  const num =
+    line.match(/^(\d{1,2})\s*[.)]\s*(?=[^\d\s])/) ??
+    line.match(/^(\d{1,2})(?:\.\d)?\s*[.)]\s+/) ??
+    line.match(new RegExp(String.raw`^(\d{1,2})\s*${DASH}\s*(?=\[?\s*\d{1,2}:\d{2})`)) ??
+    (expect === undefined ? null : line.match(new RegExp(String.raw`^(${expect})\s+(?=\S)`)));
+  const n = num ? Number(num[1]) : undefined;
+  if (num) line = line.slice(num[0].length);
+  // "Side A - 5:30 - 13:20 - Artist - Title" is a sentence about a side; `parseComment` knows how to read it.
+  if (/^\(?(?:side|part)\b/i.test(line)) return null;
+  // "…helicopter buzz)  he uses the mid track breakdown as an intro": after the gap, the keeper is talking.
+  line = line.replace(/(\))\s{2,}[a-z].*$/, "$1");
+  let start: number | undefined;
+  let end: number | undefined;
+  const t = line.match(new RegExp(String.raw`(?:(?:@|\bat)\s*(?:approx\.?|about|around)?\s*)?[([]?\s*(${ROW_TIME})\s*\]?(?:\s*(?:${DASH}|to)\s*\[?(${ROW_TIME})\]?)?\s*[)\]]?`, "i"));
+  if (t) {
+    start = seconds(t[1]);
+    if (t[2] && seconds(t[2]) > start) end = seconds(t[2]);
+    line = `${line.slice(0, t.index)} ${line.slice((t.index ?? 0) + t[0].length)}`;
+  }
+  const rest = clean(line, false).replace(/[\s.]+$/, "");
+  // "7:48 ??"   "? 12:48"   "?"   "54:24 ?? I Need You"   "17:06 (ambient)"   "14. ??? (26:20 - 28:20)"
+  if (/^\?/.test(rest) || (start !== undefined && (!rest || /^\([^()]*\)$/.test(rest) || NO_NAME.test(rest))) || (n !== undefined && !rest))
+    return { n, start, end, layer, artist: "", title: NO_NAME.test(rest) ? "" : hint(rest), known: false };
+  if (rest.length > 120) return null;
+  // A dash with a space on both sides, else after it, else before it: "Synth-Problem – L.A. Factory" splits
+  // at the second dash, "SIL -Windows" at its only one.
+  const m =
+    rest.match(new RegExp(String.raw`^(.+?)\s+${DASH}\s+(.+)$`)) ?? rest.match(new RegExp(String.raw`^(.+?)${DASH}\s+(.+)$`)) ?? rest.match(new RegExp(String.raw`^(.+?)\s+${DASH}(.+)$`));
+  // "1:30 come together keep the faith hiphouse": a time and what the keeper could make out, no name.
+  if (!m) return start !== undefined && rest.length <= 80 ? { n, start, end, layer, artist: "", title: hint(rest), known: false } : null;
+  const artist = clean(m[1], false);
+  const title = clean(m[2], false);
+  // A sentence with a dash in it is not a record: "I hear MNO - …", "Last is Gypsy - …", "Nice one. That - …".
+  // An initial is not the end of a sentence: "O. Walters", "L.A. Style", "K. Hand".
+  if (!artist || !title || artist.split(" ").length > 8) return null;
+  if (/[a-z]{3,}[.!?]\s+\S/i.test(artist.replace(ABBREVIATION, "")) || /^(?:i|it|this|that|he|she|they|we|last|first|next|then|also|and|but)\s/i.test(artist)) return null;
+  return { n, start, end, layer, artist, title, known: true };
+}
+
+/**
+ * The comment as a running tracklist, or null if it isn't one. It is one when it has at least five rows, at
+ * least two of them names with no time (a list where every line has a time is read by `parseComment` alone,
+ * as before), and next to nothing between its rows that isn't a row. `prose` is everything else in the
+ * comment, for the things said around the list.
+ *
+ * Which side a row is on comes from the heading above it, and a list whose sides can't be told is not used:
+ * on a tape with more than one side, a list with no headings could be either, and "Marques's side" alone
+ * doesn't say which. Two labels this page doesn't know, on a tape with two sides ("Side X", then "Side E"),
+ * are taken in the order the tape runs.
+ */
+export function parseRunning(content: string, titles: string[] = []): { rows: Row[]; headed: boolean; prose: string } | null {
+  const lines = plain(content).split(/\r?\n/);
+  const time = new RegExp(TIME);
+  // A line that names a side: one this page can place, or one it can't ("Side X", "Marques's side").
+  const sideOf = (line: string): number | "?" | null => {
+    if (!line || line.length >= 60 || time.test(line)) return null;
+    const letter = line.match(/^\W*([a-d])\W*$/i);
+    if (letter) return sideIndex(letter[1]);
+    const known = headingSide(line, titles);
+    if (known !== null && (!rowOf(line) || /^\W*(?:side|part)\b/i.test(line) || sideNamed(line, titles, true) !== null)) return known;
+    return !rowOf(line) && /\bside\b/i.test(line) && line.length < 40 && !/[.!?]\s+\S/.test(line) ? "?" : null;
+  };
+  const marks = lines.map((l) => sideOf(l.trim()));
+  const placed = marks.filter((m): m is number => typeof m === "number");
+  const labels = [...new Set(lines.filter((_, i) => marks[i] === "?").map((l) => squash(l)))];
+  const inOrder = labels.length > 0 && placed.length === 0 && labels.length === titles.length;
+  if (labels.length > 0 && !inOrder) return null;
+  const headed = placed.length > 0 || inOrder;
+  if (!headed && titles.length > 1) return null;
+
+  const rows: Row[] = [];
+  const prose: string[] = [];
+  const at: number[] = [];
+  const strays: number[] = [];
+  const count: number[] = [];
+  let side = 0;
+  // With headings, what comes before the first is the commenter talking, unless the first heading is for a
+  // later side: then the list simply opened on side A without saying so.
+  let begun = !headed || (placed[0] ?? 0) > 0;
+  lines.forEach((raw, i) => {
+    const line = raw.trim();
+    if (!line) return;
+    if (marks[i] !== null) {
+      side = marks[i] === "?" ? labels.indexOf(squash(line)) : (marks[i] as number);
+      begun = true;
+      if (marks[i] !== "?") prose.push(raw);
+      return;
+    }
+    const last = rows[rows.length - 1];
+    let row = begun ? rowOf(line, last?.numbered ? last.n + 1 : undefined) : null;
+    // Something short between the rows that is no record and no time: "(Voice mail montage)", "Monty Python".
+    // It keeps its place, so the tracks after it keep their numbers and the one after it is not the opener.
+    const note = !row && begun && line.length <= 60 && !time.test(line) && !/[.!?:]\s+\S|[:!]$/.test(line);
+    if (note) row = { artist: "", title: hint(clean(line)), known: false, note: true };
+    if (!row) {
+      prose.push(raw);
+      strays.push(i);
+      return;
+    }
+    // Its own number if it was written with one (some lists count straight on through side B), else its place.
+    count[side] = row.n ?? (count[side] ?? 0) + 1;
+    rows.push({ side, ...row, raw: line, n: count[side], numbered: row.n !== undefined || undefined });
+    if (note) strays.push(i);
+    else at.push(i);
+  });
+  const real = rows.filter((r) => !r.note);
+  if (real.length < 5 || real.filter((r) => r.known && r.start === undefined).length < 2) return null;
+  if (strays.filter((i) => i > at[0] && i < at[at.length - 1]).length > real.length * 0.2) return null;
+  // Notes after the last real row are the commenter signing off.
+  while (rows.length && rows[rows.length - 1].note) rows.pop();
+  return { rows, headed, prose: prose.join("\n") };
+}
+
+const sameRow = (a: Row, b: Row) => sameTrack(a as unknown as Sighting, b as unknown as Sighting) || squash(`${a.artist} ${a.title}`) === squash(`${b.artist} ${b.title}`);
+
+/**
+ * Passes times from one version of a side to the next. Rows that are the same in both are the fixed points;
+ * between two fixed points, if both versions have the same number of rows, they are the same tracks in the
+ * same order, and a row that had a time before and has none now (a "??" that got its name) keeps it. If the
+ * numbers differ, the keeper added or dropped a track there and nothing is assumed.
+ */
+function carry(older: Row[], newer: Row[]) {
+  const same = (a: Row, b: Row) => (a.known && b.known ? sameRow(a, b) : !a.known && !b.known && a.start !== undefined && b.start !== undefined && Math.abs(a.start - b.start) <= 20);
+  // Longest common run of rows, by the usual table.
+  const table = Array.from({ length: older.length + 1 }, () => new Array<number>(newer.length + 1).fill(0));
+  for (let i = older.length - 1; i >= 0; i--) for (let j = newer.length - 1; j >= 0; j--) table[i][j] = same(older[i], newer[j]) ? table[i + 1][j + 1] + 1 : Math.max(table[i + 1][j], table[i][j + 1]);
+  const give = (from: Row, to: Row) => {
+    if (to.start === undefined && from.start !== undefined && to.known) to.start = from.start;
+  };
+  let i = 0;
+  let j = 0;
+  let gapI = 0;
+  let gapJ = 0;
+  const closeGap = () => {
+    if (i - gapI === j - gapJ) for (let k = 0; k < i - gapI; k++) give(older[gapI + k], newer[gapJ + k]);
+  };
+  while (i < older.length && j < newer.length) {
+    if (same(older[i], newer[j])) {
+      closeGap();
+      give(older[i], newer[j]);
+      i++;
+      j++;
+      gapI = i;
+      gapJ = j;
+    } else if (table[i + 1][j] >= table[i][j + 1]) i++;
+    else j++;
+  }
+  i = older.length;
+  j = newer.length;
+  closeGap();
+}
+
+export type Said = { author: string; date: string; content: string };
+// "Josh" and "Josh McClintock" are one keeper.
+const sameAuthor = (a: string, b: string) => {
+  const [x, y] = [squash(a), squash(b)];
+  return x === y || x.startsWith(`${y} `) || y.startsWith(`${x} `);
+};
+
+/**
+ * Everything the comments on a tape say about what plays when: timed tracks, and names in order without
+ * times. Comments are read one by one, except a keeper's running tracklist (above): its older versions are
+ * set aside, apart from what was said around them, and the newest stands for all of them.
+ */
+export function digest(comments: Said[], titles: string[] = []): { sightings: Sighting[]; listed: Listed[] } {
+  const read = comments.map((c) => ({ c, list: parseRunning(c.content, titles) }));
+  // Oldest first; comments arrive in the order they were posted, which settles two on the same day.
+  const lists = read.filter((r) => r.list).sort((a, b) => a.c.date.localeCompare(b.c.date));
+  const replaced = new Set<Said>();
+  const heads = new Map<Said, Row[]>();
+  for (let h = lists.length - 1; h >= 0; h--) {
+    const head = lists[h];
+    if (replaced.has(head.c)) continue;
+    const rows = head.list!.rows.map((r) => ({ ...r }));
+    // Its earlier versions: the same keeper's lists that are mostly in this one. Walked oldest to newest so a
+    // time passes down the whole line of them.
+    const versions = lists.slice(0, h).filter((v) => {
+      if (replaced.has(v.c) || !sameAuthor(v.c.author, head.c.author)) return false;
+      const names = v.list!.rows.filter((r) => r.known);
+      return names.length > 0 && names.filter((r) => rows.some((x) => x.known && sameRow(x, r))).length >= Math.max(2, names.length * 0.5);
+    });
+    let prior: Row[] | null = null;
+    for (const v of [...versions, { c: head.c, list: { ...head.list!, rows } }]) {
+      const now = v.c === head.c ? rows : v.list!.rows.map((r) => ({ ...r }));
+      if (prior) for (const side of new Set(now.map((r) => r.side))) carry(prior.filter((r) => r.side === side), now.filter((r) => r.side === side));
+      prior = now;
+    }
+    versions.forEach((v) => replaced.add(v.c));
+    heads.set(head.c, rows);
+  }
+
+  const sightings: Sighting[] = [];
+  const listed: Listed[] = [];
+  const inferred: Sighting[] = [];
+  for (const { c, list } of read) {
+    const rows = heads.get(c);
+    // A running list is read here, row by row, so that its sides are the ones its headings were found to
+    // mean. What was said around it, in any version, is read as any comment is.
+    if (list && (rows || replaced.has(c))) sightings.push(...parseComment(list.prose, c.author, c.date, titles));
+    else {
+      sightings.push(...parseComment(c.content, c.author, c.date, titles));
+      listed.push(...parseListing(c.content, c.author, c.date, titles));
+    }
+    if (!rows) continue;
+    const own = list!.rows;
+    rows.forEach((r, k) => {
+      listed.push({ side: r.side, n: r.n, artist: r.artist, title: r.title, known: r.known, author: c.author, date: c.date, running: true, at: r.start });
+      const said = { side: r.side, artist: r.artist, title: r.title, known: r.known, author: c.author, date: c.date };
+      // Written with its time: read as a timed line always has been (it knows more ways of writing one than
+      // a row needs to), and put on the side this list's headings were found to mean.
+      if (own[k].start !== undefined) {
+        // (An unnamed row is the exception: "0:55 ?? (ambient track)" keeps its clue as a row reads it.)
+        const line = r.known ? parseComment(r.raw ?? "", c.author, c.date, titles, true) : [];
+        sightings.push(...(line.length ? line.map((s) => ({ ...s, side: r.side, sideless: undefined, unsure: undefined })) : [{ ...said, start: own[k].start!, end: r.end, layer: r.layer }]));
+      }
+      else if (!r.known) return;
+      // A time handed down from an earlier version of the list: the keeper's own, but worked out from where
+      // the line sits, so it gives way if anyone timed this record on this side outright.
+      else if (r.start !== undefined) inferred.push({ ...said, start: r.start });
+      // The first track listed on a side starts the side (a keeper writes "0:00 ??" when it opens on something
+      // else). First means first: under a side heading, and numbered 1 or carrying on from the side before.
+      else if (rows.findIndex((x) => x.side === r.side) === k && (list!.headed || titles.length === 1) && (!r.numbered || r.n === 1 || (k > 0 && rows[k - 1].numbered && rows[k - 1].n === r.n - 1)))
+        inferred.push({ ...said, start: 0, weak: true });
+    });
+  }
+  // "23:38 is The Slippers - Tribal Hen", in reply to a keeper whose list has "23:38 ???" under Side 2: the
+  // reply didn't say the side because the list had. A time with no side goes to the side where a keeper's
+  // list, in any version, has that very time, if there is one such side.
+  if (titles.length > 1) {
+    const timed = lists.flatMap((l) => l.list!.rows.filter((r) => r.start !== undefined));
+    for (const s of sightings) {
+      if (!s.sideless) continue;
+      const near = timed.filter((r) => Math.abs(r.start! - s.start) <= 5);
+      const best = Math.min(...near.map((r) => Math.abs(r.start! - s.start)));
+      const sides = new Set(near.filter((r) => Math.abs(r.start! - s.start) === best).map((r) => r.side));
+      if (sides.size === 1) s.side = [...sides][0];
+    }
+  }
+  for (const s of inferred) if (s.weak || !sightings.some((x) => x.side === s.side && x.known && sameTrack(x, s))) sightings.push(s);
+  return { sightings, listed };
+}

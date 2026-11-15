@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getAllTapes, getCommentsForTape, getTapeById } from "../../../../lib/data";
 import { getPaginatedComments } from "../../../../lib/comments";
-import { parseComment, parseListing, reconcile, runningOrders } from "../parse";
+import { digest, reconcile, runningOrders, type Said } from "../parse";
 import { Trainspotter } from "../trainspotter";
 import "../trainspotter.css";
 
@@ -12,7 +12,6 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-type Said = { author: string; date: string; content: string };
 const GROUPS = ["Tracks marked unknown", "Tracklist known, times needed", "Started in the comments", "Nothing marked yet"];
 
 export default async function TrainspotterPage({ params }: { params: Promise<{ id: string }> }) {
@@ -22,7 +21,9 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
 
   // Everything anyone has said: the 2008–2023 archive plus the comments posted through the site since.
   // One cached query for the live ones; if the database is unreachable the archive still works.
-  const live = (await getPaginatedComments(1, 5000)).comments;
+  // Oldest first, like the archive: a later comment corrects an earlier one, and two on the same day are told
+  // apart only by the order they arrive in.
+  const live = [...(await getPaginatedComments(1, 5000)).comments].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
   const said = (tapeId: string): Said[] => [
     ...getCommentsForTape(tapeId).map((c) => ({ author: c.author, date: c.date, content: c.content })),
     ...live
@@ -30,15 +31,14 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
       .map((c) => ({ author: c.author_name, date: new Date(c.created_at).toISOString().slice(0, 10), content: c.content })),
   ];
 
-  // A sighting read from a sentence that didn't say which side is only used where there is one side.
-  // The parser is given each side's own title, so "the Planet Earth side" lands on the side the site calls that.
-  type Sided = { sides: { title?: string }[] };
-  const titles = (t: Sided) => t.sides.map((s) => s.title ?? "");
-  const timed = (comments: Said[], t: Sided) =>
-    comments.flatMap((c) => parseComment(c.content, c.author, c.date, titles(t))).filter((s) => !s.unsure || t.sides.length === 1);
-  const mine = said(id);
-  const sightings = timed(mine, tape);
-  const listed = mine.flatMap((c) => parseListing(c.content, c.author, c.date, titles(tape)));
+  // What the comments say about a tape: timed tracks and names in order. The parser is given each side's own
+  // title, so "the Planet Earth side" lands on the side the site calls that. A sighting read from a sentence
+  // that didn't say which side is only used where there is one side.
+  const read = (t: { id: string; sides: { title?: string }[] }) => {
+    const { sightings, listed } = digest(said(t.id), t.sides.map((s) => s.title ?? ""));
+    return { sightings: sightings.filter((s) => !s.unsure || t.sides.length === 1), listed };
+  };
+  const { sightings, listed } = read(tape);
   // The tracklist already published on the site: names in order with no times, the most trusted order there is.
   const official = tape.sides.map((side, i) =>
     (side.tracks ?? []).map((t, n) => ({ side: i, n: n + 1, artist: t.artist, title: t.title, known: true, author: "simfonik", date: "" })),
@@ -49,8 +49,8 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
   const plural = (n: number, one: string) => `${n} ${n === 1 ? one : `${one}s`}`;
   const others = getAllTapes()
     .map((t) => {
-      const all = said(t.id);
-      const marked = reconcile(timed(all, t), t.sides.map(() => Infinity));
+      const all = read(t);
+      const marked = reconcile(all.sightings, t.sides.map(() => Infinity));
       const known = marked.filter((m) => m.known).length;
       const unknown = marked.length - known;
       // Two different things, and only one of them is a tracklist. The site's own list is the tape's full
@@ -59,7 +59,7 @@ export default async function TrainspotterPage({ params }: { params: Promise<{ i
       const official = t.sides.reduce((n, side) => n + (side.tracks?.length ?? 0), 0);
       const namedInComments = official
         ? 0
-        : runningOrders(all.flatMap((c) => parseListing(c.content, c.author, c.date, titles(t))), t.sides.length)
+        : runningOrders(all.listed, t.sides.length)
             .flat()
             .filter((l) => l.known).length;
       // A compilation's eight names would fill the row; its title says more.
