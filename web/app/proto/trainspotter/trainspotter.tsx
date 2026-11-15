@@ -53,7 +53,7 @@ const origin = (c: Cue): Spot | null => {
   return from ? { side: Number(from[1]), start: Number(from[2]) } : null;
 };
 /** What is kept in this browser for a tape. */
-type Saved = { v: 2; cues: Cue[]; removed: Spot[] };
+type Saved = { v: 2; cues: Cue[]; removed: Spot[]; /** The comment tracks whose times this visitor set themselves, by id. */ moved?: string[] };
 
 /** The SDK's keyboard hints for a name, minus its autofill: this is a record's artist, not the visitor's own name. */
 const nameHints = (enter: "next" | "done") => {
@@ -146,6 +146,10 @@ export function Trainspotter({
   // timeline lacks is put back unless it is listed here. Before, the page only remembered which tracks it
   // had once shown, so one that went missing for any other reason stayed missing for good.
   const gone = useRef<Spot[]>([]);
+  // The comment tracks whose start or end this visitor has set: dragged, trimmed, nudged, or cut short by a
+  // track marked inside them. Those times are theirs. Every other comment track keeps following the comments,
+  // times included. `null` for work saved before this was recorded.
+  const moved = useRef<Set<string> | null>(new Set());
   useEffect(() => {
     let saved: unknown = null;
     let legacy = false;
@@ -163,6 +167,7 @@ export function Trainspotter({
     if (found) {
       setCues(found.cues);
       gone.current = Array.isArray(found.removed) ? found.removed : [];
+      moved.current = Array.isArray((found as Saved).moved) ? new Set((found as Saved).moved) : null;
       setReady(true);
     }
     setRestored(found ? "saved" : "fresh");
@@ -170,7 +175,7 @@ export function Trainspotter({
   useEffect(() => {
     if (!ready) return;
     try {
-      window.localStorage.setItem(storageKey, JSON.stringify({ v: 2, cues, removed: gone.current } satisfies Saved));
+      window.localStorage.setItem(storageKey, JSON.stringify({ v: 2, cues, removed: gone.current, moved: [...(moved.current ?? [])] } satisfies Saved));
       window.localStorage.removeItem(`${storageKey}:seen`); // the earlier versions' bookkeeping
       saveFailed.current = false;
     } catch {
@@ -395,6 +400,12 @@ export function Trainspotter({
       // A track a person has just marked is the one they want to ID next.
       const added = v.filter((c) => !cuesRef.current.some((b) => b.id === c.id));
       if (added.length === 1 && details?.source !== "agent" && !quiet.current) setSelected(added[0].id);
+      // A time changed by anything but the page's own writing from the comments is the visitor's.
+      if (!quiet.current)
+        for (const c of v) {
+          const was = cuesRef.current.find((b) => b.id === c.id);
+          if (was && c.by && (was.start !== c.start || was.end !== c.end)) (moved.current ??= new Set()).add(c.id);
+        }
       setCues(v);
     },
     sides,
@@ -534,9 +545,9 @@ export function Trainspotter({
 
   // Return visit: the timeline is brought back in line with the comments. Nobody approves any of it.
   //  · A track that came from the comments follows the comments. If they no longer have anything there, it
-  //    goes; if they now say something else there, it takes that name. That is what clears a misreading once
-  //    the reader is fixed, instead of leaving it in every browser that saved it. It keeps its times, which
-  //    the visitor may have adjusted.
+  //    goes; if they now say something else there, it takes that name, and their times with it. That is
+  //    what clears a misreading once the reader is fixed, instead of leaving it in every browser that saved
+  //    it. Times the visitor set themselves are kept.
   //  · A track the comments have and the timeline lacks is put back, unless the visitor removed it. That
   //    covers what was posted since the last visit and anything that went missing for any other reason.
   //  · A track the visitor marked or ID'd themselves is never touched.
@@ -555,9 +566,14 @@ export function Trainspotter({
         removed++;
         return [];
       }
-      if (p.artist === c.artist && p.title === c.title && p.known === c.known) return [c];
+      // Its times follow the comments too, unless the visitor set them. Otherwise a track the comments now
+      // end sooner (someone timed another one inside it) would run on over its new neighbour. For work saved
+      // before the page recorded whose times were whose, a start still where the comments put it is theirs.
+      const mine = moved.current ? moved.current.has(c.id) : c.start !== from.start;
+      const next = { ...c, ...(mine ? {} : { start: p.start, end: p.end, open: p.open }), artist: p.artist, title: p.title, known: p.known, by: p.author };
+      if (next.start === c.start && next.end === c.end && next.artist === c.artist && next.title === c.title && next.known === c.known) return [c];
       corrected++;
-      return [{ ...c, artist: p.artist, title: p.title, known: p.known, by: p.author }];
+      return [next];
     });
     for (const p of proposals) {
       if (gone.current.some((spot) => near(spot, p))) continue;
@@ -582,6 +598,7 @@ export function Trainspotter({
 
   const startOver = async () => {
     gone.current = []; // starting over forgets what was removed, too
+    moved.current = new Set(); // and whose times were whose
     if (await writeAsListeners(proposals.map(toCue))) {
       setSelected(null);
       confirmWithUndo("Back to the IDs from the comments.");
@@ -698,10 +715,25 @@ export function Trainspotter({
     return sides.map((_, i) => (official[i]?.length ? official[i] : (fromComments[i] ?? [])));
   }, [listed, official, sides]);
   const fromSite = official.some((o) => o.length > 0);
-  const waiting = useMemo(
-    () => orders.map((order, side) => order.filter((l) => l.known && !cues.some((c) => c.track === sides[side] && c.known && isSameRecord(c, l)))),
+  // Which track on the timeline carries each listed name. A record played twice is listed twice, and the
+  // first listing is the earlier track: each track answers for one line of the list.
+  const placed = useMemo(
+    () =>
+      orders.map((order, side) => {
+        const here = cues.filter((c) => c.track === sides[side] && c.known).sort((a, b) => a.start - b.start);
+        const taken = new Set<string>();
+        const at = new Map<Listed, Cue>();
+        for (const l of order) {
+          const cue = l.known ? here.find((c) => !taken.has(c.id) && isSameRecord(c, l)) : undefined;
+          if (!cue) continue;
+          taken.add(cue.id);
+          at.set(l, cue);
+        }
+        return at;
+      }),
     [orders, cues, sides],
   );
+  const waiting = useMemo(() => orders.map((order, side) => order.filter((l) => l.known && !placed[side].has(l))), [orders, placed]);
   const namesTotal = orders.reduce((n, o) => n + o.filter((l) => l.known).length, 0);
   const namesWaiting = waiting.reduce((n, w) => n + w.length, 0);
 
@@ -710,19 +742,31 @@ export function Trainspotter({
   // fields are always there and always about something: press play, hear a track you know, and type. Putting
   // the cursor in a field picks that track, so it stays put while the tape plays on to the next one.
   const subject = sel ?? playingCue;
-  // For an unknown track, the names most likely to belong to it: the ones nearest its place in the order.
+  // For an unknown track, the names most likely to belong to it. A listed name with no time still has a
+  // place: after the last line before it whose time is known, and before the next one. Names whose place takes
+  // in this track come first; after those, the ones nearest it in the order. A track the list itself marks
+  // unknown at this spot gets no names from it: its keeper has every other line down as some other track.
   const nextNames = useMemo(() => {
     if (!subject || subject.known) return [];
     const side = sides.indexOf(subject.track);
     const order = orders[side] ?? [];
-    const place = cues.filter((c) => c.track === subject.track && c.start < subject.start).length;
+    const at = placed[side];
+    const when = (l: Listed) => at?.get(l)?.start ?? l.at;
+    if (order.some((l) => !l.known && l.at !== undefined && Math.abs(l.at - subject.start) <= 20)) return [];
+    const before = cues.filter((c) => c.track === subject.track && c.start < subject.start).length;
+    const outside = (l: Listed) => {
+      const i = order.indexOf(l);
+      const lo = order.slice(0, i).map(when).findLast((t) => t !== undefined) ?? -Infinity;
+      const hi = order.slice(i + 1).map(when).find((t) => t !== undefined) ?? Infinity;
+      return subject.start < lo ? lo - subject.start : subject.start > hi ? subject.start - hi : 0;
+    };
     return (waiting[side] ?? [])
-      .map((l) => ({ l, d: Math.abs(order.indexOf(l) - place) }))
-      .sort((a, b) => a.d - b.d)
+      .map((l) => ({ l, out: outside(l), d: Math.abs(l.n - 1 - before) }))
+      .sort((a, b) => a.out - b.out || a.d - b.d)
       .slice(0, 3)
       .map((x) => x.l)
       .sort((a, b) => a.n - b.n);
-  }, [subject, sides, orders, waiting, cues]);
+  }, [subject, sides, orders, waiting, placed, cues]);
   // What else people said about that track's moment.
   const opinions = useMemo(() => {
     if (!subject) return [];
@@ -1602,7 +1646,7 @@ export function Trainspotter({
                       .map((l) => {
                         // A name is on the timeline once a track there carries it: show when it plays, and go
                         // there on a click. A name with no time yet is the work still to do.
-                        const at = cues.find((c) => c.track === sides[side] && c.known && isSameRecord(c, l));
+                        const at = placed[side].get(l);
                         return (
                           <li key={`${side}-${l.n}`} data-placed={at ? "" : undefined}>
                             <span className="flex-none font-mono text-xs tabular-nums text-[var(--muted)]">

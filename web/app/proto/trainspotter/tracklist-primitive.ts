@@ -198,13 +198,16 @@ export const tracklist = definePrimitive({
         const first = [...row].sort((a, b) => a.start - b.start)[0];
         // One tab stop per side: the track last focused, or the first one.
         const stop = row.some((c) => c.id === state.focused) ? state.focused : first?.id;
+        const stack = stackSpans(row).get(cue.id);
         return {
           tabindex: stop === cue.id ? "0" : "-1",
           "aria-label": `${cueLabel(cue)}, side ${cue.track}, ${clock(cue.start)} to ${clock(cue.end)}`,
           "aria-roledescription": "track",
-          style: part.api.spans.spanStyle(cue, stackSpans(row).get(cue.id)),
+          style: part.api.spans.spanStyle(cue, stack),
           ...part.api.spans.spanAttrs(state, part.key),
           "data-known": cue.known ? "" : undefined,
+          // Two records playing at once share the row's height; each has room for less of its name.
+          "data-stacked": stack && stack.lanes > 1 ? "" : undefined,
         };
       },
       on: {

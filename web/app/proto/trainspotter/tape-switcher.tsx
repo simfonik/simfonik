@@ -58,6 +58,7 @@ export const TapeSwitcher = memo(function TapeSwitcher({ tapes, currentId }: { t
     tapeScrollerSize.current.observe(el);
   }, []);
   const tapeRows = useRef<TapeRow[]>([]);
+  const justOpened = useRef(false);
   const place = tapes.findIndex((o) => o.id === currentId);
   const elsewhere = tapes.some((o) => o.id !== currentId);
   const prevTape = elsewhere ? tapes[(place <= 0 ? tapes.length : place) - 1] : null;
@@ -74,12 +75,21 @@ export const TapeSwitcher = memo(function TapeSwitcher({ tapes, currentId }: { t
       }}
       items={tapeItems}
       // Bring the highlighted tape into view. With only the rows in view built, the combobox can't scroll to
-      // one itself. A heading above the first tape of a group comes along with it.
+      // one itself. Moving through the list scrolls no further than it must, and a heading above the first
+      // tape of a group comes along with it. Opening is different: the tape you are on sits in the middle,
+      // with what comes before and after it in view, and the list starts on a whole row.
       onHighlight={(_value: unknown, details: { index: number }) => {
         const el = tapeScroller.current;
-        const row = tapeRows.current.find((r) => "item" in r && r.index === details.index);
+        const rows = tapeRows.current;
+        const row = rows.find((r) => "item" in r && r.index === details.index);
         if (!el || !row) return;
-        const top = row.top - (tapeRows.current.some((r) => "heading" in r && r.top + r.height === row.top) ? TAPE_HEADING : 0);
+        if (justOpened.current) {
+          justOpened.current = false;
+          const middle = row.top - (el.clientHeight - row.height) / 2;
+          el.scrollTop = rows.reduce((top, r) => (r.top <= middle ? r.top : top), 0);
+          return;
+        }
+        const top = row.top - (rows.some((r) => "heading" in r && r.top + r.height === row.top) ? TAPE_HEADING : 0);
         if (top < el.scrollTop) el.scrollTop = top;
         else if (row.top + row.height > el.scrollTop + el.clientHeight) el.scrollTop = row.top + row.height - el.clientHeight;
       }}
@@ -88,11 +98,15 @@ export const TapeSwitcher = memo(function TapeSwitcher({ tapes, currentId }: { t
       // highlight straight after telling us, and a render later it would highlight a match for the letters
       // before this one.
       query={tapeQuery}
-      onQueryChange={(q: string) => flushSync(() => setTapeQuery(q))}
+      onQueryChange={(q: string) => {
+        justOpened.current = false;
+        flushSync(() => setTapeQuery(q));
+      }}
       open={tapesOpen}
       onOpenChange={(open: boolean, details?: { reason?: string; source?: string }) => {
         setTapesOpen(open);
         if (open) {
+          justOpened.current = true;
           setTapeQuery("");
           setTapeScroll((v) => ({ ...v, top: 0 }));
         }
