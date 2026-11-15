@@ -76,7 +76,9 @@ export function Trainspotter({
   const toCue = useCallback((p: Proposal): Cue => cueFrom(p, sides), [sides]);
 
   // ── The tracklist value: controlled here, saved in this browser ──
-  const [cues, setCues] = useState<Cue[]>([]);
+  // It starts as what the comments say, so the tracks are in the HTML the server sends. Saved work, if this
+  // browser has any, takes its place as soon as the page can read it.
+  const [cues, setCues] = useState<Cue[]>(() => reconcile(sightings, tape.sides.map(() => Infinity)).map((p) => cueFrom(p, tape.sides.map((s) => s.key))));
   const cuesRef = useRef(cues);
   cuesRef.current = cues;
   const [restored, setRestored] = useState<"pending" | "saved" | "fresh">("pending");
@@ -128,8 +130,8 @@ export function Trainspotter({
   }, [durations, cues, proposals, many, active, sides]);
   const sideLength = (i: number) => durations[i] ?? length;
   const [sheet, setSheet] = useState(false); // the ID sheet, on phones
-  const timeline = useTimeline({ audio, length, touch, many, rows: sides.length, sheet });
-  const { scrollerRef, headRef, ghostRef, mapRef, mapWindowRef, mapHeadRef, width, minutes, scrolls, snapUntil, scrubAt, scrub, scrubEnd, rulerDown, mapDown, mapMove, mapUp, mapCancel } = timeline;
+  const timeline = useTimeline({ audio, length, many, rows: sides.length, sheet });
+  const { scrollerRef, headRef, ghostRef, mapRef, mapWindowRef, mapHeadRef, minutes, snapUntil, scrubAt, scrub, scrubEnd, rulerDown, mapDown, mapMove, mapUp, mapCancel } = timeline;
 
   const [selected, setSelected] = useState<string | null>(null);
   const quiet = useRef(false); // true while the page itself is writing, so it doesn't select what it adds
@@ -277,23 +279,10 @@ export function Trainspotter({
     [writeAsListeners],
   );
 
-  // First visit to a tape: open with what is already known. This doesn't wait for the audio.
-  const opening = useRef(false);
+  // First visit to a tape: the page opened holding what the comments know, so there is nothing to wait for.
   useEffect(() => {
-    if (restored !== "fresh" || opening.current) return;
-    opening.current = true;
-    void (async () => {
-      if (proposals.length) {
-        // Giving up here would show an empty tape and then save it as this visitor's work.
-        if (!(await writeWhenReady(proposals.map(toCue)))) {
-          opening.current = false; // nothing saved; the next visit starts clean
-          return;
-        }
-        setFloor(historyRef.current?.position() ?? 0);
-      }
-      setReady(true);
-    })();
-  }, [restored, proposals, toCue, writeWhenReady]);
+    if (restored === "fresh") setReady(true);
+  }, [restored]);
 
   // The tracks went in before the audio said how long each side is. Once it does, pull back any listener's
   // track that runs past the end of its side. Left alone once the visitor has started making changes.
@@ -572,7 +561,7 @@ export function Trainspotter({
               <Track
                 value={side.key}
                 className="ts-track"
-                style={{ width, backgroundSize: `${(60 / length) * 100}% 100%` }}
+                style={{ backgroundSize: `${(60 / length) * 100}% 100%` }}
                 onPointerDown={(e: React.PointerEvent) => {
                   down.current = { x: e.clientX, y: e.clientY };
                 }}
@@ -699,12 +688,13 @@ export function Trainspotter({
         </SegmentedControl>
       )}
 
-      <div className={`ts-root ${many ? "mt-2" : "mt-4"}`}>
+      {/* The stylesheet turns the tape's length into its width: see .ts-canvas. */}
+      <div className={`ts-root ${many ? "mt-2" : "mt-4"}`} style={{ "--minutes": length / 60 } as React.CSSProperties}>
         <div className="ts-scroller" ref={scrollerRef} data-proto-keys>
-          <div className="ts-canvas" style={{ width: width + GUTTER }}>
+          <div className="ts-canvas">
             {/* The ruler is the scrubber: a slider the width of the tape. It sits outside the tracklist
                 so that moving through the audio is never recorded as a change to the tracklist. */}
-            <div className="ts-ruler" style={{ marginLeft: GUTTER, width }} onPointerDownCapture={rulerDown}>
+            <div className="ts-ruler" onPointerDownCapture={rulerDown}>
               <Slider value={Math.min(scrubAt ?? now, length)} onValueChange={scrub} onValueCommit={scrubEnd} min={0} max={length} step={1} largeStep={15} format={clock}>
                 <SliderControl
                   className="ts-scrub"
@@ -754,7 +744,8 @@ export function Trainspotter({
             (grey for ID'd, hatched for unknown, solid for what's playing), with the part that is off screen
             dimmed and a frame around what is on screen. Press or drag it to go there (a finger: tap, or drag sideways). It is a second
             way to scroll, so it stays out of the accessibility tree; the timeline itself scrolls for everyone. */}
-        {scrolls && (
+        {/* Always in the page, and folded shut by the stylesheet when the whole tape is on screen. */}
+        <div className="ts-map-fold">
           <div
             ref={mapRef}
             className="ts-map"
@@ -783,7 +774,7 @@ export function Trainspotter({
               <div ref={mapWindowRef} className="ts-map-window" />
             </div>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Under the timeline. Both layouts are in the page and the stylesheet shows the one that fits the

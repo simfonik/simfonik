@@ -8,19 +8,12 @@ import { solveSpring } from "@ui-sdk/core/gesture";
 import { clock } from "./tracklist-primitive";
 import type { TapeAudio } from "./use-tape-audio";
 
-// Pixels per minute. A four-minute track is 160px wide with a mouse and 136px on a phone: room for an artist
-// and a title. Seeing a whole 47-minute side at once on a laptop made every block too narrow to read, so the
-// tape scrolls and follows the playhead instead. A side that fits at this scale (a short one, or a very wide
-// window) is stretched to fill the width.
-const PPM = 40;
-const PPM_TOUCH = 34;
-/** The side label and its gap, to the left of every track. */
+/** The side label and its gap, to the left of every track, in px. The stylesheet has the same number (--ts-gutter). */
 export const GUTTER = 56;
 
 export function useTimeline({
   audio,
   length,
-  touch,
   many,
   rows,
   sheet,
@@ -28,7 +21,6 @@ export function useTimeline({
   audio: TapeAudio;
   /** How many seconds the timeline shows. */
   length: number;
-  touch: boolean;
   /** One part of the tape shows at a time (a set of more than two sides). */
   many: boolean;
   /** How many sides the tape has. */
@@ -136,17 +128,26 @@ export function useTimeline({
   }, [audios, activeRef, hear]);
   audio.painter.current = paint;
 
-  // ── Timeline geometry: fill the width on a wide screen, scroll on a narrow one ──
+  // ── Timeline geometry ──
+  // The stylesheet sets the scale: so many pixels a minute, or the whole width where the side fits in it. So
+  // the tracks are the right size in the HTML the server sends, before any of this runs. What is measured
+  // here is the result, for the things that are placed in pixels: the playhead, scrubbing, the overview.
   const [avail, setAvail] = useState(0);
+  const [width, setWidth] = useState(0);
   useEffect(() => {
     const el = scrollerRef.current;
-    if (!el) return;
+    const ruler = el?.querySelector<HTMLElement>(".ts-ruler");
+    if (!el || !ruler) return;
     const measure = () => {
-      setAvail(el.clientWidth);
+      availRef.current = el.clientWidth;
+      widthRef.current = ruler.getBoundingClientRect().width;
+      setAvail(availRef.current);
+      setWidth(widthRef.current);
       paint();
     };
     const ro = new ResizeObserver(measure);
     ro.observe(el);
+    ro.observe(ruler);
     measure();
     // The visitor moving the timeline themselves puts following on hold for a few seconds.
     const hold = () => {
@@ -190,12 +191,6 @@ export function useTimeline({
       el.removeEventListener("touchstart", hold);
     };
   }, [paint, frame]);
-  // Fit the whole side when there is room for it to stay readable; otherwise keep a fixed scale and scroll.
-  const fit = avail - GUTTER - 2;
-  const ppm = touch ? PPM_TOUCH : PPM;
-  const width = fit >= (length / 60) * ppm ? fit : Math.round((length / 60) * ppm);
-  widthRef.current = width;
-  availRef.current = avail;
   const minutes = Math.ceil(length / 60);
   // The playhead's line runs down the row of the side that is playing. Measured when that changes, not per frame.
   useLayoutEffect(() => {
@@ -209,8 +204,8 @@ export function useTimeline({
     // On its way to a lower row the line only passes through the rows above, so it is drawn faint there.
     head.style.setProperty("--pass", many || active === 0 ? "1" : "0.3");
   }, [active, many, rows, avail]);
-  // More tape than fits: the overview strip shows the rest and takes you there.
-  const scrolls = avail > 0 && width > fit + 1;
+  // More tape than fits (the stylesheet shows the overview strip then; see .ts-map-fold).
+  const scrolls = avail > 0 && width + GUTTER > avail + 1;
   useEffect(() => {
     paint(); // the playhead is placed in pixels, so it moves when the scale does
     frame();
@@ -348,5 +343,5 @@ export function useTimeline({
     [],
   );
 
-  return { scrollerRef, headRef, ghostRef, mapRef, mapWindowRef, mapHeadRef, width, minutes, scrolls, snapUntil, scrubAt, scrub, scrubEnd, rulerDown, mapDown, mapMove, mapUp, mapCancel };
+  return { scrollerRef, headRef, ghostRef, mapRef, mapWindowRef, mapHeadRef, minutes, snapUntil, scrubAt, scrub, scrubEnd, rulerDown, mapDown, mapMove, mapUp, mapCancel };
 }

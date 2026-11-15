@@ -14,6 +14,12 @@
    Labels, in Geist Mono capitals: 13px on boxed buttons, 12px everywhere else, always letter-spaced.
    Nothing is set smaller than 12px. */
 .ts-page {
+  /* The timeline's scale, in pixels a minute. A four-minute track is 160px wide with a mouse and 136px on a
+     phone: room for an artist and a title. Seeing a whole 47-minute side at once on a laptop made every
+     block too narrow to read, so the tape scrolls and follows the playhead instead. */
+  --ts-ppm: 40px;
+  /* The side label and its gap, to the left of every track. The script has the same number (GUTTER). */
+  --ts-gutter: 56px;
   /* The playhead's red: the page's only colour. Deeper on the light page, brighter on the dark one, so it
      holds at least 3:1 against the page, a grey track and the solid playing track in both. */
   --ts-play: #d4201a;
@@ -178,12 +184,15 @@
 /* ── Timeline ── */
 /* No rules of its own: the player above opens with one and the strip below closes with one, and three more
    between them made the page a stack of lines. */
-.ts-root { isolation: isolate; } /* its layers can't rise above anything outside it */
+.ts-root { isolation: isolate; container-type: inline-size; } /* its layers can't rise above anything outside it; its width is 100cqw below */
+@media (pointer: coarse) { .ts-page { --ts-ppm: 34px; } }
 /* The player: one row, everything centred on the track's name; the credit sits under the name only. */
 .ts-player { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; column-gap: 1.5rem; }
 .ts-player-sub { grid-column: 2; margin-top: 0.125rem; }
 .ts-scroller { overflow-x: auto; overscroll-behavior-x: contain; }
-.ts-canvas { position: relative; padding-block: 2px 10px; }
+/* As wide as the tape is long at the page's scale, or the whole width where the side fits in it (a short
+   side, or a very wide window): then it is stretched to fill. --minutes is set on .ts-root by the page. */
+.ts-canvas { position: relative; width: max(100%, calc(var(--minutes) * var(--ts-ppm) + var(--ts-gutter))); padding-block: 2px 10px; }
 /* When the tape is scrolled, the ruler's ticks and flag stop at the side labels' column instead of sliding
    through the space above them. Narrower than the column by half a flag, so the flag is whole at 0:00. */
 .ts-canvas::before {
@@ -199,7 +208,7 @@
   pointer-events: none;
 }
 /* The ruler doubles as the scrubber. The slider places its own thumb; this gives it a size and a handle. */
-.ts-ruler { position: relative; height: 44px; }
+.ts-ruler { position: relative; height: 44px; margin-left: var(--ts-gutter); }
 .ts-scrub { display: block; height: 44px; cursor: pointer; user-select: none; -webkit-user-select: none; }
 .ts-scrub-track { height: 44px; border-bottom: 1.5px solid color-mix(in oklch, var(--text) 35%, transparent); }
 /* How much of the side has played: the rule under the ruler, drawn solid up to the marker. */
@@ -269,7 +278,7 @@
   --hatch: color-mix(in oklch, var(--text) 30%, transparent);
 }
 /* The baseline sits under the lane, not inside it, so every block stands on the same unbroken line. */
-.ts-track { position: relative; flex: none; height: 96px; cursor: pointer; box-shadow: 0 1px 0 color-mix(in oklch, var(--text) 22%, transparent); }
+.ts-track { position: relative; flex: 1 1 0; min-width: 0; height: 96px; cursor: pointer; box-shadow: 0 1px 0 color-mix(in oklch, var(--text) 22%, transparent); }
 /* Past the end of the shorter side there is no tape: the lane and its baseline simply stop. */
 .ts-beyond { position: absolute; top: 0; bottom: -1px; right: 0; pointer-events: none; background: var(--ts-paper); }
 .ts-cue {
@@ -636,6 +645,10 @@
    Shown only when the tape is wider than the screen. It is the rows above in miniature and uses their
    marks: grey for an ID'd track, hatching for an unknown, solid for the one playing. The part that is off
    screen is dimmed; the part on screen is framed and can be dragged. */
+/* The overview is for a tape wider than the timeline. Whether it is, is the same sum the canvas does, so the
+   stylesheet can open or shut this without waiting for a script: a positive difference times a thousand is
+   more than the strip's height, anything else is none. The padding below is room for the strip's touch area. */
+.ts-map-fold { overflow: hidden; max-height: clamp(0px, calc((var(--minutes) * var(--ts-ppm) + var(--ts-gutter) - 100cqw) * 1000), 6rem); margin-bottom: -11px; padding-bottom: 11px; }
 .ts-map { position: relative; margin-top: 14px; cursor: grab; touch-action: pan-y; -webkit-user-select: none; user-select: none; }
 .ts-map:active { cursor: grabbing; }
 /* A strip this slim still needs a finger-sized target. */
