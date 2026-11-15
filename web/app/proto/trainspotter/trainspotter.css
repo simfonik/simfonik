@@ -666,10 +666,12 @@
 .ts-map-lane span { position: absolute; inset-block: 0; right: 0; background: var(--ts-paper); }
 .ts-map-head { position: absolute; inset-block: 0; left: 0; z-index: 1; width: 1px; background: var(--ts-play); pointer-events: none; will-change: transform; }
 /* The frame dims everything outside itself with one very wide shadow, clipped by the strip. */
-.ts-map-window { position: absolute; inset-block: 0; z-index: 2; border: 1px solid color-mix(in oklch, var(--text) 45%, transparent); box-shadow: 0 0 0 100vw color-mix(in oklch, var(--bg) 62%, transparent); pointer-events: none; transition: border-color 120ms ease-out; }
-/* The dimming already says which part is on screen, so the frame stays quiet until it is being used. */
-@media (hover: hover) { .ts-map:hover .ts-map-window { border-color: var(--text); } }
-.ts-map:active .ts-map-window { border-color: var(--text); }
+/* The part of the tape that is on screen: a faint band, as a scrollbar draws its thumb, with everything
+   outside it dimmed. No outline. With tracks under it the dimming already marks the edge, and with none an
+   outline was an empty box. It brightens a step while the pointer is on the strip or dragging it. */
+.ts-map-window { position: absolute; inset-block: 0; z-index: 2; background: color-mix(in oklch, var(--text) 9%, transparent); box-shadow: 0 0 0 100vw color-mix(in oklch, var(--bg) 62%, transparent); pointer-events: none; transition: background-color 120ms ease-out; }
+@media (hover: hover) { .ts-map:hover .ts-map-window { background: color-mix(in oklch, var(--text) 16%, transparent); } }
+.ts-map:active .ts-map-window { background: color-mix(in oklch, var(--text) 16%, transparent); }
 @media (prefers-reduced-motion: reduce) { .ts-map-window { transition: none; } }
 
 /* More tape to the right than fits: the row fades out at that edge instead of stopping dead at it. Only

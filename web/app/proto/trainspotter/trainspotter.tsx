@@ -737,7 +737,7 @@ export function Trainspotter({
         </div>
         {/* The whole tape at a glance, when it doesn't all fit: the rows above in miniature, drawn the same way
             (grey for ID'd, hatched for unknown, solid for what's playing), with the part that is off screen
-            dimmed and a frame around what is on screen. Press or drag it to go there (a finger: tap, or drag sideways). It is a second
+            dimmed and a faint band behind what is on screen. Press or drag it to go there (a finger: tap, or drag sideways). It is a second
             way to scroll, so it stays out of the accessibility tree; the timeline itself scrolls for everyone. */}
         {/* Always in the page, and folded shut by the stylesheet when the whole tape is on screen. */}
         <div className="ts-map-fold">
@@ -751,7 +751,7 @@ export function Trainspotter({
             onPointerUp={mapUp}
             onPointerCancel={mapCancel}
           >
-            {/* Inside a clipped box of its own, so the frame can dim everything outside itself. */}
+            {/* Inside a clipped box of its own, so the band can dim everything outside itself. */}
             <div className="ts-map-tape">
               {tape.sides.map((side, i) =>
                 many && i !== active ? null : (

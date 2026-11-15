@@ -44,7 +44,7 @@ export function useTimeline({
   const availRef = useRef(0); // the scroller's visible width, in px
   const scrollerRef = useRef<HTMLDivElement>(null);
   const ghostRef = useRef<HTMLDivElement>(null);
-  // The overview under the sides: the whole tape in a strip, with a frame over the part on screen.
+  // The overview under the sides: the whole tape in a strip, with a band over the part on screen.
   const mapRef = useRef<HTMLDivElement>(null);
   const mapWindowRef = useRef<HTMLDivElement>(null);
   const mapHeadRef = useRef<HTMLDivElement>(null);
