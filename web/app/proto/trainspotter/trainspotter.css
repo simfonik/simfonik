@@ -103,7 +103,8 @@
 @media (prefers-reduced-motion: reduce) { .ts-btn { transition: none; } }
 
 /* Getting between tapes: a line of text, not a row of boxes. */
-.ts-nav { display: flex; flex-wrap: wrap; align-items: center; column-gap: 0.75rem; margin-left: -0.6rem; }
+/* Out by the first link's padding, and two pixels more: the chevron's own shape starts that far into its box. */
+.ts-nav { display: flex; flex-wrap: wrap; align-items: center; column-gap: 0.75rem; margin-left: calc(-0.6rem - 2px); }
 /* Underline the words only: across the whole button the line would break at each gap. */
 .ts-nav-all:hover, .ts-nav-all[data-open] { text-decoration: none !important; }
 .ts-nav-all[data-open] > span:first-child { text-decoration: underline; text-underline-offset: 4px; }
@@ -571,8 +572,8 @@
   /* Each line is one line and keeps its height when empty, so the buttons under it never move. */
   .ts-bar-line { display: flex; min-height: 1.25rem; align-items: baseline; gap: 0.75rem; font-size: 14px; font-weight: 500; line-height: 1.25rem; color: var(--text); }
   .ts-bar-sub { font-weight: 400; color: var(--muted); }
-  /* Play is a square at the thumb's corner; the two ID actions share the rest. */
-  .ts-bar-row { display: grid; grid-template-columns: 3.25rem 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem; }
+  /* Play sits at the thumb's corner, as wide as the side labels up the page; the two ID actions share the rest. */
+  .ts-bar-row { display: grid; grid-template-columns: 3rem 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem; }
   .ts-bar-btn {
     display: inline-flex;
     min-height: 2.75rem;

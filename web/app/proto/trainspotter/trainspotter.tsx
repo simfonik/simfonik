@@ -1217,7 +1217,8 @@ export function Trainspotter({
           <button type="submit" disabled={!subject} className="ts-btn ts-btn-solid">
             Save
           </button>
-          <button type="button" disabled={!subject} onClick={() => remove()} className="ts-link" data-agent-confirm="Remove this track from the tracklist?">
+          {/* Pulled out by its own padding, so its last letter ends where "Keyboard shortcuts" below it does. */}
+          <button type="button" disabled={!subject} onClick={() => remove()} className="ts-link -mr-2.5" data-agent-confirm="Remove this track from the tracklist?">
             Remove
           </button>
         </div>
@@ -1424,14 +1425,14 @@ export function Trainspotter({
       <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-4">
         <TapeSwitcher tapes={others} currentId={tape.id} />
         {/* Above the title: its tall letters reach up past their own line and would otherwise sit over this link. */}
-        <p className="relative z-[1] font-mono text-xs uppercase tracking-[0.14em] text-[var(--muted)]">
+        <p className="relative z-[1] -mr-[0.14em] font-mono text-xs uppercase tracking-[0.14em] text-[var(--muted)]">
           Released {tape.released} ·{" "}
           <Link href={`/tapes/${tape.id}`} className="ts-inline-link">
             Tape page
           </Link>
         </p>
       </div>
-      <h1 className="mt-5 font-display text-4xl leading-[0.95] text-[var(--text)] [text-wrap:balance] sm:text-6xl">
+      <h1 className="-ml-[0.038em] mt-5 font-display text-4xl leading-[0.95] text-[var(--text)] [text-wrap:balance] sm:text-6xl">
         {compactTitle ? (
           <>
             {tape.title} <span className="text-[var(--muted)]">{partName ?? `${tape.djCount} DJs`}</span>

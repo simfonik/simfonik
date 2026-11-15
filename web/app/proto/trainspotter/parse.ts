@@ -467,6 +467,8 @@ function rowOf(raw: string, expect?: number): (Omit<Row, "side" | "n"> & { n?: n
     line.match(/^(\d{1,2})\s*[.)]\s*(?=[^\d\s])/) ??
     line.match(/^(\d{1,2})(?:\.\d)?\s*[.)]\s+/) ??
     line.match(new RegExp(String.raw`^(\d{1,2})\s*${DASH}\s*(?=\[?\s*\d{1,2}:\d{2})`)) ??
+    // With spaces round both dashes, or "9-10-Boy - Revenge of the Gatorade" is track 9 at minute 10.
+    line.match(new RegExp(String.raw`^(\d{1,2})\s+${DASH}\s+(?=\d{1,2}\s+${DASH}\s)`)) ??
     (expect === undefined ? null : line.match(new RegExp(String.raw`^(${expect})\s+(?=\S)`)));
   const n = num ? Number(num[1]) : undefined;
   if (num) line = line.slice(num[0].length);
@@ -476,7 +478,13 @@ function rowOf(raw: string, expect?: number): (Omit<Row, "side" | "n"> & { n?: n
   line = line.replace(/(\))\s{2,}[a-z].*$/, "$1");
   let start: number | undefined;
   let end: number | undefined;
-  const t = line.match(new RegExp(String.raw`(?:(?:@|\bat)\s*(?:approx\.?|about|around)?\s*)?[([]?\s*(${ROW_TIME})\s*\]?(?:\s*(?:${DASH}|to)\s*\[?(${ROW_TIME})\]?)?\s*[)\]]?`, "i"));
+  // "1 - 00 - ???"   "19 - 47 - ?? hint": after a track number, a bare number before a dash is the minute.
+  const minute = n === undefined ? null : line.match(new RegExp(String.raw`^(\d{1,2})\s+${DASH}\s+`));
+  if (minute) {
+    start = Number(minute[1]) * 60;
+    line = line.slice(minute[0].length);
+  }
+  const t = minute ? null : line.match(new RegExp(String.raw`(?:(?:@|\bat)\s*(?:approx\.?|about|around)?\s*)?[([]?\s*(${ROW_TIME})\s*\]?(?:\s*(?:${DASH}|to)\s*\[?(${ROW_TIME})\]?)?\s*[)\]]?`, "i"));
   if (t) {
     start = seconds(t[1]);
     if (t[2] && seconds(t[2]) > start) end = seconds(t[2]);
@@ -497,7 +505,7 @@ function rowOf(raw: string, expect?: number): (Omit<Row, "side" | "n"> & { n?: n
   const title = clean(m[2], false);
   // A sentence with a dash in it is not a record: "I hear MNO - …", "Last is Gypsy - …", "Nice one. That - …".
   // An initial is not the end of a sentence: "O. Walters", "L.A. Style", "K. Hand".
-  if (!artist || !title || artist.split(" ").length > 8) return null;
+  if (!artist || !title || /^\d+$/.test(artist) || artist.split(" ").length > 8) return null;
   if (/[a-z]{3,}[.!?]\s+\S/i.test(artist.replace(ABBREVIATION, "")) || /^(?:i|it|this|that|he|she|they|we|last|first|next|then|also|and|but)\s/i.test(artist)) return null;
   return { n, start, end, layer, artist, title, known: true };
 }
