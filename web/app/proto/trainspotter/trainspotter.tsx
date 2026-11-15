@@ -757,6 +757,10 @@ export function Trainspotter({
   const unknownCount = counted.length - knownCount;
   const audioFailed = failed[active];
 
+  // The unknown list follows the timeline: every side of a two-sided tape, or the one part on screen.
+  const unknownHere = cues.filter((c) => !c.known && (!many || c.track === sides[active])).sort((a, b) => a.track.localeCompare(b.track) || a.start - b.start);
+  const elsewhereUnknown = cues.filter((c) => !c.known && c.track !== sides[active]).length;
+  const unknownParts = sides.filter((k) => k !== sides[active] && cues.some((c) => !c.known && c.track === k));
   // A compilation is named by its title and the part being heard, not by a line of eight DJs.
   const compactTitle = tape.djCount > 3;
   const partTitle = (i: number) => (tape.sides[i]?.title && !/^side\b/i.test(tape.sides[i].title) ? tape.sides[i].title : null);
@@ -788,7 +792,7 @@ export function Trainspotter({
             }}
             className="ts-chip"
           >
-            <span className="font-mono text-[10px] tabular-nums opacity-70">{l.n}</span> {l.artist} — {l.title}
+            <span className="font-mono text-xs tabular-nums opacity-70">{l.n}</span> {l.artist} — {l.title}
           </button>
         ))}
       </div>
@@ -931,6 +935,7 @@ export function Trainspotter({
                       key={c.id}
                       value={c.id}
                       className="ts-cue"
+                      title={c.known ? cueLabel(c) : c.title ? `Unknown. Clue: “${c.title}”` : undefined}
                       data-selected={c.id === selected ? "" : undefined}
                       aria-current={c.id === selected ? "true" : undefined}
                       onClick={(e: React.MouseEvent) => {
@@ -1056,8 +1061,8 @@ export function Trainspotter({
                 <ComboboxGroupLabel className="ts-tapes-group">{group}</ComboboxGroupLabel>
                 {tapes.map((t) => (
                   <ComboboxItem key={t.id} value={t.id} label={t.label} className="ts-option">
-                    <span className="min-w-0 flex-1 truncate">{t.label}</span>
-                    <span className="flex-none font-mono text-[11px] tabular-nums opacity-70">{t.id === tape.id ? "You’re here" : t.meta}</span>
+                    <span className="min-w-0 flex-1 truncate" title={t.label}>{t.label}</span>
+                    <span className="flex-none font-mono text-xs tabular-nums opacity-70">{t.id === tape.id ? "You’re here" : t.meta}</span>
                     {/* How much of what's marked has a name: a full bar is a tape with nothing left unknown. */}
                     <span className="ts-prog" style={{ "--done": t.done ?? 0 } as React.CSSProperties} data-none={t.done === null ? "" : undefined} aria-hidden />
                   </ComboboxItem>
@@ -1069,7 +1074,7 @@ export function Trainspotter({
       </Combobox>
 
       {/* Above the title: its tall letters reach up past their own line and would otherwise sit over this link. */}
-      <p className="relative z-[1] mt-6 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
+      <p className="relative z-[1] mt-6 font-mono text-xs uppercase tracking-[0.14em] text-[var(--muted)]">
         Released {tape.released} ·{" "}
         <Link href={`/tapes/${tape.id}`} className="ts-inline-link">
           Tape page
@@ -1086,7 +1091,7 @@ export function Trainspotter({
           </>
         )}
       </h1>
-      <p className="mt-3 max-w-[60ch] text-[17px] text-[var(--text)]">{intro}</p>
+      <p className="mt-3 max-w-[60ch] text-[17px] text-[var(--text)] [text-wrap:pretty]">{intro}</p>
 
       {!touch && (
         <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 border-t-[1.5px] border-[var(--text)] pt-4">
@@ -1103,8 +1108,8 @@ export function Trainspotter({
       {/* With a mouse, what's playing and what to do about it. On a phone the pinned bar says the same thing. */}
       <div className="ts-fine-only mt-5 flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
         <div className="min-w-0 flex-1 basis-72">
-          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">{playing ? "Now playing" : `Paused at ${clock(now)}`}</p>
-          <p className="mt-1 truncate font-display text-3xl leading-tight text-[var(--text)] sm:text-4xl">{playingCue ? (playingCue.known ? cueLabel(playingCue) : "Unknown track") : "Nothing ID’d here yet"}</p>
+          <p className="font-mono text-xs uppercase tracking-[0.14em] text-[var(--muted)]">{playing ? "Now playing" : `Paused at ${clock(now)}`}</p>
+          <p className="mt-1 truncate font-display text-3xl leading-tight text-[var(--text)] sm:text-4xl" title={playingCue?.known ? cueLabel(playingCue) : undefined}>{playingCue ? (playingCue.known ? cueLabel(playingCue) : "Unknown track") : "Nothing ID’d here yet"}</p>
           <p className="mt-1 min-h-[1.25rem] truncate text-sm text-[var(--muted)]">
             {audioFailed
               ? `Side ${sides[active]}’s audio didn’t load. Check your connection and reload the page.`
@@ -1182,7 +1187,7 @@ export function Trainspotter({
       <div className="ts-namebar">
         {sel ? (
           <>
-            <p className="w-full font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] tabular-nums">
+            <p className="w-full font-mono text-xs uppercase tracking-[0.14em] text-[var(--muted)] tabular-nums">
               {sel.track} {clock(sel.start)}–{clock(sel.end)}
             </p>
             {touch ? (
@@ -1202,7 +1207,7 @@ export function Trainspotter({
         ) : (
           <div className="text-sm text-[var(--muted)]">
             <p className="ts-fine">Click a track to play and ID it. Drag it to move it, or drag an edge to resize it. Drag the top marker to skip through the tape.</p>
-            <p className="ts-fine mt-1 font-mono text-[11px] uppercase tracking-[0.1em]">
+            <p className="ts-fine mt-1 font-mono text-xs uppercase tracking-[0.1em]">
               Space play · ← → previous / next track · M new track · Enter ID · Delete remove · Alt ← → nudge · Alt Shift ← → trim · {undoHint.text} undo
             </p>
             <p className="ts-coarse">Tap a track to play it, then “ID it”. Slide the top marker to skip through the tape.</p>
@@ -1223,7 +1228,7 @@ export function Trainspotter({
                 <DrawerTitle className="font-display text-2xl leading-tight text-[var(--text)]">{sel.known ? "Fix this ID" : "What is this track?"}</DrawerTitle>
                 <DrawerClose className="ts-link flex-none">Close</DrawerClose>
               </div>
-              <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] tabular-nums">
+              <p className="mt-1 font-mono text-xs uppercase tracking-[0.14em] text-[var(--muted)] tabular-nums">
                 {sel.track} {clock(sel.start)}–{clock(sel.end)}
               </p>
               <div className="mt-3">{idForm}</div>
@@ -1235,19 +1240,25 @@ export function Trainspotter({
       {/* The job, as a list: every track nobody has ID'd. Easier to hit than a narrow block on the timeline. */}
       {ready && unknownCount > 0 && (
         <div className="mt-8">
-          <h2 className="font-display text-2xl leading-none text-[var(--text)]">Still unknown</h2>
-          <ul className="ts-list ts-unknowns mt-3">
-            {cues
-              .filter((c) => !c.known)
-              .sort((a, b) => a.track.localeCompare(b.track) || a.start - b.start)
+          {/* Where one part shows at a time, the list is that part's, so it matches the timeline above it. */}
+          <h2 className="font-display text-2xl leading-none text-[var(--text)]">
+            Still unknown{many && <span className="text-[var(--muted)]"> on {sides[active]}{partName ? ` · ${partName}` : ""}</span>}
+          </h2>
+          {unknownHere.length === 0 && (
+            <p className="mt-3 text-sm text-[var(--muted)]">
+              Nothing is marked as unknown on this part. {elsewhereUnknown} still unknown on {unknownParts.join(", ")}.
+            </p>
+          )}
+          <ul className="ts-list ts-unknowns mt-3" hidden={unknownHere.length === 0}>
+            {unknownHere
               .map((c) => (
                 <li key={c.id}>
                   <button type="button" onClick={() => seek(sides.indexOf(c.track), c.start, true)} className="ts-list-row" aria-label={`Hear side ${c.track} from ${clock(c.start)}${c.title ? `. Clue: ${c.title}` : ""}`}>
-                    <span className="flex-none font-mono text-[11px] tabular-nums text-[var(--muted)]">
+                    <span className="flex-none font-mono text-xs tabular-nums text-[var(--muted)]">
                       {c.track} {clock(c.start)}
                     </span>
-                    <span className="min-w-0 flex-1 truncate">{c.title ? `Clue: “${c.title}”` : "No clues yet"}</span>
-                    <span className="flex-none text-[12px] text-[var(--muted)]">Hear it</span>
+                    <span className="min-w-0 flex-1 truncate" title={c.title || undefined}>{c.title ? `Clue: “${c.title}”` : "No clues yet"}</span>
+                    <span className="flex-none text-xs text-[var(--muted)]">Hear it</span>
                   </button>
                   <button type="button" onClick={() => idIt(c.id)} className="ts-chip flex-none" aria-label={`ID the track at ${clock(c.start)}, side ${c.track}`}>
                     ID it
@@ -1261,7 +1272,7 @@ export function Trainspotter({
       <div className="mt-10 grid gap-x-12 gap-y-8 lg:grid-cols-2">
         <div className="min-w-0">
           <h2 className="font-display text-2xl leading-none text-[var(--text)]">Send it in</h2>
-          <p className="mt-2 max-w-[52ch] text-[15px] text-[var(--muted)]">
+          <p className="mt-2 max-w-[52ch] text-[15px] text-[var(--muted)] [text-wrap:pretty]">
             What you ID here is saved on this device. To add it to the archive, copy your IDs and post them as a comment on the tape’s page. The other IDs on this timeline came from comments there.
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -1286,7 +1297,7 @@ export function Trainspotter({
             <Collapsible className="ts-fold" defaultOpen={namesWaiting === namesTotal}>
               <CollapsibleTrigger className="ts-fold-trigger">
                 <span>{fromSite ? "The tape’s tracklist" : "A tracklist from the comments, in order"}</span>
-                <span className="font-mono text-[11px] tabular-nums text-[var(--muted)]">{namesWaiting} still to place</span>
+                <span className="font-mono text-xs tabular-nums text-[var(--muted)]">{namesWaiting} still to place</span>
               </CollapsibleTrigger>
               <CollapsiblePanel className="ts-fold-panel">
                 <ol className="ts-list ts-names">
@@ -1297,13 +1308,13 @@ export function Trainspotter({
                         const placed = !waiting[side].includes(l);
                         return (
                           <li key={`${side}-${l.n}`} data-placed={placed ? "" : undefined}>
-                            <span className="flex-none font-mono text-[11px] tabular-nums text-[var(--muted)]">
+                            <span className="flex-none font-mono text-xs tabular-nums text-[var(--muted)]">
                               {sides[side]} {l.n}
                             </span>
                             <span className="min-w-0 flex-1">
                               {l.artist} — {l.title}
                             </span>
-                            {placed && <span className="flex-none text-[12px] text-[var(--muted)]">placed</span>}
+                            {placed && <span className="flex-none text-xs text-[var(--muted)]">placed</span>}
                           </li>
                         );
                       }),
@@ -1315,7 +1326,7 @@ export function Trainspotter({
           <Collapsible className="ts-fold">
             <CollapsibleTrigger className="ts-fold-trigger">
               <span>IDs from the comments</span>
-              <span className="font-mono text-[11px] tabular-nums text-[var(--muted)]">{proposals.length}</span>
+              <span className="font-mono text-xs tabular-nums text-[var(--muted)]">{proposals.length}</span>
             </CollapsibleTrigger>
             <CollapsiblePanel className="ts-fold-panel">
               {proposals.length ? (
@@ -1323,11 +1334,11 @@ export function Trainspotter({
                   {proposals.map((p) => (
                     <li key={`${p.side}-${p.start}`}>
                       <button type="button" onClick={() => seek(p.side, p.start, true)} className="ts-list-row" aria-label={`Hear side ${sides[p.side]} at ${clock(p.start)}: ${cueLabel(toCue(p))}`}>
-                        <span className="font-mono text-[11px] tabular-nums text-[var(--muted)]">
+                        <span className="font-mono text-xs tabular-nums text-[var(--muted)]">
                           {sides[p.side]} {clock(p.start)}
                         </span>
-                        <span className="min-w-0 flex-1 truncate">{cueLabel(toCue(p))}</span>
-                        <span className="flex-none text-[12px] text-[var(--muted)]">
+                        <span className="min-w-0 flex-1 truncate" title={cueLabel(toCue(p))}>{cueLabel(toCue(p))}</span>
+                        <span className="flex-none text-xs text-[var(--muted)]">
                           {p.author}, {p.date.slice(0, 4)}
                         </span>
                       </button>
@@ -1342,7 +1353,7 @@ export function Trainspotter({
           <Collapsible className="ts-fold">
             <CollapsibleTrigger className="ts-fold-trigger">
               <span>What you’ve changed</span>
-              <span className="font-mono text-[11px] tabular-nums text-[var(--muted)]">{Math.max(0, entries.length - floor)}</span>
+              <span className="font-mono text-xs tabular-nums text-[var(--muted)]">{Math.max(0, entries.length - floor)}</span>
             </CollapsibleTrigger>
             <CollapsiblePanel className="ts-fold-panel">
               {entries.length > floor ? (
@@ -1378,7 +1389,7 @@ export function Trainspotter({
       <div className="ts-bar" role="group" aria-label="Player">
         <p className="ts-bar-now">
           <span className="min-w-0 flex-1 truncate">{audioFailed ? "This side’s audio didn’t load" : playingCue ? (playingCue.known ? cueLabel(playingCue) : "Unknown track") : "Nothing ID’d here yet"}</span>
-          <span className="flex-none font-mono text-[12px] tabular-nums text-[var(--muted)]">
+          <span className="flex-none font-mono text-xs tabular-nums text-[var(--muted)]">
             {sides[active]} {clock(now)}
           </span>
         </p>
