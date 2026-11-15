@@ -480,27 +480,38 @@ export function Trainspotter({
       return;
     }
     const fresh = proposals.filter((p) => !seen.current.has(sig(p)));
-    if (!fresh.length) return;
+    // A track that came from the comments follows the comments. Its id records where they put it, so one
+    // the visitor has since dragged elsewhere is still recognised and keeps its new times. If the comments
+    // no longer have anything there it goes; if they now say something else there, it takes that name. This
+    // is what clears a misreading once the reader is fixed, instead of leaving it in every browser that
+    // saved it. A track the visitor ID'd themselves has no `by` and is never touched.
     let added = 0;
     let corrected = 0;
-    let next = [...cuesRef.current];
+    let removed = 0;
+    const next = cuesRef.current.flatMap((c) => {
+      const from = c.by ? c.id.match(/^crowd-(\d+)-(\d+)/) : null;
+      if (!from) return [c];
+      const p = proposals.find((x) => x.side === Number(from[1]) && Math.abs(x.start - Number(from[2])) <= 20);
+      if (!p) {
+        removed++;
+        return [];
+      }
+      if (p.artist === c.artist && p.title === c.title && p.known === c.known) return [c];
+      corrected++;
+      return [{ ...c, artist: p.artist, title: p.title, known: p.known, by: p.author }];
+    });
     for (const p of fresh) {
       const cue = { ...toCue(p), id: `crowd-${p.side}-${p.start}-${Date.now().toString(36)}` };
-      const old = next.find((c) => c.track === cue.track && Math.abs(c.start - cue.start) <= 20);
-      if (!old) {
-        next.push(cue);
-        added++;
-      } else if (old.by) {
-        next = next.map((c) => (c === old ? { ...cue, start: old.start, end: old.end } : c));
-        corrected++;
-      }
+      if (next.some((c) => c.track === cue.track && Math.abs(c.start - cue.start) <= 20)) continue;
+      next.push(cue);
+      added++;
     }
     markSeen(fresh.map(sig));
-    if (!added && !corrected) return;
+    if (!added && !corrected && !removed) return;
     void writeAsListeners(next).then((ok) => {
       if (!ok) return;
-      const parts = [added ? `added ${added} ${added === 1 ? "track" : "tracks"}` : "", corrected ? `corrected ${corrected}` : ""].filter(Boolean).join(" and ");
-      confirmWithUndo(`Since you were last here, new comments ${parts}.`);
+      const parts = [added ? `added ${added}` : "", corrected ? `corrected ${corrected}` : "", removed ? `removed ${removed} misread` : ""].filter(Boolean).join(", ");
+      confirmWithUndo(`Updated from the comments: ${parts}.`);
     });
     // Runs once, with the proposals as they are when saved work has been restored.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1000,13 +1011,8 @@ export function Trainspotter({
                             <i>{c.artist ? c.title : ""}</i>
                           </>
                         ) : (
-                          <>
-                            {/* The block's own label already says "Unknown"; this is the mark you can see from across the room. */}
-                            <b className="ts-q" aria-hidden>
-                              ?
-                            </b>
-                            <i>{c.title ? `“${c.title}”` : ""}</i>
-                          </>
+                          // Always rendered: empty, it is the blank tape over the name; with a clue, the clue is written on it.
+                          <i className="ts-clue">{c.title ? `“${c.title}”` : ""}</i>
                         )}
                       </span>
                       <span className="ts-edge" data-span-edge="end" aria-hidden />
@@ -1044,6 +1050,7 @@ export function Trainspotter({
         />
       ))}
 
+      <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-4">
       {/* Getting around: step to the next tape, or open the whole list with each tape's progress. The list is a
           combobox with its search inside the popup; on a phone it presents as a sheet. */}
       <Combobox
@@ -1119,15 +1126,15 @@ export function Trainspotter({
           </ComboboxList>
         </ComboboxContent>
       </Combobox>
-
       {/* Above the title: its tall letters reach up past their own line and would otherwise sit over this link. */}
-      <p className="relative z-[1] mt-6 font-mono text-xs uppercase tracking-[0.14em] text-[var(--muted)]">
+      <p className="relative z-[1] font-mono text-xs uppercase tracking-[0.14em] text-[var(--muted)]">
         Released {tape.released} ·{" "}
         <Link href={`/tapes/${tape.id}`} className="ts-inline-link">
           Tape page
         </Link>
       </p>
-      <h1 className="mt-2 font-display text-4xl leading-[0.95] text-[var(--text)] [text-wrap:balance] sm:text-6xl">
+      </div>
+      <h1 className="mt-5 font-display text-4xl leading-[0.95] text-[var(--text)] [text-wrap:balance] sm:text-6xl">
         {compactTitle ? (
           <>
             {tape.title} <span className="text-[var(--muted)]">{partName ?? `${tape.djCount} DJs`}</span>
@@ -1140,24 +1147,16 @@ export function Trainspotter({
       </h1>
       <p className="mt-3 max-w-[60ch] text-[17px] text-[var(--text)] [text-wrap:pretty]">{intro}</p>
 
-      {!touch && (
-        <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 border-t-[1.5px] border-[var(--text)] pt-4">
-          <button type="button" onClick={toggle} disabled={audioFailed} className="ts-fine-only ts-btn ts-btn-solid min-w-[6rem]" aria-keyshortcuts="Space">
-            {playing ? "Pause" : "Play"}
-          </button>
-          <p className="ts-fine-only font-mono text-sm tabular-nums text-[var(--text)]">
-            Side {sides[active]} · {clock(now)} <span className="text-[var(--muted)]">/ {durations[active] === null ? "–:––" : clock(durations[active]!)}</span>
-          </p>
-          <div className="ml-auto flex gap-1">{undoRedo}</div>
-        </div>
-      )}
-
-      {/* With a mouse, what's playing and what to do about it. On a phone the pinned bar says the same thing. */}
-      <div className="ts-fine-only mt-5 flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
-        <div className="min-w-0 flex-1 basis-72">
-          <p className="font-mono text-xs uppercase tracking-[0.14em] text-[var(--muted)]">{playing ? "Now playing" : `Paused at ${clock(now)}`}</p>
-          <p className="mt-1 truncate font-display text-3xl leading-tight text-[var(--text)] sm:text-4xl" title={playingCue?.known ? cueLabel(playingCue) : undefined}>{playingCue ? (playingCue.known ? cueLabel(playingCue) : "Unknown track") : "Nothing ID’d here yet"}</p>
-          <p className="mt-1 min-h-[1.25rem] truncate text-sm text-[var(--muted)]">
+      {/* The player, with a mouse: play, what is playing, where in the side, and the one thing to do about it,
+          on one line. The button says whether it is playing and the clock says where, so neither is said
+          twice. On a phone the pinned bar does this job. */}
+      <div className="ts-fine-only mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 border-t-[1.5px] border-[var(--text)] pt-5">
+        <button type="button" onClick={toggle} disabled={audioFailed} className="ts-btn ts-btn-solid min-w-[6rem]" aria-keyshortcuts="Space">
+          {playing ? "Pause" : "Play"}
+        </button>
+        <div className="min-w-0 flex-1 basis-64">
+          <p className="truncate font-display text-3xl leading-tight text-[var(--text)] sm:text-4xl" title={playingCue?.known ? cueLabel(playingCue) : undefined}>{playingCue ? (playingCue.known ? cueLabel(playingCue) : "Unknown track") : "Nothing ID’d here yet"}</p>
+          <p className="mt-0.5 min-h-[1.25rem] truncate text-sm text-[var(--muted)]">
             {audioFailed
               ? `Side ${sides[active]}’s audio didn’t load. Check your connection and reload the page.`
               : playingCue
@@ -1171,7 +1170,11 @@ export function Trainspotter({
                 : `If a track is playing here, press “${markLabel}” and ID it.`}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <p className="flex-none font-mono text-sm tabular-nums text-[var(--text)]">
+          <span className="sr-only">Side </span>
+          {sides[active]} {clock(now)} <span className="text-[var(--muted)]">/ {durations[active] === null ? "–:––" : clock(durations[active]!)}</span>
+        </p>
+        <div className="flex flex-none flex-wrap items-center gap-2">
           {playingCue && (
             <button type="button" onClick={() => idIt(playingCue.id)} className={playingCue.known ? "ts-link" : "ts-btn ts-btn-solid"}>
               {playingCue.known ? "Fix this ID" : "ID this track"}
@@ -1239,33 +1242,25 @@ export function Trainspotter({
 
       {/* With a mouse the ID fields sit under the timeline. On a phone they open in a sheet that stays above the keyboard. */}
       <div className="ts-namebar">
-        {sel ? (
-          <>
-            <p className="w-full font-mono text-xs uppercase tracking-[0.14em] text-[var(--muted)] tabular-nums">
+        {/* Always here, so undo is never hidden behind the ID form: what is picked (or what to do) on the left,
+            undo, redo and the keys on the right. */}
+        <div className="flex w-full flex-wrap items-center justify-between gap-x-6 text-sm text-[var(--muted)]">
+          {sel ? (
+            <p className="font-mono text-xs uppercase tracking-[0.14em] tabular-nums">
               {sel.track} {clock(sel.start)}–{clock(sel.end)}
             </p>
-            {touch ? (
-              <div className="flex w-full items-center gap-3">
-                <p className="min-w-0 flex-1 truncate text-[15px] font-medium text-[var(--text)]">{cueLabel(sel)}</p>
-                <button type="button" onClick={() => seek(sides.indexOf(sel.track), sel.start, true)} className="ts-link flex-none">
-                  Hear it
-                </button>
-                <button type="button" onClick={() => openSheet(sel.id)} className="ts-btn ts-btn-solid flex-none">
-                  {sel.known ? "Fix ID" : "ID it"}
-                </button>
-              </div>
-            ) : (
-              idForm
-            )}
-          </>
-        ) : (
-          <div className="flex w-full flex-wrap items-center justify-between gap-x-6 text-sm text-[var(--muted)]">
-            <p className="ts-fine">Click a track to play it and ID it.</p>
-            <p className="ts-coarse">Tap a track to play it, then “ID it”.</p>
+          ) : (
+            <>
+              <p className="ts-fine">Click a track to play it and ID it.</p>
+              <p className="ts-coarse">Tap a track to play it, then “ID it”.</p>
+            </>
+          )}
+          <div className="-mr-2.5 flex items-center gap-1">
+            {(!touch || canUndo || canRedo) && undoRedo}
             {/* Everything else the page can do is shown where it happens: the time under the pointer, the grips
                 on a track. The keys are a click away for whoever wants them. */}
             <Popover>
-              <PopoverTrigger className="ts-link ts-fine-only -mr-2.5">Keyboard shortcuts</PopoverTrigger>
+              <PopoverTrigger className="ts-link ts-fine-only">Keyboard shortcuts</PopoverTrigger>
               <PopoverContent side="top" align="end" sideOffset={6} className="ts-keys">
                 <PopoverTitle className="font-mono text-xs uppercase tracking-[0.14em] text-[var(--muted)]">Keyboard shortcuts</PopoverTitle>
                 <dl>
@@ -1289,11 +1284,22 @@ export function Trainspotter({
               </PopoverContent>
             </Popover>
           </div>
-        )}
+        </div>
+        {sel &&
+          (touch ? (
+            <div className="flex w-full items-center gap-3">
+              <p className="min-w-0 flex-1 truncate text-[15px] font-medium text-[var(--text)]">{cueLabel(sel)}</p>
+              <button type="button" onClick={() => seek(sides.indexOf(sel.track), sel.start, true)} className="ts-link flex-none">
+                Hear it
+              </button>
+              <button type="button" onClick={() => openSheet(sel.id)} className="ts-btn ts-btn-solid flex-none">
+                {sel.known ? "Fix ID" : "ID it"}
+              </button>
+            </div>
+          ) : (
+            idForm
+          ))}
       </div>
-
-      {/* On a phone, undo appears under the timeline once there is something to undo, so the timeline never moves. */}
-      {touch && (canUndo || canRedo) && <div className="mt-1 flex justify-end gap-1">{undoRedo}</div>}
 
       <Drawer open={sheet && Boolean(sel) && touch} onOpenChange={(open: boolean) => (open ? setSheet(true) : closeSheet())}>
         <DrawerBackdrop className="ts-backdrop" />
