@@ -189,7 +189,11 @@
 /* The player: one row, everything centred on the track's name; the credit sits under the name only. */
 .ts-player { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; column-gap: 1.5rem; }
 .ts-player-sub { grid-column: 2; margin-top: 0.125rem; }
-.ts-scroller { overflow-x: auto; overscroll-behavior-x: contain; }
+/* No scrollbar of its own: the overview strip under the rows shows where the tape is and moves it, and the
+   right edge fades where there is more. The browser's bar said the same thing a third time, and on a Mac it
+   flashed across the bottom row whenever the tape moved. Wheel, trackpad, touch and keys scroll as before. */
+.ts-scroller { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+.ts-scroller::-webkit-scrollbar { display: none; }
 /* As wide as the tape is long at the page's scale, or the whole width where the side fits in it (a short
    side, or a very wide window): then it is stretched to fill. --minutes is set on .ts-root by the page. */
 .ts-canvas { position: relative; width: max(100%, calc(var(--minutes) * var(--ts-ppm) + var(--ts-gutter))); padding-block: 2px 10px; }
