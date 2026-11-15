@@ -614,15 +614,33 @@
 .ts-keys dd { color: var(--muted); }
 
 /* ── The overview: the whole tape in a strip under the sides ──
-   Shown only when the tape is wider than the screen. Unknowns are drawn at full strength and ID'd tracks
-   faint, so it doubles as a map of where the work is. */
-.ts-map { position: relative; display: grid; gap: 2px; margin-top: 12px; padding-block: 4px; cursor: pointer; touch-action: none; -webkit-user-select: none; user-select: none; }
-/* A strip this thin still needs a finger-sized target. */
-.ts-map::before { content: ""; position: absolute; inset: -12px 0; }
-.ts-map-lane { position: relative; height: 5px; overflow: hidden; background: color-mix(in oklch, var(--text) 9%, transparent); }
-.ts-map-lane i { position: absolute; inset-block: 0; min-width: 2px; background: var(--text); }
-.ts-map-lane i[data-known] { background: color-mix(in oklch, var(--text) 34%, transparent); }
+   Shown only when the tape is wider than the screen. It is the rows above in miniature and uses their
+   marks: grey for an ID'd track, hatching for an unknown, solid for the one playing. The part that is off
+   screen is dimmed; the part on screen is framed and can be dragged. */
+.ts-map { position: relative; margin-top: 14px; cursor: grab; touch-action: none; -webkit-user-select: none; user-select: none; }
+.ts-map:active { cursor: grabbing; }
+/* A strip this slim still needs a finger-sized target. */
+.ts-map::before { content: ""; position: absolute; inset: -11px 0; }
+.ts-map-tape { position: relative; display: grid; gap: 2px; overflow: hidden; padding-block: 3px; }
+.ts-map-lane { position: relative; height: 9px; box-shadow: 0 1px 0 color-mix(in oklch, var(--text) 16%, transparent); }
+.ts-map-lane i { position: absolute; inset-block: 0; min-width: 2px; border-inline: 0.5px solid transparent; background-clip: padding-box; background-image: repeating-linear-gradient(135deg, transparent 0 2px, color-mix(in oklch, var(--text) 55%, transparent) 2px 3px); }
+.ts-map-lane i[data-known] { background-color: color-mix(in oklch, var(--text) 26%, var(--bg)); background-image: none; }
+.ts-map-lane i[data-playing] { background-color: var(--text); background-image: none; }
 /* Past the end of a shorter side: no tape. */
 .ts-map-lane span { position: absolute; inset-block: 0; right: 0; background: var(--ts-paper); }
-.ts-map-head { position: absolute; inset-block: 1px; width: 2px; margin-left: -1px; background: var(--text); box-shadow: 0 0 0 1px var(--bg); pointer-events: none; }
-.ts-map-window { position: absolute; inset-block: 0; border: 1.5px solid var(--text); pointer-events: none; }
+.ts-map-head { position: absolute; inset-block: 0; z-index: 1; width: 2px; margin-left: -1px; background: var(--text); box-shadow: 0 0 0 1px var(--bg); pointer-events: none; }
+/* The frame dims everything outside itself with one very wide shadow, clipped by the strip. */
+.ts-map-window { position: absolute; inset-block: 0; z-index: 2; border: 1.5px solid var(--text); box-shadow: 0 0 0 100vw color-mix(in oklch, var(--bg) 62%, transparent); pointer-events: none; }
+
+/* More tape to the right than fits: the row fades out at that edge instead of stopping dead at it. Only
+   there, and only while there is more: at the end of the tape the edge is square again. */
+.ts-scroller[data-more] {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
+          mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
+}
+@media (pointer: coarse) {
+  .ts-scroller[data-more] {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+            mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+  }
+}

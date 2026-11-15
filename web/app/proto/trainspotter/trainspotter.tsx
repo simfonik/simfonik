@@ -223,6 +223,8 @@ export function Trainspotter({
     if (!sc || !win || tape <= 0) return;
     win.style.left = `${(sc.scrollLeft / tape) * 100}%`;
     win.style.width = `${Math.min(1, (sc.clientWidth - GUTTER) / tape) * 100}%`;
+    // More tape to the right of what's on screen: the stylesheet fades that edge.
+    sc.toggleAttribute("data-more", sc.scrollLeft + sc.clientWidth < sc.scrollWidth - 2);
   }, []);
   const handsOff = useRef(0); // until when the visitor's own scrolling is left alone
   const sheetOpen = useRef(false);
@@ -1278,8 +1280,9 @@ export function Trainspotter({
             </div>
           </div>
         </div>
-        {/* The whole tape at a glance, when it doesn't all fit: a lane per side, unknowns in full strength,
-            the playhead, and a frame around what is on screen. Press or drag it to go there. It is a second
+        {/* The whole tape at a glance, when it doesn't all fit: the rows above in miniature, drawn the same way
+            (grey for ID'd, hatched for unknown, solid for what's playing), with the part that is off screen
+            dimmed and a frame around what is on screen. Press or drag it to go there. It is a second
             way to scroll, so it stays out of the accessibility tree; the timeline itself scrolls for everyone. */}
         {scrolls && (
           <div
@@ -1293,20 +1296,23 @@ export function Trainspotter({
             }}
             onPointerMove={mapTo}
           >
-            {tape.sides.map((side, i) =>
-              many && i !== active ? null : (
-                <div key={side.key} className="ts-map-lane">
-                  {durations[i] !== null && durations[i]! < length && <span style={{ left: `${(durations[i]! / length) * 100}%` }} />}
-                  {cues
-                    .filter((c) => c.track === side.key)
-                    .map((c) => (
-                      <i key={c.id} data-known={c.known ? "" : undefined} style={{ left: `${(c.start / length) * 100}%`, width: `${((c.end - c.start) / length) * 100}%` }} />
-                    ))}
-                </div>
-              ),
-            )}
-            <div ref={mapHeadRef} className="ts-map-head" />
-            <div ref={mapWindowRef} className="ts-map-window" />
+            {/* Inside a clipped box of its own, so the frame can dim everything outside itself. */}
+            <div className="ts-map-tape">
+              {tape.sides.map((side, i) =>
+                many && i !== active ? null : (
+                  <div key={side.key} className="ts-map-lane">
+                    {durations[i] !== null && durations[i]! < length && <span style={{ left: `${(durations[i]! / length) * 100}%` }} />}
+                    {cues
+                      .filter((c) => c.track === side.key)
+                      .map((c) => (
+                        <i key={c.id} data-known={c.known ? "" : undefined} data-playing={c.id === playingCue?.id ? "" : undefined} style={{ left: `${(c.start / length) * 100}%`, width: `${((c.end - c.start) / length) * 100}%` }} />
+                      ))}
+                  </div>
+                ),
+              )}
+              <div ref={mapHeadRef} className="ts-map-head" />
+              <div ref={mapWindowRef} className="ts-map-window" />
+            </div>
           </div>
         )}
       </div>
