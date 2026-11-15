@@ -25,8 +25,8 @@ const VARIANTS = [
 /** The live page's numbers, the top of each slider: its image column at a 1280px window, its thumbnails, and
     the tallest it lets a picture be. */
 const LIVE = { image: 708, thumb: 80, tall: 650 };
-/** Where the controls start: the settings chosen on 2026-11-15 to try on other tapes. proto.css has them too. */
-const CHOSEN = { image: 560, thumb: 60, tall: 500, flipped: false, under: false, single: true };
+/** Where the controls start: the settings the user called working on 2026-11-15. proto.css has them too. */
+const CHOSEN = { image: 500, thumb: 60, tall: 460, flipped: false, under: false, single: true };
 const KEPT = "simfonik:proto-today";
 
 /** The settings last used in this browser, so a change made on one tape is still there on the next. */

@@ -29,7 +29,7 @@
 }
 
 /* "Today": what the panel's controls set, until they are moved (the same as CHOSEN in harness.tsx). */
-:root { --image-column: 560px; --thumb: 60px; --image-max: 500px; }
+:root { --image-column: 500px; --thumb: 60px; --image-max: 460px; }
 
 /* "Today", the images. One picture unless the panel asks for the live gallery. */
 .proto-many { display: none; }
