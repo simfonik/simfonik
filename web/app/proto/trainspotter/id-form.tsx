@@ -249,6 +249,21 @@ export function IdBar({
 }
 
 /**
+ * On an iPhone, a field taking focus makes Safari scroll the page to bring the field to the middle of the
+ * screen. It does so even for a field in a sheet, which doesn't move with the page: the sheet stays put and
+ * the page slides away underneath it. Safari skips the scroll for a field it takes to be at the top already,
+ * so the field is put there for the instant it takes focus. (React Aria does the same.)
+ */
+function focusInPlace(e: React.TouchEvent<HTMLFormElement>) {
+  const field = e.target instanceof HTMLInputElement ? e.target : null;
+  if (!field || field === document.activeElement) return; // a tap in the focused field places the caret
+  e.preventDefault();
+  field.style.transform = "translateY(-2000px)";
+  field.focus({ preventScroll: true });
+  requestAnimationFrame(() => (field.style.transform = ""));
+}
+
+/**
  * On a phone the same job is a sheet that stays above the keyboard. Height is free there, so the likely names
  * and the clue get lines of their own.
  */
@@ -256,6 +271,7 @@ export function IdSheetForm({ form, track, onClose, onReplay }: { form: IdDraft;
   return (
     <form
       className="ts-nameform"
+      onTouchEndCapture={focusInPlace}
       onSubmit={(e) => {
         e.preventDefault();
         form.save();

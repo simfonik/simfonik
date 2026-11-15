@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { createPointerKind } from "@ui-sdk/core";
+import { solveSpring } from "@ui-sdk/core/gesture";
 import { usePart, usePrimitive } from "@ui-sdk/react/primitive";
 import { usePreference } from "@ui-sdk/react/preferences";
 import { useShortcut } from "@ui-sdk/react/shortcuts";
@@ -137,24 +138,62 @@ export function Trainspotter({
 
   const [selected, setSelected] = useState<string | null>(null);
   const wantName = useRef(false);
-  const pageScroll = useRef(0);
+  // The ID sheet must not cover the track being ID'd. The page moves only when it would (the sheet's edge
+  // lands on the timeline, the keyboard lifts the sheet over it, or the timeline is off the screen), by as
+  // little as clears it, and goes back when the sheet closes. It glides on the sheet's own spring, so the two
+  // read as one movement; with reduced motion it is simply there.
+  const [sheetEl, setSheetEl] = useState<HTMLElement | null>(null);
+  const pageBefore = useRef(0); // where the page was when the sheet opened
+  const pageGlide = useRef(0);
+  const glidePage = useCallback((to: number) => {
+    cancelAnimationFrame(pageGlide.current);
+    const from = window.scrollY;
+    if (Math.abs(to - from) < 1) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return window.scrollTo({ top: to });
+    const spring = solveSpring(0.34, 1, from - to, 0); // the SDK's sheet spring
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      const off = spring.position(now - t0);
+      const done = Math.abs(off) < 0.5;
+      window.scrollTo({ top: done ? to : to + off });
+      if (!done) pageGlide.current = requestAnimationFrame(tick);
+    };
+    pageGlide.current = requestAnimationFrame(tick);
+  }, []);
+  const keepClear = useCallback(() => {
+    const tape = scrollerRef.current?.getBoundingClientRect();
+    if (!sheetEl || !tape) return;
+    const view = window.visualViewport;
+    const top = view?.offsetTop ?? 0;
+    // Where the sheet's top edge rests: above the keyboard when it is up, else at the bottom of the screen.
+    const edge = top + (view?.height ?? window.innerHeight) - sheetEl.offsetHeight;
+    const by = tape.top < top + 8 ? tape.top - top - 8 : tape.bottom > edge - 12 ? Math.min(tape.top - top - 8, tape.bottom - edge + 12) : 0;
+    if (by) glidePage(window.scrollY + by);
+  }, [sheetEl, scrollerRef, glidePage]);
+  useEffect(() => {
+    if (!sheetEl) return;
+    const sized = new ResizeObserver(keepClear); // as it opens, and if what it holds changes height
+    sized.observe(sheetEl);
+    window.visualViewport?.addEventListener("resize", keepClear); // the keyboard coming up
+    return () => {
+      sized.disconnect();
+      window.visualViewport?.removeEventListener("resize", keepClear);
+    };
+  }, [sheetEl, keepClear]);
   const openSheet = useCallback((id?: string | null) => {
-    // Put the timeline at the top of the screen and the track in the middle of it, then open the sheet
-    // below. Otherwise the sheet covers the very thing being ID'd.
-    pageScroll.current = window.scrollY;
+    pageBefore.current = window.scrollY;
     toaster.dismiss(); // a lingering confirmation would sit on top of the fields
-    const frame = document.querySelector(".ts-root") as HTMLElement | null;
-    if (frame) window.scrollTo({ top: frame.getBoundingClientRect().top + window.scrollY - 8 });
+    // The track goes to the middle of the timeline. One too long to fit shows from its start, where its name is.
     const sc = scrollerRef.current;
     const el = id ? (sc?.querySelector(`[data-span-id="${CSS.escape(id)}"]`) as HTMLElement | null) : null;
-    if (sc && el) sc.scrollLeft = Math.max(0, el.offsetLeft + el.offsetWidth / 2 - sc.clientWidth / 2 + GUTTER / 2);
+    if (sc && el) sc.scrollLeft = Math.max(0, el.offsetWidth > sc.clientWidth - GUTTER ? el.offsetLeft : el.offsetLeft + el.offsetWidth / 2 - sc.clientWidth / 2 + GUTTER / 2);
     setSheet(true);
   }, [scrollerRef]);
   const closeSheet = useCallback(() => {
     setSheet(false);
     // Back to where the visitor was, such as their place in the unknown list.
-    requestAnimationFrame(() => window.scrollTo({ top: pageScroll.current }));
-  }, []);
+    requestAnimationFrame(() => glidePage(pageBefore.current));
+  }, [glidePage]);
   const focusName = useCallback(
     (id?: string | null) => {
       if (touch) requestAnimationFrame(() => openSheet(id));
@@ -731,7 +770,7 @@ export function Trainspotter({
 
       <Drawer open={sheet && Boolean(sel) && touch} onOpenChange={(open: boolean) => (open ? setSheet(true) : closeSheet())}>
         <DrawerBackdrop className="ts-backdrop" />
-        <DrawerContent className="ts-sheet">
+        <DrawerContent ref={setSheetEl} className="ts-sheet">
           <div data-slot="grip" className="ts-grip" aria-hidden />
           {sel && (
             <>
