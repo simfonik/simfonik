@@ -630,7 +630,11 @@
 .ts-map-lane span { position: absolute; inset-block: 0; right: 0; background: var(--ts-paper); }
 .ts-map-head { position: absolute; inset-block: 0; z-index: 1; width: 2px; margin-left: -1px; background: var(--text); box-shadow: 0 0 0 1px var(--bg); pointer-events: none; }
 /* The frame dims everything outside itself with one very wide shadow, clipped by the strip. */
-.ts-map-window { position: absolute; inset-block: 0; z-index: 2; border: 1.5px solid var(--text); box-shadow: 0 0 0 100vw color-mix(in oklch, var(--bg) 62%, transparent); pointer-events: none; }
+.ts-map-window { position: absolute; inset-block: 0; z-index: 2; border: 1px solid color-mix(in oklch, var(--text) 45%, transparent); box-shadow: 0 0 0 100vw color-mix(in oklch, var(--bg) 62%, transparent); pointer-events: none; transition: border-color 120ms ease-out; }
+/* The dimming already says which part is on screen, so the frame stays quiet until it is being used. */
+@media (hover: hover) { .ts-map:hover .ts-map-window { border-color: var(--text); } }
+.ts-map:active .ts-map-window { border-color: var(--text); }
+@media (prefers-reduced-motion: reduce) { .ts-map-window { transition: none; } }
 
 /* More tape to the right than fits: the row fades out at that edge instead of stopping dead at it. Only
    there, and only while there is more: at the end of the tape the edge is square again. */
