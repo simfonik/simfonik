@@ -10,6 +10,7 @@ import { flushSync } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createPointerKind, inputHints } from "@ui-sdk/core";
+import { solveSpring } from "@ui-sdk/core/gesture";
 import { usePart, usePrimitive } from "@ui-sdk/react/primitive";
 import { usePreference } from "@ui-sdk/react/preferences";
 import { createAgent, registerTools } from "@ui-sdk/react/agent";
@@ -229,6 +230,19 @@ export function Trainspotter({
   const handsOff = useRef(0); // until when the visitor's own scrolling is left alone
   const sheetOpen = useRef(false);
   const lastSecond = useRef(-1);
+  // The tape's glide to the playhead after a seek, and until when a key press asks for no glide at all.
+  const glide = useRef<{ spring: ReturnType<typeof solveSpring>; t0: number; to: number } | null>(null);
+  const snapUntil = useRef(0);
+  const reduceMotion = useRef(false);
+  useEffect(() => {
+    const q = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const set = () => {
+      reduceMotion.current = q.matches;
+    };
+    set();
+    q.addEventListener("change", set);
+    return () => q.removeEventListener("change", set);
+  }, []);
   const paint = useCallback(() => {
     const a = audios.current[activeRef.current];
     const t = a?.currentTime ?? 0;
@@ -240,12 +254,45 @@ export function Trainspotter({
       el.hidden = i !== activeRef.current;
       if (i === activeRef.current) x = px;
     });
-    // Where the tape is wider than the screen, follow the playhead as it plays off the edge. Not while the
-    // visitor is looking somewhere else: they scrolled there on purpose, or the ID sheet put them there.
+    // Where the tape is wider than the screen, the tape follows the playhead. Three kinds of movement, each
+    // chosen for what caused it:
+    //  · Playing along: the playhead rides at a fixed spot a little past the middle and the tape slides under
+    //    it at the speed of the music, under a pixel a frame. What is coming is always in view, and the
+    //    playhead never reaches the faded edge. This replaces turning the page when it hit the edge, which
+    //    moved the whole row in a single frame.
+    //  · After a click that lands the playhead far from that spot: a short spring to it. A spring, because a
+    //    second click mid-flight should bend the motion, not restart it; no bounce, settled in about a third of a second.
+    //  · After a key press: no animation. The tape is simply there. Keys are for moving fast.
+    // With reduced motion there is no sliding at all: the tape turns the page, just before the faded edge.
+    // None of it while the visitor is looking somewhere else (they scrolled there, or the ID sheet did).
     const sc = scrollerRef.current;
-    if (sc && a && !a.paused && !sheetOpen.current && performance.now() > handsOff.current && sc.scrollWidth > sc.clientWidth + 4) {
-      const left = x + GUTTER - sc.scrollLeft;
-      if (left > sc.clientWidth - 48 || left < GUTTER) sc.scrollLeft = Math.max(0, x - 24);
+    const following = sc && a && !a.paused && !sheetOpen.current && performance.now() > handsOff.current && sc.scrollWidth > sc.clientWidth + 4;
+    if (!following) glide.current = null;
+    else {
+      const nowMs = performance.now();
+      const visible = sc.clientWidth - GUTTER;
+      const far = sc.scrollWidth - sc.clientWidth;
+      const at = x - sc.scrollLeft; // where the playhead is, across the visible tape
+      const ride = visible * 0.6;
+      if (reduceMotion.current) {
+        if (at > visible * 0.85 || at < 0) sc.scrollLeft = Math.max(0, Math.min(x - visible * 0.15, far));
+      } else {
+        const target = at > ride ? x - ride : at < 0 ? x - visible * 0.15 : null;
+        const want = target === null ? null : Math.max(0, Math.min(target, far));
+        let g = glide.current;
+        // A new goal while still moving: carry on from here at the speed it already has.
+        if (g && want !== null && Math.abs(want - g.to) > 3) g = glide.current = { spring: solveSpring(0.24, 1, sc.scrollLeft - want, g.spring.velocity(nowMs - g.t0)), t0: nowMs, to: want };
+        if (g) {
+          const off = g.spring.position(nowMs - g.t0);
+          const done = Math.abs(off) < 0.5 && Math.abs(g.spring.velocity(nowMs - g.t0)) < 0.005;
+          sc.scrollLeft = done ? g.to : g.to + off;
+          if (done) glide.current = null;
+        } else if (want !== null) {
+          const gap = want - sc.scrollLeft;
+          if (Math.abs(gap) < 3 || nowMs < snapUntil.current) sc.scrollLeft = want;
+          else glide.current = { spring: solveSpring(0.24, 1, -gap, 0), t0: nowMs, to: want };
+        }
+      }
     }
     if (mapHeadRef.current) mapHeadRef.current.style.left = `${Math.min(1, t / lengthRef.current) * 100}%`;
     if (Math.floor(t) !== lastSecond.current) {
@@ -617,6 +664,7 @@ export function Trainspotter({
       if (!to) return;
       const id = to.id;
       setSelected(id);
+      snapUntil.current = performance.now() + 600; // a key press: the tape goes there without a glide
       seek(side, to.start);
       // Focus the block: it scrolls into view, and the keys that act on a track now act on this one.
       requestAnimationFrame(() => (scrollerRef.current?.querySelector(`[data-span-id="${CSS.escape(id)}"]`) as HTMLElement | null)?.focus());
