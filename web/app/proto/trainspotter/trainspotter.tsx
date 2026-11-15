@@ -22,8 +22,9 @@ import { Drawer, DrawerBackdrop, DrawerClose, DrawerContent, DrawerTitle } from 
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@ui-sdk/react/collapsible";
 import { Field, FieldLabel } from "@ui-sdk/react/field";
 import { Input } from "@ui-sdk/react/input";
-import { isSameRecord, reconcile, runningOrders, type Listed, type Proposal, type Sighting } from "./parse";
+import { reconcile, type Listed, type Proposal, type Sighting } from "./parse";
 import { DEFAULT_LENGTH, clock, cueLabel, tracklist, type Cue } from "./tracklist-primitive";
+import { ordersFor, placeNames, suggestNames } from "./names";
 import { followComments, near, origin, readSaved, toCue as cueFrom, type Saved, type Spot } from "./saved";
 import { TapeSwitcher, type TapeEntry } from "./tape-switcher";
 
@@ -656,29 +657,10 @@ export function Trainspotter({
   }, [markHere, toggle, stepTrack]);
 
   // ── Names waiting for a time: the site's own tracklist if there is one, else a commenter's running order ──
-  const orders = useMemo(() => {
-    const fromComments = runningOrders(listed, sides.length);
-    return sides.map((_, i) => (official[i]?.length ? official[i] : (fromComments[i] ?? [])));
-  }, [listed, official, sides]);
+  const orders = useMemo(() => ordersFor(listed, official, sides.length), [listed, official, sides]);
   const fromSite = official.some((o) => o.length > 0);
-  // Which track on the timeline carries each listed name. A record played twice is listed twice, and the
-  // first listing is the earlier track: each track answers for one line of the list.
-  const placed = useMemo(
-    () =>
-      orders.map((order, side) => {
-        const here = cues.filter((c) => c.track === sides[side] && c.known).sort((a, b) => a.start - b.start);
-        const taken = new Set<string>();
-        const at = new Map<Listed, Cue>();
-        for (const l of order) {
-          const cue = l.known ? here.find((c) => !taken.has(c.id) && isSameRecord(c, l)) : undefined;
-          if (!cue) continue;
-          taken.add(cue.id);
-          at.set(l, cue);
-        }
-        return at;
-      }),
-    [orders, cues, sides],
-  );
+  // Which track on the timeline carries each listed name, and the names still without one.
+  const placed = useMemo(() => orders.map((order, side) => placeNames(order, cues.filter((c) => c.track === sides[side]))), [orders, cues, sides]);
   const waiting = useMemo(() => orders.map((order, side) => order.filter((l) => l.known && !placed[side].has(l))), [orders, placed]);
   const namesTotal = orders.reduce((n, o) => n + o.filter((l) => l.known).length, 0);
   const namesWaiting = waiting.reduce((n, w) => n + w.length, 0);
@@ -688,31 +670,12 @@ export function Trainspotter({
   // fields are always there and always about something: press play, hear a track you know, and type. Putting
   // the cursor in a field picks that track, so it stays put while the tape plays on to the next one.
   const subject = sel ?? playingCue;
-  // For an unknown track, the names most likely to belong to it. A listed name with no time still has a
-  // place: after the last line before it whose time is known, and before the next one. Names whose place takes
-  // in this track come first; after those, the ones nearest it in the order. A track the list itself marks
-  // unknown at this spot gets no names from it: its keeper has every other line down as some other track.
+  // For a track nobody has named, the listed names that could be it.
   const nextNames = useMemo(() => {
-    if (!subject || subject.known) return [];
+    if (!subject) return [];
     const side = sides.indexOf(subject.track);
-    const order = orders[side] ?? [];
-    const at = placed[side];
-    const when = (l: Listed) => at?.get(l)?.start ?? l.at;
-    if (order.some((l) => !l.known && l.at !== undefined && Math.abs(l.at - subject.start) <= 20)) return [];
-    const before = cues.filter((c) => c.track === subject.track && c.start < subject.start).length;
-    const outside = (l: Listed) => {
-      const i = order.indexOf(l);
-      const lo = order.slice(0, i).map(when).findLast((t) => t !== undefined) ?? -Infinity;
-      const hi = order.slice(i + 1).map(when).find((t) => t !== undefined) ?? Infinity;
-      return subject.start < lo ? lo - subject.start : subject.start > hi ? subject.start - hi : 0;
-    };
-    return (waiting[side] ?? [])
-      .map((l) => ({ l, out: outside(l), d: Math.abs(l.n - 1 - before) }))
-      .sort((a, b) => a.out - b.out || a.d - b.d)
-      .slice(0, 3)
-      .map((x) => x.l)
-      .sort((a, b) => a.n - b.n);
-  }, [subject, sides, orders, waiting, placed, cues]);
+    return suggestNames(subject, orders[side] ?? [], placed[side] ?? new Map(), cues.filter((c) => c.track === subject.track));
+  }, [subject, sides, orders, placed, cues]);
   // What else people said about that track's moment.
   const opinions = useMemo(() => {
     if (!subject) return [];
