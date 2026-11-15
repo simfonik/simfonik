@@ -50,4 +50,29 @@ describe('PlaylistPlayer Integration', () => {
     // advanced currentTrackIndex, and assigned the new src to the audio node.
     expect(audioNode?.src).toContain('track2.mp3');
   });
+
+  it('says the times on the rows: each side\'s length, and how far in the loaded side is once it has started', async () => {
+    const timed = [
+      { ...mockTracks[0], length: 1831 },
+      { ...mockTracks[1], length: 1829 },
+    ];
+    render(<PlaylistPlayer tracks={timed} tapeId="tape-1" />);
+    const [first, second] = [screen.getByRole('button', { name: /track 1/i }), screen.getByRole('button', { name: /track 2/i })];
+
+    // At rest: a length on each row, and no clock anywhere.
+    expect(first).toHaveTextContent('Track 10:30:31');
+    expect(second).toHaveTextContent('Track 20:30:29');
+    expect(document.body).not.toHaveTextContent('0:00:00');
+
+    const audioNode = document.querySelector('audio')!;
+    await act(async () => {
+      audioNode.currentTime = 441;
+      audioNode.dispatchEvent(new Event('timeupdate'));
+    });
+
+    expect(first).toHaveTextContent('Track 10:07:21 / 0:30:31');
+    expect(second).toHaveTextContent('Track 20:30:29');
+    // The row's name for a screen reader stays its side and length; the slider says how far in the tape is.
+    expect(first).toHaveAccessibleName('Track 1 0:30:31');
+  });
 });

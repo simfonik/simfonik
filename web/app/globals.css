@@ -233,7 +233,8 @@ body::before {
   height: 2px;
   transform: translateY(-50%);
 }
-/* Under a mouse: where a click would land, and the time there. */
+/* A line on the bar with a time over it: under a mouse, where a click would land; under a finger that is
+   dragging the bar, where the tape is being taken. */
 .player-wave-ghost {
   position: absolute;
   inset: 0;
@@ -265,6 +266,7 @@ body::before {
 @media (hover: hover) and (pointer: fine) {
   .player-wave-ghost[data-on] { opacity: 1; }
 }
+.player-wave-ghost[data-drag] { opacity: 1; }
 /* The slider itself, unseen, over the whole bar. */
 .player-wave input {
   position: absolute;
@@ -274,6 +276,15 @@ body::before {
   margin: 0;
   opacity: 0;
   cursor: pointer;
+}
+/* A browser places a click by the middle of the slider's handle, and keeps the handle inside the bar: with a
+   handle of ordinary width, a click near either end of a half-hour side lands half a minute from the pointer.
+   Under a mouse the handle is a hairline, so a click lands where it was aimed and where the label said. A
+   finger keeps the full-size handle: on an iPhone the handle is what a drag takes hold of. */
+@media (hover: hover) and (pointer: fine) {
+  .player-wave input { -webkit-appearance: none; appearance: none; background: none; }
+  .player-wave input::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 1px; height: 2.75rem; }
+  .player-wave input::-moz-range-thumb { width: 1px; height: 2.75rem; border: 0; }
 }
 /* Where the keyboard is: the bar, the play button, a side's row. */
 .player-wave:has(input:focus-visible) { outline: 2px solid var(--text); outline-offset: 4px; }

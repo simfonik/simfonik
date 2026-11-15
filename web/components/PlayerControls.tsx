@@ -11,6 +11,8 @@ export interface PlayerControlsProps {
   wave?: number[] | null;
   /** The side's length in seconds, known ahead of time, for before the audio has said so itself. */
   length?: number | null;
+  /** The time played and the side's length, under the bar's two ends. Off where a list of sides says them. */
+  showTimes?: boolean;
   onPlay: () => void;
   onPause: () => void;
   onSeek: (time: number) => void;
@@ -33,6 +35,7 @@ export function PlayerControls({
   title,
   wave,
   length,
+  showTimes = true,
   onPlay,
   onPause,
   onSeek
@@ -50,7 +53,7 @@ export function PlayerControls({
   // A phone lets audio start only from inside a finished tap, click or key press. The slider reports its new
   // value the moment a finger lands, which is too early: started from there, an iPhone refuses to play. So
   // before the audio has loaded, the tape is started when the press ends, at the place pressed.
-  const press = useRef<{ x: number; y: number } | null>(null);
+  const press = useRef<{ x: number; y: number; dragging: boolean } | null>(null);
   const startAt = (x: number, bar: DOMRect) => {
     if (duration || isPlaying || isLoading) return;
     setWanted(wanted ?? Math.max(0, Math.min(1, (x - bar.left) / bar.width)));
@@ -61,19 +64,32 @@ export function PlayerControls({
   // The side's length: what the audio says once it has loaded, and before that what was read ahead of time.
   const whole = duration > 0 ? duration : length ?? 0;
 
-  // Under a mouse: a line where a click would land and, once the side's length is known, the time there.
-  // Written straight to the element; a pointer moves far more often than the page needs to re-render.
+  // A line on the bar with a time over it, written straight to the element: a pointer moves far more often
+  // than the page needs to re-render. Under a mouse it is where a click would land. Under a finger dragging
+  // the bar it is where the tape is being taken, said beside the finger because the times may be rows away.
   const ghost = useRef<HTMLDivElement>(null);
-  const preview = (e: React.PointerEvent<HTMLDivElement>) => {
+  const point = (x: number, width: number) => {
     const el = ghost.current;
-    if (!el || e.pointerType !== 'mouse') return;
-    const bar = e.currentTarget.getBoundingClientRect();
-    const x = Math.max(0, Math.min(bar.width, e.clientX - bar.left));
+    if (!el) return;
     el.style.setProperty('--at', `${x}px`);
     // The label stays inside the bar's ends.
-    el.style.setProperty('--label', `${Math.max(30, Math.min(bar.width - 30, x))}px`);
-    el.firstElementChild!.textContent = whole > 0 ? formatTime((x / bar.width) * whole) : '';
-    el.setAttribute('data-on', '');
+    el.style.setProperty('--label', `${Math.max(30, Math.min(width - 30, x))}px`);
+    el.firstElementChild!.textContent = whole > 0 ? formatTime((x / width) * whole) : '';
+  };
+  const preview = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== 'mouse') return;
+    const bar = e.currentTarget.getBoundingClientRect();
+    point(Math.max(0, Math.min(bar.width, e.clientX - bar.left)), bar.width);
+    ghost.current?.setAttribute('data-on', '');
+  };
+  /** The slider's own value, as a place on the bar. */
+  const pointAtValue = (slider: HTMLInputElement) => {
+    const width = slider.getBoundingClientRect().width;
+    point((parseFloat(slider.value) / parseFloat(slider.max)) * width, width);
+  };
+  const endTouch = () => {
+    press.current = null;
+    ghost.current?.removeAttribute('data-drag');
   };
 
   return (
@@ -104,8 +120,8 @@ export function PlayerControls({
       </button>
 
       {/* The bar. With the side's sound measured it is drawn as that sound; without, as a plain line. Either
-          way the part played is bright and the rest dim, the times sit under its two ends, and over it lies
-          an ordinary slider, unseen, so the mouse, a finger, the keyboard and a screen reader all work it. */}
+          way the part played is bright and the rest dim, and over it lies an ordinary slider, unseen, so the
+          mouse, a finger, the keyboard and a screen reader all work it. */}
       <div className="flex-1 min-w-0 font-mono text-[12px] tabular-nums text-[var(--muted)]">
         <div
           className="player-wave"
@@ -118,7 +134,6 @@ export function PlayerControls({
           ) : (
             <div className="player-wave-shape" data-flat="" />
           )}
-          {/* Where a click would land, and what time that is, under a mouse. */}
           <div ref={ghost} className="player-wave-ghost" aria-hidden>
             <span />
           </div>
@@ -130,16 +145,35 @@ export function PlayerControls({
             value={duration ? currentTime : wanted ?? 0}
             onChange={(e) => {
               const value = parseFloat(e.target.value);
+              // Shown only once a drag is moving the slider: on an iPhone a drag that starts away from the
+              // playhead moves nothing, and a label there would say the tape was being taken somewhere.
+              if (press.current?.dragging) {
+                pointAtValue(e.target);
+                ghost.current?.setAttribute('data-drag', '');
+              }
               if (duration) return onSeek(value);
               setWanted(value);
             }}
             onTouchStart={(e) => {
-              press.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+              press.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, dragging: false };
+            }}
+            onTouchMove={(e) => {
+              const from = press.current;
+              const to = e.touches[0];
+              if (!from || from.dragging || !to) return;
+              // A tap shows nothing; a finger that has set off along the bar is dragging it.
+              const across = Math.abs(to.clientX - from.x);
+              if (across <= 6 || across <= Math.abs(to.clientY - from.y)) return;
+              from.dragging = true;
+            }}
+            onTouchCancel={() => {
+              endTouch();
+              setWanted(null);
             }}
             onTouchEnd={(e) => {
               const from = press.current;
               const to = e.changedTouches[0];
-              press.current = null;
+              endTouch();
               if (!from || !to) return;
               // A finger that travelled up or down was scrolling the page past the bar, not pressing it.
               const across = Math.abs(to.clientX - from.x);
@@ -155,10 +189,12 @@ export function PlayerControls({
             aria-valuetext={duration ? `${formatTime(currentTime)} of ${formatTime(duration)}` : 'Not loaded yet'}
           />
         </div>
-        <div className="mt-1 flex justify-between">
-          <span>{formatTime(currentTime)}</span>
-          <span>{whole > 0 ? formatTime(whole) : '--:--:--'}</span>
-        </div>
+        {showTimes && (
+          <div className="mt-1 flex justify-between">
+            <span>{formatTime(currentTime)}</span>
+            <span>{whole > 0 ? formatTime(whole) : '--:--:--'}</span>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -79,6 +79,7 @@ export function PlaylistPlayer({ tracks, tapeId }: PlaylistPlayerProps) {
         title={currentTrack.title}
         wave={currentTrack.wave}
         length={currentTrack.length}
+        showTimes={false}
         onPlay={controls.play}
         onPause={controls.pause}
         onSeek={controls.seek}
@@ -86,10 +87,14 @@ export function PlaylistPlayer({ tracks, tapeId }: PlaylistPlayerProps) {
 
       {/* The sides. Each row keeps to the player's two edges: its glyph under the play button, on the content's
           left edge, and its name under the start of the bar. The side that is loaded is the one in full
-          colour; the others wait in grey. */}
+          colour; the others wait in grey. The rows are also where the times are: each says how long its side
+          is, and the loaded one, once it has been started, how far in it is. */}
       <div className="border-t border-[var(--border)]">
         {tracks.map((track, index) => {
           const isCurrent = index === currentTrackIndex;
+          // The audio's own word on its length once it has loaded; before that, what was read ahead of time.
+          const length = isCurrent && state.duration > 0 ? state.duration : track.length;
+          const started = isCurrent && (state.isPlaying || state.isLoading || state.currentTime > 0);
           return (
             <button
               key={track.position}
@@ -102,7 +107,8 @@ export function PlaylistPlayer({ tracks, tapeId }: PlaylistPlayerProps) {
               <svg className="h-3.5 w-3" viewBox="0 0 12 14" fill="currentColor" aria-hidden>
                 {isCurrent && state.isPlaying ? <path d="M0 0h4v14H0zM8 0h4v14H8z" /> : <path d="M0 0v14l11-7z" />}
               </svg>
-              <span className="min-w-0">
+              {/* A name too long for one line breaks into even lines, not a full line and a stray word. */}
+              <span className="min-w-0 text-balance">
                 <span className="font-display text-base leading-tight">{track.title}</span>
                 {track.djs && track.djs.length > 0 && (
                   <span className="block font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mt-0.5">
@@ -110,8 +116,18 @@ export function PlaylistPlayer({ tracks, tapeId }: PlaylistPlayerProps) {
                   </span>
                 )}
               </span>
-              {/* How long the side is, said before it is played. */}
-              {track.length ? <span className="font-mono text-[12px] tabular-nums text-[var(--muted)]">{formatTime(track.length)}</span> : null}
+              {/* Room for both times on every row, so a long name breaks at the same place whether or not its
+                  side is the one playing. */}
+              <span className="min-w-[17ch] text-right font-mono text-[12px] tabular-nums text-[var(--muted)]">
+                {/* The slider already tells a screen reader how far in the tape is. */}
+                {started && (
+                  <span aria-hidden>
+                    <span className="text-[var(--text)]">{formatTime(state.currentTime)}</span>
+                    {length ? ' / ' : null}
+                  </span>
+                )}
+                {length ? formatTime(length) : null}
+              </span>
             </button>
           );
         })}
