@@ -194,7 +194,11 @@ export function Trainspotter({
     const shown = (i: number) => !many || i === active;
     const measured = durations.filter((_, i) => shown(i));
     const unmeasured = measured.every((d) => d === null) ? DEFAULT_LENGTH : 0;
-    const ends = [...cues.filter((c) => shown(sides.indexOf(c.track))).map((c) => c.end), ...proposals.filter((p) => shown(p.side)).map((p) => p.end)];
+    // A track whose end is only a guess (the last one anyone timed on a side) doesn't get to stretch the
+    // timeline: until that side's audio reports its length the guess can run four minutes past the real end,
+    // which made the whole tape draw at a scrolling scale and then snap to fit a moment later.
+    const reach = (x: { start: number; end: number; open?: boolean }) => (x.open ? x.start + 30 : x.end);
+    const ends = [...cues.filter((c) => shown(sides.indexOf(c.track))).map(reach), ...proposals.filter((p) => shown(p.side)).map(reach)];
     return Math.max(60, unmeasured, ...measured.map((d) => d ?? 0), ...ends);
   }, [durations, cues, proposals, many, active, sides]);
   const lengthRef = useRef(length);
@@ -864,7 +868,9 @@ export function Trainspotter({
     >
       {/* One-tap answers come before the fields that need typing. */}
       {chips}
-      {!sel.known && sel.title && (
+      {/* On a phone the sheet covers the player, so the clue is repeated here. With a mouse the player already
+          shows it for the track that is playing; see the note under the fields for one that isn't. */}
+      {touch && !sel.known && sel.title && (
         <p className="w-full text-[15px] text-[var(--text)]">
           Clue from {sel.by ?? "a comment"}: “{sel.title}”
         </p>
@@ -902,7 +908,17 @@ export function Trainspotter({
         </button>
       </div>
       <p className="w-full text-sm text-[var(--muted)]">
-        {sel.known ? (sel.by ? `ID’d by ${sel.by}.` : "ID’d by you.") : !sel.title && sel.by ? `${sel.by} marked this one as unknown.` : ""}
+        {sel.known
+          ? sel.by
+            ? `ID’d by ${sel.by}.`
+            : "ID’d by you."
+          : sel.title
+            ? !touch && sel.id !== playingCue?.id
+              ? `Clue from ${sel.by ?? "a comment"}: “${sel.title}”`
+              : ""
+            : sel.by
+              ? `${sel.by} marked this one as unknown.`
+              : ""}
         {opinions.map((o, i) => (
           <span key={i}>
             {" "}
@@ -1005,18 +1021,13 @@ export function Trainspotter({
                     >
                       <span className="ts-edge" data-span-edge="start" aria-hidden />
                       <span className="ts-cue-text">
-                        {c.known ? (
+                        {/* An unknown track shows nothing but its hatching. Its label, the pointer's time label and the
+                            list below say "unknown" in words; a mark repeated in every block was noise. */}
+                        {c.known && (
                           <>
                             <b>{c.artist || c.title}</b>
                             <i>{c.artist ? c.title : ""}</i>
                           </>
-                        ) : (
-                          // The block's own label already says "Unknown"; this is the mark you can see from
-                          // across the room. A listener's clue is not shown here: it is in the pointer's label,
-                          // the list below and the ID form.
-                          <b className="ts-q" aria-hidden>
-                            ?
-                          </b>
                         )}
                       </span>
                       <span className="ts-edge" data-span-edge="end" aria-hidden />
@@ -1152,28 +1163,14 @@ export function Trainspotter({
       <p className="mt-3 max-w-[60ch] text-[17px] text-[var(--text)] [text-wrap:pretty]">{intro}</p>
 
       {/* The player, with a mouse: play, what is playing, where in the side, and the one thing to do about it,
-          on one line. The button says whether it is playing and the clock says where, so neither is said
-          twice. On a phone the pinned bar does this job. */}
-      <div className="ts-fine-only mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 border-t-[1.5px] border-[var(--text)] pt-5">
+          on one line: the button, the clock and the action all sit on the track's name, and who ID'd it hangs
+          below the name alone. The button says whether it is playing and the clock says where, so neither is
+          said twice. On a phone the pinned bar does this job. */}
+      <div className="ts-fine-only ts-player mt-6 border-t-[1.5px] border-[var(--text)] pt-5">
         <button type="button" onClick={toggle} disabled={audioFailed} className="ts-btn ts-btn-solid min-w-[6rem]" aria-keyshortcuts="Space">
           {playing ? "Pause" : "Play"}
         </button>
-        <div className="min-w-0 flex-1 basis-64">
-          <p className="truncate font-display text-3xl leading-tight text-[var(--text)] sm:text-4xl" title={playingCue?.known ? cueLabel(playingCue) : undefined}>{playingCue ? (playingCue.known ? cueLabel(playingCue) : "Unknown track") : "Nothing ID’d here yet"}</p>
-          <p className="mt-0.5 min-h-[1.25rem] truncate text-sm text-[var(--muted)]">
-            {audioFailed
-              ? `Side ${sides[active]}’s audio didn’t load. Check your connection and reload the page.`
-              : playingCue
-                ? playingCue.known
-                  ? playingCue.by
-                    ? `ID’d by ${playingCue.by}`
-                    : "ID’d by you"
-                  : playingCue.title
-                    ? `Nobody has ID’d it. Clue: “${playingCue.title}”`
-                    : "Nobody has ID’d this one. Do you know it?"
-                : `If a track is playing here, press “${markLabel}” and ID it.`}
-          </p>
-        </div>
+        <p className="ts-player-title truncate font-display text-3xl leading-tight text-[var(--text)] sm:text-4xl" title={playingCue?.known ? cueLabel(playingCue) : undefined}>{playingCue ? (playingCue.known ? cueLabel(playingCue) : "Unknown track") : "Nothing ID’d here yet"}</p>
         <p className="flex-none font-mono text-sm tabular-nums text-[var(--text)]">
           <span className="sr-only">Side </span>
           {sides[active]} {clock(now)} <span className="text-[var(--muted)]">/ {durations[active] === null ? "–:––" : clock(durations[active]!)}</span>
@@ -1188,6 +1185,19 @@ export function Trainspotter({
             A new track starts here
           </button>
         </div>
+        <p className="ts-player-sub min-h-[1.25rem] truncate text-sm text-[var(--muted)]">
+            {audioFailed
+              ? `Side ${sides[active]}’s audio didn’t load. Check your connection and reload the page.`
+              : playingCue
+                ? playingCue.known
+                  ? playingCue.by
+                    ? `ID’d by ${playingCue.by}`
+                    : "ID’d by you"
+                  : playingCue.title
+                    ? `Nobody has ID’d it. Clue: “${playingCue.title}”`
+                    : "Nobody has ID’d this one. Do you know it?"
+                : `If a track is playing here, press “${markLabel}” and ID it.`}
+          </p>
       </div>
 
       {many && (
@@ -1249,16 +1259,15 @@ export function Trainspotter({
         {/* Always here, so undo is never hidden behind the ID form: what is picked (or what to do) on the left,
             undo, redo and the keys on the right. */}
         <div className="flex w-full flex-wrap items-center justify-between gap-x-6 text-sm text-[var(--muted)]">
-          {sel ? (
-            <p className="font-mono text-xs uppercase tracking-[0.14em] tabular-nums">
-              {sel.track} {clock(sel.start)}–{clock(sel.end)}
-            </p>
-          ) : (
-            <>
-              <p className="ts-fine">Click a track to play it and ID it.</p>
-              <p className="ts-coarse">Tap a track to play it, then “ID it”.</p>
-            </>
-          )}
+          {/* With a track picked there is nothing to add here: where it sits is on the timeline above. */}
+          <div>
+            {!sel && (
+              <>
+                <p className="ts-fine">Click a track to play it and ID it.</p>
+                <p className="ts-coarse">Tap a track to play it, then “ID it”.</p>
+              </>
+            )}
+          </div>
           <div className="-mr-2.5 flex items-center gap-1">
             {(!touch || canUndo || canRedo) && undoRedo}
             {/* Everything else the page can do is shown where it happens: the time under the pointer, the grips

@@ -162,7 +162,12 @@
 }
 
 /* ── Timeline ── */
-.ts-root { isolation: isolate; border-block: 1.5px solid var(--text); } /* its layers can't rise above anything outside it */
+/* No rules of its own: the player above opens with one and the strip below closes with one, and three more
+   between them made the page a stack of lines. */
+.ts-root { isolation: isolate; } /* its layers can't rise above anything outside it */
+/* The player: one row, everything centred on the track's name; the credit sits under the name only. */
+.ts-player { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; column-gap: 1.5rem; }
+.ts-player-sub { grid-column: 2; margin-top: 0.125rem; }
 .ts-scroller { overflow-x: auto; overscroll-behavior-x: contain; }
 .ts-canvas { position: relative; padding-block: 2px 10px; }
 /* When the tape is scrolled, the ruler's ticks and flag stop at the side labels' column instead of sliding
@@ -259,8 +264,8 @@
 /* ── The tape ──
    Three things can be on a side, and each is drawn so it can't be mistaken for another:
    bare tape is nothing but a baseline; an ID'd track is a calm filled block you can read; an unknown track
-   is hatched and carries a big question mark and nothing else, because unknowns are what the page is for
-   and a clue is detail for whoever stops on one (the pointer's label, the list below, the ID form). No outlines: an
+   is hatched and carries nothing else: no mark, no clue. Those are detail for whoever stops on one (the
+   pointer's label, the list below, the ID form). No outlines: an
    outline is how a selected track is shown, and a row of outlined boxes shouts over everything else.
    The one track that is playing is the only solid block on the tape. */
 .ts-root {
@@ -300,8 +305,12 @@
 .ts-cue[data-playing] { background-color: var(--text); background-image: none; color: var(--bg); }
 .ts-cue[data-playing]:not([data-known]) { background-image: repeating-linear-gradient(135deg, transparent 0 5px, color-mix(in oklch, var(--bg) 28%, transparent) 5px 6px); }
 @media (hover: hover) { .ts-cue[data-playing]:hover { background-color: var(--text); } }
-.ts-cue[data-selected] { z-index: 2; --cue-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--text); }
-.ts-cue:focus-visible { z-index: 2; --cue-ring: 0 0 0 2px var(--bg), 0 0 0 4.5px var(--text); }
+/* The picked track is framed INSIDE its own edges: a line at the edge and a second, in the page colour, just
+   within it, so it shows on a grey block, a hatched one and the solid playing one alike. Drawn outside, the
+   frame made the picked track bigger than its neighbours and taller than the row, and the row seemed to
+   shift each time the frame moved to the next track. */
+.ts-cue[data-selected] { --cue-ring: inset 0 0 0 2px var(--text), inset 0 0 0 4px var(--bg); }
+.ts-cue:focus-visible { --cue-ring: inset 0 0 0 2.5px var(--text), inset 0 0 0 5px var(--bg); }
 .ts-cue[data-dragging], .ts-cue[data-resizing], .ts-cue[data-drawing] { cursor: grabbing; z-index: 2; opacity: 0.85; }
 @media (prefers-reduced-motion: reduce) { .ts-cue { transition: none; } }
 
@@ -311,21 +320,16 @@
 .ts-cue-text b { -webkit-line-clamp: 2; font-weight: 600; }
 .ts-cue-text i { -webkit-line-clamp: 3; opacity: 0.7; }
 .ts-cue-text i:empty { display: none; }
-.ts-cue-text .ts-q { display: block; font-family: var(--font-anton), sans-serif; font-size: 26px; font-weight: 400; line-height: 0.9; }
 /* A thin track gets one short line each and is allowed to cut off. The full name is one glance away: big
    in Now playing while it plays, and beside the time under the pointer. */
 @container (max-width: 84px) {
-  .ts-cue-text :is(b, i):not(.ts-q) { display: block; white-space: nowrap; text-overflow: ellipsis; }
+  .ts-cue-text :is(b, i) { display: block; white-space: nowrap; text-overflow: ellipsis; }
   .ts-edge { width: 5px; }
 }
 /* Thinner than a few letters: a plain block says more than "B…". */
 @container (max-width: 48px) {
-  .ts-cue-text :is(b, i):not(.ts-q) { display: none; }
-  .ts-cue:not([data-known]) .ts-cue-text { align-items: center; padding-inline: 0; }
+  .ts-cue-text :is(b, i) { display: none; }
   .ts-edge { width: 3px; }
-}
-@container (max-width: 20px) {
-  .ts-cue-text .ts-q { display: none; }
 }
 /* Trim handles: a grip that appears at each end when the pointer is on the track. */
 .ts-edge { position: relative; flex: none; align-self: stretch; width: 8px; }
