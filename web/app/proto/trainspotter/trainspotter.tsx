@@ -672,15 +672,18 @@ export function Trainspotter({
   const saveId = (artist = draft.artist, title = draft.title) => {
     const a = artist.trim();
     const t = title.trim();
-    if (!sel || (!a && !t) || (a === sel.artist && t === shownTitle)) return false;
+    if (!sel || (a === sel.artist && t === shownTitle)) return false;
+    if (!a && !t) {
+      // Both fields emptied on an ID'd track: that is how it goes back to unknown. On an unknown one there
+      // is nothing to save.
+      if (!sel.known) return false;
+      api.renameCue(sel.id, "", "");
+      confirmWithUndo("Set back to unknown.");
+      return true;
+    }
     api.renameCue(sel.id, a, t);
     confirmWithUndo(`ID’d: ${[a, t].filter(Boolean).join(" — ")}`, "Saved on this device.");
     return true;
-  };
-  const backToUnknown = () => {
-    if (!sel) return;
-    api.renameCue(sel.id, "", "");
-    confirmWithUndo("Set back to unknown.");
   };
   const remove = (cue: Cue | null = sel) => {
     if (!cue) return;
@@ -846,6 +849,7 @@ export function Trainspotter({
       </div>
     </div>
   );
+  const clueNote = Boolean(sel && !sel.known && sel.title && !touch && sel.id !== playingCue?.id);
   const idForm = sel && (
     <form
       className="ts-nameform"
@@ -907,45 +911,31 @@ export function Trainspotter({
           Remove
         </button>
       </div>
-      <p className="w-full text-sm text-[var(--muted)]">
-        {sel.known
-          ? sel.by
-            ? `ID’d by ${sel.by}.`
-            : "ID’d by you."
-          : sel.title
-            ? !touch && sel.id !== playingCue?.id
-              ? `Clue from ${sel.by ?? "a comment"}: “${sel.title}”`
-              : ""
-            : sel.by
-              ? `${sel.by} marked this one as unknown.`
-              : ""}
-        {opinions.map((o, i) => (
-          <span key={i}>
-            {" "}
-            {o.known ? (
-              <>
-                {o.author} thought it was{" "}
-                <button type="button" onClick={() => saveId(o.artist, o.title)} className="inline-flex min-h-11 cursor-pointer items-center text-[var(--text)] underline underline-offset-4">
-                  {[o.artist, o.title].filter(Boolean).join(" — ")}
-                </button>
-                .
-              </>
-            ) : (
-              <>
-                {o.author} heard “{o.title}”.
-              </>
-            )}
-          </span>
-        ))}
-        {sel.known && (
-          <>
-            {" "}
-            <button type="button" onClick={backToUnknown} className="inline-flex min-h-11 cursor-pointer items-center underline underline-offset-4 hover:text-[var(--text)]">
-              Not right? Set it back to unknown
-            </button>
-          </>
-        )}
-      </p>
+      {/* Only what can't be read anywhere else: a clue for a picked track that isn't the one playing (the
+          player shows the playing one's), and other IDs people gave for this spot, one click to take. */}
+      {(clueNote || opinions.length > 0) && (
+        <p className="w-full text-sm text-[var(--muted)]">
+          {clueNote ? `Clue from ${sel.by ?? "a comment"}: “${sel.title}”` : ""}
+          {opinions.map((o, i) => (
+            <span key={i}>
+              {" "}
+              {o.known ? (
+                <>
+                  {o.author} thought it was{" "}
+                  <button type="button" onClick={() => saveId(o.artist, o.title)} className="inline-flex min-h-11 cursor-pointer items-center text-[var(--text)] underline underline-offset-4">
+                    {[o.artist, o.title].filter(Boolean).join(" — ")}
+                  </button>
+                  .
+                </>
+              ) : (
+                <>
+                  {o.author} heard “{o.title}”.
+                </>
+              )}
+            </span>
+          ))}
+        </p>
+      )}
     </form>
   );
 
