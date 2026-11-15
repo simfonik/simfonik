@@ -209,62 +209,82 @@ export function useTimeline({
     paint(); // the playhead is placed in pixels, so it moves when the scale does
     frame();
   }, [width, length, paint, frame, scrolls, active]);
-  // The overview works like a scrollbar. A press on the band that marks what is on screen takes hold of it
-  // there, and it moves with the pointer from that point. A press anywhere else brings that part of the tape
-  // to the middle of the screen first, as near as the ends of the tape allow, and takes hold of the band there.
+  // Dragged, the overview works like a scrollbar. A drag that starts on the band marking what is on screen
+  // takes hold of it there, and it moves with the pointer from that point. One that starts anywhere else
+  // brings that part of the tape to the middle of the screen first, as near as the ends of the tape allow,
+  // and takes hold of the band there.
   const mapGrab = useRef(0); // where the band is held: how far from its middle, as a share of the strip
-  const mapPlace = (e: React.PointerEvent<HTMLDivElement>) => {
+  const mapPlace = (strip: HTMLElement, x: number) => {
     const sc = scrollerRef.current;
     if (!sc) return null;
-    const box = e.currentTarget.getBoundingClientRect();
+    const box = strip.getBoundingClientRect();
     const tape = sc.scrollWidth - GUTTER;
     const half = (sc.clientWidth - GUTTER) / 2;
-    return { sc, tape, half, at: Math.max(0, Math.min(1, (e.clientX - box.left) / box.width)), middle: () => (sc.scrollLeft + half) / tape };
+    return { sc, tape, half, at: Math.max(0, Math.min(1, (x - box.left) / box.width)), middle: () => (sc.scrollLeft + half) / tape };
   };
-  const mapHold = (e: React.PointerEvent<HTMLDivElement>) => {
-    const m = mapPlace(e);
+  /** Takes hold of the band at `x`, where the press began. */
+  const mapHold = (strip: HTMLElement, x: number) => {
+    const m = mapPlace(strip, x);
     if (!m) return;
     handsOff.current = performance.now() + 5000; // the visitor is steering; don't snap back to the playhead
     if (Math.abs(m.at - m.middle()) > m.half / m.tape) m.sc.scrollLeft = m.at * m.tape - m.half;
     mapGrab.current = m.at - m.middle();
   };
   const mapDrag = (e: React.PointerEvent<HTMLDivElement>) => {
-    const m = mapPlace(e);
+    const m = mapPlace(e.currentTarget, e.clientX);
     if (!m || !(e.buttons & 1)) return;
     handsOff.current = performance.now() + 5000;
     m.sc.scrollLeft = (m.at - mapGrab.current) * m.tape - m.half;
   };
-  // A finger on the overview may be on its way down the page. The strip takes a sideways drag, or a tap (on
-  // release); a swipe up or down is the page's, and the browser tells us so by cancelling the touch.
-  const mapTouch = useRef<{ id: number; x: number; y: number; dragging: boolean } | null>(null);
+  // A press on the overview is a tap or a drag, and they do different things. A tap plays the tape from that
+  // point: the strip is drawn as the tape's sound, and a tap on a sound is how you play it. A drag moves what
+  // is on screen and leaves the audio alone, which is the way to look ahead without losing your place.
+  // A finger may also be on its way down the page: a swipe up or down is the page's, and the browser says so
+  // by cancelling the touch.
+  const mapPress = useRef<{ id: number; x: number; y: number; dragging: boolean } | null>(null);
+  const mapPlay = (e: React.PointerEvent<HTMLDivElement>) => {
+    const m = mapPlace(e.currentTarget, e.clientX);
+    if (!m) return;
+    // Each side has its own bar; a set of several parts shows only the one chosen.
+    const bars = [...e.currentTarget.querySelectorAll<HTMLElement>(".ts-map-lane")];
+    const under = bars.findIndex((bar) => e.clientY <= bar.getBoundingClientRect().bottom + 1);
+    const side = many ? activeRef.current : under < 0 ? bars.length - 1 : under;
+    handsOff.current = 0; // the tape goes to the playhead, wherever the view was left
+    seek(side, Math.min(m.at * lengthRef.current, Math.max(0, sideLength(side) - 1)), true);
+  };
   const mapDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.pointerType === "touch") {
-      mapTouch.current = { id: e.pointerId, x: e.clientX, y: e.clientY, dragging: false };
-      return;
-    }
-    e.currentTarget.setPointerCapture(e.pointerId);
-    mapHold(e);
+    mapPress.current = { id: e.pointerId, x: e.clientX, y: e.clientY, dragging: false };
+    if (e.pointerType !== "touch") e.currentTarget.setPointerCapture(e.pointerId);
   };
   const mapMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.pointerType !== "touch") return mapDrag(e);
-    const t = mapTouch.current;
-    if (!t || t.id !== e.pointerId) return;
+    const t = mapPress.current;
+    if (!t || t.id !== e.pointerId) {
+      // Not pressed: the cursor says what a press here would do, play from the point or take hold of the band.
+      const band = mapWindowRef.current?.getBoundingClientRect();
+      e.currentTarget.toggleAttribute("data-band", Boolean(band && e.clientX >= band.left && e.clientX <= band.right));
+      return;
+    }
     if (!t.dragging) {
       const dx = Math.abs(e.clientX - t.x);
-      if (dx < 6 || dx <= Math.abs(e.clientY - t.y)) return;
+      if (dx < 6 || (e.pointerType === "touch" && dx <= Math.abs(e.clientY - t.y))) return;
       t.dragging = true;
-      e.currentTarget.setPointerCapture(e.pointerId);
-      return mapHold(e);
+      e.currentTarget.setAttribute("data-dragging", "");
+      if (e.pointerType === "touch") e.currentTarget.setPointerCapture(e.pointerId);
+      // Held from where the press began, so the band has not slipped by the distance it took to tell a drag
+      // from a tap.
+      mapHold(e.currentTarget, t.x);
     }
     mapDrag(e);
   };
   const mapUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    const t = mapTouch.current;
-    mapTouch.current = null;
-    if (t && t.id === e.pointerId && !t.dragging && Math.hypot(e.clientX - t.x, e.clientY - t.y) < 6) mapHold(e);
+    const t = mapPress.current;
+    mapPress.current = null;
+    e.currentTarget.removeAttribute("data-dragging");
+    if (t && t.id === e.pointerId && !t.dragging && Math.hypot(e.clientX - t.x, e.clientY - t.y) < 6) mapPlay(e);
   };
-  const mapCancel = () => {
-    mapTouch.current = null;
+  const mapCancel = (e: React.PointerEvent<HTMLDivElement>) => {
+    mapPress.current = null;
+    e.currentTarget.removeAttribute("data-dragging");
   };
 
   // Scrubbing: the marker follows the finger at once; the audio follows a few times a second and settles on
