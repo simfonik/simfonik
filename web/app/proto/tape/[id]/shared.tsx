@@ -81,17 +81,20 @@ export function Words({ tape }: { tape: TapeView }) {
  * side, and on a set with nine images that strip is taller than the picture. A full-screen viewer was tried
  * and dropped: it blew small scans up far past their size.)
  */
-export function Cover({ tape }: { tape: TapeView }) {
+export function Cover({ tape, side = "right" }: { tape: TapeView; side?: "left" | "right" }) {
   const [chosen, setChosen] = useState(tape.images[0]?.src ?? "");
   if (tape.placeholderLabel) return <PlaceholderCassetteLive tapeId={tape.id} labelDataUri={tape.placeholderLabel} />;
   const shown = tape.images.find((img) => img.src === chosen) ?? tape.images[0];
+  // The picture is held to the edge of the page it is nearest, so that edge is straight whatever its shape.
+  const right = side === "right";
   return (
     <div>
       <div className="relative h-56 sm:h-80">
-        <Image loader={imageLoader} key={shown.src} src={shown.src} alt={shown.label} fill priority sizes="(max-width: 1024px) 100vw, 576px" className="object-contain object-top lg:object-right-top" />
+        <Image loader={imageLoader} key={shown.src} src={shown.src} alt={shown.label} fill priority sizes="(max-width: 1024px) 100vw, 576px" className={`object-contain object-top ${right ? "lg:object-right-top" : "lg:object-left-top"}`} />
       </div>
       {tape.images.length > 1 && (
-        <div className="mt-3 flex flex-wrap gap-2 lg:justify-end">
+        // Nine thumbnails, the most a tape has (a cover and eight sides), fill the narrowest column exactly.
+        <div className={`mt-3 flex flex-wrap gap-1.5 ${right ? "lg:justify-end" : ""}`}>
           {tape.images.map((img) => (
             <button key={img.src} type="button" onClick={() => setChosen(img.src)} aria-label={img.label} aria-pressed={img.src === shown.src} title={img.label} className="proto-thumb">
               <Image loader={imageLoader} src={img.src} alt="" fill sizes="48px" className="object-contain" />

@@ -4,20 +4,20 @@
 // skill's spec, unchanged: 1–4 and ←/→ switch, the choice is kept in the address as ?v=.
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import "./proto.css";
-import { Contents, type Single } from "./contents";
+import { Contents, type Variant } from "./contents";
 import type { TapeView } from "./shared";
 
-// Round 3. "Contents" was chosen from round 2 (Band, Bars and Spare are out). These are four ways to fill
-// the column beside the cover on a tape with one recording; on a tape with sides they are all the same page.
-const variant = (single: Single) =>
-  function Variant({ tape }: { tape: TapeView }) {
-    return <Contents tape={tape} single={single} />;
+// Round 3. "Contents" was chosen from round 2; "Foot" and "Middle" (the words moved down the empty column of a
+// tape with one recording) were tried and dropped as tricks. What each of these is, is said in contents.tsx.
+const variant = (name: Variant) =>
+  function Shown({ tape }: { tape: TapeView }) {
+    return <Contents tape={tape} variant={name} />;
   };
 const VARIANTS = [
-  { name: "Top", Component: variant("top") },
-  { name: "Foot", Component: variant("foot") },
-  { name: "Middle", Component: variant("middle") },
+  { name: "Contents", Component: variant("contents") },
   { name: "Beside", Component: variant("beside") },
+  { name: "Column", Component: variant("column") },
+  { name: "Column, flipped", Component: variant("column-flipped") },
 ];
 
 export function Harness({ tape }: { tape: TapeView }) {
