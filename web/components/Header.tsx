@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import { NewsletterModal, useNewsletterModal } from './NewsletterSignup';
+import { NewsletterMenu, NewsletterModal, useNewsletterForm, useNewsletterModal } from './NewsletterSignup';
 import { ThemeToggle } from './ThemeToggle';
 import { SimfonikLockup } from './SimfonikLockup';
 
@@ -14,6 +14,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const { open, onOpen, onClose } = useNewsletterModal();
+  const menuSignup = useNewsletterForm();
 
   useEffect(() => {
     if (!mobileMenuOpen) return;
@@ -118,19 +119,10 @@ export function Header() {
                 >
                   Contribute
                 </Link>
-                <button
-                  type="button"
-                  onClick={() => {
-                    // This button goes when the menu shuts. The menu button takes the keyboard first, so it is
-                    // where focus comes back to when the Subscribe window is closed.
-                    menuButtonRef.current?.focus();
-                    setMobileMenuOpen(false);
-                    onOpen();
-                  }}
-                  className={`block px-3 py-[13px] text-left ${NAV_LINK_CLASSES}`}
-                >
-                  Subscribe
-                </button>
+                {/* On a phone the sign-up is here, in the menu, and not a window opened from it. */}
+                <div className="mt-2 border-t-[1.5px] border-[var(--border)] px-3 pt-5 pb-1">
+                  <NewsletterMenu form={menuSignup} />
+                </div>
               </div>
             </nav>
           </div>
