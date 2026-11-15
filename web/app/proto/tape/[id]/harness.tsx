@@ -22,22 +22,34 @@ const VARIANTS = [
   { name: "Today", Component: Today, split: true },
 ];
 
-/** The live page's image column at a 1280px window, the top of the slider. */
-const LIVE = 708;
-const START = 480;
+/** The live page's numbers, the top of each slider: its image column at a 1280px window, its thumbnails, and
+    the tallest it lets a picture be. */
+const LIVE = { image: 708, thumb: 80, tall: 650 };
+const START = 640;
+
+const kept = (name: string, otherwise: number) => parseInt(document.documentElement.style.getPropertyValue(name), 10) || otherwise;
 
 /**
- * "Today" has one number nobody has chosen yet: how wide the image column is. It is on a slider, which writes
- * the width to a CSS variable on the page (the page is not rendered again as it moves) and shows the two
- * columns' widths, so the one that looks right can be read off and kept.
+ * "Today" has four things nobody has chosen yet: how wide the image column is, which side it is on, how big
+ * the gallery's thumbnails are, and how tall a picture may be. The sliders write to CSS variables on the page
+ * and the button sets an attribute on it, so the page is not rendered again as they change; proto.css does
+ * the rest. All are read back from the page when the panel returns, so they survive a look at another
+ * variant. The numbers are shown so the right ones can be kept.
  */
 function Split() {
-  const [image, setImage] = useState(START);
+  const [image, setImage] = useState(() => kept("--image-column", START));
+  const [thumb, setThumb] = useState(() => kept("--thumb", LIVE.thumb));
+  const [tall, setTall] = useState(() => kept("--image-max", LIVE.tall));
+  const [flipped, setFlipped] = useState(() => document.documentElement.hasAttribute("data-proto-flip"));
   const [words, setWords] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    document.documentElement.style.setProperty("--image-column", `${image}px`);
+    const page = document.documentElement;
+    page.style.setProperty("--image-column", `${image}px`);
+    page.style.setProperty("--thumb", `${thumb}px`);
+    page.style.setProperty("--image-max", `${tall}px`);
+    page.toggleAttribute("data-proto-flip", flipped);
     const measure = () => setWords(Math.round(document.querySelector("[data-proto-words]")?.getBoundingClientRect().width ?? 0) || null);
     const frame = requestAnimationFrame(measure);
     window.addEventListener("resize", measure);
@@ -45,24 +57,36 @@ function Split() {
       cancelAnimationFrame(frame);
       window.removeEventListener("resize", measure);
     };
-  }, [image]);
+  }, [image, thumb, tall, flipped]);
   useEffect(() => {
     if (!copied) return;
     const timer = setTimeout(() => setCopied(false), 1500);
     return () => clearTimeout(timer);
   }, [copied]);
 
-  const summary = `image column ${image}px · words column ${words ?? "?"}px`;
+  const live = (value: number, top: number) => `${value}px${value === top ? " (live)" : ""}`;
+  const summary = `image column ${image}px, on the ${flipped ? "right" : "left"} · words column ${words ?? "?"}px · thumbnails ${thumb}px · picture up to ${tall}px tall`;
   return (
     <div className="proto-panel">
       <label htmlFor="proto-split">Image column</label>
-      <input id="proto-split" type="range" min={280} max={LIVE} step={4} value={image} onChange={(e) => setImage(Number(e.target.value))} />
+      <input id="proto-split" type="range" min={280} max={LIVE.image} step={4} value={image} onChange={(e) => setImage(Number(e.target.value))} />
       <output htmlFor="proto-split">
-        {image}px{image === LIVE ? " (live)" : ""} · words {words ?? "…"}px
+        {live(image, LIVE.image)} · words {words ?? "…"}px
       </output>
-      <button type="button" onClick={() => navigator.clipboard.writeText(summary).then(() => setCopied(true))}>
-        {copied ? "Copied" : "Copy"}
-      </button>
+      <label htmlFor="proto-tall">Picture height, at most</label>
+      <input id="proto-tall" type="range" min={280} max={LIVE.tall} step={10} value={tall} onChange={(e) => setTall(Number(e.target.value))} />
+      <output htmlFor="proto-tall">{live(tall, LIVE.tall)}</output>
+      <label htmlFor="proto-thumb">Thumbnails</label>
+      <input id="proto-thumb" type="range" min={32} max={LIVE.thumb} step={4} value={thumb} onChange={(e) => setThumb(Number(e.target.value))} />
+      <output htmlFor="proto-thumb">{live(thumb, LIVE.thumb)}</output>
+      <div>
+        <button type="button" aria-pressed={flipped} onClick={() => setFlipped((f) => !f)}>
+          Flip
+        </button>
+        <button type="button" onClick={() => navigator.clipboard.writeText(summary).then(() => setCopied(true))}>
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
     </div>
   );
 }

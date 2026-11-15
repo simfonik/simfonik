@@ -28,22 +28,34 @@
   .proto-thumb { transition: none; }
 }
 
-/* "Today": the image column's width until the slider is moved. */
-:root { --image-column: 480px; }
+/* "Today": what the panel's controls set, until they are moved. The live gallery sizes its thumbnails and caps
+   its picture with its own classes, so both are set over them from here. */
+:root { --image-column: 640px; --thumb: 80px; --image-max: 650px; }
+.proto-gallery > .flex > .flex-col > button { width: var(--thumb); height: var(--thumb); }
+.proto-gallery img[alt="Tape image"] { max-height: var(--image-max); }
 
-/* The slider for it. Harness chrome like the picker, sitting above it; only where the page has two columns. */
+/* "Today", flipped: the image column goes to the right, and its strip of thumbnails to the page's edge with
+   it, so the page is the mirror of the live one. */
+@media (min-width: 64rem) {
+  :root[data-proto-flip] .proto-today { grid-template-columns: minmax(0, 1fr) var(--image-column); }
+  :root[data-proto-flip] .proto-today > :first-child { order: 2; }
+  :root[data-proto-flip] .proto-today > :first-child > .flex { flex-direction: row-reverse; }
+}
+
+/* The panel for them. Harness chrome like the picker, sitting above it; only where the page has two columns. */
 .proto-panel {
   position: fixed;
   left: 50%;
   bottom: 68px;
   transform: translateX(-50%);
-  white-space: nowrap;
   z-index: 2147483647;
   display: none;
+  grid-template-columns: auto 150px auto;
   align-items: center;
-  gap: 10px;
-  padding: 8px 8px 8px 14px;
-  border-radius: 999px;
+  gap: 10px 12px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  white-space: nowrap;
   background: rgba(10, 10, 10, 0.82);
   -webkit-backdrop-filter: blur(12px) saturate(1.4);
   backdrop-filter: blur(12px) saturate(1.4);
@@ -58,10 +70,11 @@
   -webkit-font-smoothing: antialiased;
 }
 @media (min-width: 64rem) {
-  .proto-panel { display: flex; }
+  .proto-panel { display: grid; }
 }
-.proto-panel input { width: 180px; accent-color: #fff; cursor: pointer; }
+.proto-panel input { width: 150px; accent-color: #fff; cursor: pointer; }
 .proto-panel output { min-width: 21ch; color: #fff; font-variant-numeric: tabular-nums; }
+.proto-panel > div { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 8px; }
 .proto-panel button {
   height: 28px;
   min-width: 62px;
@@ -71,6 +84,7 @@
   color: #fff;
   cursor: pointer;
 }
+.proto-panel button[aria-pressed="true"] { background: #fff; color: #0a0a0a; }
 .proto-panel button:active { opacity: 0.7; }
 .proto-panel :focus-visible { outline: 2px solid rgba(255, 255, 255, 0.4); outline-offset: 2px; }
 
