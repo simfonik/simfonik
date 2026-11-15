@@ -309,12 +309,23 @@ export function Trainspotter({
   // What it can't know is where a key already means something on this page, so each says where it stands
   // aside: Space and M on a button or link (where Space presses it), the arrows on the scrubber, the part
   // picker or an open list. A focused track is none of those.
-  const offControls = awayFrom("button, a, input, [role=slider], [role=option]");
-  const arrowsFree = awayFrom("input, [role=slider], [role=radio], [role=radiogroup], [role=option], [role=listbox], [role=combobox]");
+  const offControls = useMemo(() => awayFrom("button, a, input, [role=slider], [role=option]"), []);
+  const arrowsFree = useMemo(() => awayFrom("input, [role=slider], [role=radio], [role=radiogroup], [role=option], [role=listbox], [role=combobox]"), []);
   useShortcut("space", toggle, { description: "Play or pause", when: offControls });
   useShortcut("arrowleft", () => stepTrack(-1), { description: "Previous track", when: arrowsFree });
   useShortcut("arrowright", () => stepTrack(1), { description: "Next track", when: arrowsFree });
   useShortcut("m", markHere, { description: "Mark new track", when: offControls });
+  // A held key is one press. The SDK ignores the key's repeats, which leaves them to the browser, and the
+  // browser reads a held arrow as "scroll the timeline" and a held Space as "scroll the page": the track
+  // just stepped to would slide out of view. Where one of these keys is the page's, its repeats do nothing.
+  useEffect(() => {
+    const once = (e: KeyboardEvent) => {
+      if (!e.repeat || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      if (e.key === " " ? offControls() : (e.key === "ArrowLeft" || e.key === "ArrowRight") && arrowsFree()) e.preventDefault();
+    };
+    window.addEventListener("keydown", once);
+    return () => window.removeEventListener("keydown", once);
+  }, [offControls, arrowsFree]);
 
   // Names waiting for a time: the site's own tracklist if there is one, else a list kept in the comments.
   const orders = useMemo(() => ordersFor(listed, official, sides.length), [listed, official, sides]);
@@ -350,11 +361,13 @@ export function Trainspotter({
   // The picked track is let go when the playhead leaves it, by the tape playing on or by being moved. From
   // then on the fields, and the bar on a phone, are about what you are hearing, not what you tapped a minute
   // ago. Not while you are IDing it: the sheet open, the cursor in a field, or something typed and not saved.
-  const heard = useRef<string | null>(null);
+  // And not when it was the track that left the playhead: moved or trimmed, it is still being worked on.
+  const heard = useRef<{ id: string; start: number; end: number } | null>(null);
   useEffect(() => {
     const was = heard.current;
-    heard.current = playingCue?.id ?? null;
-    if (was === null || was === heard.current || selected !== was) return;
+    heard.current = playingCue ? { id: playingCue.id, start: playingCue.start, end: playingCue.end } : null;
+    if (was === null || was.id === heard.current?.id || selected !== was.id) return;
+    if (sel && (sel.start !== was.start || sel.end !== was.end)) return;
     const typed = draft.artist.trim() !== (sel?.artist ?? "") || draft.title.trim() !== (sel?.known ? sel.title : "");
     if (!sheet && !document.activeElement?.closest(".ts-idbar-fields") && !typed) setSelected(null);
     // Only when the track under the playhead changes; what was picked and typed is read as it stands then.
