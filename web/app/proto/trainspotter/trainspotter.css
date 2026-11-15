@@ -372,13 +372,17 @@
    playing track alike, so it needs no outline and no blending, and a hairline hides almost none of a name.
    Its position is snapped to whole device pixels by the script that moves it, which keeps a 1px line sharp. */
 .ts-head { position: absolute; top: 2px; bottom: 10px; z-index: 4; width: 0; pointer-events: none; will-change: transform; }
-.ts-head-flag { position: absolute; top: 0; left: 0; height: 44px; }
-/* 11px wide around a 1px pole, so both sit on whole pixels. */
-.ts-head-flag::before { content: ""; position: absolute; top: 8px; left: -5px; width: 11px; height: 14px; background: var(--ts-play); clip-path: polygon(0 0, 100% 0, 100% 58%, 50% 100%, 0 58%); }
-.ts-head-flag::after { content: ""; position: absolute; top: 20px; bottom: 0; left: 0; width: 1px; background: var(--ts-play); }
-/* From just inside the pole's foot (they overlap by a pixel, so no seam can open between them) to 4px below
-   the row. */
-.ts-head-line { position: absolute; top: calc(var(--row-top, 52px) - 9px); left: 0; width: 1px; height: calc(var(--row-h, 96px) + 11px); background: var(--ts-play); }
+/* Top: a cap with softly rounded shoulders that tapers to a point on the line. */
+.ts-head-cap { position: absolute; top: 7px; left: -5px; display: block; fill: var(--ts-play); }
+/* The line is one pixel wide from the cap's point to the baseline, in three runs that overlap by a pixel so
+   no seam can open between them:
+   the pole, through the ruler; */
+.ts-head-pole { position: absolute; top: 19px; left: 0; width: 1px; height: 25px; background: var(--ts-play); }
+/* the pass, from the ruler down to the playing row, faint where it only crosses rows that aren't playing; */
+.ts-head-pass { position: absolute; top: 43px; left: 0; width: 1px; height: calc(var(--row-top, 52px) - 44px); background: var(--ts-play); opacity: var(--pass, 1); }
+/* and the line itself, over the playing row. Bottom: it ends exactly on the row's baseline, the way the
+   tracks do, instead of running a few pixels past it. */
+.ts-head-line { position: absolute; top: calc(var(--row-top, 52px) - 2px); left: 0; width: 1px; height: calc(var(--row-h, 96px) + 1px); background: var(--ts-play); }
 
 /* ── Naming ── */
 .ts-namebar {

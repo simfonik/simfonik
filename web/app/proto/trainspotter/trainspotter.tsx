@@ -838,6 +838,8 @@ export function Trainspotter({
     const box = row.getBoundingClientRect();
     head.style.setProperty("--row-top", `${box.top - canvas.getBoundingClientRect().top}px`);
     head.style.setProperty("--row-h", `${box.height}px`);
+    // On its way to a lower row the line only passes through the rows above, so it is drawn faint there.
+    head.style.setProperty("--pass", many || active === 0 ? "1" : "0.3");
   }, [active, many, sides.length, avail]);
   // More tape than fits: the overview strip shows the rest and takes you there.
   const scrolls = avail > 0 && width > fit + 1;
@@ -1336,7 +1338,13 @@ export function Trainspotter({
                 pixels every frame) glided, and they could sit a pixel apart. The slider's handle is still under
                 the marker, invisible, for dragging and for the keyboard. */}
             <div ref={headRef} className="ts-head" style={{ left: GUTTER }} aria-hidden>
-              <span className="ts-head-flag" />
+              {/* The cap: drawn as a path, not clipped from a box, so its curves and its point are exact. Eleven
+                  wide around a one-pixel line, so its point lands dead centre on the line. */}
+              <svg className="ts-head-cap" width="11" height="13" viewBox="0 0 11 13">
+                <path d="M2 0h7a2 2 0 0 1 2 2v4.4L5.5 13 0 6.4V2a2 2 0 0 1 2-2Z" />
+              </svg>
+              <span className="ts-head-pole" />
+              <span className="ts-head-pass" />
               <span className="ts-head-line" />
             </div>
             <div ref={ghostRef} className="ts-ghost" aria-hidden>
