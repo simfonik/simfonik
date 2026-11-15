@@ -606,6 +606,8 @@ export function Trainspotter({
   useShortcut("mod+z", () => canUndo && void step(-1), { description: "Undo", when: notTyping });
   useShortcut("mod+shift+z", () => canRedo && void step(1), { description: "Redo", when: notTyping });
   const undoHint = useShortcutHint("mod+z");
+  // The hint already knows the platform: it writes ⌘ on a Mac and Ctrl elsewhere.
+  const onMac = undoHint.text.includes("⌘");
   const redoHint = useShortcutHint("mod+shift+z");
 
   // ── The track under the playhead on the side that's playing ──
@@ -1419,10 +1421,11 @@ export function Trainspotter({
                     ["Space", "Play or pause"],
                     ["← →", "Previous or next track"],
                     ["M", "Mark new track"],
-                    ["Enter", "ID the selected track"],
+                    // Keys are named the way they are printed on the keyboard in front of the visitor.
+                    [onMac ? "Return" : "Enter", "ID the selected track"],
                     ["Delete", "Remove it"],
-                    ["Alt ← →", "Move it a second"],
-                    ["Alt Shift ← →", "Trim where it ends"],
+                    [onMac ? "⌥ ← →" : "Alt ← →", "Move it a second"],
+                    [onMac ? "⌥ ⇧ ← →" : "Alt Shift ← →", "Trim where it ends"],
                     [undoHint.text, "Undo"],
                     [redoHint.text, "Redo"],
                   ].map(([key, what]) => (
