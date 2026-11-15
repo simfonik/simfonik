@@ -10,8 +10,6 @@ import Link from "next/link";
 import { createPointerKind } from "@ui-sdk/core";
 import { usePart, usePrimitive } from "@ui-sdk/react/primitive";
 import { usePreference } from "@ui-sdk/react/preferences";
-import { createAgent, registerTools } from "@ui-sdk/react/agent";
-import { createHistory, type HistoryEntry } from "@ui-sdk/react/history";
 import { useShortcut } from "@ui-sdk/react/shortcuts";
 import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack } from "@ui-sdk/react/slider";
 import { SegmentedControl, SegmentedControlItem } from "@ui-sdk/react/segmented-control";
@@ -21,10 +19,10 @@ import { reconcile, type Listed, type Proposal, type Sighting } from "./parse";
 import { DEFAULT_LENGTH, clock, cueLabel, tracklist, type Cue } from "./tracklist-primitive";
 import { ordersFor, placeNames, suggestNames } from "./names";
 import { ChangesFold, CommentsFold, NamesFold, SendItIn, StillUnknown } from "./below-the-tape";
-import { describe, madeBy, stepFrom } from "./changes";
 import { IdBar, IdSheetForm, Shortcuts, UndoRedo, type IdDraft } from "./id-form";
 import { awayFrom } from "./keys";
 import { PhoneBar, Player } from "./player";
+import { useChanges } from "./use-changes";
 import { useTapeAudio } from "./use-tape-audio";
 import { GUTTER, useTimeline } from "./use-timeline";
 import { followComments, near, origin, readSaved, toCue as cueFrom, type Saved, type Spot } from "./saved";
@@ -33,11 +31,9 @@ import { TapeSwitcher, type TapeEntry } from "./tape-switcher";
 type TapeProp = { id: string; title: string; djs: string; djCount: number; released: string; sides: { key: string; title: string; audio: string | null }[] };
 
 // One bridge for the page. Every UI SDK component registers with it, including the timeline.
-const agent = typeof window === "undefined" ? null : createAgent();
 const pointerKind = createPointerKind();
 const toaster = createToaster();
 
-const UNDO_TOAST = "undo"; // one undo toast at a time: a newer one replaces the older
 
 function Track({ value, ...props }: { value: string } & React.ComponentProps<"div">) {
   return usePart(tracklist, "track", { value }, props, "div");
@@ -136,7 +132,6 @@ export function Trainspotter({
   const { scrollerRef, headRef, ghostRef, mapRef, mapWindowRef, mapHeadRef, minutes, snapUntil, scrubAt, scrub, scrubEnd, rulerDown, mapDown, mapMove, mapUp, mapCancel } = timeline;
 
   const [selected, setSelected] = useState<string | null>(null);
-  const quiet = useRef(false); // true while the page itself is writing, so it doesn't select what it adds
   const wantName = useRef(false);
   const pageScroll = useRef(0);
   const openSheet = useCallback((id?: string | null) => {
@@ -164,14 +159,17 @@ export function Trainspotter({
     [touch, openSheet],
   );
 
+  // Every change to the timeline, with who made it. It is the undo stack.
+  const { rootRef, writing, entries, position, floor, canUndo, canRedo, step, confirmWithUndo, writeAsListeners, writeWhenReady, untouched, settle } = useChanges({ toaster, saveFailed });
+
   const handle = usePrimitive(tracklist, {
     value: cues,
     onValueChange: (v: Cue[], details: { source?: string }) => {
       // A track a person has just marked is the one they want to ID next.
       const added = v.filter((c) => !cuesRef.current.some((b) => b.id === c.id));
-      if (added.length === 1 && details?.source !== "agent" && !quiet.current) setSelected(added[0].id);
+      if (added.length === 1 && details?.source !== "agent" && !writing.current) setSelected(added[0].id);
       // A time changed by anything but the page's own writing from the comments is the visitor's.
-      if (!quiet.current)
+      if (!writing.current)
         for (const c of v) {
           const was = cuesRef.current.find((b) => b.id === c.id);
           if (was && c.by && (was.start !== c.start || was.end !== c.end)) (moved.current ??= new Set()).add(c.id);
@@ -182,103 +180,6 @@ export function Trainspotter({
     length,
   });
   const api = handle.api;
-  // Every change to the timeline, with who made it. It is the undo stack.
-  const rootRef = useRef<HTMLDivElement>(null);
-  const historyRef = useRef<ReturnType<typeof createHistory> | null>(null);
-  const [entries, setEntries] = useState<HistoryEntry[]>([]);
-  const [position, setPosition] = useState(0);
-  // Undo stops at the listeners' tracklist the page opened with; it never empties the tape.
-  const [floor, setFloorState] = useState(0);
-  const floorRef = useRef(0);
-  const setFloor = (n: number) => {
-    floorRef.current = n;
-    setFloorState(n);
-  };
-  const undoToastAt = useRef<number | null>(null);
-  /** A confirmation whose Undo belongs to the change just made, and to nothing else. */
-  const confirmWithUndo = useCallback((title: string, description?: string) => {
-    // Wait a frame so the history has recorded the change this is about.
-    requestAnimationFrame(() => {
-      const h = historyRef.current;
-      const at = h?.position() ?? 0;
-      undoToastAt.current = at;
-      toaster(title, {
-        id: UNDO_TOAST,
-        description: saveFailed.current ? "Couldn’t save on this device. It will be gone when you leave the page." : description,
-        action: {
-          label: "Undo",
-          onAction: () => {
-            if (h && h.position() === at && at > floorRef.current) void h.seek(at - 1);
-          },
-        },
-      });
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!agent) return;
-    // One step per action: two separate drags are two undos, not one.
-    const history = createHistory(agent, { keys: ["value"], within: () => rootRef.current, coalesce: false });
-    historyRef.current = history;
-    let newest: string | undefined;
-    const off = history.subscribe(() => {
-      setEntries([...history.entries()]);
-      setPosition(history.position());
-      // A change the visitor didn't make with their own hands is said out loud, with a way back.
-      const last = history.entries().at(-1);
-      if (last && last.id !== newest && history.position() === history.entries().length) {
-        newest = last.id;
-        if (madeBy(last) === "Assistant") confirmWithUndo("Changed by your browser’s assistant", describe(last));
-      }
-      // An Undo offered for one change must not outlive it and undo something else.
-      if (undoToastAt.current !== null && history.position() !== undoToastAt.current) {
-        undoToastAt.current = null;
-        toaster.dismiss(UNDO_TOAST);
-      }
-    });
-    // Offer the timeline to an assistant built into the browser, where the browser supports WebMCP. It may mark
-    // and ID tracks. Replacing the whole tracklist is the page's own way of loading the comments, and refused.
-    const unregister = registerTools(agent, { allow: (step) => step.action !== "setValue" });
-    return () => {
-      off();
-      unregister?.();
-      history.destroy();
-      toaster.dismiss();
-    };
-  }, [confirmWithUndo]);
-
-  const step = useCallback(async (by: -1 | 1) => {
-    const h = historyRef.current;
-    if (!h) return;
-    await h.seek(Math.max(floorRef.current, stepFrom(h.entries(), h.position(), by)));
-  }, []);
-  // The timeline as the bridge lists it. A timeline that has left the page (the tape before this one) can
-  // still be listed, marked as gone, and can't be written to.
-  const target = () => agent?.snapshot().find((c) => c.component === "tracklist" && !c.offPage)?.ref;
-  /** Writes listeners' tracks through the agent bridge, so the history knows they weren't typed here. */
-  const writeAsListeners = useCallback(async (next: Cue[]) => {
-    const ref = target();
-    if (!agent || !ref) return false;
-    quiet.current = true;
-    try {
-      return (await agent.act({ steps: [{ ref, action: "setValue", args: [next] }] })).ok;
-    } finally {
-      quiet.current = false;
-    }
-  }, []);
-
-  // The timeline registers with the bridge a moment after it mounts, so a write made as the page opens waits
-  // for it instead of being dropped.
-  const writeWhenReady = useCallback(
-    async (next: Cue[]) => {
-      for (let tries = 0; tries < 60; tries++) {
-        if (await writeAsListeners(next)) return true;
-        await new Promise((r) => setTimeout(r, 50));
-      }
-      return false;
-    },
-    [writeAsListeners],
-  );
 
   // First visit to a tape: the page opened holding what the comments know, so there is nothing to wait for.
   useEffect(() => {
@@ -288,7 +189,7 @@ export function Trainspotter({
   // The tracks went in before the audio said how long each side is. Once it does, pull back any listener's
   // track that runs past the end of its side. Left alone once the visitor has started making changes.
   useEffect(() => {
-    if (!ready || historyRef.current?.position() !== floorRef.current) return;
+    if (!ready || !untouched()) return;
     let changed = false;
     const next = cuesRef.current.flatMap((c) => {
       const d = durations[sides.indexOf(c.track)];
@@ -296,8 +197,8 @@ export function Trainspotter({
       changed = true;
       return c.start > d - 5 ? [] : [{ ...c, end: d }];
     });
-    if (changed) void writeAsListeners(next).then((ok) => ok && setFloor(historyRef.current?.position() ?? 0));
-  }, [durations, ready, sides, writeAsListeners]);
+    if (changed) void writeAsListeners(next).then((ok) => ok && settle());
+  }, [durations, ready, sides, writeAsListeners, untouched, settle]);
 
   // Return visit: the saved timeline is brought back in line with the comments (the rules are in `followComments`).
   const merged = useRef(false);
@@ -325,8 +226,6 @@ export function Trainspotter({
     }
   };
 
-  const canUndo = position > floor;
-  const canRedo = position < entries.length;
   // In a text field these keys belong to the field: they undo typing, not the tracklist.
   const notTyping = () => !(document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLTextAreaElement);
   useShortcut("mod+z", () => canUndo && void step(-1), { description: "Undo", when: notTyping });
