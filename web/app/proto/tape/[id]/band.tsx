@@ -1,6 +1,6 @@
 "use client";
 
-// PROTOTYPE (SIM-43), direction 2: "Band". The player leads. The words sit on the left, on the page's left
+// PROTOTYPE (SIM-43), round 2, the reference: "Band", the direction chosen from round 1. The player leads. The words sit on the left, on the page's left
 // edge with everything under them, the images on the right and smaller; the waveform then runs the full
 // width of the page, with the track line and the sides beneath it.
 import { Player } from "./column";
@@ -22,5 +22,14 @@ export function Band({ tape }: { tape: TapeView }) {
         <Cover tape={tape} />
       </div>
     </>
+  );
+}
+
+/** Round 2, "Bars": Band as it is, with the waveform drawn as fine bars and not one solid shape. */
+export function Bars({ tape }: { tape: TapeView }) {
+  return (
+    <div className="proto-bars">
+      <Band tape={tape} />
+    </div>
   );
 }

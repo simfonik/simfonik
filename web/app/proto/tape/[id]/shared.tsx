@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import imageLoader from "../../../../lib/imageLoader";
 import { PlaceholderCassetteLive } from "../../../../components/PlaceholderCassetteLive";
-import { TapeGallery } from "../../../../components/TapeGallery";
 import { useTapeTrackIds } from "../../../../components/TapeTrackIds";
 import { useAudioPlayer } from "../../../../hooks/useAudioPlayer";
 
@@ -73,11 +72,6 @@ export function Words({ tape, big = false }: { tape: TapeView; big?: boolean }) 
       </div>
     </header>
   );
-}
-
-/** The tape's images: the real gallery, or the live cassette for a tape with no cover. */
-export function Pictures({ tape }: { tape: TapeView }) {
-  return tape.placeholderLabel ? <PlaceholderCassetteLive tapeId={tape.id} labelDataUri={tape.placeholderLabel} /> : <TapeGallery allImages={tape.images} />;
 }
 
 /**

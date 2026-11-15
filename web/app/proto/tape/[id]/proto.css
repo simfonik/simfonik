@@ -8,9 +8,37 @@
   .proto-wide .player-play { margin-top: 0; }
 }
 
-/* Direction 3, "Sides", on a set with many sides: a side that isn't loaded is drawn at the ordinary height. */
-.proto-wide .proto-small .player-wave { height: 2.75rem; }
-.proto-wide .proto-small .player-play { margin-top: 0; }
+/* "Bars": the waveform drawn as fine upright bars, the way the home page's is, in place of one solid shape.
+   The gaps are painted over the shape in the page's own colour, inside the shape's outline. */
+.proto-bars .player-wave-shape:not([data-flat])::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(to right, transparent 0 2px, var(--bg) 2px 4px);
+}
+
+/* "Spare": the sides as one quiet line of names, the loaded one in full colour. */
+.proto-side-link {
+  position: relative;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  text-underline-offset: 5px;
+  cursor: pointer;
+  transition: color 0.15s ease-out;
+}
+.proto-side-link::before { content: ""; position: absolute; inset: -14px -6px; }
+.proto-side-link[aria-pressed="true"] { color: var(--text); text-decoration: underline; text-decoration-thickness: 1.5px; }
+@media (hover: hover) and (pointer: fine) {
+  .proto-side-link:hover { color: var(--text); }
+}
+.proto-side-link:active { opacity: 0.6; }
+.proto-side-link:focus-visible { outline: 2px solid var(--text); outline-offset: 4px; }
+@media (prefers-reduced-motion: reduce) {
+  .proto-side-link { transition: none; }
+}
 
 /* The cover, where the words lead: one image that opens all of them. Its count sits in its corner. */
 .proto-cover { position: relative; display: block; width: 100%; cursor: zoom-in; }
@@ -164,51 +192,3 @@ html:has(.proto-viewer[open]) { overflow: hidden; scrollbar-gutter: stable; }
 .proto-picker-item:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.4); outline-offset: 2px; }
 .proto-picker-item[data-active] { color: #fff; }
 
-/* ---- Direction 4, "Sheet" ---- */
-/* A side, as a tab over the bar: the loaded one in full colour with a line under it. */
-.proto-tab {
-  position: relative;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.6875rem 0;
-  color: var(--muted);
-  cursor: pointer;
-  text-align: left;
-  transition: color 0.15s ease-out;
-}
-/* In a narrow cell the length goes under the name, not beside it. */
-@media (max-width: 39.99rem) {
-  .proto-tab { flex-direction: column; align-items: flex-start; gap: 0.125rem; }
-}
-.proto-tab[aria-pressed="true"] { color: var(--text); box-shadow: inset 0 -2px 0 var(--text); }
-@media (hover: hover) and (pointer: fine) {
-  .proto-tab:hover { color: var(--text); }
-}
-.proto-tab:active { opacity: 0.6; }
-.proto-tab:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
-/* A track in the running order: the whole row is pressed to hear it. */
-.proto-row {
-  display: grid;
-  grid-template-columns: 3.75rem minmax(0, 1fr) auto;
-  align-items: baseline;
-  gap: 0.75rem;
-  min-height: 2.75rem;
-  padding: 0.75rem 0.5rem;
-  margin: 0 -0.5rem;
-  width: calc(100% + 1rem);
-  border-bottom: 1px solid var(--border);
-  text-align: left;
-  cursor: pointer;
-  transition: background-color 0.15s ease-out;
-}
-.proto-row[aria-current="true"] { background: var(--bg-hover); }
-@media (hover: hover) and (pointer: fine) {
-  .proto-row:hover { background: var(--bg-hover); }
-}
-.proto-row:active { opacity: 0.6; }
-.proto-row:focus-visible { outline: 2px solid var(--text); outline-offset: -2px; }
-@media (prefers-reduced-motion: reduce) {
-  .proto-tab, .proto-row { transition: none; }
-}

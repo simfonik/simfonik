@@ -4,17 +4,17 @@
 // skill's spec, unchanged: 1–4 and ←/→ switch, the choice is kept in the address as ?v=.
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import "./proto.css";
-import { Band } from "./band";
-import { Column } from "./column";
+import { Band, Bars } from "./band";
+import { Contents } from "./contents";
 import type { TapeView } from "./shared";
-import { Sheet } from "./sheet";
-import { Sides } from "./sides";
+import { Spare } from "./spare";
 
+// Round 2: riffs on "Band", the direction chosen from round 1 (Column, Sides and Sheet are out).
 const VARIANTS = [
-  { name: "Column", Component: Column },
   { name: "Band", Component: Band },
-  { name: "Sides", Component: Sides },
-  { name: "Sheet", Component: Sheet },
+  { name: "Bars", Component: Bars },
+  { name: "Contents", Component: Contents },
+  { name: "Spare", Component: Spare },
 ];
 
 export function Harness({ tape }: { tape: TapeView }) {
