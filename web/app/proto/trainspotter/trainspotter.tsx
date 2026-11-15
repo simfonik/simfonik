@@ -71,7 +71,10 @@ export function Trainspotter({
   const { audios, durations, failed, active, activeRef, playing, now, seek, toggle } = audio;
 
   // What the comments said, reconciled into one proposal per moment. An unmeasured side is treated as endless, so a slow connection never drops an ID for being "past the end".
-  const proposals = useMemo(() => reconcile(sightings, durations.map((d) => d ?? Infinity)), [sightings, durations]);
+  // How long each side is: what its audio says or, until it does, what it said on an earlier visit.
+  const [remembered, setRemembered] = useState<(number | null)[]>([]);
+  const lengths = useMemo(() => durations.map((d, i) => d ?? remembered[i] ?? null), [durations, remembered]);
+  const proposals = useMemo(() => reconcile(sightings, lengths.map((d) => d ?? Infinity)), [sightings, lengths]);
   const toCue = useCallback((p: Proposal): Cue => cueFrom(p, sides), [sides]);
 
   // It starts as what the comments say, so the tracks are in the HTML the server sends. Saved work, if this
@@ -99,6 +102,7 @@ export function Trainspotter({
       setCues(found.cues);
       gone.current = found.removed;
       moved.current = found.moved;
+      setRemembered(found.lengths);
       setReady(true);
     }
     setRestored(found ? "saved" : "fresh");
@@ -106,18 +110,18 @@ export function Trainspotter({
   useEffect(() => {
     if (!ready) return;
     try {
-      window.localStorage.setItem(storageKey, JSON.stringify({ v: 2, cues, removed: gone.current, moved: [...(moved.current ?? [])] } satisfies Saved));
+      window.localStorage.setItem(storageKey, JSON.stringify({ v: 2, cues, removed: gone.current, moved: [...(moved.current ?? [])], lengths } satisfies Saved));
       window.localStorage.removeItem(`${storageKey}:seen`); // the earlier versions' bookkeeping
       saveFailed.current = false;
     } catch {
       saveFailed.current = true; // private mode, or storage is full; the toasts say so
     }
-  }, [cues, ready, storageKey]);
+  }, [cues, lengths, ready, storageKey]);
 
   // The timeline is as long as the longest thing it has to show: a measured side, or the last known track.
   const length = useMemo(() => {
     const shown = (i: number) => !many || i === active;
-    const measured = durations.filter((_, i) => shown(i));
+    const measured = lengths.filter((_, i) => shown(i));
     const unmeasured = measured.every((d) => d === null) ? DEFAULT_LENGTH : 0;
     // A track whose end is only a guess (the last one anyone timed on a side) doesn't get to stretch the
     // timeline: until that side's audio reports its length the guess can run four minutes past the real end,
@@ -125,8 +129,8 @@ export function Trainspotter({
     const reach = (x: { start: number; end: number; open?: boolean }) => (x.open ? x.start + 30 : x.end);
     const ends = [...cues.filter((c) => shown(sides.indexOf(c.track))).map(reach), ...proposals.filter((p) => shown(p.side)).map(reach)];
     return Math.max(60, unmeasured, ...measured.map((d) => d ?? 0), ...ends);
-  }, [durations, cues, proposals, many, active, sides]);
-  const sideLength = (i: number) => durations[i] ?? length;
+  }, [lengths, cues, proposals, many, active, sides]);
+  const sideLength = (i: number) => lengths[i] ?? length;
   const [sheet, setSheet] = useState(false); // the ID sheet, on phones
   const timeline = useTimeline({ audio, length, many, rows: sides.length, sheet });
   const { scrollerRef, headRef, ghostRef, mapRef, mapWindowRef, mapHeadRef, minutes, snapUntil, scrubAt, scrub, scrubEnd, rulerDown, mapDown, mapMove, mapUp, mapCancel } = timeline;
@@ -160,7 +164,7 @@ export function Trainspotter({
   );
 
   // Every change to the timeline, with who made it. It is the undo stack.
-  const { rootRef, writing, entries, position, floor, canUndo, canRedo, step, confirmWithUndo, writeAsListeners, writeWhenReady, untouched, settle } = useChanges({ toaster, saveFailed });
+  const { rootRef, writing, entries, position, floor, canUndo, canRedo, step, confirmWithUndo, rewrite, untouched, settle } = useChanges({ toaster, saveFailed });
 
   const handle = usePrimitive(tracklist, {
     value: cues,
@@ -174,6 +178,7 @@ export function Trainspotter({
           const was = cuesRef.current.find((b) => b.id === c.id);
           if (was && c.by && (was.start !== c.start || was.end !== c.end)) (moved.current ??= new Set()).add(c.id);
         }
+      cuesRef.current = v; // at once: the page's next change in line works from this, not from the last render
       setCues(v);
     },
     sides,
@@ -186,19 +191,24 @@ export function Trainspotter({
     if (restored === "fresh") setReady(true);
   }, [restored]);
 
-  // The tracks went in before the audio said how long each side is. Once it does, pull back any listener's
-  // track that runs past the end of its side. Left alone once the visitor has started making changes.
+  // A comment's track can't run past the end of its side. The tracks went in before the audio said how long
+  // each side is; whenever a side's length becomes known, a comment's track that runs past it is pulled back,
+  // and one that starts past it goes. Before the visitor has changed anything this is part of setting up.
   useEffect(() => {
-    if (!ready || !untouched()) return;
-    let changed = false;
-    const next = cuesRef.current.flatMap((c) => {
-      const d = durations[sides.indexOf(c.track)];
-      if (d == null || c.end <= d || !c.by) return [c];
-      changed = true;
-      return c.start > d - 5 ? [] : [{ ...c, end: d }];
-    });
-    if (changed) void writeAsListeners(next).then((ok) => ok && settle());
-  }, [durations, ready, sides, writeAsListeners, untouched, settle]);
+    if (!ready) return;
+    let settingUp = false;
+    void rewrite(() => {
+      settingUp = untouched();
+      let changed = false;
+      const next = cuesRef.current.flatMap((c) => {
+        const d = lengths[sides.indexOf(c.track)];
+        if (d == null || c.end <= d || !c.by) return [c];
+        changed = true;
+        return c.start > d - 5 ? [] : [{ ...c, end: d }];
+      });
+      return changed ? next : null;
+    }).then((ok) => ok && settingUp && settle());
+  }, [lengths, ready, sides, rewrite, untouched, settle]);
 
   // Return visit: the saved timeline is brought back in line with the comments (the rules are in `followComments`).
   const merged = useRef(false);
@@ -206,11 +216,13 @@ export function Trainspotter({
     // Not from a reading that is missing the newer comments: their tracks would look "gone" and be removed.
     if (restored !== "saved" || merged.current || !complete) return;
     merged.current = true;
-    const next = followComments({ cues: cuesRef.current, removed: gone.current, moved: moved.current }, proposals, sides);
-    if (!next) return;
-    void writeWhenReady(next.cues).then((ok) => {
-      if (!ok) return;
-      const parts = [next.added ? `added ${next.added}` : "", next.corrected ? `corrected ${next.corrected}` : "", next.removed ? `removed ${next.removed} misread` : ""].filter(Boolean).join(", ");
+    let found: ReturnType<typeof followComments> = null;
+    void rewrite(() => {
+      found = followComments({ cues: cuesRef.current, removed: gone.current, moved: moved.current }, proposals, sides);
+      return found?.cues ?? null;
+    }).then((ok) => {
+      if (!ok || !found) return;
+      const parts = [found.added ? `added ${found.added}` : "", found.corrected ? `corrected ${found.corrected}` : "", found.removed ? `removed ${found.removed} misread` : ""].filter(Boolean).join(", ");
       confirmWithUndo(`Updated from the comments: ${parts}.`);
     });
     // Runs once, with the comments as they are when saved work has been restored.
@@ -220,7 +232,7 @@ export function Trainspotter({
   const startOver = async () => {
     gone.current = []; // starting over forgets what was removed, too
     moved.current = new Set(); // and whose times were whose
-    if (await writeAsListeners(proposals.map(toCue))) {
+    if (await rewrite(() => proposals.map(toCue))) {
       setSelected(null);
       confirmWithUndo("Back to the IDs from the comments.");
     }
@@ -474,7 +486,7 @@ export function Trainspotter({
                   if (wasClick(e)) seek(i, Math.min(api.spans.valueAt(side.key, e.clientX, e.clientY), sideLength(i)));
                 }}
               >
-                {durations[i] !== null && durations[i]! < length && <div className="ts-beyond" style={{ left: `${(durations[i]! / length) * 100}%` }} aria-hidden />}
+                {lengths[i] !== null && lengths[i]! < length && <div className="ts-beyond" style={{ left: `${(lengths[i]! / length) * 100}%` }} aria-hidden />}
                 {live
                   .filter((c) => c.track === side.key)
                   .map((c) => (
@@ -668,7 +680,7 @@ export function Trainspotter({
               {tape.sides.map((side, i) =>
                 many && i !== active ? null : (
                   <div key={side.key} className="ts-map-lane">
-                    {durations[i] !== null && durations[i]! < length && <span style={{ left: `${(durations[i]! / length) * 100}%` }} />}
+                    {lengths[i] !== null && lengths[i]! < length && <span style={{ left: `${(lengths[i]! / length) * 100}%` }} />}
                     {cues
                       .filter((c) => c.track === side.key)
                       .map((c) => (

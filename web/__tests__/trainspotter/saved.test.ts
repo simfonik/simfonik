@@ -18,7 +18,7 @@ const said = (side: number, start: number, end: number, artist: string, title = 
   also: [],
   ...rest,
 });
-const kept = (proposals: Proposal[], rest: Partial<Kept> = {}): Kept => ({ cues: proposals.map((p) => toCue(p, SIDES)), removed: [], moved: new Set(), ...rest });
+const kept = (proposals: Proposal[], rest: Partial<Kept> = {}): Kept => ({ cues: proposals.map((p) => toCue(p, SIDES)), removed: [], moved: new Set(), lengths: [], ...rest });
 const line = (c: { track: string; start: number; end: number; artist: string }) => `${c.track} ${c.start}-${c.end} ${c.artist || '??'}`;
 
 describe('a return visit', () => {
@@ -104,7 +104,7 @@ describe('reading what was stored', () => {
 
   it('takes a bare empty list for a first visit that was cut short, unless the page had finished opening', () => {
     expect(readSaved('[]', false)).toBeNull();
-    expect(readSaved('[]', true)).toEqual({ cues: [], removed: [], moved: null });
+    expect(readSaved('[]', true)).toEqual({ cues: [], removed: [], moved: null, lengths: [] });
   });
 
   it('leaves out anything stored that is not a track', () => {
@@ -114,6 +114,11 @@ describe('reading what was stored', () => {
     expect(found.removed).toEqual([{ side: 0, start: 5 }]);
     expect(found.moved).toEqual(new Set(['a']));
     expect(readSaved(JSON.stringify([null, good]), false)!.cues).toEqual([good]);
+  });
+
+  it('reads how long each side was, and takes anything else there for not known', () => {
+    expect(readSaved(JSON.stringify({ v: 2, cues: [], lengths: [2864, null, 'x', -1, 2700.4] }), false)!.lengths).toEqual([2864, null, null, null, 2700.4]);
+    expect(readSaved(JSON.stringify({ v: 2, cues: [] }), false)!.lengths).toEqual([]);
   });
 
   it('takes nothing, or nonsense, for a first visit', () => {

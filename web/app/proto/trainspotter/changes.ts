@@ -15,7 +15,7 @@ export function describe(e: HistoryEntry): string {
   const after = (Array.isArray(e.value) ? e.value : []) as Cue[];
   const added = after.filter((c) => !before.some((b) => b.id === c.id));
   const removed = before.filter((b) => !after.some((c) => c.id === b.id));
-  if (madeBy(e) === "Comments") return added.length ? `Added ${added.length} ${added.length === 1 ? "track" : "tracks"} from the comments` : "Went back to the IDs from the comments";
+  if (madeBy(e) === "Comments") return added.length ? `Added ${added.length} ${added.length === 1 ? "track" : "tracks"} from the comments` : "Brought in line with the comments";
   if (added.length === 1 && removed.length <= 1) return `Marked a new track at ${clock(added[0].start)}, side ${added[0].track}`;
   if (removed.length === 1 && !added.length) return `Removed ${cueLabel(removed[0])}`;
   if (!added.length && !removed.length) {

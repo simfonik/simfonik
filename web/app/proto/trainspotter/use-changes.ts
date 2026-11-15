@@ -115,6 +115,24 @@ export function useChanges({ toaster, saveFailed }: { toaster: Toaster<ReactNode
     [writeAsListeners],
   );
 
+  // The page's own changes happen one at a time, each working from the tracklist as the one before left it.
+  // A return visit catching up with the comments and a side's audio saying how long it is can arrive in either
+  // order; side by side, the later one would write over the earlier from an out-of-date copy.
+  const turn = useRef<Promise<unknown>>(Promise.resolve());
+  /** Puts `change`'s tracklist in place as the comments', when its turn comes. Null from `change` leaves it. */
+  const rewrite = useCallback(
+    (change: () => Cue[] | null) => {
+      const job = async () => {
+        const next = change();
+        return next ? writeWhenReady(next) : false;
+      };
+      const mine = turn.current.then(job, job);
+      turn.current = mine;
+      return mine;
+    },
+    [writeWhenReady],
+  );
+
   /** Nothing has changed since the page finished setting up. */
   const untouched = useCallback(() => historyRef.current?.position() === floorRef.current, []);
   /** What is on the timeline now is the page's own setting up: undo stops here. */
@@ -123,5 +141,5 @@ export function useChanges({ toaster, saveFailed }: { toaster: Toaster<ReactNode
     setFloor(floorRef.current);
   }, []);
 
-  return { rootRef, writing, entries, position, floor, canUndo: position > floor, canRedo: position < entries.length, step, confirmWithUndo, writeAsListeners, writeWhenReady, untouched, settle };
+  return { rootRef, writing, entries, position, floor, canUndo: position > floor, canRedo: position < entries.length, step, confirmWithUndo, rewrite, untouched, settle };
 }

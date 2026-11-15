@@ -39,10 +39,13 @@ export type Saved = {
       short by a track marked inside them), by id. Those times are theirs; every other comment track keeps
       following the comments, times included. */
   moved?: string[];
+  /** How long each side's audio is, in seconds, where it has said. The comments are read against these, and
+      on a slow connection the audio says so only after the saved work has been brought in line with them. */
+  lengths?: (number | null)[];
 };
 
 /** Saved work as the page holds it. `moved` is null for work saved before the page recorded it. */
-export type Kept = { cues: Cue[]; removed: Spot[]; moved: Set<string> | null };
+export type Kept = { cues: Cue[]; removed: Spot[]; moved: Set<string> | null; lengths: (number | null)[] };
 
 /**
  * Reads what was stored. Two shapes: today's, and the bare list of tracks that earlier versions of the page
@@ -56,13 +59,14 @@ export function readSaved(raw: string | null, opened: boolean): Kept | null {
   } catch {
     return null;
   }
-  if (Array.isArray(saved)) return saved.length > 0 || opened ? { cues: saved.filter(isCue), removed: [], moved: null } : null;
+  if (Array.isArray(saved)) return saved.length > 0 || opened ? { cues: saved.filter(isCue), removed: [], moved: null, lengths: [] } : null;
   if (!saved || typeof saved !== "object" || !Array.isArray((saved as Saved).cues)) return null;
-  const { cues, removed, moved } = saved as { cues: unknown[]; removed?: unknown; moved?: unknown };
+  const { cues, removed, moved, lengths } = saved as { cues: unknown[]; removed?: unknown; moved?: unknown; lengths?: unknown };
   return {
     cues: cues.filter(isCue),
     removed: Array.isArray(removed) ? removed.filter(isSpot) : [],
     moved: Array.isArray(moved) ? new Set(moved.filter((id): id is string => typeof id === "string")) : null,
+    lengths: Array.isArray(lengths) ? lengths.map((d) => (typeof d === "number" && Number.isFinite(d) && d > 0 ? d : null)) : [],
   };
 }
 
@@ -87,7 +91,7 @@ const isCue = (x: unknown): x is Cue =>
  *
  * Returns null when the saved timeline already agrees with the comments.
  */
-export function followComments(kept: Kept, proposals: Proposal[], sides: string[], stamp = Date.now().toString(36)): { cues: Cue[]; added: number; corrected: number; removed: number } | null {
+export function followComments(kept: Pick<Kept, "cues" | "removed" | "moved">, proposals: Proposal[], sides: string[], stamp = Date.now().toString(36)): { cues: Cue[]; added: number; corrected: number; removed: number } | null {
   let added = 0;
   let corrected = 0;
   let removed = 0;
