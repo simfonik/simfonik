@@ -60,26 +60,26 @@ export function StillUnknown({
 
 /** Copying this visitor's IDs so they can be posted as a comment on the tape's page. */
 export function SendItIn({ tapeId, sides, cues }: { tapeId: string; sides: string[]; cues: Cue[] }) {
-// Only what this visitor ID'd goes in the comment. Pasting everyone's IDs would re-credit the whole tape to them.
-const mine = cues.filter((c) => c.known && !c.by);
-const asComment = () =>
-  sides
-    .map((side) => {
-      const rows = mine.filter((c) => c.track === side).sort((a, b) => a.start - b.start);
-      return rows.length ? [`Side ${side}`, ...rows.map((c) => `[${clock(c.start)}] ${[c.artist, c.title].filter(Boolean).join(" - ")}`)].join("\n") : "";
-    })
-    .filter(Boolean)
-    .join("\n\n");
-const [copied, setCopied] = useState<"no" | "yes" | "failed">("no");
-const copy = async () => {
-  try {
-    await navigator.clipboard.writeText(asComment());
-    setCopied("yes");
-    setTimeout(() => setCopied("no"), 1500);
-  } catch {
-    setCopied("failed"); // show the text so it can be copied by hand
-  }
-};
+  // Only what this visitor ID'd goes in the comment. Pasting everyone's IDs would re-credit the whole tape to them.
+  const mine = cues.filter((c) => c.known && !c.by);
+  const asComment = () =>
+    sides
+      .map((side) => {
+        const rows = mine.filter((c) => c.track === side).sort((a, b) => a.start - b.start);
+        return rows.length ? [`Side ${side}`, ...rows.map((c) => `[${clock(c.start)}] ${[c.artist, c.title].filter(Boolean).join(" - ")}`)].join("\n") : "";
+      })
+      .filter(Boolean)
+      .join("\n\n");
+  const [copied, setCopied] = useState<"no" | "yes" | "failed">("no");
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(asComment());
+      setCopied("yes");
+      setTimeout(() => setCopied("no"), 1500);
+    } catch {
+      setCopied("failed"); // show the text so it can be copied by hand
+    }
+  };
   return (
     <div className="min-w-0">
       <h2 className="font-display text-2xl leading-none text-[var(--text)]">Send it in</h2>
