@@ -6,12 +6,17 @@
   --ts-z-popup: 50;
   --ts-z-toast: 60;
 }
+@media (prefers-color-scheme: dark) { :root:not(.theme-light) .ts-page { --ts-play: #ff4a3d; } }
+.theme-dark .ts-page { --ts-play: #ff4a3d; }
 /* Type on this page comes from one short scale.
    Display, in Anton: the title, the now-playing line, section headings.
    Text, in the system face: 17px for the opening line, 15px body, 14px for rows and notes, 12px captions.
    Labels, in Geist Mono capitals: 13px on boxed buttons, 12px everywhere else, always letter-spaced.
    Nothing is set smaller than 12px. */
 .ts-page {
+  /* The playhead's red: the page's only colour. Deeper on the light page, brighter on the dark one, so it
+     holds at least 3:1 against the page, a grey track and the solid playing track in both. */
+  --ts-play: #d4201a;
   /* A weight or italic that was never loaded should look missing, not be faked by the browser. */
   font-synthesis: none;
   --ts-paper:
@@ -202,29 +207,9 @@
 }
 .ts-scrub-thumb { z-index: 5; width: 44px; height: 44px; cursor: grab; touch-action: none; }
 .ts-scrub-thumb[data-dragging] { cursor: grabbing; }
-/* A flag on a pole: the pole lines up with the playhead line running down through the sides. */
-.ts-scrub-thumb::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 4px;
-  width: 16px;
-  height: 20px;
-  margin-left: -8px;
-  background: var(--text);
-  clip-path: polygon(0 0, 100% 0, 100% 62%, 50% 100%, 0 62%);
-}
-.ts-scrub-thumb::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 22px;
-  bottom: 0;
-  width: 2px;
-  margin-left: -1px;
-  background: var(--text);
-}
-.ts-scrub-thumb:has(:focus-visible)::before { outline: 2px solid var(--text); outline-offset: 3px; clip-path: none; border-radius: 1px; }
+/* The handle has no look of its own: the marker you see belongs to the playhead (.ts-head), which sits
+   exactly over it. Keyboard focus is shown on the handle. */
+.ts-scrub-thumb:has(:focus-visible) { outline: 2px solid var(--text); outline-offset: -9px; }
 .ts-row { display: flex; align-items: stretch; margin-top: 6px; }
 /* The label stays put while the tape scrolls under it. Behind the label sits a patch of page the width of
    the label and its gap, and a little taller than the row: a track, its selection ring and the playhead all
@@ -380,18 +365,20 @@
 .ts-ghost-time span { overflow: hidden; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; text-overflow: ellipsis; }
 .ts-ghost-time span:empty { display: none; }
 
-.ts-playhead {
-  position: absolute;
-  inset-block: -4px;
-  left: 0;
-  z-index: 4;
-  width: 2px;
-  margin-left: -1px;
-  pointer-events: none;
-  background: var(--text);
-  box-shadow: 0 0 0 1.5px var(--bg);
-  will-change: transform;
-}
+/* ── The playhead ──
+   One element moved by one transform: a small flag on a pole over the ruler, and a line down the row of the
+   side that is playing. The row's place comes from --row-top and --row-h, set when the playing side changes.
+   Thin, and the one colour on the page. Red shows on the page, on a grey track, on hatching and on the solid
+   playing track alike, so it needs no outline and no blending, and a hairline hides almost none of a name.
+   Its position is snapped to whole device pixels by the script that moves it, which keeps a 1px line sharp. */
+.ts-head { position: absolute; top: 2px; bottom: 10px; z-index: 4; width: 0; pointer-events: none; will-change: transform; }
+.ts-head-flag { position: absolute; top: 0; left: 0; height: 44px; }
+/* 11px wide around a 1px pole, so both sit on whole pixels. */
+.ts-head-flag::before { content: ""; position: absolute; top: 8px; left: -5px; width: 11px; height: 14px; background: var(--ts-play); clip-path: polygon(0 0, 100% 0, 100% 58%, 50% 100%, 0 58%); }
+.ts-head-flag::after { content: ""; position: absolute; top: 20px; bottom: 0; left: 0; width: 1px; background: var(--ts-play); }
+/* From just inside the pole's foot (they overlap by a pixel, so no seam can open between them) to 4px below
+   the row. */
+.ts-head-line { position: absolute; top: calc(var(--row-top, 52px) - 9px); left: 0; width: 1px; height: calc(var(--row-h, 96px) + 11px); background: var(--ts-play); }
 
 /* ── Naming ── */
 .ts-namebar {
@@ -628,7 +615,7 @@
 .ts-map-lane i[data-playing] { background-color: var(--text); background-image: none; }
 /* Past the end of a shorter side: no tape. */
 .ts-map-lane span { position: absolute; inset-block: 0; right: 0; background: var(--ts-paper); }
-.ts-map-head { position: absolute; inset-block: 0; z-index: 1; width: 2px; margin-left: -1px; background: var(--text); box-shadow: 0 0 0 1px var(--bg); pointer-events: none; }
+.ts-map-head { position: absolute; inset-block: 0; left: 0; z-index: 1; width: 1px; background: var(--ts-play); pointer-events: none; will-change: transform; }
 /* The frame dims everything outside itself with one very wide shadow, clipped by the strip. */
 .ts-map-window { position: absolute; inset-block: 0; z-index: 2; border: 1px solid color-mix(in oklch, var(--text) 45%, transparent); box-shadow: 0 0 0 100vw color-mix(in oklch, var(--bg) 62%, transparent); pointer-events: none; transition: border-color 120ms ease-out; }
 /* The dimming already says which part is on screen, so the frame stays quiet until it is being used. */

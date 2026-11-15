@@ -210,7 +210,14 @@ export function Trainspotter({
   const sideLength = (i: number) => durations[i] ?? length;
 
   // ── Playhead: written straight to the element each frame while playing; React hears once a second ──
-  const playheads = useRef<(HTMLDivElement | null)[]>([]);
+  // The playhead is one element: the marker on the ruler and the line down the side that is playing. It is
+  // moved by a single transform, once per frame, from one time. While the marker is being dragged that time
+  // is the dragged one (scrubT), so marker and line stay under the pointer instead of trailing the audio.
+  const headRef = useRef<HTMLDivElement>(null);
+  const scrubT = useRef<number | null>(null);
+  // Layout the frame loop needs, kept in refs so it never measures the page while it draws.
+  const widthRef = useRef(0); // the tape, in px
+  const availRef = useRef(0); // the scroller's visible width, in px
   const scrollerRef = useRef<HTMLDivElement>(null);
   const ghostRef = useRef<HTMLDivElement>(null);
   // The overview under the sides: the whole tape in a strip, with a frame over the part on screen.
@@ -245,15 +252,13 @@ export function Trainspotter({
   }, []);
   const paint = useCallback(() => {
     const a = audios.current[activeRef.current];
-    const t = a?.currentTime ?? 0;
-    let x = 0;
-    playheads.current.forEach((el, i) => {
-      if (!el) return;
-      const px = (t / lengthRef.current) * (el.parentElement?.clientWidth ?? 0);
-      el.style.transform = `translateX(${px}px)`;
-      el.hidden = i !== activeRef.current;
-      if (i === activeRef.current) x = px;
-    });
+    const t = scrubT.current ?? a?.currentTime ?? 0;
+    const part = Math.min(1, t / lengthRef.current);
+    const x = part * widthRef.current;
+    // Whole device pixels: a 1px line drawn between two pixels is smeared across both.
+    const dpr = window.devicePixelRatio || 1;
+    const snap = (px: number) => Math.round(px * dpr) / dpr;
+    if (headRef.current) headRef.current.style.transform = `translate3d(${snap(x)}px, 0, 0)`;
     // Where the tape is wider than the screen, the tape follows the playhead. Three kinds of movement, each
     // chosen for what caused it:
     //  · Playing along: the playhead rides at a fixed spot a little past the middle and the tape slides under
@@ -266,12 +271,12 @@ export function Trainspotter({
     // With reduced motion there is no sliding at all: the tape turns the page, just before the faded edge.
     // None of it while the visitor is looking somewhere else (they scrolled there, or the ID sheet did).
     const sc = scrollerRef.current;
-    const following = sc && a && !a.paused && !sheetOpen.current && performance.now() > handsOff.current && sc.scrollWidth > sc.clientWidth + 4;
+    const visible = availRef.current - GUTTER;
+    const far = Math.max(0, widthRef.current + GUTTER - availRef.current); // the furthest the tape can scroll
+    const following = sc && a && !a.paused && scrubT.current === null && !sheetOpen.current && performance.now() > handsOff.current && far > 4;
     if (!following) glide.current = null;
     else {
       const nowMs = performance.now();
-      const visible = sc.clientWidth - GUTTER;
-      const far = sc.scrollWidth - sc.clientWidth;
       const at = x - sc.scrollLeft; // where the playhead is, across the visible tape
       const ride = visible * 0.6;
       if (reduceMotion.current) {
@@ -294,7 +299,7 @@ export function Trainspotter({
         }
       }
     }
-    if (mapHeadRef.current) mapHeadRef.current.style.left = `${Math.min(1, t / lengthRef.current) * 100}%`;
+    if (mapHeadRef.current) mapHeadRef.current.style.transform = `translate3d(${snap(part * Math.max(0, visible))}px, 0, 0)`;
     if (Math.floor(t) !== lastSecond.current) {
       lastSecond.current = Math.floor(t);
       setNow(t);
@@ -821,7 +826,19 @@ export function Trainspotter({
   const fit = avail - GUTTER - 2;
   const ppm = touch ? PPM_TOUCH : PPM;
   const width = fit >= (length / 60) * ppm ? fit : Math.round((length / 60) * ppm);
+  widthRef.current = width;
+  availRef.current = avail;
   const minutes = Math.ceil(length / 60);
+  // The playhead's line runs down the row of the side that is playing. Measured when that changes, not per frame.
+  useLayoutEffect(() => {
+    const head = headRef.current;
+    const canvas = head?.parentElement;
+    const row = canvas?.querySelectorAll<HTMLElement>(".ts-row")[many ? 0 : active];
+    if (!head || !canvas || !row) return;
+    const box = row.getBoundingClientRect();
+    head.style.setProperty("--row-top", `${box.top - canvas.getBoundingClientRect().top}px`);
+    head.style.setProperty("--row-h", `${box.height}px`);
+  }, [active, many, sides.length, avail]);
   // More tape than fits: the overview strip shows the rest and takes you there.
   const scrolls = avail > 0 && width > fit + 1;
   useEffect(() => {
@@ -845,12 +862,15 @@ export function Trainspotter({
   const scrub = (v: number | number[]) => {
     const t = Math.min(v as number, sideLength(activeRef.current));
     setScrubAt(t);
+    scrubT.current = t;
+    paint(); // marker and line move with the pointer now; the audio catches up below
     if (performance.now() - lastSeek.current > 120) {
       lastSeek.current = performance.now();
       seek(activeRef.current, t);
     }
   };
   const scrubEnd = (v: number | number[]) => {
+    scrubT.current = null;
     seek(activeRef.current, Math.min(v as number, sideLength(activeRef.current)));
     setScrubAt(null);
   };
@@ -1108,14 +1128,6 @@ export function Trainspotter({
                       <span className="ts-edge" data-span-edge="end" aria-hidden />
                     </CuePart>
                   ))}
-                <div
-                  ref={(el) => {
-                    playheads.current[i] = el;
-                  }}
-                  className="ts-playhead"
-                  hidden={i !== active}
-                  aria-hidden
-                />
               </Track>
             </div>
           )))}
@@ -1319,6 +1331,14 @@ export function Trainspotter({
               </Slider>
             </div>
             {root}
+            {/* The playhead. One element, so the marker and the line cannot part company: built as two, the
+                marker (a slider handle, placed in percent once a second) ticked along while the line (placed in
+                pixels every frame) glided, and they could sit a pixel apart. The slider's handle is still under
+                the marker, invisible, for dragging and for the keyboard. */}
+            <div ref={headRef} className="ts-head" style={{ left: GUTTER }} aria-hidden>
+              <span className="ts-head-flag" />
+              <span className="ts-head-line" />
+            </div>
             <div ref={ghostRef} className="ts-ghost" aria-hidden>
               <span className="ts-ghost-time">
                 <b className="font-normal" />
