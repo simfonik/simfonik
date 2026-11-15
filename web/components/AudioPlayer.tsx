@@ -1,7 +1,9 @@
 'use client';
 
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
+import { useTrackIds } from '../hooks/useTrackIds';
 import { PlayerControls } from './PlayerControls';
+import { TrackIds } from './TrackIds';
 
 interface AudioPlayerProps {
   src: string;
@@ -10,9 +12,14 @@ interface AudioPlayerProps {
   sidePosition?: string;
   wave?: number[] | null;
   length?: number | null;
+  /** The side's place among all the tape's sides, and how many there are: for the track IDs. */
+  sideIndex?: number;
+  sideCount?: number;
 }
 
-export function AudioPlayer({ src, title, tapeId, sidePosition, wave, length }: AudioPlayerProps) {
+export function AudioPlayer({ src, title, tapeId, sidePosition, wave, length, sideIndex = 0, sideCount = 1 }: AudioPlayerProps) {
+  const trackIds = useTrackIds(tapeId);
+  const ids = trackIds.sides[sideIndex] ?? [];
   const { ref, state, controls } = useAudioPlayer({ 
     src, 
     tapeId, 
@@ -38,10 +45,21 @@ export function AudioPlayer({ src, title, tapeId, sidePosition, wave, length }: 
         title={title}
         wave={wave}
         length={length}
+        ids={ids}
         onPlay={controls.play}
         onPause={controls.pause}
         onSeek={controls.seek}
-      />
+      >
+        {tapeId && (
+          <TrackIds
+            tapeId={tapeId}
+            position={sideCount > 1 ? sidePosition ?? null : null}
+            ids={ids}
+            time={state.currentTime}
+            onPosted={trackIds.refresh}
+          />
+        )}
+      </PlayerControls>
     </>
   );
 }

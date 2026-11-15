@@ -2,7 +2,9 @@
 
 import { useState, useCallback } from 'react';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
+import { useTrackIds } from '../hooks/useTrackIds';
 import { PlayerControls, formatTime } from './PlayerControls';
+import { TrackIds } from './TrackIds';
 
 interface DJ {
   name: string;
@@ -14,6 +16,8 @@ interface Track {
   title: string;
   url: string;
   position: string;
+  /** Its place among all the tape's sides, playable or not: how the track IDs are kept. */
+  index: number;
   djs?: DJ[];
   wave?: number[] | null;
   length?: number | null;
@@ -22,9 +26,11 @@ interface Track {
 interface PlaylistPlayerProps {
   tracks: Track[];
   tapeId?: string;
+  /** How many sides the tape has in all. */
+  sideCount: number;
 }
 
-export function PlaylistPlayer({ tracks, tapeId }: PlaylistPlayerProps) {
+export function PlaylistPlayer({ tracks, tapeId, sideCount }: PlaylistPlayerProps) {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const currentTrack = tracks[currentTrackIndex];
 
@@ -40,6 +46,9 @@ export function PlaylistPlayer({ tracks, tapeId }: PlaylistPlayerProps) {
     sidePosition: currentTrack.position,
     onEnded: currentTrackIndex < tracks.length - 1 ? handleNextTrack : undefined
   });
+
+  const trackIds = useTrackIds(tapeId);
+  const ids = trackIds.sides[currentTrack.index] ?? [];
 
   const selectTrack = (index: number) => {
     if (index === currentTrackIndex) {
@@ -80,10 +89,23 @@ export function PlaylistPlayer({ tracks, tapeId }: PlaylistPlayerProps) {
         wave={currentTrack.wave}
         length={currentTrack.length}
         showTimes={false}
+        ids={ids}
         onPlay={controls.play}
         onPause={controls.pause}
         onSeek={controls.seek}
-      />
+      >
+        {tapeId && (
+          <TrackIds
+            // A form left open belongs to the side it was opened on.
+            key={currentTrack.position}
+            tapeId={tapeId}
+            position={sideCount > 1 ? currentTrack.position : null}
+            ids={ids}
+            time={state.currentTime}
+            onPosted={trackIds.refresh}
+          />
+        )}
+      </PlayerControls>
 
       {/* The sides. Each row keeps to the player's two edges: its glyph under the play button, on the content's
           left edge, and its name under the start of the bar. The side that is loaded is the one in full

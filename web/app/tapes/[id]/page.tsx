@@ -346,12 +346,14 @@ export default async function Page({ params }: Props) {
             {(() => {
               // Build playlist from sides with audio
               const playlist = tape.sides
-                .map((side, index) => ({ side, wave: waves?.[index] ?? null, length: lengths?.[index] ?? null }))
+                .map((side, index) => ({ side, index, wave: waves?.[index] ?? null, length: lengths?.[index] ?? null }))
                 .filter(({ side }) => side.audio_links[0] && isStreamable(side.audio_links[0].url))
-                .map(({ side, wave, length }) => ({
+                .map(({ side, index, wave, length }) => ({
                   title: side.title ?? `Side ${side.position}`,
                   url: side.audio_links[0].url,
                   position: side.position,
+                  // Its place among all the tape's sides, which is how the track IDs are kept.
+                  index,
                   djs: side.djs,
                   // Half the measured detail: the bar is a few hundred pixels wide.
                   wave: wave ? thin(wave, 300) : null,
@@ -361,7 +363,7 @@ export default async function Page({ params }: Props) {
 
               // Use playlist player for 2+ tracks, individual player for single side
               if (playlist.length >= 2) {
-                return <PlaylistPlayer tracks={playlist} tapeId={tape.id} />;
+                return <PlaylistPlayer tracks={playlist} tapeId={tape.id} sideCount={tape.sides.length} />;
               }
 
               // One playable side: a player of its own.
@@ -402,6 +404,8 @@ export default async function Page({ params }: Props) {
                         title={unlabelled ? undefined : track.title}
                         tapeId={tape.id}
                         sidePosition={track.position}
+                        sideIndex={track.index}
+                        sideCount={tape.sides.length}
                         wave={track.wave}
                         length={track.length}
                       />

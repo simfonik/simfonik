@@ -1,4 +1,5 @@
-import React, { useMemo, useRef } from 'react';
+import React, { ReactNode, useMemo, useRef } from 'react';
+import { idAt, idLabel, type TrackId } from '../lib/track-ids/compose';
 import { outline } from '../lib/waveform';
 
 export interface PlayerControlsProps {
@@ -13,6 +14,10 @@ export interface PlayerControlsProps {
   length?: number | null;
   /** The time played and the side's length, under the bar's two ends. Off where a list of sides says them. */
   showTimes?: boolean;
+  /** The track IDs the comments give for this side, in order of time. Each is marked on the bar. */
+  ids?: TrackId[];
+  /** Whatever goes under the bar, in line with it. */
+  children?: ReactNode;
   onPlay: () => void;
   onPause: () => void;
   onSeek: (time: number) => void;
@@ -36,6 +41,8 @@ export function PlayerControls({
   wave,
   length,
   showTimes = true,
+  ids,
+  children,
   onPlay,
   onPause,
   onSeek
@@ -45,6 +52,7 @@ export function PlayerControls({
   // The side's length: what the audio says once it has loaded, and before that what was read ahead of time.
   const whole = duration > 0 ? duration : length ?? 0;
   const played = whole > 0 ? Math.min(100, (currentTime / whole) * 100) : 0;
+  const playing = ids ? idAt(ids, currentTime) : null;
   /** Nothing has been asked of the audio yet, so the first press on the bar is also what starts the tape. */
   const unstarted = !duration && !isPlaying && !isLoading;
 
@@ -79,10 +87,14 @@ export function PlayerControls({
     if (!el) return;
     const at = Math.max(0, Math.min(bar.width, x - bar.left));
     el.style.setProperty('--at', `${at}px`);
-    // The label stays inside the bar's ends.
-    el.style.setProperty('--label', `${Math.max(30, Math.min(bar.width - 30, at))}px`);
+    // The time there and, where the comments have ID'd it, the track playing there.
     const time = timeAt(x, bar);
-    el.firstElementChild!.textContent = time === null ? '' : formatTime(time);
+    const id = time !== null && ids ? idAt(ids, time) : null;
+    const label = el.firstElementChild as HTMLElement;
+    label.textContent = time === null ? '' : `${formatTime(time)}${id ? ` · ${idLabel(id)}` : ''}`;
+    // The label stays inside the bar's ends, however long the name makes it.
+    const half = label.offsetWidth / 2;
+    el.style.setProperty('--label', `${Math.max(half, Math.min(bar.width - half, at))}px`);
   };
   const preview = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== 'mouse') return;
@@ -137,6 +149,13 @@ export function PlayerControls({
           ) : (
             <div className="player-wave-shape" data-flat="" />
           )}
+          {/* Where each ID'd track starts: a cut through the bar. One at the very start would cut nothing. */}
+          {whole > 0 &&
+            ids?.map((id) =>
+              id.start > 0 && id.start < whole ? (
+                <span key={id.start} className="player-wave-mark" style={{ left: `${(id.start / whole) * 100}%` }} />
+              ) : null,
+            )}
           <div ref={ghost} className="player-wave-ghost" aria-hidden>
             <span />
           </div>
@@ -188,7 +207,7 @@ export function PlayerControls({
               if (unstarted && currentTime > 0 && /^(Arrow|Page|Home|End)/.test(e.key)) onPlay();
             }}
             aria-label={`Seek audio${title ? `: ${title}` : ''}`}
-            aria-valuetext={whole ? `${formatTime(currentTime)} of ${formatTime(whole)}` : 'Not loaded yet'}
+            aria-valuetext={whole ? `${formatTime(currentTime)} of ${formatTime(whole)}${playing ? `, ${idLabel(playing)}` : ''}` : 'Not loaded yet'}
           />
         </div>
         {showTimes && (
@@ -197,6 +216,7 @@ export function PlayerControls({
             <span>{whole > 0 ? formatTime(whole) : '--:--:--'}</span>
           </div>
         )}
+        {children}
       </div>
     </div>
   );

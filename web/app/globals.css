@@ -271,6 +271,16 @@ body::before {
   height: 2px;
   transform: translateY(-50%);
 }
+/* Where each ID'd track starts: a cut through the bar, in the page's own colour. The slider lies over them. */
+.player-wave-mark {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--bg);
+  pointer-events: none;
+}
 /* A line on the bar with a time over it: under a mouse, where a click would land; under a finger that is
    dragging the bar, where the tape is being taken. */
 .player-wave-ghost {
@@ -299,6 +309,10 @@ body::before {
   font-size: 11px;
   line-height: 1.3;
   white-space: nowrap;
+  /* A track's name can be long: it is cut short before it is wider than the bar. */
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .player-wave-ghost span:empty { display: none; }
 @media (hover: hover) and (pointer: fine) {
@@ -326,6 +340,30 @@ body::before {
   .player-wave input::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 1px; height: 2.75rem; }
   .player-wave input::-moz-range-thumb { width: 1px; height: 2.75rem; border: 0; }
 }
+/* Track IDs under the bar: the plain-text buttons that open and shut the form. Small type, a full-size place
+   to press. */
+.track-ids-open {
+  position: relative;
+  flex: none;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--text);
+  text-underline-offset: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.track-ids-open::before {
+  content: "";
+  position: absolute;
+  inset: -15px -8px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .track-ids-open:hover { text-decoration: underline; }
+}
+.track-ids-open:active { opacity: 0.6; }
+.track-ids-open:focus-visible { outline: 2px solid var(--text); outline-offset: 4px; }
 /* Where the keyboard is: the bar, the play button, a side's row. */
 .player-wave:has(input:focus-visible) { outline: 2px solid var(--text); outline-offset: 4px; }
 .player-play:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }

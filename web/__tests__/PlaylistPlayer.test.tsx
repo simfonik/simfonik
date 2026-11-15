@@ -4,12 +4,15 @@ import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { PlaylistPlayer } from '../components/PlaylistPlayer';
 
-// Mock our fetch API globally to prevent unhandled rejection spam if track-play fires
-global.fetch = vi.fn(() => Promise.resolve(new Response(null, { status: 200 })));
+// Mock our fetch API globally to prevent unhandled rejection spam if track-play fires. The player also asks
+// for the tape's track IDs; it is told there are none.
+global.fetch = vi.fn((url: RequestInfo | URL) =>
+  Promise.resolve(new Response(String(url).includes('/api/track-ids/') ? JSON.stringify({ sides: [[], []], complete: true }) : null, { status: 200 })),
+);
 
 const mockTracks = [
-  { title: 'Track 1', url: 'track1.mp3', position: 'A' },
-  { title: 'Track 2', url: 'track2.mp3', position: 'B' },
+  { title: 'Track 1', url: 'track1.mp3', position: 'A', index: 0 },
+  { title: 'Track 2', url: 'track2.mp3', position: 'B', index: 1 },
 ];
 
 describe('PlaylistPlayer Integration', () => {
@@ -24,7 +27,7 @@ describe('PlaylistPlayer Integration', () => {
 
   it('auto-advances to the next track when the current track fires the ended event', async () => {
     const user = userEvent.setup();
-    render(<PlaylistPlayer tracks={mockTracks} tapeId="tape-1" />);
+    render(<PlaylistPlayer tracks={mockTracks} tapeId="tape-1" sideCount={2} />);
 
     // Track 1 should be active initially
     expect(screen.getByText('Track 1')).toBeInTheDocument();
@@ -56,7 +59,7 @@ describe('PlaylistPlayer Integration', () => {
       { ...mockTracks[0], length: 1831 },
       { ...mockTracks[1], length: 1829 },
     ];
-    render(<PlaylistPlayer tracks={timed} tapeId="tape-1" />);
+    render(<PlaylistPlayer tracks={timed} tapeId="tape-1" sideCount={2} />);
     const [first, second] = [screen.getByRole('button', { name: /track 1/i }), screen.getByRole('button', { name: /track 2/i })];
 
     // At rest: a length on each row, and no clock anywhere.
