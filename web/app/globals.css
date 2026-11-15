@@ -92,16 +92,19 @@ body::before {
   }
 }
 
-/* Where the keyboard is, in a field. The search field is a line under its text: with the keyboard in it the
-   line doubles and the glass comes up to full colour. A boxed field gets a second line around its box. */
+/* Where the keyboard is, in a field: the field's own line gets heavier. The search field is a line under its
+   text, and the line doubles (its glass also comes up to full colour). A boxed field's border doubles, drawn
+   inside the box so nothing around it moves. A text field shows this on every click, not only for the
+   keyboard, which is why it is the field's own line and not a second ring around it. */
 .search-field { transition: box-shadow 0.15s ease-out; }
 .search-field svg { transition: color 0.15s ease-out; }
 .search-field input { outline: none; }
 .search-field:focus-within { box-shadow: 0 2px 0 var(--text); }
 .search-field:focus-within svg { color: var(--text); }
-.text-field:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.text-field { outline: none; transition: box-shadow 0.15s ease-out; }
+.text-field:focus-visible { box-shadow: inset 0 0 0 1.5px var(--text); }
 @media (prefers-reduced-motion: reduce) {
-  .search-field, .search-field svg { transition: none; }
+  .search-field, .search-field svg, .text-field { transition: none; }
 }
 
 /* The page under the open phone menu: dimmed, blurred and held still. The menu exists below the width at
