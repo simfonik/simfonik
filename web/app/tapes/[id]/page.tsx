@@ -4,10 +4,11 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import fs from "fs";
 import path from "path";
+import sharp from "sharp";
 import { getTapeById, getAllTapes, getCommentsForTape, getAllSeries } from "../../../lib/data";
 import { hasOptimizedImages, isOptimizableImagePath } from "../../../lib/image-utils";
 import { ASSET_CACHE_VERSION } from "../../../lib/imageLoader";
-import { TapeGallery } from "../../../components/TapeGallery";
+import { TapeImages } from "../../../components/TapeImages";
 import { PlaceholderCassetteLive } from "../../../components/PlaceholderCassetteLive";
 import { AudioCoordinator } from "../../../components/AudioCoordinator";
 import { AudioPlayer } from "../../../components/AudioPlayer";
@@ -186,6 +187,17 @@ export default async function Page({ params }: Props) {
         .toString('base64')}`
     : '';
 
+  // The wide screen's picture is sized from its file's own measurements, so its place is settled before it
+  // has loaded. A tape with the drawn cassette has no picture to measure.
+  const pictures = usesPlaceholder
+    ? []
+    : await Promise.all(
+        allImages.map(async ({ src, label }) => {
+          const { width, height } = await sharp(path.join(process.cwd(), 'public', src)).metadata();
+          return { src, label, width, height };
+        })
+      );
+
   return (
     <main className="min-h-screen">
       <JsonLd data={generateTapeSchema(tape)} />
@@ -263,15 +275,16 @@ export default async function Page({ params }: Props) {
 
       {/* Hero: Image Gallery with Players */}
       <div className="mb-12">
-        <div className="grid lg:grid-cols-[1fr_500px] gap-8 items-start">
-          {/* Desktop Gallery - Hidden on mobile. For tapes that have no
-              real cover, render a live SVG cassette whose reels rotate
-              while audio is playing instead of the static AVIF. */}
+        {/* Five parts image to seven parts words: 500px and 700px at the page's full width. */}
+        <div className="grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-8 items-start">
+          {/* The picture, on a wide screen only (a phone has every image stacked, further down). For tapes
+              that have no real cover, render a live SVG cassette whose reels rotate while audio is playing
+              instead of the static AVIF. */}
           <div className="hidden lg:block">
             {usesPlaceholder ? (
               <PlaceholderCassetteLive tapeId={tape.id} labelDataUri={labelDataUri} />
             ) : (
-              <TapeGallery allImages={allImages} />
+              <TapeImages images={pictures} />
             )}
           </div>
 
@@ -279,7 +292,7 @@ export default async function Page({ params }: Props) {
           <div>
             {/* Desktop-only Header */}
             <header className="mb-8 hidden lg:block">
-              <h1 className="font-display text-4xl sm:text-5xl leading-[0.95] text-[var(--text)] mb-6">
+              <h1 className="font-display text-6xl leading-[0.95] text-[var(--text)] mb-6 text-balance">
                 {tape.title}
               </h1>
               <div className="flex gap-2 flex-wrap mb-6">
