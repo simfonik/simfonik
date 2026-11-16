@@ -53,10 +53,11 @@ export type ListedTrack = {
 export type RunningOrder = { by: string | null; tracks: ListedTrack[] };
 
 /**
- * How close two IDs in the site's form must be, in seconds, to be one moment of the tape: the later is then
- * the earlier put right. Further apart they are two tracks. The form places an ID to the second, and a
- * correction made with it lands on the very second of what it corrects, so little room is needed. (A time
- * typed into a sentence is rougher: the reader gives those 20 seconds, see `reconcile` in parse.ts.)
+ * How close an ID in the site's form must be to where a track starts, in seconds, to be said of that track:
+ * it is then that track put right. Further off it is a track of its own. The form places an ID to the
+ * second, and a correction made with it lands on the very second of what it corrects, so little room is
+ * needed. (Two times typed into sentences are rougher: the reader gives those 20 seconds of each other, see
+ * `reconcile` in parse.ts.)
  */
 export const ONE_MOMENT = 5;
 

@@ -325,8 +325,19 @@ describe('IDs made with the site’s own form, which places them to the second',
     expect(tracks([at(100, 'Orbital', 'Chime', '1'), at(105, 'Joey Beltram', 'Energy Flash', '2')])).toEqual(['100 Joey Beltram — Energy Flash']);
   });
 
-  it('still name the moment someone asked about a few seconds earlier', () => {
-    expect(tracks([at(100, '', '', '1', { exact: false }), at(112, 'Orbital', 'Chime', '2')])).toEqual(['100 Orbital — Chime']);
+  it('are said of a track someone timed in a sentence only within five seconds of where it starts, like any other', () => {
+    const typed = (start: number, artist: string, title: string, date: string) => at(start, artist, title, date, { exact: false });
+    // Twelve seconds into a track from an old comment, an ID made with the form is the next track. Two
+    // times typed into sentences that close would be one moment, and the later would replace the earlier.
+    expect(tracks([typed(100, 'Orbital', 'Chime', '1'), at(112, 'Joey Beltram', 'Energy Flash', '2')])).toEqual(['100 Orbital — Chime', '112 Joey Beltram — Energy Flash']);
+    expect(tracks([typed(100, 'Orbital', 'Chime', '1'), typed(112, 'Joey Beltram', 'Energy Flash', '2')])).toEqual(['100 Joey Beltram — Energy Flash']);
+    // The same of a spot someone asked about: it is named from where it starts, not from twelve seconds in.
+    expect(tracks([typed(100, '', '', '1'), at(112, 'Orbital', 'Chime', '2')])).toEqual(['100 ??', '112 Orbital — Chime']);
+    expect(tracks([typed(100, '', '', '1'), at(100, 'Orbital', 'Chime', '2')])).toEqual(['100 Orbital — Chime']);
+    // Within five seconds before it, the track starts where the form said: that is the earliest time given.
+    expect(tracks([typed(100, 'Orbital', 'Chime', '1'), at(97, 'Orbital', 'Belfast', '2')])).toEqual(['97 Orbital — Belfast']);
+    // And what is typed into a sentence afterwards, near a form's time, is still said of that moment.
+    expect(tracks([at(100, 'Orbital', 'Chime', '1'), typed(112, 'Joey Beltram', 'Energy Flash', '2'), typed(104, '', '', '3')])).toEqual(['100 Joey Beltram — Energy Flash']);
   });
 
   describe('a mark taken away', () => {

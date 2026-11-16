@@ -411,19 +411,27 @@ export function reconcile(read: Sighting[], lengths: number[]): Proposal[] {
   const out: Proposal[] = [];
   lengths.forEach((length, side) => {
     const here = sightings.filter((s) => s.side === side && !s.gone && s.start < length).sort((a, b) => a.start - b.start || a.date.localeCompare(b.date));
-    // What is said within 20 seconds is said of one moment: people's times are rough. Two times from the
-    // site's own form are not, and are one moment only when ONE_MOMENT apart or closer. Twelve seconds after
-    // an ID made with the form, another made with it is the next track, not the first put right.
+    // Where a moment starts: the earliest time anyone actually gave for it.
+    const shown = (g: Sighting[]) => (g.find((s) => !s.weak) ?? g[0]).start;
+    // What people type is rough: said within 20 seconds, it is said of one moment.
     const groups: Sighting[][] = [];
-    for (const s of here) {
+    for (const s of here.filter((x) => !x.exact)) {
       const g = groups[groups.length - 1];
-      const another = s.exact && g?.some((x) => x.exact && s.start - x.start > ONE_MOMENT);
-      if (g && s.start - g[0].start <= 20 && !another) g.push(s);
+      if (g && s.start - g[0].start <= 20) g.push(s);
       else groups.push([s]);
     }
+    // A time from the site's own form is exact. It is said of the moment that starts within ONE_MOMENT of
+    // it, and is otherwise a moment of its own, whoever said what nearby: twelve seconds into a track, an
+    // ID made with the form is the next track, not that one put right. (The tape page works on the same
+    // rule before anything is posted: `withChanges` in side.ts.)
+    for (const s of here.filter((x) => x.exact)) {
+      const g = groups.find((group) => Math.abs(shown(group) - s.start) <= ONE_MOMENT);
+      if (g) g.splice(0, g.length, ...[...g, s].sort((a, b) => a.start - b.start || a.date.localeCompare(b.date)));
+      else groups.push([s]);
+    }
+    groups.sort((a, b) => a[0].start - b[0].start);
     // A mark taken away (see compose.ts) is taken from the moment that starts where it says, and takes with
     // it everything said of that moment before. What is said after stands: the track can be ID'd again.
-    const shown = (g: Sighting[]) => (g.find((s) => !s.weak) ?? g[0]).start;
     for (const gone of sightings.filter((s) => s.side === side && s.gone)) {
       const i = groups.findIndex((g) => Math.abs(shown(g) - gone.start) <= ONE_MOMENT);
       if (i < 0) continue;

@@ -436,6 +436,24 @@ describe('a spot the comments have marked without a name', () => {
   });
 });
 
+describe('a track that an old comment timed, to the nearest few seconds', () => {
+  it('is put right only from where it starts: ten seconds in, what is said starts a new track, before and after it is posted', async () => {
+    const page = tapePage({ archive: [old('The track at 5:00 is Orbital - Chime')] });
+    await page.read();
+    expect(page.rows()).toEqual(['0:05:00Orbital — Chime']);
+    await page.at(310);
+    expect(page.line()).toBe('Orbital — ChimeNew IDNew unknown');
+    await page.user.click(page.button(NEW_UNKNOWN));
+    expect(page.rows()).toEqual(['0:05:00Orbital — Chime', '0:05:10Unknown trackUndo']);
+
+    await page.user.click(within(page.bar() as HTMLElement).getByRole('button', { name: 'Post' }));
+    await waitFor(() => expect(page.posts()).toEqual(['[5:10] ? - ?']));
+    await waitFor(() => expect(page.shared().sides[0].rows.every((row) => !row.mine)).toBe(true));
+    // The comments, read again, say the same: the old track still has its name and its start.
+    expect(page.rows()).toEqual(['0:05:00Orbital — Chime', '0:05:10Unknown trackID it']);
+  });
+});
+
 describe('the list’s order, and the one moment each track has', () => {
   it('never shows a side out of order of time, whatever is said of it', async () => {
     // The fourth line of the list, said to start before the second.
