@@ -24,7 +24,7 @@
 //
 // Pure functions, used in the browser.
 import { composeId, composeRemoval, splitComposed, type Composed, type RunningOrder } from './compose';
-import { ROUGHLY, SHORTEST, momentOf, sameRecord, settle, type Moment, type TrackId } from './moments';
+import { LONGEST, ROUGHLY, SHORTEST, momentOf, sameRecord, settle, type Moment, type TrackId } from './moments';
 
 /**
  * When the visitor's own change was said, as a date: after any the comments have. What was posted together
@@ -195,6 +195,9 @@ function placed(lines: RunningOrder['tracks'], ids: Timed[]): Map<number, { id: 
  *    order can't take.
  * 4. Any ID still unclaimed (a record the list doesn't have, or has under a name too different to tell, or
  *    out of its order) is not left out. It is a row of its own, after the last row to start before it.
+ * 5. A track runs until the next one starts (`settle`). But where the list has lines with no time between
+ *    it and the next, the list itself says other tracks played there, and nobody has said when: the track
+ *    is then taken to play no longer than LONGEST, unless a comment says where it ends.
  *
  * Down the rows, times only rise.
  */
@@ -249,6 +252,12 @@ export function sideRows(order: RunningOrder | null, ids: Timed[]): Row[] {
     if (taken.has(id)) continue;
     rows.splice(rows.findLastIndex((row) => row.start !== null && row.start <= id.start) + 1, 0, loose(id));
   }
+  const stated = new Set(ids.filter((id) => id.until !== undefined).map((id) => id.start));
+  rows.forEach((row, k) => {
+    if (row.start === null || row.end === null || stated.has(row.start)) return;
+    const next = rows.findIndex((later, j) => j > k && later.start !== null);
+    if (next > k + 1) row.end = Math.min(row.end, row.start + LONGEST);
+  });
   return rows;
 }
 

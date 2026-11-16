@@ -41,9 +41,8 @@ describe('a side’s tracks with the visitor’s changes among them', () => {
     expect(ids[2].mine).toBe(change);
     // What was playing there is cut off where the new track starts.
     expect(times(withChanges(posted, [said(100)]))[0]).toBe('0-100 Orbital / Chime');
-    // And the last track anyone had timed now runs to it, where that is within the ten minutes a track is ever taken to play.
-    expect(times(withChanges(posted, [said(900)]))[2]).toBe('600-900 Joey Beltram / Energy Flash');
-    expect(times(withChanges(posted, [said(1500)]))[2]).toBe('600-1200 Joey Beltram / Energy Flash');
+    // And the last track anyone had timed now runs to it, however far on it is.
+    expect(times(withChanges(posted, [said(1500)]))[2]).toBe('600-1500 Joey Beltram / Energy Flash');
   });
 
   it('read a change as its line of a comment will read back: its time to the second, its names as written there', () => {
@@ -151,6 +150,23 @@ describe('a side’s rows', () => {
     // The comments' latest word for the track is often the fuller one.
     const kept = list('Josh', 'Oval Emotion - Do It');
     expect(rows(kept, [id(911, 'Oval Emotion', 'Do It (Nasty Organ Dub)')])[0]).toMatchObject({ n: 1, artist: 'Oval Emotion', title: 'Do It (Nasty Organ Dub)', start: 911 });
+  });
+
+  it('have a track run to the next, however far on, unless the list has lines with no time between them: then other tracks played there, and it is taken to play ten minutes', () => {
+    const spans = (o: RunningOrder | null, ids: Moment[]) => rows(o, ids).flatMap((r) => (r.start === null ? [] : [`${r.start}-${r.end}`]));
+    const kept = list('Josh', 'Orbital - Chime', 'Joey Beltram - Energy Flash', 'Altern 8 - Infiltrate 202');
+    // The first and second lines, thirteen minutes apart: the list says nothing came between.
+    expect(spans(kept, [id(0, 'Orbital', 'Chime'), id(780, 'Joey Beltram', 'Energy Flash')])).toEqual(['0-780', '780-1380']);
+    // The first and third, with the second waiting for its time: it played somewhere in there.
+    expect(spans(kept, [id(0, 'Orbital', 'Chime'), id(780, 'Altern 8', 'Infiltrate 202')])).toEqual(['0-600', '780-1380']);
+    // Sooner than ten minutes on, the next track ends it as ever.
+    expect(spans(kept, [id(0, 'Orbital', 'Chime'), id(300, 'Altern 8', 'Infiltrate 202')])).toEqual(['0-300', '300-900']);
+    // A comment that says where it ends is believed over the guess.
+    expect(spans(kept, [{ ...id(0, 'Orbital', 'Chime'), until: 700 }, id(780, 'Altern 8', 'Infiltrate 202')])).toEqual(['0-700', '780-1380']);
+    // A track the list hasn't got is held to the same: the lines after it with no time played before the next.
+    expect(spans(kept, [id(0, 'LFO', 'LFO'), id(780, 'Altern 8', 'Infiltrate 202')])).toEqual(['0-600', '780-1380']);
+    // With no list there is nothing to say a track is missing.
+    expect(spans(null, [id(0, 'Orbital', 'Chime'), id(780, 'Altern 8', 'Infiltrate 202')])).toEqual(['0-780', '780-1380']);
   });
 
   it('never let an ID that names another line of the list stand in for a line with no name', () => {

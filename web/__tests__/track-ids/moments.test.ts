@@ -15,10 +15,12 @@ describe('the tracks a side’s moments make', () => {
     expect(laid([at(600, 'Joey Beltram - Energy Flash'), at(0, 'Orbital - Chime'), at(240)])).toEqual(['0-240 Chime', '240-600 ??', '600-1200 Energy Flash']);
   });
 
-  it('are never taken to play longer than ten minutes: past that, nobody has said what is on', () => {
-    // IDs at the start of a side and twenty-five minutes in, and nothing between.
-    expect(laid([at(0, 'Orbital - Chime'), at(1500, 'Joey Beltram - Energy Flash')])).toEqual(['0-600 Chime', '1500-2100 Energy Flash']);
-    // The last on a side the same, or to the end of the side.
+  it('run to the next however far on it is: a long gap is put right by marking what came between', () => {
+    expect(laid([at(0, 'Orbital - Chime'), at(1500, 'Joey Beltram - Energy Flash')])).toEqual(['0-1500 Chime', '1500-2100 Energy Flash']);
+    expect(laid([at(0, 'Orbital - Chime'), at(300), at(1500, 'Joey Beltram - Energy Flash')])[0]).toBe('0-300 Chime');
+  });
+
+  it('end with the last, which is taken to play ten minutes, or to the end of the side', () => {
     expect(laid([at(0, 'Orbital - Chime')])).toEqual(['0-600 Chime']);
     expect(laid([at(0, 'Orbital - Chime')], 100)).toEqual(['0-100 Chime']);
   });
@@ -36,13 +38,10 @@ describe('the tracks a side’s moments make', () => {
     expect(laid(side)).toEqual(['0-400 Chime', '100-150 Next Is The E', '150-400 Infiltrate 202', '400-1000 ??']);
   });
 
-  it('take a record named again while it is taken to be playing, with nothing else between, as the one play from the earlier start', () => {
+  it('take a record named again, with nothing else between, as the one play from the earlier start', () => {
     expect(laid([at(300, 'Altern 8 - Infiltrate 202'), at(360, 'Altern 8 - Infiltrate 202 (Remix)'), at(900)])).toEqual(['300-900 Infiltrate 202', '900-1500 ??']);
     // With anything between them they are two plays, a spot nobody has named included.
     expect(laid([at(300, 'Altern 8 - Infiltrate 202'), at(360), at(420, 'Altern 8 - Infiltrate 202')])).toEqual(['300-360 Infiltrate 202', '360-420 ??', '420-1020 Infiltrate 202']);
-    // And so they are when the first is taken to have ended by then: ten minutes on, or where a comment says.
-    expect(laid([at(0, 'Altern 8 - Infiltrate 202'), at(700, 'Altern 8 - Infiltrate 202')])).toEqual(['0-600 Infiltrate 202', '700-1300 Infiltrate 202']);
-    expect(laid([at(0, 'Altern 8 - Infiltrate 202', { until: 200 }), at(300, 'Altern 8 - Infiltrate 202')])).toEqual(['0-200 Infiltrate 202', '300-900 Infiltrate 202']);
   });
 
   it('are never shorter than five seconds', () => {
