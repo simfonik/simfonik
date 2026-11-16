@@ -201,6 +201,21 @@ describe('a point the visitor marked without a name, not yet posted', () => {
     expect(page.posts()).toEqual([]);
   });
 
+  it('Edit, on its row: the blanks open there, and its time typed over moves it, still the visitor’s own', async () => {
+    const page = await marked();
+    await page.user.click(page.button('Edit your mark, at 0:01:40'));
+    const blanks = screen.getByRole('form', { name: 'ID the track at 0:01:40' });
+    expect(blanks.closest('li')).toBe(within(page.tracklist() as HTMLElement).getAllByRole('listitem')[0]);
+    // Its way back is in the blanks too.
+    expect(within(blanks).getByRole('button', { name: 'Undo' })).toBeInTheDocument();
+    const time = screen.getByRole('textbox', { name: 'Starts at' });
+    await page.user.clear(time);
+    await page.user.type(time, '1:30{Enter}');
+    expect(page.rows()).toEqual(['0:01:30Unknown trackUndo']);
+    expect(page.bar()).toHaveTextContent('1 ID pending');
+    expect(page.posts()).toEqual([]);
+  });
+
   it('Undo, in the blanks: the same, with no post', async () => {
     const page = await marked();
     await page.at(130);

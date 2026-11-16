@@ -392,15 +392,23 @@ function SideList({ heading, summary, rows, position, silent, lit, markable, mov
                       <TrackName row={row} />
                     )}
                     {unposted ? (
-                      <button
-                        type="button"
-                        onClick={() => onUndo(row.mine as NonNullable<Row['mine']>)}
-                        className="tracklist-cue"
-                        aria-label={row.known ? `Take back the time for ${label}` : `Take back the mark at ${idPlace(position, row.start as number)}`}
-                      >
-                        Undo
-                      </button>
-                    ) : silent ? null : row.start === null ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => onUndo(row.mine as NonNullable<Row['mine']>)}
+                          className="tracklist-cue"
+                          aria-label={row.known ? `Take back the time for ${label}` : `Take back the mark at ${idPlace(position, row.start as number)}`}
+                        >
+                          Undo
+                        </button>
+                        {/* The visitor's own is edited like any other: its time typed over, and nothing posted by it. */}
+                        {!silent && (
+                          <button type="button" onClick={() => onEdit(row.start, null)} className="tracklist-cue tracklist-edit" aria-label={`Edit ${row.known ? label : 'your mark'}, at ${idPlace(position, row.start as number)}`}>
+                            Edit
+                          </button>
+                        )}
+                      </>
+                  ) : silent ? null : row.start === null ? (
                       row.n !== null && (
                         <button type="button" onClick={() => onEdit(null, row.n)} className="tracklist-cue tracklist-edit" aria-label={`Edit ${row.known ? label : `track ${row.n}`}`}>
                           Edit
