@@ -1,5 +1,7 @@
 import { sql } from '@/lib/db';
-import { COMMENTS_CACHE_TAG } from '@/lib/comments';
+import { COMMENTS_CACHE_TAG, findIdPostIds } from '@/lib/comments';
+import { getTapeById } from '@/lib/data';
+import { readComposed } from '@/lib/track-ids/compose';
 import { revalidateTag } from 'next/cache';
 import { timingSafeEqual } from 'crypto';
 
@@ -40,23 +42,48 @@ export async function GET(request: Request) {
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = 50;
     const offset = (page - 1) * limit;
+    // Two lists: what people have said, and the posts of track IDs made on the tape pages (which are
+    // comments too, approved as they come and sent with no notification, so this is where they are seen).
+    const kind = url.searchParams.get('kind') === 'ids' ? 'ids' : 'talk';
+    const idPosts = await findIdPostIds(true);
 
     // Comments are auto-approved on submit, so the moderation list has to show
     // everything, newest first, for the admin to be able to delete bad ones.
-    const { rows } = await sql`
-      SELECT id, tape_id, author_name, content, created_at, approved
-      FROM comments
-      ORDER BY created_at DESC
-      LIMIT ${limit} OFFSET ${offset}
-    `;
+    const { rows } =
+      kind === 'ids'
+        ? await sql`
+            SELECT id, tape_id, author_name, content, created_at, approved
+            FROM comments
+            WHERE id = ANY(${idPosts}::int[])
+            ORDER BY created_at DESC
+            LIMIT ${limit} OFFSET ${offset}
+          `
+        : await sql`
+            SELECT id, tape_id, author_name, content, created_at, approved
+            FROM comments
+            WHERE NOT (id = ANY(${idPosts}::int[]))
+            ORDER BY created_at DESC
+            LIMIT ${limit} OFFSET ${offset}
+          `;
 
     const { rows: [{ count }] } = await sql`
       SELECT COUNT(*) as count FROM comments
     `;
+    const counts = { talk: parseInt(count) - idPosts.length, ids: idPosts.length };
 
     return Response.json({
-      comments: rows,
-      total: parseInt(count),
+      // A post of IDs comes with what it says, line by line, as the tape page reads it.
+      comments:
+        kind === 'ids'
+          ? rows.map((row) => {
+              const positions = getTapeById(row.tape_id)?.sides.map((side) => side.position) ?? [];
+              const ids = readComposed(row.content, positions) ?? [];
+              return { ...row, ids: ids.map((id) => ({ ...id, position: positions.length > 1 ? positions[id.side] : null })) };
+            })
+          : rows,
+      total: counts[kind],
+      counts,
+      kind,
       page,
       limit
     });

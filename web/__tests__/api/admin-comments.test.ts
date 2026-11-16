@@ -13,8 +13,8 @@ function authHeader(password: string): Record<string, string> {
   return { authorization: `Basic ${token}` };
 }
 
-function makeGet(headers: Record<string, string> = {}) {
-  return new Request('https://simfonik.com/api/admin/comments', { headers });
+function makeGet(headers: Record<string, string> = {}, query = '') {
+  return new Request(`https://simfonik.com/api/admin/comments${query}`, { headers });
 }
 
 function makePost(body: unknown, headers: Record<string, string> = {}) {
@@ -52,6 +52,7 @@ describe('GET /api/admin/comments', () => {
 
   it('returns all comments (approved included) + total when authed', async () => {
     sqlMock
+      .mockResolvedValueOnce({ rows: [] })
       .mockResolvedValueOnce({ rows: [{ id: 1, tape_id: 't', author_name: 'A', content: 'x', created_at: 'd', approved: true }] })
       .mockResolvedValueOnce({ rows: [{ count: '7' }] });
     const res = await GET(makeGet(authHeader(ADMIN_PW)));
@@ -64,6 +65,31 @@ describe('GET /api/admin/comments', () => {
     for (const call of sqlMock.mock.calls) {
       expect(call[0].join('')).not.toMatch(/approved\s*=/);
     }
+  });
+
+  it('lists the posts of track IDs apart from the talk, each read line by line, and counts the two', async () => {
+    // What the database takes for posts of IDs: one that is, and one that only looks it (a time and a name
+    // with no side said, on a tape with two sides), which is talk.
+    const post = { id: 5, tape_id: 'dj-greg-j-1992-rave-jams', author_name: 'Dana', content: '[1:09] Butsch - The Count (Remix) [was Butsch - The Count]\n[1:30] no track starts here', created_at: 'd', approved: true };
+    const looksIt = { id: 6, tape_id: 'dj-trance-raw-wake-up-la', content: '[12:30] Moby - Go' };
+    const queries = () => sqlMock.mockResolvedValueOnce({ rows: [post, looksIt] });
+
+    queries().mockResolvedValueOnce({ rows: [post] }).mockResolvedValueOnce({ rows: [{ count: '9' }] });
+    const ids = await (await GET(makeGet(authHeader(ADMIN_PW), '?kind=ids'))).json();
+    expect(ids).toMatchObject({ kind: 'ids', total: 1, counts: { talk: 8, ids: 1 } });
+    expect(ids.comments[0].ids).toEqual([
+      { side: 0, position: null, start: 69, artist: 'Butsch', title: 'The Count (Remix)', gone: false, line: { artist: 'Butsch', title: 'The Count' } },
+      { side: 0, position: null, start: 90, artist: '', title: '', gone: true },
+    ]);
+    // The list is of exactly those posts; the talk is everything else.
+    expect(sqlMock.mock.calls[1].slice(1)).toContainEqual([5]);
+
+    sqlMock.mockClear();
+    queries().mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [{ count: '9' }] });
+    const talk = await (await GET(makeGet(authHeader(ADMIN_PW)))).json();
+    expect(talk).toMatchObject({ kind: 'talk', total: 8, counts: { talk: 8, ids: 1 } });
+    expect(sqlMock.mock.calls[1][0].join('')).toMatch(/NOT \(id = ANY/);
+    expect(sqlMock.mock.calls[1].slice(1)).toContainEqual([5]);
   });
 });
 

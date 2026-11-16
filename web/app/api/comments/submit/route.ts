@@ -3,7 +3,7 @@ import { COMMENTS_CACHE_TAG } from '@/lib/comments';
 import { getTapeById } from '@/lib/data';
 import { revalidateTag } from 'next/cache';
 import { sendCommentNotification } from '@/lib/email';
-import { readComposed } from '@/lib/track-ids/compose';
+import { hasLink, readComposed } from '@/lib/track-ids/compose';
 import { createHash } from 'crypto';
 
 // How many comments one address may post in an hour. Track IDs made on the tape page are comments too
@@ -18,7 +18,8 @@ export async function POST(request: Request) {
 
     // A post of track IDs: nothing but lines in the site's own form, for sides the tape has.
     const tape = typeof tapeId === 'string' ? getTapeById(tapeId) : undefined;
-    const trackIds = Boolean(tape && typeof content === 'string' && readComposed(content, tape.sides.map((side) => side.position)));
+    const ids = tape && typeof content === 'string' ? readComposed(content, tape.sides.map((side) => side.position)) : null;
+    const trackIds = Boolean(ids);
 
     // Get IP address for rate limiting
     const forwarded = request.headers.get('x-forwarded-for');
@@ -79,6 +80,12 @@ export async function POST(request: Request) {
 
     if (!tapeId) {
       return Response.json({ error: 'Tape ID is required' }, { status: 400 });
+    }
+
+    // A track's name is an artist and a title. One with a web address in it is not taken as an ID: IDs are
+    // approved as they come and send no notification, and that is not to be a way round the moderation of talk.
+    if (ids?.some((id) => hasLink(`${id.artist} ${id.title} ${id.line ? `${id.line.artist} ${id.line.title}` : ''}`))) {
+      return Response.json({ error: 'Track IDs can’t include links.' }, { status: 400 });
     }
 
     // 4. Insert comment (auto-approved; admin gets a notification email

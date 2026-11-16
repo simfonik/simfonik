@@ -113,6 +113,20 @@ describe('POST /api/comments/submit', () => {
       expect(revalidateTagMock).toHaveBeenCalledWith('comments');
     });
 
+    it('is not taken with a web address in a name, and nothing is written', async () => {
+      for (const content of ['[1:31:02] Wax Doctor - cheap pills at pills.com', '[1:31:02] http://spam.example - A New Direction', '[1:31:02] Wax Doctor - A New Direction [was www.spam - x]']) {
+        sqlMock.mockClear();
+        const res = await POST(makeRequest({ ...ids, content }));
+        expect(res.status, content).toBe(400);
+        expect((await res.json()).error).toBe('Track IDs can’t include links.');
+        expect(sqlMock.mock.calls.some((call) => call[0].join('').includes('INSERT INTO comments')), content).toBe(false);
+      }
+      // Talk may have one, as it always could: that is moderated as talk is.
+      sqlMock.mockClear();
+      expect((await POST(makeRequest({ ...validBody, content: 'Full tracklist is at https://example.com/list if anyone wants it.' }))).status).toBe(200);
+      expect(sendCommentNotificationMock).toHaveBeenCalled();
+    });
+
     it('is talk like any other when it isn’t all IDs, or is for a side the tape hasn’t got', async () => {
       for (const content of ['[1:31:02] Wax Doctor - A New Direction\nwhat a tune', '[C 1:31:02] Wax Doctor - A New Direction']) {
         sendCommentNotificationMock.mockClear();

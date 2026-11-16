@@ -2,7 +2,7 @@
 
 import { FormEvent, RefObject, useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
-import { idLabel, idPlace } from '../lib/track-ids/compose';
+import { hasLink, idLabel, idPlace } from '../lib/track-ids/compose';
 import { sameRecord } from '../lib/track-ids/moments';
 import { rememberedName } from '../lib/track-ids/post';
 import { asListed, canStartAt, isUnposted, playingAt, saidBy, startingAt, suggest, type Change, type Row } from '../lib/track-ids/side';
@@ -365,6 +365,8 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
       if (!unchanged && !canStartAt(others, entered, end)) return refuse('That is past where a track could start on this side.', timeField.current);
       to = entered;
     }
+    // An ID is an artist and a title, and no place for a web address: the site takes none (the route says so too).
+    if (what === 'id' && hasLink(`${artist} ${title}`)) return refuse('Track IDs can’t include links.', artistField.current);
     // "Mark unknown": only that a track starts there. It is the visitor's own, and waits to be posted.
     if (what === 'mark') {
       say({ side, time: to, artist: '', title: '' });

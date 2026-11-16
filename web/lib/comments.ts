@@ -60,23 +60,20 @@ export const getTapeComments = unstable_cache(
 // finds the comments that may be (`ID_POST`), and each is then put to the reader's own test on its own tape,
 // so that a comment which only looks like one (a time and a name on a tape with sides, and no side said) is
 // never left out of the talk.
-const fetchIdPostIds = unstable_cache(
-  async () => {
-    const { rows } = await sql`
-      SELECT id, tape_id, content
-      FROM comments
-      WHERE approved = true AND content ~* ${ID_POST}
-    `;
-    return (rows as Pick<TapeComment, 'id' | 'tape_id' | 'content'>[])
-      .filter((comment) => {
-        const tape = getTapeById(comment.tape_id);
-        return tape && readComposed(comment.content, tape.sides.map((side) => side.position)) !== null;
-      })
-      .map((comment) => comment.id);
-  },
-  ['id-post-ids'],
-  cacheOptions
-);
+/** The ids of the comments that are posts of track IDs: the approved ones, or with `all` every one (for the admin). */
+export async function findIdPostIds(all = false): Promise<number[]> {
+  const { rows } = all
+    ? await sql`SELECT id, tape_id, content FROM comments WHERE content ~* ${ID_POST}`
+    : await sql`SELECT id, tape_id, content FROM comments WHERE approved = true AND content ~* ${ID_POST}`;
+  return (rows as Pick<TapeComment, 'id' | 'tape_id' | 'content'>[])
+    .filter((comment) => {
+      const tape = getTapeById(comment.tape_id);
+      return tape && readComposed(comment.content, tape.sides.map((side) => side.position)) !== null;
+    })
+    .map((comment) => comment.id);
+}
+
+const fetchIdPostIds = unstable_cache(() => findIdPostIds(), ['id-post-ids'], cacheOptions);
 
 // The newest of each kind, talk and posts of track IDs, so that a run of one never crowds out the other.
 const fetchRecentTalk = unstable_cache(

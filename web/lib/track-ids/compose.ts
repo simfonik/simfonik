@@ -156,6 +156,15 @@ export function readComposed(content: string, positions: string[]): (Named & { s
  */
 export const ID_POST = '^\\s*(\\[([^\\] ]+ )?[0-9]{1,3}:[0-9]{2}(:[0-9]{2})?\\] ([^\\n]+ - [^\\n]+|no track starts here)\\s*)+$';
 
+// A web address: "http://", "www.", or a name with one of the endings addresses mostly have.
+const LINK = /https?:\/\/|www\.|\b[a-z0-9-]+\.(?:com|net|org|info|biz|io|co|ru|cn|xyz|top|site|online|shop|store|link|click|ly|me|tv|cc|app|dev)\b/i;
+
+/**
+ * Whether a name has a web address in it. A track's artist and title don't, and an ID that does is an
+ * advertisement in an ID's form: the tape page won't make one and the site won't take one.
+ */
+export const hasLink = (text: string) => LINK.test(text);
+
 /**
  * Where an ID is, as the page shows it wherever one appears: the side's label on a tape with sides, then the
  * time the way the player writes times. "A 0:01:55"; on a tape that is one recording, "0:01:55". (The comment

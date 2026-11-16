@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import comments from '@/data/tape-comments.json';
 import tapes from '@/data/tapes.json';
-import { clock, composeId, composeRemoval, ID_POST, idLabel, idPlace, readComposed, splitComposed } from '@/lib/track-ids/compose';
+import { clock, composeId, composeRemoval, hasLink, ID_POST, idLabel, idPlace, readComposed, splitComposed } from '@/lib/track-ids/compose';
 
 type Tape = { id: string; sides: { position: string }[] };
 
@@ -58,6 +58,15 @@ describe('IDs the site writes', () => {
     // A title that ends in brackets of its own is a title.
     expect(splitComposed('[1:00] Moby - Go [Woodtick Mix]')).toEqual({ position: null, time: 60, artist: 'Moby', title: 'Go [Woodtick Mix]', gone: false });
     expect(splitComposed('[1:00] Moby - Go [was Moby - Go [Woodtick Mix]]')?.line).toEqual({ artist: 'Moby', title: 'Go [Woodtick Mix]' });
+  });
+
+  it('knows a web address in a name from the dots and dashes names do have', () => {
+    for (const name of ['http://spam.example', 'see https://x.yz/now', 'www.cheap-pills', 'buy at pills.com today', 'my-site.net', 'Watch.TV', 'bit.ly/abc']) expect(hasLink(name), name).toBe(true);
+    for (const name of ['T.D.5. Cosmic Tones', 'D.J. Friendly Down A J.D.', 'Vol. 2 (Remix)', 'S.O.S. Band', 'Mr. Kool-Aid', 'Altern 8 Infiltrate 202', 'Dr. Motte & WestBam', 'Run-D.M.C.', 'Co-Co']) expect(hasLink(name), name).toBe(false);
+    // No track named in the archive's own tracklists reads as one.
+    for (const tape of tapes as { id: string; sides: { tracks?: { artist: string; title: string }[] }[] }[]) {
+      for (const side of tape.sides) for (const track of side.tracks ?? []) expect(hasLink(`${track.artist} ${track.title}`), `${track.artist} - ${track.title}`).toBe(false);
+    }
   });
 
   it('reads nothing longer than a comment may be, and takes the longest line apart in no time', () => {

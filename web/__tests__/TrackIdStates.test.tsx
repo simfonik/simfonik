@@ -623,6 +623,18 @@ describe('a track the comments have ID’d', () => {
     expect(page.has('Remove this ID')).toBe(true);
   });
 
+  it('a web address typed for a name: it is not taken, as an ID or as one that waits', async () => {
+    const page = tape();
+    await page.read();
+    await page.at(100);
+    await page.user.click(page.button(NEW_TRACK));
+    await page.user.type(artist(), 'Best prices');
+    await page.user.type(title(), 'www.pills.com{Enter}');
+    expect(screen.getByRole('alert')).toHaveTextContent('Track IDs can’t include links.');
+    expect(page.posts()).toEqual([]);
+    expect(page.bar()).toBeNull();
+  });
+
   it('New track inside it: a new track from there, and this one ends where that starts', async () => {
     const page = tape();
     await page.read();
