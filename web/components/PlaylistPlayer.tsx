@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
 import { formatTime } from '../lib/time-utils';
 import { PlayerControls } from './PlayerControls';
-import { useTapeTrackIds } from './TapeTrackIds';
+import { useTapeTrackIds, useSideIds } from './TapeTrackIds';
 import { TrackIds } from './TrackIds';
 
 interface DJ {
@@ -58,7 +58,7 @@ export function PlaylistPlayer({ tracks, tapeId, sideCount }: PlaylistPlayerProp
   });
 
   const trackIds = useTapeTrackIds();
-  const ids = trackIds.sides[currentTrack.index] ?? [];
+  const ids = useSideIds(currentTrack.index);
 
   // A time pressed in a comment takes the tape there and plays it. If it is on another side, that side is
   // loaded first, and the place is gone to once it is the one loaded: loading a side starts it from zero.
@@ -142,6 +142,7 @@ export function PlaylistPlayer({ tracks, tapeId, sideCount }: PlaylistPlayerProp
             // A form left open belongs to the side it was opened on.
             key={currentTrack.position}
             tapeId={tapeId}
+            side={currentTrack.index}
             position={sideCount > 1 ? currentTrack.position : null}
             ids={ids}
             time={state.currentTime}

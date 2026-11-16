@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import type { RunningOrder, TrackId } from '../lib/track-ids/compose';
+import { ONE_MOMENT, type RunningOrder, type TrackId } from '../lib/track-ids/compose';
 
 /** Takes the tape to a moment on a side. `position` is the side's label, or null on a tape with one side. */
 type GoTo = (position: string | null, time: number) => void;
@@ -11,6 +11,22 @@ export type TapeComment = { id: number; tape_id: string; author_name: string; co
 
 /** Where the tape is: which of its sides is loaded, how far in, and whether it has been played at all. */
 export type Playhead = { side: number; time: number; started: boolean };
+
+/**
+ * A time a visitor has set and not posted yet. It is either the time of a line of the side's list (its `n`,
+ * with the line as it read when its + was pressed), or a point marked by ear with no name to it (`n` is
+ * null). They are kept on this device until the visitor posts what they have: a sitting's times go up as one
+ * comment.
+ */
+export type Mark = { side: number; n: number | null; artist: string; title: string; known: boolean; time: number };
+
+const isMark = (x: unknown): x is Mark => {
+  const m = x as Mark;
+  return Boolean(m) && [m.side, m.time].every(Number.isFinite) && (m.n === null || Number.isFinite(m.n)) && typeof m.artist === 'string' && typeof m.title === 'string' && typeof m.known === 'boolean';
+};
+
+/** How long a track with no known end is taken to play, as the reader takes it (parse.ts). */
+export const UNENDED = 240;
 
 /** A track someone wants to ID or put right from outside the player: the side's label and where it starts. */
 type Asked = { position: string | null; time: number };
@@ -37,6 +53,9 @@ type TapeTrackIds = {
   /** Where the tape is at this instant, for whatever is pressed. To follow it as it moves, `usePlayhead`. */
   playhead: () => Playhead;
   watch: (changed: () => void) => () => void;
+  /** The visitor's unposted times, and the way to change them. */
+  marks: Mark[];
+  setMarks: (next: Mark[]) => void;
   /** The tracklist asks for the form that IDs a track to open for one of its lines; the form answers once. */
   ask: (position: string | null, time: number) => void;
   asked: Asked | null;
@@ -55,6 +74,8 @@ const nothing: TapeTrackIds = {
   report: () => {},
   playhead: () => STILL,
   watch: () => () => {},
+  marks: [],
+  setMarks: () => {},
   ask: () => {},
   asked: null,
   answered: () => {},
@@ -72,6 +93,29 @@ export function TapeTrackIdsProvider({ tapeId, children }: { tapeId: string; chi
   const [comments, setComments] = useState<TapeComment[] | null>(null);
   const [changed, setChanged] = useState(0);
   const [asked, setAsked] = useState<Asked | null>(null);
+  // Kept through a reload: a visitor who has timed half a side and comes back still has it to post.
+  const marksKey = `simfonik:id-marks:${tapeId}`;
+  const [marks, keepMarks] = useState<Mark[]>([]);
+  useEffect(() => {
+    try {
+      const kept: unknown = JSON.parse(window.localStorage.getItem(marksKey) ?? '[]');
+      if (Array.isArray(kept)) keepMarks(kept.filter(isMark));
+    } catch {
+      // Storage is off in this browser, or what it holds isn't ours: the visitor starts with none.
+    }
+  }, [marksKey]);
+  const setMarks = useCallback(
+    (next: Mark[]) => {
+      keepMarks(next);
+      try {
+        if (next.length) window.localStorage.setItem(marksKey, JSON.stringify(next));
+        else window.localStorage.removeItem(marksKey);
+      } catch {
+        // Storage is off: the times last as long as the page does.
+      }
+    },
+    [marksKey],
+  );
   const player = useRef<GoTo | null>(null);
   // The tape's place changes several times a second. It is kept out of what the page renders from, and
   // whatever follows it says what it wants to know of it (`usePlayhead`), so a page of tracks isn't drawn
@@ -122,14 +166,31 @@ export function TapeTrackIdsProvider({ tapeId, children }: { tapeId: string; chi
   const answered = useCallback(() => setAsked(null), []);
 
   const value = useMemo(
-    () => ({ sides, orders, comments, changed, refresh, setPlayer, goTo, report, playhead, watch, ask, asked, answered }),
-    [sides, orders, comments, changed, refresh, setPlayer, goTo, report, playhead, watch, ask, asked, answered],
+    () => ({ sides, orders, comments, changed, refresh, setPlayer, goTo, report, playhead, watch, marks, setMarks, ask, asked, answered }),
+    [sides, orders, comments, changed, refresh, setPlayer, goTo, report, playhead, watch, marks, setMarks, ask, asked, answered],
   );
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 
 /** The tape's track IDs and the ways to act on them. Outside a tape page there are none, and the ways do nothing. */
 export const useTapeTrackIds = () => useContext(Context);
+
+/**
+ * A side's IDs as the player has them: those the comments give, and among them the points the visitor has
+ * marked by ear and not yet posted, each an unknown track from where it was marked until the next thing
+ * starts. A mark shows on the waveform and on the line under it the moment it is made.
+ */
+export function useSideIds(side: number): TrackId[] {
+  const { sides, marks } = useContext(Context);
+  return useMemo(() => {
+    const posted = sides[side] ?? [];
+    // A mark the comments now have at that moment is no longer only the visitor's.
+    const mine = marks.filter((m) => m.side === side && m.n === null && !posted.some((id) => Math.abs(id.start - m.time) <= ONE_MOMENT));
+    if (mine.length === 0) return posted;
+    const all = [...posted, ...mine.map((m): TrackId => ({ start: m.time, end: m.time + UNENDED, artist: '', title: '', known: false, by: '', pending: true }))].sort((a, b) => a.start - b.start);
+    return all.map((id, k) => (all[k + 1] && all[k + 1].start < id.end ? { ...id, end: all[k + 1].start } : id));
+  }, [sides, marks, side]);
+}
 
 /**
  * One thing about where the tape is, kept up to date: `pick` says what, as a string, a number or a yes or

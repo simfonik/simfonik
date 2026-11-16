@@ -27,6 +27,8 @@ export type TrackId = {
   known: boolean;
   /** Who said so. */
   by: string;
+  /** The visitor's own mark, on this device and not posted yet (see TapeTrackIds). Never in what the reader gives. */
+  pending?: boolean;
 };
 
 /** A line of a side's running order: a track written down in its place, with or without a time. */

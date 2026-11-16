@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
 import { PlayerControls } from './PlayerControls';
-import { useTapeTrackIds } from './TapeTrackIds';
+import { useTapeTrackIds, useSideIds } from './TapeTrackIds';
 import { TrackIds } from './TrackIds';
 
 interface AudioPlayerProps {
@@ -20,7 +20,7 @@ interface AudioPlayerProps {
 
 export function AudioPlayer({ src, title, tapeId, sidePosition, wave, length, sideIndex = 0, sideCount = 1 }: AudioPlayerProps) {
   const trackIds = useTapeTrackIds();
-  const ids = trackIds.sides[sideIndex] ?? [];
+  const ids = useSideIds(sideIndex);
   const { ref, state, controls } = useAudioPlayer({ 
     src, 
     tapeId, 
@@ -73,6 +73,7 @@ export function AudioPlayer({ src, title, tapeId, sidePosition, wave, length, si
         {tapeId && (
           <TrackIds
             tapeId={tapeId}
+            side={sideIndex}
             position={sideCount > 1 ? sidePosition ?? null : null}
             ids={ids}
             time={state.currentTime}

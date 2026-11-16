@@ -1,8 +1,8 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
+import React, { useEffect } from 'react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { TapeTrackIdsProvider, useTapeTrackIds } from '../components/TapeTrackIds';
+import { TapeTrackIdsProvider, useSideIds, useTapeTrackIds } from '../components/TapeTrackIds';
 import { TrackIds } from '../components/TrackIds';
 import type { TrackId } from '../lib/track-ids/compose';
 
@@ -33,25 +33,25 @@ describe('the track line under the player', () => {
   const yourName = () => screen.getByRole('textbox', { name: 'Your name' });
 
   it('says the track playing now, and asks where nobody has ID’d it', () => {
-    const { rerender } = render(<TrackIds tapeId="tape-1" position="A" ids={ids} time={60} onPosted={posted} />);
+    const { rerender } = render(<TrackIds tapeId="tape-1" side={0} position="A" ids={ids} time={60} onPosted={posted} />);
     const line = screen.getByRole('button', { name: 'Now playing: Moby — Go. Correct this ID' });
     expect(line).toHaveAttribute('title', 'ID by Rents. Press to correct it.');
 
-    rerender(<TrackIds tapeId="tape-1" position="A" ids={ids} time={200} onPosted={posted} />);
+    rerender(<TrackIds tapeId="tape-1" side={0} position="A" ids={ids} time={200} onPosted={posted} />);
     expect(screen.getByRole('button', { name: 'Know this track? ID it' })).toBeInTheDocument();
 
-    rerender(<TrackIds tapeId="tape-1" position="A" ids={ids} time={310} onPosted={posted} />);
+    rerender(<TrackIds tapeId="tape-1" side={0} position="A" ids={ids} time={310} onPosted={posted} />);
     expect(screen.getByRole('button', { name: 'Unknown track. Know it? ID it' })).toBeInTheDocument();
   });
 
   it('turns into two fields, asks a first-time visitor’s name as a second step, and posts a comment carrying the side and the moment it was opened', async () => {
     const user = userEvent.setup();
-    const { rerender } = render(<TrackIds tapeId="tape-1" position="B" ids={ids} time={754.6} onPosted={posted} />);
+    const { rerender } = render(<TrackIds tapeId="tape-1" side={0} position="B" ids={ids} time={754.6} onPosted={posted} />);
 
     await user.click(screen.getByRole('button', { name: 'Know this track? ID it' }));
     expect(artist()).toHaveFocus();
     // The tape plays on; the fields stay on the moment they were opened for.
-    rerender(<TrackIds tapeId="tape-1" position="B" ids={ids} time={790} onPosted={posted} />);
+    rerender(<TrackIds tapeId="tape-1" side={0} position="B" ids={ids} time={790} onPosted={posted} />);
 
     await user.type(artist(), '808 State');
     await user.type(title(), 'Cubik{Enter}');
@@ -81,7 +81,7 @@ describe('the track line under the player', () => {
   it('puts a known ID right from what it says, at the time that track starts, with no side on a tape that is one recording', async () => {
     const user = userEvent.setup();
     window.localStorage.setItem('simfonik:id-name', 'Tester');
-    render(<TrackIds tapeId="tape-1" position={null} ids={ids} time={95} onPosted={posted} />);
+    render(<TrackIds tapeId="tape-1" side={0} position={null} ids={ids} time={95} onPosted={posted} />);
 
     await user.click(screen.getByRole('button', { name: /Correct this ID/ }));
     expect(artist()).toHaveValue('Moby');
@@ -95,7 +95,7 @@ describe('the track line under the player', () => {
     const user = userEvent.setup();
     window.localStorage.setItem('simfonik:id-name', 'Dana');
     // The unknown runs from 5:00 to 7:00, and the tape is 50 seconds into it.
-    render(<TrackIds tapeId="tape-1" position="A" ids={ids} time={350} onPosted={posted} />);
+    render(<TrackIds tapeId="tape-1" side={0} position="A" ids={ids} time={350} onPosted={posted} />);
     await user.click(screen.getByRole('button', { name: 'Unknown track. Know it? ID it' }));
     expect(screen.getByRole('form', { name: 'ID the track at A 0:05:00' })).toBeInTheDocument();
     await user.type(artist(), 'Orbital');
@@ -118,7 +118,7 @@ describe('the track line under the player', () => {
       const user = userEvent.setup();
       window.localStorage.setItem('simfonik:id-name', 'Dana');
       // Nothing is marked at 3:20 on a side of 16 minutes: the first quarter is over, so the second track.
-      render(<TrackIds tapeId="tape-1" position="A" ids={[]} time={200} order={order} length={960} onPosted={posted} />);
+      render(<TrackIds tapeId="tape-1" side={0} position="A" ids={[]} time={200} order={order} length={960} onPosted={posted} />);
       await user.click(screen.getByRole('button', { name: 'Know this track? ID it' }));
       expect(screen.getByRole('group', { name: 'From Josh’s list' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: '1 Orbital — Chime' })).toBeInTheDocument();
@@ -133,7 +133,7 @@ describe('the track line under the player', () => {
 
     it('offers none for an ID being put right', async () => {
       const user = userEvent.setup();
-      render(<TrackIds tapeId="tape-1" position="A" ids={ids} time={60} order={order} length={960} onPosted={posted} />);
+      render(<TrackIds tapeId="tape-1" side={0} position="A" ids={ids} time={60} order={order} length={960} onPosted={posted} />);
       await user.click(screen.getByRole('button', { name: /Correct this ID/ }));
       expect(screen.queryByRole('group', { name: 'From Josh’s list' })).not.toBeInTheDocument();
     });
@@ -148,7 +148,7 @@ describe('the track line under the player', () => {
 
     it('takes the ID in a sheet over the page, asks a first-time visitor’s name in the same sheet, and posts', async () => {
       const user = userEvent.setup();
-      render(<TrackIds tapeId="tape-1" position="A" ids={ids} time={200} onPosted={posted} />);
+      render(<TrackIds tapeId="tape-1" side={0} position="A" ids={ids} time={200} onPosted={posted} />);
       await user.click(screen.getByRole('button', { name: 'Know this track? ID it' }));
 
       const sheet = screen.getByRole('dialog', { name: 'ID the track at A 0:03:20' });
@@ -173,7 +173,7 @@ describe('the track line under the player', () => {
     it('says who a returning visitor is posting as, and lets them change it', async () => {
       const user = userEvent.setup();
       window.localStorage.setItem('simfonik:id-name', 'Dana');
-      render(<TrackIds tapeId="tape-1" position="A" ids={ids} time={200} onPosted={posted} />);
+      render(<TrackIds tapeId="tape-1" side={0} position="A" ids={ids} time={200} onPosted={posted} />);
       await user.click(screen.getByRole('button', { name: 'Know this track? ID it' }));
       expect(screen.getByText('Dana')).toBeInTheDocument();
       expect(screen.queryByRole('textbox', { name: 'Your name' })).not.toBeInTheDocument();
@@ -185,7 +185,7 @@ describe('the track line under the player', () => {
 
     it('goes away when it is cancelled, and the keyboard is back on the line', async () => {
       const user = userEvent.setup();
-      render(<TrackIds tapeId="tape-1" position="A" ids={ids} time={200} onPosted={posted} />);
+      render(<TrackIds tapeId="tape-1" side={0} position="A" ids={ids} time={200} onPosted={posted} />);
       await user.click(screen.getByRole('button', { name: 'Know this track? ID it' }));
       await user.click(screen.getByRole('button', { name: 'Cancel' }));
       await vi.waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -197,14 +197,14 @@ describe('the track line under the player', () => {
     const user = userEvent.setup();
     window.localStorage.setItem('simfonik:id-name', 'Dana');
     // Moby — Go runs from 0:00. Four seconds in, an ID would be read as that same ID said again.
-    const { rerender } = render(<TrackIds tapeId="tape-1" position="A" ids={ids} time={4} onPosted={posted} />);
+    const { rerender } = render(<TrackIds tapeId="tape-1" side={0} position="A" ids={ids} time={4} onPosted={posted} />);
     expect(screen.queryByRole('button', { name: 'A new track starts here. ID it' })).not.toBeInTheDocument();
-    rerender(<TrackIds tapeId="tape-1" position="A" ids={ids} time={6} onPosted={posted} />);
+    rerender(<TrackIds tapeId="tape-1" side={0} position="A" ids={ids} time={6} onPosted={posted} />);
     expect(screen.getByRole('button', { name: 'A new track starts here. ID it' })).toBeInTheDocument();
-    rerender(<TrackIds tapeId="tape-1" position="A" ids={ids} time={4} onPosted={posted} />);
+    rerender(<TrackIds tapeId="tape-1" side={0} position="A" ids={ids} time={4} onPosted={posted} />);
     expect(screen.queryByRole('button', { name: 'A new track starts here. ID it' })).not.toBeInTheDocument();
 
-    rerender(<TrackIds tapeId="tape-1" position="A" ids={ids} time={95.4} onPosted={posted} />);
+    rerender(<TrackIds tapeId="tape-1" side={0} position="A" ids={ids} time={95.4} onPosted={posted} />);
     await user.click(screen.getByRole('button', { name: 'A new track starts here. ID it' }));
     expect(screen.getByRole('form', { name: 'ID the track at A 0:01:35' })).toBeInTheDocument();
     expect(artist()).toHaveValue('');
@@ -218,7 +218,7 @@ describe('the track line under the player', () => {
 
     it('can be taken away: one line that says no track starts there, and nothing asked about the names', async () => {
       const user = userEvent.setup();
-      render(<TrackIds tapeId="tape-1" position="A" ids={ids} time={3} onPosted={posted} />);
+      render(<TrackIds tapeId="tape-1" side={0} position="A" ids={ids} time={3} onPosted={posted} />);
       await user.click(screen.getByRole('button', { name: 'Now playing: Moby — Go. Correct this ID' }));
       await user.clear(artist());
       await user.clear(title());
@@ -232,25 +232,25 @@ describe('the track line under the player', () => {
 
     it('says "mark" of a spot nobody has named, and offers nothing of the kind where the tape has no mark', async () => {
       const user = userEvent.setup();
-      const { rerender } = render(<TrackIds tapeId="tape-1" position="A" ids={ids} time={310} onPosted={posted} />);
+      const { rerender } = render(<TrackIds tapeId="tape-1" side={0} position="A" ids={ids} time={310} onPosted={posted} />);
       await user.click(screen.getByRole('button', { name: 'Unknown track. Know it? ID it' }));
       await user.click(screen.getByRole('button', { name: 'Remove this mark' }));
       expect(body().content).toBe('[A 5:00] no track starts here');
 
-      rerender(<TrackIds tapeId="tape-1" position="A" ids={ids} time={200} onPosted={posted} />);
+      rerender(<TrackIds tapeId="tape-1" side={0} position="A" ids={ids} time={200} onPosted={posted} />);
       await user.click(screen.getByRole('button', { name: 'Know this track? ID it' }));
       expect(screen.queryByRole('button', { name: /^Remove/ })).not.toBeInTheDocument();
     });
 
     it('can be moved to where the tape is, when that is later and in the same track: the old mark goes and the ID is made again, in one post', async () => {
       const user = userEvent.setup();
-      const { rerender } = render(<TrackIds tapeId="tape-1" position="A" ids={ids} time={3} onPosted={posted} />);
+      const { rerender } = render(<TrackIds tapeId="tape-1" side={0} position="A" ids={ids} time={3} onPosted={posted} />);
       // In the track's first moments there is nowhere later to move it to.
       await user.click(screen.getByRole('button', { name: 'Now playing: Moby — Go. Correct this ID' }));
       expect(screen.queryByRole('button', { name: /instead$/ })).not.toBeInTheDocument();
       await user.keyboard('{Escape}');
 
-      rerender(<TrackIds tapeId="tape-1" position="A" ids={ids} time={41.8} onPosted={posted} />);
+      rerender(<TrackIds tapeId="tape-1" side={0} position="A" ids={ids} time={41.8} onPosted={posted} />);
       await user.click(screen.getByRole('button', { name: 'Now playing: Moby — Go. Correct this ID' }));
       await user.click(screen.getByRole('button', { name: 'Starts at 0:00:41 instead' }));
       expect(body().content).toBe('[A 0:00] no track starts here\n[A 0:41] Moby - Go');
@@ -260,7 +260,7 @@ describe('the track line under the player', () => {
     it('asks a first-time visitor’s name before taking it away, and then takes it away', async () => {
       const user = userEvent.setup();
       window.localStorage.clear();
-      render(<TrackIds tapeId="tape-1" position="A" ids={ids} time={3} onPosted={posted} />);
+      render(<TrackIds tapeId="tape-1" side={0} position="A" ids={ids} time={3} onPosted={posted} />);
       await user.click(screen.getByRole('button', { name: 'Now playing: Moby — Go. Correct this ID' }));
       await user.click(screen.getByRole('button', { name: 'Remove this ID' }));
       expect(fetchMock).not.toHaveBeenCalled();
@@ -271,6 +271,87 @@ describe('the track line under the player', () => {
 
       await user.type(yourName(), 'Dana{Enter}');
       expect(body()).toMatchObject({ authorName: 'Dana', content: '[A 0:00] no track starts here' });
+    });
+  });
+
+  describe('Mark: a track starts here, and the visitor doesn’t know what it is', () => {
+    // The line as the player gives it: the side's IDs with the visitor's own unposted marks among them.
+    function Line({ time }: { time: number }) {
+      return <TrackIds tapeId="tape-1" side={0} position="A" ids={useSideIds(0)} time={time} onPosted={posted} />;
+    }
+    let shared: ReturnType<typeof useTapeTrackIds>;
+    function Shared() {
+      const all = useTapeTrackIds();
+      useEffect(() => {
+        shared = all;
+      });
+      return null;
+    }
+    const tape = (time: number) => (
+      <TapeTrackIdsProvider tapeId="tape-1">
+        <Shared />
+        <Line time={time} />
+      </TapeTrackIdsProvider>
+    );
+    const mark = () => screen.getByRole('button', { name: 'Mark a track start here, without an ID' });
+    const submits = () => fetchMock.mock.calls.filter(([url]) => String(url) === '/api/comments/submit');
+
+    beforeEach(() => {
+      window.localStorage.setItem('simfonik:id-name', 'Dana');
+      fetchMock.mockImplementation((url: RequestInfo | URL) =>
+        Promise.resolve(new Response(JSON.stringify(String(url).includes('/api/track-ids/') ? { sides: [ids], orders: [null], complete: true } : String(url) === '/api/comments/submit' ? { success: true } : []), { status: 200 })),
+      );
+    });
+
+    it('is there once the tape has been played, and not within a moment of a track’s start', async () => {
+      const { rerender } = render(tape(0));
+      await screen.findByRole('button', { name: 'Now playing: Moby — Go. Correct this ID' });
+      expect(screen.queryByRole('button', { name: /^Mark/ })).not.toBeInTheDocument();
+      rerender(tape(3));
+      expect(screen.queryByRole('button', { name: /^Mark/ })).not.toBeInTheDocument();
+      rerender(tape(297));
+      expect(screen.queryByRole('button', { name: /^Mark/ })).not.toBeInTheDocument();
+      rerender(tape(200));
+      expect(mark()).toBeInTheDocument();
+    });
+
+    it('sets a point with one press and nothing posted: the line then has an unknown track there, the visitor’s own', async () => {
+      const user = userEvent.setup();
+      const { rerender } = render(tape(200.7));
+      await screen.findByRole('button', { name: 'Know this track? ID it' });
+      await user.click(mark());
+
+      expect(shared.marks).toEqual([{ side: 0, n: null, artist: '', title: '', known: false, time: 200 }]);
+      expect(screen.getByRole('status')).toHaveTextContent('Marked A 0:03:20. Not posted yet.');
+      expect(screen.getByRole('button', { name: 'Unknown track. Know it? ID it' })).toBeInTheDocument();
+      expect(submits()).toHaveLength(0);
+      // The next can be marked once the tape has moved on a moment.
+      expect(screen.queryByRole('button', { name: /^Mark/ })).not.toBeInTheDocument();
+      rerender(tape(215));
+      await user.click(mark());
+      expect(shared.marks.map((m) => m.time)).toEqual([200, 215]);
+    });
+
+    it('is taken back from the blanks without a post, and when ID’d is posted at once from where it was marked', async () => {
+      const user = userEvent.setup();
+      const { rerender } = render(tape(200));
+      await screen.findByRole('button', { name: 'Know this track? ID it' });
+      await user.click(mark());
+      rerender(tape(230));
+      await user.click(screen.getByRole('button', { name: 'Unknown track. Know it? ID it' }));
+      // The mark is the visitor's own: there is nowhere later to move it to, only taking it back.
+      expect(screen.queryByRole('button', { name: /instead$/ })).not.toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Remove this mark' }));
+      expect(shared.marks).toEqual([]);
+      expect(submits()).toHaveLength(0);
+
+      await user.click(mark());
+      rerender(tape(260));
+      await user.click(screen.getByRole('button', { name: 'Unknown track. Know it? ID it' }));
+      await user.type(artist(), 'Orbital');
+      await user.type(title(), 'Chime{Enter}');
+      expect(JSON.parse(submits()[0][1].body).content).toBe('[A 3:50] Orbital - Chime');
+      await waitFor(() => expect(shared.marks).toEqual([]));
     });
   });
 
@@ -285,7 +366,7 @@ describe('the track line under the player', () => {
       );
     }
     function Line({ position }: { position: string }) {
-      return <TrackIds tapeId="tape-1" position={position} ids={ids} time={12} onPosted={posted} />;
+      return <TrackIds tapeId="tape-1" side={0} position={position} ids={ids} time={12} onPosted={posted} />;
     }
     const { rerender } = render(
       <TapeTrackIdsProvider tapeId="tape-1">
@@ -310,7 +391,7 @@ describe('the track line under the player', () => {
 
   it('asks for what is missing on its own line, drops the complaint once it is being put right, and shuts on Escape', async () => {
     const user = userEvent.setup();
-    render(<TrackIds tapeId="tape-1" position="A" ids={ids} time={200} onPosted={posted} />);
+    render(<TrackIds tapeId="tape-1" side={0} position="A" ids={ids} time={200} onPosted={posted} />);
 
     await user.click(screen.getByRole('button', { name: 'Know this track? ID it' }));
     await user.click(screen.getByRole('button', { name: /post/i }));
@@ -334,7 +415,7 @@ describe('the track line under the player', () => {
     const user = userEvent.setup();
     window.localStorage.setItem('simfonik:id-name', 'Tester');
     fetchMock.mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ error: 'Too many requests. Please try again later.' }), { status: 429 })));
-    render(<TrackIds tapeId="tape-1" position="A" ids={ids} time={200} onPosted={posted} />);
+    render(<TrackIds tapeId="tape-1" side={0} position="A" ids={ids} time={200} onPosted={posted} />);
 
     await user.click(screen.getByRole('button', { name: 'Know this track? ID it' }));
     await user.type(artist(), 'Moby{Enter}');

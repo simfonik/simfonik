@@ -282,6 +282,34 @@ describe('the tape page’s tracklist', () => {
       expect(screen.getByRole('button', { name: 'Play from 0:03:41, your time, not posted yet' })).toBeInTheDocument();
     });
 
+    it('include a point marked by ear on the player’s line: a row of its own at its time, taken back or posted with the rest', async () => {
+      const user = userEvent.setup();
+      page();
+      await screen.findByRole('button', { name: 'Play from 0:00:00' });
+      await act(() => deck.setMarks([{ side: 0, n: null, artist: '', title: '', known: false, time: 500 }, { side: 0, n: null, artist: '', title: '', known: false, time: 130 }]));
+
+      expect(rows()).toEqual(['0:00:00The Prodigy — Hyperspeed (G-Force Part 2)', '0:02:10Unknown trackUndo', '0:08:20Unknown trackUndo', '02Butsch — The Count(4:10)', '03Rhythm For Reasons — Grand National']);
+      expect(bar()).toHaveTextContent('2 times not posted · as Dana');
+      // They are not the side's yet.
+      expect(screen.getByText('1 of 3 timed')).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Take back the mark at 0:02:10' }));
+      expect(deck.marks.map((m) => m.time)).toEqual([500]);
+      await user.click(within(bar()).getByRole('button', { name: 'Post' }));
+      expect(posts()[0].content).toBe('[8:20] ? - ?');
+    });
+
+    it('make the tracklist appear on a tape that had nothing, with only the points and the bar', async () => {
+      sides = [[]];
+      page([{ position: 'A' }]);
+      await read();
+      expect(screen.queryByRole('heading', { name: 'Tracklist' })).not.toBeInTheDocument();
+      await act(() => deck.setMarks([{ side: 0, n: null, artist: '', title: '', known: false, time: 61 }]));
+      expect(screen.getByRole('heading', { name: 'Tracklist' })).toBeInTheDocument();
+      expect(rows()).toEqual(['0:01:01Unknown trackUndo']);
+      expect(bar()).toHaveTextContent('1 time not posted');
+    });
+
     it('mark a line the list has down as unknown without naming it', async () => {
       const user = userEvent.setup();
       orders = [{ by: 'Josh', tracks: [{ n: 1, artist: 'Orbital', title: 'Chime', known: true }, { n: 2, artist: '', title: 'ambient track', known: false }] }];
@@ -289,7 +317,7 @@ describe('the tape page’s tracklist', () => {
       page([{ position: 'A' }, { position: 'B' }]);
       await screen.findByRole('button', { name: 'Play from A 0:00:00' });
       await playing(0, 250);
-      await user.click(plus('Unknown track'));
+      await user.click(plus('Track 2'));
       await user.click(within(bar()).getByRole('button', { name: 'Post' }));
       expect(posts()[0].content).toBe('[A 4:10] ? - ?');
     });

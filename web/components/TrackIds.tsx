@@ -53,9 +53,11 @@ function dismiss(sheet: HTMLDialogElement) {
 
 type Props = {
   tapeId: string;
+  /** Which of the tape's sides this is, counting from 0. */
+  side: number;
   /** The side's label as the site shows it ("A", "1B"), or null on a tape that is one recording. */
   position: string | null;
-  /** The IDs the comments give for this side, in order of time. */
+  /** The side's IDs in order of time: those the comments give, and the visitor's own unposted marks among them. */
   ids: TrackId[];
   /** Where the tape is, in seconds. */
   time: number;
@@ -81,10 +83,15 @@ type Props = {
  * outweigh what was said of that moment before. The tracklist, down the page, can ask for the blanks to
  * open for one of its lines.
  *
+ * Beside all that is Mark: one press says a track starts at this moment without saying what it is. A visitor
+ * can go through a tape setting the points and leave the names to whoever knows them. A mark is the
+ * visitor's own until they post what they have (the tracklist keeps the count and the Post), and until then
+ * it is taken back, or ID'd, like any other mark on the line.
+ *
  * Where the side has a list of its tracks with no times, the two lines of it likeliest to be this track are
  * offered, and pressing one writes it into the blanks.
  */
-export function TrackIds({ tapeId, position, ids, time, order = null, length = null, onPosted }: Props) {
+export function TrackIds({ tapeId, side, position, ids, time, order = null, length = null, onPosted }: Props) {
   const playing = idAt(ids, time);
   // The blanks are for one moment of the tape, fixed when they open, while the tape plays on underneath.
   const [at, setAt] = useState<number | null>(null);
@@ -120,8 +127,8 @@ export function TrackIds({ tapeId, position, ids, time, order = null, length = n
     setAt(start);
     setMark(marked);
     // A mark made too early can be moved to here: the tape is in that track, well past where it is marked,
-    // and nothing else starts at this moment.
-    setLater(marked && marked === playing && now - marked.start > ONE_MOMENT && !ids.some((id) => id !== marked && Math.abs(id.start - now) <= ONE_MOMENT) ? now : null);
+    // and nothing else starts at this moment. (The visitor's own unposted mark is taken back and made again.)
+    setLater(marked && !marked.pending && marked === playing && now - marked.start > ONE_MOMENT && !ids.some((id) => id !== marked && Math.abs(id.start - now) <= ONE_MOMENT) ? now : null);
     setAct('id');
     setArtist(marked?.known ? marked.artist : '');
     setTitle(marked?.known ? marked.title : '');
@@ -145,7 +152,16 @@ export function TrackIds({ tapeId, position, ids, time, order = null, length = n
   };
   // The tracklist asks for one of its lines. On a tape with sides the blanks belong to the side loaded, so a
   // line on another side is answered once the player has loaded that side.
-  const { asked, answered } = useTapeTrackIds();
+  const { asked, answered, marks, setMarks } = useTapeTrackIds();
+  // A track could start at this moment: the tape has been played, and nothing on the side starts within a
+  // moment of here already.
+  const canMark = time > 0 && !ids.some((id) => Math.abs(id.start - time) <= ONE_MOMENT);
+  const unmark = (start: number) => setMarks(marks.filter((m) => !(m.side === side && m.n === null && m.time === start)));
+  const markHere = () => {
+    const now = Math.floor(time);
+    setMarks([...marks, { side, n: null, artist: '', title: '', known: false, time: now }]);
+    setThanks(`Marked ${idPlace(position, now)}. Not posted yet.`);
+  };
   // The blanks open on the side's IDs and the tape's place as they are when the asking is heard.
   const answer = useRef<(time: number) => void>(() => {});
   useEffect(() => {
@@ -242,6 +258,12 @@ export function TrackIds({ tapeId, position, ids, time, order = null, length = n
 
   async function send(what: Act) {
     if (status === 'sending' || at === null) return;
+    // The visitor's own unposted mark is theirs to take back: nothing was said, so nothing is posted.
+    if (what === 'remove' && mark?.pending) {
+      unmark(mark.start);
+      setThanks('Removed.');
+      return leave();
+    }
     // Only an ID needs a name: a mark is taken away or moved as it is, named or not.
     if (what === 'id' && !artist.trim() && !title.trim()) return refuse('Enter the artist or the title.', artistField.current);
     if (!name.trim()) {
@@ -260,6 +282,8 @@ export function TrackIds({ tapeId, position, ids, time, order = null, length = n
     // In the line the name, once asked for, is the only blank there is.
     if (failed) return refuse(failed, askName && !sheet ? nameField.current : artistField.current);
     setStatus('idle');
+    // An unposted mark that has now been ID'd is on the tape by that ID, and no longer waits to be posted.
+    if (mark?.pending) unmark(mark.start);
     setThanks(what === 'remove' ? 'Removed.' : what === 'move' ? 'Moved. Thanks.' : 'Posted. Thanks.');
     onPosted();
     leave();
@@ -330,6 +354,11 @@ export function TrackIds({ tapeId, position, ids, time, order = null, length = n
           ) : (
             <button ref={line} type="button" onClick={() => open(false)} className="track-ids-line text-[var(--muted)]">
               {playing ? 'Unknown track. Know it?' : 'Know this track?'} <span className="track-ids-cue">ID it</span>
+            </button>
+          )}
+          {canMark && (
+            <button type="button" onClick={markHere} className="track-ids-post" aria-label="Mark a track start here, without an ID" title="A track starts here, and you don’t know what it is">
+              Mark
             </button>
           )}
         </div>

@@ -645,21 +645,18 @@ html:has(.id-sheet[open]) { overflow: hidden; }
 @media (hover: hover) and (pointer: fine) {
   .tracklist-cue:hover { text-decoration: underline; text-underline-offset: 4px; }
 }
-/* The visitor's times, waiting to be posted: a bar that stays at the foot of the screen while the list is
-   on it, so it is in reach from whichever row was last pressed. */
+/* The visitor's times, waiting to be posted: a bar at the foot of the screen for as long as there are any,
+   so it is in reach from the player's line and from whichever row was last pressed. The page ends that much
+   lower while the bar is there, so its last lines can still be read. */
 .tracklist-post {
-  position: sticky;
-  bottom: 0;
-  z-index: 1;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0 1rem;
-  margin-top: 1rem;
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 30;
   padding: 0.5rem 0 calc(0.5rem + env(safe-area-inset-bottom, 0px));
   border-top: 1.5px solid var(--border);
   background: var(--bg);
 }
+body:has(.tracklist-post) { padding-bottom: 6rem; }
 .tracklist-post-name { flex: 1 1 8rem; }
 /* The tracklist's history of ID posts: each post's lines in the ID's own type, with who posted it and when
    after them, more quietly, at the far end of the line where there is room and under it where there is not. Each entry
