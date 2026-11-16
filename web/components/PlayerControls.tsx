@@ -1,7 +1,7 @@
 import React, { ReactNode, useMemo, useRef } from 'react';
 import { formatTime } from '../lib/time-utils';
-import { idAt, idLabel } from '../lib/track-ids/compose';
-import { saidBy, type Mark } from '../lib/track-ids/side';
+import { idLabel } from '../lib/track-ids/compose';
+import { playingAt, saidBy, type Mark } from '../lib/track-ids/side';
 import { outline } from '../lib/waveform';
 
 export interface PlayerControlsProps {
@@ -45,7 +45,7 @@ export function PlayerControls({
   // The side's length: what the audio says once it has loaded, and before that what was read ahead of time.
   const whole = duration > 0 ? duration : length ?? 0;
   const played = whole > 0 ? Math.min(100, (currentTime / whole) * 100) : 0;
-  const playing = ids ? idAt(ids, currentTime) : null;
+  const playing = ids?.[playingAt(ids, currentTime)] ?? null;
   /** Nothing has been asked of the audio yet, so the first press on the bar is also what starts the tape. */
   const unstarted = !duration && !isPlaying && !isLoading;
 
@@ -83,7 +83,7 @@ export function PlayerControls({
     // The time there and, where the comments have ID'd it, the track playing there and who said so. That
     // track's whole stretch of the bar lights up, so the cuts read as tracks.
     const time = timeAt(x, bar);
-    const id = time !== null && ids ? idAt(ids, time) : null;
+    const id = time === null ? null : (ids?.[playingAt(ids, time)] ?? null);
     const label = el.firstElementChild as HTMLElement;
     // An ID as the page writes one everywhere: the time, a space, the track.
     label.textContent = time === null ? '' : `${formatTime(time)}${id ? `\u2002${idLabel(id)}` : ''}`;

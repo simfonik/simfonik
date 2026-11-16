@@ -5,12 +5,15 @@ import { describe, expect, it } from 'vitest';
 import lengths from '@/data/side-lengths.json';
 import comments from '@/data/tape-comments.json';
 import tapes from '@/data/tapes.json';
-import { composeId, composeRemoval, type RunningOrder, type TrackId } from '@/lib/track-ids/compose';
+import { composeId, composeRemoval, readComposed, type RunningOrder } from '@/lib/track-ids/compose';
+import { settle, type Moment, type TrackId } from '@/lib/track-ids/moments';
+import { digest, reconcile, sideNames, trusted, type Sighting } from '@/lib/track-ids/parse';
 import { readSaid } from '@/lib/track-ids/said';
-import { contributors, couldStartAt, playingAt, saidBy, sideRows, standing, startingAt, suggest, timeline, withChanges, type Change, type Row } from '@/lib/track-ids/side';
+import { canStartAt, contributors, couldStartAt, playingAt, saidBy, sideRows, standing, startingAt, suggest, timeline, withChanges, type Change, type Row } from '@/lib/track-ids/side';
 import type { Tape } from '@/types/tape';
 
-const id = (start: number, artist: string, title: string, by = 'Rents', date = '2020-01-01'): TrackId => ({ start, end: start + 240, artist, title, known: Boolean(artist || title), by, date });
+/** What the comments say starts at a time: an ID, or with no names a spot someone marked. */
+const id = (start: number, artist: string, title: string, by = 'Rents', date = '2020-01-01'): Moment => ({ start, artist, title, known: Boolean(artist || title), by, date });
 const said = (time: number, artist = '', title = '', more: Partial<Change> = {}): Change => ({ side: 0, time, artist, title, ...more });
 const sent = { sent: { by: 'Dana', read: 1 } };
 const list = (by: string | null, ...names: (string | null)[]): RunningOrder => ({
@@ -21,13 +24,14 @@ const order = list(null, 'The Prodigy - Hyperspeed (G-Force Part 2)', 'Butsch - 
 const shown = (rows: Row[]) => rows.map((r) => `${r.n ?? '-'} ${r.start ?? '-'} ${r.known ? `${r.artist} / ${r.title}` : '??'}`);
 const times = (ids: TrackId[]) => ids.map((x) => `${x.start}-${x.end} ${x.known ? `${x.artist} / ${x.title}` : '??'}`);
 
-describe('a side’s IDs with the visitor’s changes among them', () => {
-  const posted = [id(0, 'Orbital', 'Chime'), id(240, '', '', 'Josh'), id(600, 'Joey Beltram', 'Energy Flash')];
-  posted[0].end = 240;
-  posted[1].end = 480;
+describe('a side’s tracks with the visitor’s changes among them', () => {
+  // Chime runs to the spot Josh marked at 4:00, which a comment says ends at 8:00. Energy Flash is the last anyone timed.
+  const posted = [id(0, 'Orbital', 'Chime'), { ...id(240, '', '', 'Josh'), until: 480 }, id(600, 'Joey Beltram', 'Energy Flash')];
+  const gone = (time: number) => said(time, '', '', { gone: true, ...sent });
 
-  it('are the comments’ IDs where the visitor has said nothing', () => {
-    expect(withChanges(posted, [])).toEqual(posted);
+  it('are the tracks the comments’ moments make where the visitor has said nothing', () => {
+    expect(withChanges(posted, [])).toEqual(settle(posted));
+    expect(times(withChanges(posted, []))).toEqual(['0-240 Orbital / Chime', '240-480 ??', '600-840 Joey Beltram / Energy Flash']);
   });
 
   it('have a change at a moment of its own as a new track from there, until the next one starts', () => {
@@ -37,10 +41,19 @@ describe('a side’s IDs with the visitor’s changes among them', () => {
     expect(ids[2].mine).toBe(change);
     // What was playing there is cut off where the new track starts.
     expect(times(withChanges(posted, [said(100)]))[0]).toBe('0-100 Orbital / Chime');
+    // And the last track anyone had timed now runs to it, however far on it is.
+    expect(times(withChanges(posted, [said(1500)]))[2]).toBe('600-1500 Joey Beltram / Energy Flash');
+  });
+
+  it('read a change as its line of a comment will read back: its time to the second, its names as written there', () => {
+    const [track] = withChanges([], [said(100.9, ' Jean - Michel   Jarre ', ' Oxygene (Part  IV) ')]);
+    expect(track).toMatchObject({ start: 100, artist: 'Jean-Michel Jarre', title: 'Oxygene (Part IV)', known: true });
+    // A name that is only a question mark, or only spaces, is no name.
+    expect(withChanges([], [said(10, '?', ' ')])[0]).toMatchObject({ artist: '', title: '', known: false });
   });
 
   it('take a change within a moment of a mark as said of that mark: one moment, one track', () => {
-    // A name for the spot someone marked without one, from where it was marked.
+    // A name for the spot someone marked without one, from where it was marked. Where it ends is still where the comments say.
     expect(times(withChanges(posted, [said(243, 'LFO', 'LFO')]))[1]).toBe('240-480 LFO / LFO');
     expect(withChanges(posted, [said(243, 'LFO', 'LFO')])).toHaveLength(3);
   });
@@ -59,31 +72,68 @@ describe('a side’s IDs with the visitor’s changes among them', () => {
     expect(times(withChanges(posted, [said(600, '', '', sent)]))[2]).toBe('600-840 Joey Beltram / Energy Flash');
   });
 
+  it('start a moment at the earliest time anyone gave for it', () => {
+    // Said three seconds before the mark, a posted change is still said of it, and it starts from there:
+    // named by it, or, where the mark keeps its own name, only moved by it.
+    expect(times(withChanges(posted, [said(237, 'LFO', 'LFO', sent)]))[1]).toBe('237-480 LFO / LFO');
+    const moved = withChanges(posted, [said(597, '', '', sent)])[2];
+    expect([moved.start, moved.artist, moved.mine]).toEqual([597, 'Joey Beltram', undefined]);
+    // A start nobody gave as a time (the track heads a list, and is taken to open the side) gives way to one somebody did.
+    const opener = [{ ...id(0, 'Orbital', 'Chime'), guessed: true }];
+    expect(times(withChanges(opener, [said(4, 'Orbital', 'Chime (Edit)', sent)]))).toEqual(['4-244 Orbital / Chime (Edit)']);
+  });
+
   it('drop a mark taken away, and let what played before it play on', () => {
-    expect(times(withChanges(posted, [said(240, '', '', { gone: true, ...sent })]))).toEqual(['0-240 Orbital / Chime', '600-840 Joey Beltram / Energy Flash']);
-    // Its end was only ever where the mark began.
-    expect(times(withChanges([posted[0], { ...posted[1], end: 600 }, posted[2]].map((x, k) => (k === 0 ? { ...x, end: 240 } : x)), [said(240, '', '', { gone: true, ...sent })]))[0]).toBe('0-240 Orbital / Chime');
-    expect(times(withChanges([{ ...posted[0], end: 240 }, { ...posted[1], end: 600 }], [said(240, '', '', { gone: true, ...sent })]))).toEqual(['0-240 Orbital / Chime']);
+    expect(times(withChanges(posted, [gone(240)]))).toEqual(['0-600 Orbital / Chime', '600-840 Joey Beltram / Energy Flash']);
+    // With nothing after it, as long as the last track on a side is taken to play.
+    expect(times(withChanges(posted.slice(0, 2), [gone(240)]))).toEqual(['0-240 Orbital / Chime']);
     // Taking away what isn't there changes nothing.
-    expect(withChanges(posted, [said(400, '', '', { gone: true, ...sent })])).toEqual(posted);
+    expect(withChanges(posted, [gone(400)])).toEqual(settle(posted));
   });
 
   it('take a record named again, with nothing else between, as the same play: the earlier start stands', () => {
     const one = [id(300, 'Altern 8', 'Infiltrate 202')];
     expect(times(withChanges(one, [said(400, 'Altern 8', 'Infiltrate 202', sent)]))).toEqual(['300-640 Altern 8 / Infiltrate 202']);
     expect(times(withChanges(one, [said(200, 'Altern 8', 'Infiltrate 202', sent)]))).toEqual(['200-540 Altern 8 / Infiltrate 202']);
-    // With another track between them, they are two plays.
+    // With another track between them, they are two plays: marked there, or there once the comments' own second saying is parted from the first.
     expect(withChanges([...one, id(350, '', '')], [said(400, 'Altern 8', 'Infiltrate 202', sent)])).toHaveLength(3);
+    const twice = [...one, id(700, 'Altern 8', 'Infiltrate 202', 'Josh')];
+    expect(times(withChanges(twice, []))).toEqual(['300-940 Altern 8 / Infiltrate 202']);
+    expect(times(withChanges(twice, [said(500)]))).toEqual(['300-500 Altern 8 / Infiltrate 202', '500-700 ??', '700-940 Altern 8 / Infiltrate 202']);
+    expect(times(withChanges(twice, [gone(300)]))).toEqual(['700-940 Altern 8 / Infiltrate 202']);
   });
 
   it('take a change at the nearer of two marks it is within a moment of', () => {
     const close = [id(100, '', ''), id(108, '', '')];
-    expect(times(withChanges(close, [said(105, 'LFO', 'LFO')])).map((t) => t.split(' ').slice(1).join(' '))).toEqual(['??', 'LFO / LFO']);
+    expect(times(withChanges(close, [said(105, 'LFO', 'LFO')]))).toEqual(['100-105 ??', '105-345 LFO / LFO']);
+  });
+
+  it('have nothing start in a side’s last moments: there is no room left for a track', () => {
+    expect(times(withChanges(posted, [said(895)], 900))[3]).toBe('895-900 ??');
+    expect(withChanges(posted, [said(896)], 900)).toHaveLength(3);
+    // And the last track runs to the side's end, where that is sooner than it is taken to play.
+    expect(times(withChanges(posted, [], 700))[2]).toBe('600-700 Joey Beltram / Energy Flash');
+  });
+});
+
+describe('what a visitor has waiting to be posted', () => {
+  it('is said together, as the one comment it will be, in whatever order it was made', () => {
+    // One record in two mixes, one after the other, and then another record. The visitor times the first mix,
+    // then the last line, and then, later on the tape than that, the second mix: three times that can't all
+    // stand in the list's order. The page settles it as the reader will when they arrive in one comment.
+    const tape = { id: 'made-up', sides: [{ position: 'A', tracks: [{ artist: 'Bizarre Inc', title: 'Playing With Knives (Quadrant Mix)' }, { artist: 'Bizarre Inc', title: 'Playing With Knives (Climax Mix)' }, { artist: 'Altern 8', title: 'Infiltrate 202' }] }] } as never;
+    const made = [said(6, 'Bizarre Inc', 'Playing With Knives (Quadrant Mix)'), said(20, 'Altern 8', 'Infiltrate 202'), said(150, 'Bizarre Inc', 'Playing With Knives (Climax Mix)')];
+    const comment = [...made].sort((a, b) => a.time - b.time).map((c) => composeId({ position: null, time: c.time, artist: c.artist, title: c.title })).join('\n');
+    const read = readSaid(tape, [{ author: 'Dana', date: '2026-11-15T12:00:00.000Z', content: comment }]);
+    const theirs = shown(sideRows(read.orders[0], withChanges(read.sides[0], [])));
+    expect(shown(sideRows(read.orders[0], withChanges([], made)))).toEqual(theirs);
+    // And still, between the post and the reading that has it.
+    expect(shown(sideRows(read.orders[0], withChanges([], made.map((change) => ({ ...change, ...sent })))))).toEqual(theirs);
   });
 });
 
 describe('a side’s rows', () => {
-  const rows = (o: RunningOrder | null, ids: TrackId[], changes: Change[] = []) => sideRows(o, withChanges(ids, changes));
+  const rows = (o: RunningOrder | null, ids: Moment[], changes: Change[] = []) => sideRows(o, withChanges(ids, changes));
 
   it('are the IDs in order of time where there is no list', () => {
     expect(shown(rows(null, [id(300, 'Orbital', 'Chime'), id(0, 'Joey Beltram', 'Energy Flash'), id(600, '', '')]))).toEqual(['- 0 Joey Beltram / Energy Flash', '- 300 Orbital / Chime', '- 600 ??']);
@@ -202,32 +252,39 @@ describe('a side’s rows', () => {
 });
 
 describe('what is asked of a side’s rows', () => {
-  const rows = sideRows(order, withChanges([id(0, 'The Prodigy', 'Hyperspeed (G-Force Part 2)'), { ...id(400, 'Altern 8', 'Infiltrate 202'), end: 500 }], []));
+  // The opener runs until the unnamed track at 4:00; over that one a record is layered from 5:00 to 5:30; the last is said to end at 8:20.
+  const rows = sideRows(order, withChanges([id(0, 'The Prodigy', 'Hyperspeed (G-Force Part 2)'), id(240, '', ''), { ...id(300, 'LFO', 'LFO'), layer: true, until: 330 }, { ...id(400, 'Altern 8', 'Infiltrate 202'), until: 500 }], []));
 
-  it('what is playing: the last row to start, if it hasn’t ended', () => {
-    expect(playingAt(rows, 0)).toBe(0);
-    expect(playingAt(rows, 239)).toBe(0);
-    // Four minutes on with nothing known to follow, it is taken to have ended.
-    expect(playingAt(rows, 240)).toBe(-1);
-    expect(playingAt(rows, 400)).toBe(1);
-    expect(playingAt(rows, 500)).toBe(-1);
+  const playing = (time: number) => rows[playingAt(rows, time)]?.start ?? null;
+
+  it('what is playing: the last row to have started that hasn’t ended', () => {
+    expect([playing(0), playing(239), playing(240), playing(299)]).toEqual([0, 0, 240, 240]);
+    // The layered record while it lasts, and the one under it before and after: that one plays on.
+    expect([playing(300), playing(329), playing(330), playing(399)]).toEqual([300, 300, 240, 240]);
+    expect([playing(400), playing(499)]).toEqual([400, 400]);
+    // Past where the last track is said to end, nothing is known to be playing.
+    expect(playing(500)).toBeNull();
     expect(playingAt([], 10)).toBe(-1);
+    // The waveform asks the same of the marks it is given, and marks the one that answers.
+    const marks = timeline(rows);
+    expect([0, 329, 330, 500].map((time) => marks[playingAt(marks, time)]?.start ?? null)).toEqual([0, 300, 240, null]);
   });
 
   it('what starts within a moment of a time, either side of it', () => {
-    expect(startingAt(rows, 5)).toBe(0);
-    expect(startingAt(rows, 6)).toBe(-1);
-    expect(startingAt(rows, 395)).toBe(1);
-    expect(startingAt(rows, 394)).toBe(-1);
+    const starting = (time: number) => rows[startingAt(rows, time)]?.start ?? null;
+    expect([starting(5), starting(6), starting(395), starting(394)]).toEqual([0, null, 400, null]);
+    // Within a moment of two starts, the nearer; as near to both, the earlier.
+    const close = sideRows(null, withChanges([id(100, '', ''), id(108, '', '')], []));
+    expect([103, 104, 105].map((time) => close[startingAt(close, time)].start)).toEqual([100, 100, 108]);
   });
 
   it('the timed rows as marks for the waveform', () => {
-    expect(timeline(rows).map((x) => `${x.start}-${x.end} ${x.artist}`)).toEqual(['0-240 The Prodigy', '400-500 Altern 8']);
+    expect(timeline(rows).map((x) => `${x.start}-${x.end} ${x.artist}`)).toEqual(['0-240 The Prodigy', '240-400 ', '300-330 LFO', '400-500 Altern 8']);
   });
 });
 
 describe('the lines that could be given a moment as their start', () => {
-  const at = (o: RunningOrder, ids: TrackId[], time: number) => {
+  const at = (o: RunningOrder, ids: Moment[], time: number) => {
     const rows = sideRows(o, withChanges(ids, []));
     return couldStartAt(rows, time).map((k) => rows[k].n);
   };
@@ -248,7 +305,7 @@ describe('the lines that could be given a moment as their start', () => {
 
   it('are never a row that is not a line of the list', () => {
     expect(at(five, [...timed, id(150, 'Stakker', 'Humanoid')], 200)).toEqual([2]);
-    expect(couldStartAt(sideRows(null, [id(0, 'Orbital', 'Chime')]), 100)).toEqual([]);
+    expect(couldStartAt(sideRows(null, settle([id(0, 'Orbital', 'Chime')])), 100)).toEqual([]);
   });
 
   it('are only the first of the lines with no name: one is as good as another, and an unnamed track goes to the first', () => {
@@ -272,7 +329,7 @@ describe('the lines that could be given a moment as their start', () => {
 describe('names a list offers for a moment being ID’d', () => {
   // Ten tracks on a side of 40 minutes: four minutes each, if they were all the same length.
   const ten = list(null, 'Orbital - Chime', 'Moby - Go', 'Joey Beltram - Energy Flash', 'LFO - LFO', 'Altern 8 - Infiltrate 202', 'The Prodigy - Charly', 'SL2 - DJs Take Control', 'Bizarre Inc - Playing With Knives', 'Rhythm Section - Feel The Rhythm', 'Shut Up And Dance - Raving I’m Raving');
-  const offered = (ids: TrackId[], start: number, length: number | null = 2400, most?: number, o = ten) => suggest(sideRows(o, withChanges(ids, [])), start, length, most).map((row) => row.n);
+  const offered = (ids: Moment[], start: number, length: number | null = 2400, most?: number, o = ten) => suggest(sideRows(o, withChanges(ids, [])), start, length, most).map((row) => row.n);
 
   it('are the two lines nearest to where the moment falls on the side, in list order', () => {
     expect(offered([], 0)).toEqual([1, 2]);
@@ -324,8 +381,8 @@ describe('the visitor’s changes that still change something', () => {
 
 describe('who a tape’s tracklist is owed to', () => {
   it('is everyone who gave a line its time and whoever kept a list its names are from, whoever gave the most first', () => {
-    const a = sideRows(null, [id(0, 'Orbital', 'Chime', 'Josh'), id(300, 'Joey Beltram', 'Energy Flash', 'Rents'), id(600, 'Altern 8', 'Infiltrate 202', 'Rents')]);
-    const b = sideRows({ ...order, by: 'Softboiled' }, [id(0, 'The Prodigy', 'Hyperspeed (G-Force Part 2)', 'Dana')]);
+    const a = sideRows(null, settle([id(0, 'Orbital', 'Chime', 'Josh'), id(300, 'Joey Beltram', 'Energy Flash', 'Rents'), id(600, 'Altern 8', 'Infiltrate 202', 'Rents')]));
+    const b = sideRows({ ...order, by: 'Softboiled' }, settle([id(0, 'The Prodigy', 'Hyperspeed (G-Force Part 2)', 'Dana')]));
     expect(contributors([{ rows: a, keeper: null }, { rows: b, keeper: 'Softboiled' }])).toEqual(['Softboiled', 'Rents', 'Dana', 'Josh']);
   });
 
@@ -338,47 +395,63 @@ describe('who a tape’s tracklist is owed to', () => {
 
 describe('every side in the archive', () => {
   const all = comments as Record<string, { author: string; date: string; content: string }[]>;
-  const sides = (tapes as unknown as Tape[]).flatMap((tape) => {
-    const read = readSaid(tape, (all[tape.id] ?? []).map((c) => ({ author: c.author, date: c.date, content: c.content })));
-    return tape.sides.map((side, i) => ({ name: `${tape.id} [${side.position}]`, order: read.orders[i], ids: read.sides[i] }));
+  const archive = (tapes as unknown as Tape[]).map((tape) => {
+    const before = (all[tape.id] ?? []).map((c) => ({ author: c.author, date: c.date, content: c.content }));
+    return { tape, before, read: readSaid(tape, before) };
   });
+  const sides = archive.flatMap(({ tape, read }) =>
+    tape.sides.map((side, i) => ({
+      tape,
+      i,
+      name: `${tape.id} [${side.position}]`,
+      position: tape.sides.length > 1 ? side.position : null,
+      order: read.orders[i],
+      ids: read.sides[i],
+      // The tape can't be anywhere past the side's end, and the reader holds nothing to be there.
+      end: (lengths as Record<string, (number | null)[]>)[tape.id]?.[i] ?? Infinity,
+    })),
+  );
+  const startsOf = (rows: Row[]) => rows.flatMap((row) => (row.start === null ? [] : [row.start]));
 
-  it('has its rows in order of time, each ID on one row and each line of its list on one row', () => {
-    for (const { name, order: o, ids } of sides) {
-      const rows = sideRows(o, withChanges(ids, []));
-      const starts = rows.flatMap((row) => (row.start === null ? [] : [row.start]));
-      expect(starts, name).toEqual([...starts].sort((a, b) => a - b));
-      expect(starts, name).toHaveLength(ids.length);
+  it('has its rows in order of time, each track on one row and each line of its list on one row', () => {
+    for (const { name, order: o, ids, end } of sides) {
+      const tracks = withChanges(ids, [], end);
+      const rows = sideRows(o, tracks);
+      expect(startsOf(rows), name).toEqual([...startsOf(rows)].sort((a, b) => a - b));
+      expect(startsOf(rows), name).toHaveLength(tracks.length);
       expect(rows.filter((row) => row.n !== null), name).toHaveLength(o?.tracks.length ?? 0);
     }
   });
 
   // What pressing + on each waiting line at a moment would do, worked out the long way: say it, work the side
-  // out again, and see whether that line has that moment.
-  const pressed = (o: RunningOrder, ids: TrackId[], changes: Change[], rows: Row[], time: number) =>
+  // out again, and see whether that line has that moment and every other line the time it had. (A line with
+  // no name, whose time only stands in for it, is no such line: which unnamed track it has may change.)
+  const pressed = (o: RunningOrder, ids: Moment[], changes: Change[], rows: Row[], time: number, end: number) =>
     rows.flatMap((row, k) => {
       if (row.n === null || row.start !== null) return [];
       const change = said(time, row.known ? row.artist : '', row.known ? row.title : '');
-      const then = sideRows(o, withChanges(ids, [...changes, change])).find((r) => r.n === row.n) as Row;
-      return then.start === time && then.mine === change ? [k] : [];
+      const then = sideRows(o, withChanges(ids, [...changes, change], end));
+      const line = (n: number | null) => then.find((r) => r.n === n) as Row;
+      const kept = rows.every((was) => was.n === null || was.start === null || was.filled || line(was.n).start === was.start);
+      return line(row.n).start === time && line(row.n).mine === change && kept ? [k] : [];
     });
   // Moments to try on a side: before anything, hard by each start on both sides of it, and at the quarters
   // of each stretch between two tracks and of the ten minutes after the last.
-  const moments = (rows: Row[]) => {
-    const starts = rows.flatMap((row) => (row.start === null ? [] : [row.start]));
-    return [...new Set([20, ...starts.flatMap((start, k) => [start - 3, start + 3, start + 6, ...[0.25, 0.5, 0.75].map((part) => Math.floor(start + ((starts[k + 1] ?? start + 600) - start) * part))])])].filter((time) => time >= 0);
+  const moments = (rows: Row[], end: number) => {
+    const starts = startsOf(rows);
+    return [...new Set([20, ...starts.flatMap((start, k) => [start - 3, start + 3, start + 6, ...[0.25, 0.5, 0.75].map((part) => Math.floor(start + ((starts[k + 1] ?? start + 600) - start) * part))])])].filter((time) => time >= 0 && time < end);
   };
 
-  it('offers a + on exactly the rows that pressing it would give that moment to', () => {
+  it('offers a + on exactly the rows that pressing it would give that moment to, and nothing else a new time', () => {
     let offered = 0;
-    for (const { name, order: o, ids } of sides) {
+    for (const { name, order: o, ids, end } of sides) {
       if (!o) continue;
-      const rows = sideRows(o, withChanges(ids, []));
-      for (const time of moments(rows)) {
-        // Within a moment of a start nothing else can start, so nothing is on offer. Anywhere else, what is
-        // on offer is what pressing would do.
-        const would = startingAt(rows, time) >= 0 ? [] : pressed(o, ids, [], rows, time);
-        expect(couldStartAt(rows, time), `${name} at ${time}`).toEqual(would);
+      const rows = sideRows(o, withChanges(ids, [], end));
+      for (const time of moments(rows, end)) {
+        // Within a moment of a start, or in the side's last moments, nothing can start, so nothing is on
+        // offer. Anywhere else, what is on offer is what pressing would do.
+        const would = canStartAt(rows, time, end) ? pressed(o, ids, [], rows, time, end) : [];
+        expect(couldStartAt(rows, time, end), `${name} at ${time}`).toEqual(would);
         offered += would.length;
       }
     }
@@ -386,74 +459,114 @@ describe('every side in the archive', () => {
     expect(offered).toBeGreaterThan(2000);
   });
 
-  it('goes on doing so, and keeps its rows in order of time, as a visitor times a side line by line', () => {
+  // The reader, for a tape whose comments so far have been read: what it says of a side once one more comment,
+  // in the site's own form, is posted. `readSaid` does this from the start each time, and reading a tape's
+  // prose is most of that work; here the prose is read once for the tape, which is what lets every side be
+  // tried at every moment that matters. Each tape's first answer is checked against `readSaid` itself.
+  const NOW = '2026-11-15T12:00:00.000Z';
+  const readers = new Map<Tape, (comment: string, side: number) => Moment[]>();
+  const readerOf = (tape: Tape) => {
+    const made = readers.get(tape);
+    if (made) return made;
+    const { before } = archive.find((one) => one.tape === tape) as (typeof archive)[number];
+    const prose = trusted(digest(before, sideNames(tape.sides)).sightings, tape.sides.length);
+    const measured = tape.sides.map((_, side) => (lengths as Record<string, (number | null)[]>)[tape.id]?.[side] ?? Infinity);
+    let checked = false;
+    const reader = (comment: string, side: number) => {
+      const posted = readComposed(comment, tape.sides.map((s) => s.position)) as NonNullable<ReturnType<typeof readComposed>>;
+      const exact = posted.map((id): Sighting => ({ ...id, known: Boolean(id.artist || id.title), exact: true, author: 'Dana', date: NOW }));
+      const moments = reconcile([...prose, ...exact], measured)[side];
+      if (!checked) expect(moments, `${tape.id}: ${comment}`).toEqual(readSaid(tape, [...before, { author: 'Dana', date: NOW, content: comment }]).sides[side]);
+      checked = true;
+      return moments;
+    };
+    readers.set(tape, reader);
+    return reader;
+  };
+  const written = (position: string | null, changes: Change[]) =>
+    [...changes].sort((a, b) => a.time - b.time).map((c) => (c.gone ? composeRemoval({ position, time: c.time }) : composeId({ position, time: c.time, artist: c.artist, title: c.title }))).join('\n');
+  // A side's rows as the page shows them: each one's place in the list, its time and where it ends, and its words.
+  const page = (rows: Row[]) => rows.map((r) => `${r.n ?? '-'} ${r.start ?? '-'}-${r.end ?? '-'} ${r.known ? `${r.artist} / ${r.title}` : '??'}`);
+
+  it('goes on doing so, and keeps its rows in order of time, as a visitor times a side line by line; and posted together, the times read back as they stood', () => {
     let timed = 0;
-    for (const { name, order: o, ids } of sides) {
+    for (const { tape, i, name, position, order: o, ids, end } of sides) {
       if (!o) continue;
       // A listen through the side: at each moment, the first line on offer is given it, as a visitor would.
       const changes: Change[] = [];
-      let rows = sideRows(o, withChanges(ids, changes));
-      for (const time of moments(rows).sort((a, b) => a - b)) {
-        const could = couldStartAt(rows, time);
-        expect(could, `${name} at ${time} with ${changes.length} said`).toEqual(startingAt(rows, time) >= 0 ? [] : pressed(o, ids, changes, rows, time));
+      let rows = sideRows(o, withChanges(ids, changes, end));
+      for (const time of moments(rows, end).sort((a, b) => a - b)) {
+        const could = couldStartAt(rows, time, end);
+        expect(could, `${name} at ${time} with ${changes.length} said`).toEqual(canStartAt(rows, time, end) ? pressed(o, ids, changes, rows, time, end) : []);
         if (could.length === 0) continue;
         const row = rows[could[0]];
         changes.push(said(time, row.known ? row.artist : '', row.known ? row.title : ''));
-        rows = sideRows(o, withChanges(ids, changes));
+        rows = sideRows(o, withChanges(ids, changes, end));
         timed++;
-        const starts = rows.flatMap((r) => (r.start === null ? [] : [r.start]));
-        expect(starts, `${name} after ${time}`).toEqual([...starts].sort((a, b) => a - b));
+        expect(startsOf(rows), `${name} after ${time}`).toEqual([...startsOf(rows)].sort((a, b) => a - b));
         // Every change is still on a row: none was swallowed by another.
         expect(new Set(rows.map((r) => r.mine)).size - 1, `${name} after ${time}`).toBe(changes.length);
       }
+      if (changes.length === 0) continue;
+      // The whole sitting goes up as one comment, and the reader makes of it what the page was showing.
+      const read = readerOf(tape)(written(position, changes), i);
+      expect(page(rows), `${name}: the sitting, posted`).toEqual(page(sideRows(o, withChanges(read, [], end))));
     }
     expect(timed).toBeGreaterThan(300);
   });
 
-  it('shows for a change, before it is posted, what the reader says of the side once it is a comment', () => {
-    const lines = (rows: Row[]) => rows.map((r) => `${r.n ?? '-'} ${r.start ?? '-'} ${r.known ? `${r.artist} / ${r.title}` : '??'}`);
+  it('shows for a change what the reader says of the side once it is a comment: the same rows, times, ends and names', () => {
     const posted = { sent: { by: 'Dana', read: 1 } };
-    let tried = 0;
-    for (const tape of tapes as unknown as Tape[]) {
-      const before = (all[tape.id] ?? []).map((c) => ({ author: c.author, date: c.date, content: c.content }));
-      const read = readSaid(tape, before);
-      tape.sides.forEach((side, i) => {
-        const o = read.orders[i];
-        const ids = read.sides[i];
-        const rows = sideRows(o, withChanges(ids, []));
-        if (rows.length === 0) return;
-        const name = `${tape.id} [${side.position}]`;
-        const position = tape.sides.length > 1 ? side.position : null;
-        // The tape can't be anywhere past the side's end, and the reader holds nothing to be there.
-        const end = (lengths as Record<string, (number | null)[]>)[tape.id]?.[i] ?? Infinity;
-        const starts = rows.flatMap((row) => (row.start === null ? [] : [row.start]));
-        const free = [20, ...starts.map((start, k) => Math.floor((start + (starts[k + 1] ?? start + 600)) / 2)), ...starts.map((start) => start + 12)].filter((time) => time < end && startingAt(rows, time) < 0).slice(0, 3);
+    const credit = (rows: Row[]) => rows.map((r) => `${r.start ?? '-'} ${r.by ?? '-'}`);
+    const tried: Record<string, number> = {};
+    for (const { tape, i, name, position, order: o, ids, end } of sides) {
+      const rows = sideRows(o, withChanges(ids, [], end));
+      if (rows.length === 0) continue;
+      const starts = startsOf(rows);
+      const last = Number.isFinite(end) ? Math.floor(end) : (starts[starts.length - 1] ?? 0) + 600;
+      // Where the rules turn: a moment either side of each start, the reach of a time typed into a sentence
+      // either side of it, and the side's last moments. And every two minutes between.
+      const times = new Set<number>([...starts.flatMap((start) => [-21, -20, -11, -6, -5, -4, -1, 0, 1, 4, 5, 6, 11, 20, 21].map((off) => start + off)), ...[8, 6, 5, 4, 1, 0].map((left) => last - left)]);
+      for (let time = 0; time <= last; time += 120) times.add(time);
 
-        // What a visitor can say of the side, each as the page makes it.
-        const cases: Change[][] = [];
-        for (const time of free) {
-          cases.push([said(time)]);
-          cases.push([said(time, 'Zzyzx Road', `Quite Unlike Anything ${time}`)]);
-          for (const k of couldStartAt(rows, time).slice(0, 2)) cases.push([said(time, rows[k].known ? rows[k].artist : '', rows[k].known ? rows[k].title : '')]);
+      const cases: { what: string; changes: Change[] }[] = [];
+      for (const time of [...times].filter((t) => t >= 0 && t <= last)) {
+        if (canStartAt(rows, time, end)) {
+          // What the page offers there: a point marked, a track named, a line of the list given the time.
+          cases.push({ what: 'marked', changes: [said(time)] });
+          cases.push({ what: 'named', changes: [said(time, 'Zzyzx Road', `Quite Unlike Anything ${time}`, posted)] });
+          for (const k of couldStartAt(rows, time, end).slice(0, 2)) cases.push({ what: 'a line timed', changes: [said(time, rows[k].known ? rows[k].artist : '', rows[k].known ? rows[k].title : '')] });
+        } else {
+          // What it doesn't offer, but a comment written by hand in the site's form can say.
+          cases.push({ what: 'by hand', changes: [said(time, '', '', posted)] });
+          cases.push({ what: 'by hand', changes: [said(time, 'Zzyzx Road', `Quite Unlike Anything ${time}`, posted)] });
+          cases.push({ what: 'by hand', changes: [said(time, '', '', { gone: true, ...posted })] });
         }
-        for (const row of rows.filter((r) => r.start !== null).slice(0, 2)) {
-          const start = row.start as number;
-          const gone = said(start, '', '', { gone: true, ...posted });
-          cases.push([gone]);
-          cases.push([said(start, 'Zzyzx Road', 'Quite Unlike Anything', posted)]);
-          if (start + 9 < end && startingAt(rows.filter((r) => r !== row), start + 9) < 0) cases.push([gone, said(start + 9, row.artist, row.title, posted)]);
+      }
+      for (const row of rows) {
+        if (row.start === null) continue;
+        const gone = said(row.start, '', '', { gone: true, ...posted });
+        cases.push({ what: 'removed', changes: [gone] });
+        cases.push({ what: 'renamed', changes: [said(row.start, 'Zzyzx Road', 'Quite Unlike Anything', posted)] });
+        const rest = rows.filter((r) => r !== row);
+        for (const off of [-30, -9, -3, 3, 9, 30]) {
+          const to = row.start + off;
+          if (to >= 0 && canStartAt(rest, to, end)) cases.push({ what: 'moved', changes: [gone, said(to, row.known ? row.artist : '', row.known ? row.title : '', posted)] });
         }
+      }
 
-        for (const changes of cases) {
-          const page = lines(sideRows(o, withChanges(ids, changes.map((change) => ({ ...change, side: i })))));
-          const comment = changes.map((c) => (c.gone ? composeRemoval({ position, time: c.time }) : composeId({ position, time: c.time, artist: c.artist, title: c.title }))).join('\n');
-          const after = readSaid(tape, [...before, { author: 'Dana', date: '2026-11-15T12:00:00.000Z', content: comment }]);
-          const reader = lines(sideRows(after.orders[i], withChanges(after.sides[i], [])));
-          expect(page, `${name}: ${comment}`).toEqual(reader);
-          tried++;
-        }
-      });
+      for (const { what, changes } of cases) {
+        const comment = written(position, changes);
+        const mine = sideRows(o, withChanges(ids, changes, end));
+        const theirs = sideRows(o, withChanges(readerOf(tape)(comment, i), [], end));
+        expect(page(mine), `${name}: ${comment}`).toEqual(page(theirs));
+        // Posted, it is under the name it was posted under, wherever the reader credits it.
+        if (changes.every((change) => change.sent)) expect(credit(mine), `${name}: ${comment}`).toEqual(credit(theirs));
+        tried[what] = (tried[what] ?? 0) + 1;
+      }
     }
-    expect(tried).toBeGreaterThan(1000);
+    // The check is of something, of every kind.
+    for (const what of ['marked', 'named', 'a line timed', 'by hand', 'moved']) expect(tried[what], what).toBeGreaterThan(2000);
+    for (const what of ['removed', 'renamed']) expect(tried[what], what).toBeGreaterThan(400);
   });
 });

@@ -2,11 +2,14 @@
 
 import { FormEvent, RefObject, useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
-import { idLabel, idPlace, tidy } from '../lib/track-ids/compose';
+import { idLabel, idPlace } from '../lib/track-ids/compose';
 import { rememberedName } from '../lib/track-ids/post';
-import { isUnposted, playingAt, saidBy, startingAt, suggest, type Change, type Row } from '../lib/track-ids/side';
+import { canStartAt, isUnposted, playingAt, saidBy, startingAt, suggest, type Change, type Row } from '../lib/track-ids/side';
 import { formatTime } from '../lib/time-utils';
 import { usePlayhead, useSide, useTapeTrackIds } from './TapeTrackIds';
+
+/** The most an artist or a title may run to, in characters: far past any real one, and a comment line stays a line. */
+const NAME_LENGTH = 150;
 
 /** What the blanks are about to do: post the ID in them, take the mark away, or move it to where the tape is. */
 type Act = 'id' | 'remove' | 'move';
@@ -108,14 +111,16 @@ type Props = {
  * offered, and pressing one writes it into the blanks.
  */
 export function TrackIds({ side, position, time, isPlaying, onToggle, length = null }: Props) {
-  const { rows, order } = useSide(side);
+  const { rows, order, length: end } = useSide(side);
   const { read, say, unsay, post: send, asked, answered } = useTapeTrackIds();
   const played = usePlayhead((head) => head.started);
   const now = Math.floor(time);
   const playing = rows[playingAt(rows, time)] ?? null;
   // A track could start at this moment: the tape has been played, the comments are back (what is said is
-  // said on top of them), and nothing starts within a moment of here.
-  const free = played && read !== 'reading' && startingAt(rows, now) < 0;
+  // said on top of them), nothing starts within a moment of here, and the side has room left for a track.
+  const free = played && read !== 'reading' && canStartAt(rows, now, end);
+  // With nothing marked here and no room left on the side for a track to start, there is nothing to ID.
+  const nothing = playing === null && startingAt(rows, now) < 0 && !canStartAt(rows, now, end);
   // The blanks are for one moment of the tape, fixed when they open, while the tape plays on underneath.
   const [at, setAt] = useState<number | null>(null);
   // The mark the blanks are for, where the side has one at that moment: as the side has it now, which may
@@ -169,6 +174,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   // doesn't split it at the moment the visitor happened to speak up. With nothing playing it goes to this
   // moment, or to the mark about to start within a moment of it: one moment, one track.
   const open = () => {
+    if (nothing) return;
     const marked = playing ?? rows[startingAt(rows, now)] ?? null;
     begin(marked, marked?.start ?? now);
   };
@@ -293,7 +299,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
     }
     // Taking a mark away is one line; moving it is that line and the ID at its new place, in one post.
     const gone: Change[] = mark && what !== 'id' ? [{ side, time: mark.start as number, artist: '', title: '', gone: true }] : [];
-    const id: Change[] = what === 'remove' ? [] : [{ side, time: what === 'move' && later !== null ? later : at, artist: tidy(artist), title: tidy(title) }];
+    const id: Change[] = what === 'remove' ? [] : [{ side, time: what === 'move' && later !== null ? later : at, artist, title }];
 
     setStatus('sending');
     setMessage('');
@@ -359,7 +365,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
               {idLabel(playing)}
             </button>
           ) : (
-            <button ref={line} type="button" onClick={open} className="track-ids-line text-[var(--muted)]">
+            <button ref={line} type="button" onClick={open} aria-disabled={nothing} className="track-ids-line text-[var(--muted)]">
               {playing ? 'Unknown track. Know it?' : 'Know this track?'} <span className="track-ids-cue">ID it</span>
             </button>
           )}
@@ -386,11 +392,11 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
               <input ref={nameField} value={name} onChange={typed(setName)} placeholder="Your name" aria-label="Your name" aria-describedby={message ? messageId : undefined} autoComplete="name" maxLength={100} enterKeyHint="send" className="track-ids-field" />
             ) : (
               <>
-                <input ref={artistField} value={artist} onChange={typed(setArtist)} placeholder="Artist" aria-label="Artist" aria-describedby={message ? messageId : undefined} autoComplete="off" autoCapitalize="words" enterKeyHint="send" className="track-ids-field" />
+                <input ref={artistField} value={artist} onChange={typed(setArtist)} placeholder="Artist" aria-label="Artist" maxLength={NAME_LENGTH} aria-describedby={message ? messageId : undefined} autoComplete="off" autoCapitalize="words" enterKeyHint="send" className="track-ids-field" />
                 <span aria-hidden className="text-[var(--muted)]">
                   —
                 </span>
-                <input value={title} onChange={typed(setTitle)} placeholder="Title" aria-label="Title" autoComplete="off" autoCapitalize="words" enterKeyHint="send" className="track-ids-field" />
+                <input value={title} onChange={typed(setTitle)} placeholder="Title" aria-label="Title" maxLength={NAME_LENGTH} autoComplete="off" autoCapitalize="words" enterKeyHint="send" className="track-ids-field" />
               </>
             )}
             <div className="flex items-center">
@@ -461,8 +467,8 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
             {/* A phone's keyboard would put "Altern 8" right and offer words for "Orbital": neither helps. The
                 blanks stand a little apart, so each reads as a line of its own. */}
             <div className="grid gap-2">
-              <input ref={artistField} value={artist} onChange={typed(setArtist)} onKeyDown={onward(titleField)} placeholder="Artist" aria-label="Artist" aria-describedby={message ? messageId : undefined} autoComplete="off" autoCapitalize="words" autoCorrect="off" spellCheck={false} enterKeyHint="next" className="track-ids-field" />
-              <input ref={titleField} value={title} onChange={typed(setTitle)} onKeyDown={askName && !name.trim() ? onward(nameField) : undefined} placeholder="Title" aria-label="Title" autoComplete="off" autoCapitalize="words" autoCorrect="off" spellCheck={false} enterKeyHint={askName && !name.trim() ? 'next' : 'send'} className="track-ids-field" />
+              <input ref={artistField} value={artist} onChange={typed(setArtist)} onKeyDown={onward(titleField)} placeholder="Artist" aria-label="Artist" maxLength={NAME_LENGTH} aria-describedby={message ? messageId : undefined} autoComplete="off" autoCapitalize="words" autoCorrect="off" spellCheck={false} enterKeyHint="next" className="track-ids-field" />
+              <input ref={titleField} value={title} onChange={typed(setTitle)} onKeyDown={askName && !name.trim() ? onward(nameField) : undefined} placeholder="Title" aria-label="Title" maxLength={NAME_LENGTH} autoComplete="off" autoCapitalize="words" autoCorrect="off" spellCheck={false} enterKeyHint={askName && !name.trim() ? 'next' : 'send'} className="track-ids-field" />
               {askName && (
                 <input ref={nameField} value={name} onChange={typed(setName)} placeholder="Your name" aria-label="Your name" aria-describedby={message ? messageId : undefined} autoComplete="name" autoCapitalize="words" autoCorrect="off" spellCheck={false} maxLength={100} enterKeyHint="send" className="track-ids-field" />
               )}
@@ -499,7 +505,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
                   <path d={isPlaying ? 'M0 0h4v14H0zM8 0h4v14H8z' : 'M0 0v14l11-7z'} />
                 </svg>
               </button>
-              <button ref={trayId} type="button" onClick={open} className="player-tray-btn">
+              <button ref={trayId} type="button" onClick={open} aria-disabled={nothing} className="player-tray-btn">
                 {playing?.known ? 'Fix ID' : 'ID it'}
               </button>
               {/* Marked as unavailable, not taken away, in a track's first moments: it keeps its place. */}

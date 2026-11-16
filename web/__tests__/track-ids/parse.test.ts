@@ -7,16 +7,20 @@
 import { describe, expect, it } from 'vitest';
 import comments from '@/data/tape-comments.json';
 import tapes from '@/data/tapes.json';
+import { settle } from '@/lib/track-ids/moments';
 import { digest, parseComment, reconcile, runningOrders, sideNames, splitWholeTape, trusted, type Said, type SideNames, type Sighting } from '@/lib/track-ids/parse';
 
 const clock = (s: number) => `${Math.floor(s / 3600)}:${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+
+/** The tracks the reader makes of what was read, side by side: each side's moments (`reconcile`), laid out (`settle`). */
+const tracksOf = (read: Sighting[], lengths: number[]) => reconcile(read, lengths).flatMap((moments, side) => settle(moments, lengths[side]).map((track) => ({ ...track, side })));
 
 /** What the page would show for a tape: its timeline, then its running order, one line each. */
 function shown(said: Said[], titles: SideNames): string[] {
   const { sightings, listed } = digest(said, titles);
   const timed = trusted(sightings, titles.length);
   return [
-    ...reconcile(timed, titles.map(() => Infinity)).map((p) => `side ${p.side} ${clock(p.start)} ${p.known ? `${p.artist} — ${p.title}` : `?? ${p.title}`.trim()} [${p.author}]`),
+    ...tracksOf(timed, titles.map(() => Infinity)).map((p) => `side ${p.side} ${clock(p.start)} ${p.known ? `${p.artist} — ${p.title}` : `?? ${p.title}`.trim()} [${p.by}]`),
     ...runningOrders(listed, titles.length).flatMap((order, side) => order.map((l) => `order side ${side} no.${l.n} ${l.known ? `${l.artist} — ${l.title}` : `?? ${l.title}`.trim()} [${l.author}]`)),
   ];
 }
@@ -313,7 +317,10 @@ describe('a list that times a two-sided tape as one recording', () => {
 
 describe('IDs made with the site’s own form, which places them to the second', () => {
   const at = (start: number, artist: string, title: string, date: string, more: Partial<Sighting> = {}): Sighting => ({ side: 0, start, artist, title, known: Boolean(artist || title), author: 'Rents', date, exact: true, ...more });
-  const tracks = (read: Sighting[]) => reconcile(read, [3600]).map((p) => `${p.start} ${p.known ? `${p.artist} — ${p.title}` : '??'}`);
+  /** A time typed into a sentence in an old comment, where the form's are to the second. */
+  const typed = (start: number, artist: string, title: string, date: string, more: Partial<Sighting> = {}) => at(start, artist, title, date, { exact: false, ...more });
+  const tracks = (read: Sighting[]) => tracksOf(read, [3600]).map((p) => `${p.start} ${p.known ? `${p.artist} — ${p.title}` : '??'}`);
+  const spans = (read: Sighting[]) => tracksOf(read, [3600]).map((p) => `${p.start}-${p.end} ${p.title}`);
 
   it('are two tracks when more than five seconds apart, where two rough times would be one', () => {
     expect(tracks([at(0, 'The Prodigy', 'Hyperspeed', '1'), at(12, 'Butsch', 'The Count', '2')])).toEqual(['0 The Prodigy — Hyperspeed', '12 Butsch — The Count']);
@@ -326,7 +333,6 @@ describe('IDs made with the site’s own form, which places them to the second',
   });
 
   it('are said of a track someone timed in a sentence only within five seconds of where it starts, like any other', () => {
-    const typed = (start: number, artist: string, title: string, date: string) => at(start, artist, title, date, { exact: false });
     // Twelve seconds into a track from an old comment, an ID made with the form is the next track. Two
     // times typed into sentences that close would be one moment, and the later would replace the earlier.
     expect(tracks([typed(100, 'Orbital', 'Chime', '1'), at(112, 'Joey Beltram', 'Energy Flash', '2')])).toEqual(['100 Orbital — Chime', '112 Joey Beltram — Energy Flash']);
@@ -338,6 +344,40 @@ describe('IDs made with the site’s own form, which places them to the second',
     expect(tracks([typed(100, 'Orbital', 'Chime', '1'), at(97, 'Orbital', 'Belfast', '2')])).toEqual(['97 Orbital — Belfast']);
     // And what is typed into a sentence afterwards, near a form's time, is still said of that moment.
     expect(tracks([at(100, 'Orbital', 'Chime', '1'), typed(112, 'Joey Beltram', 'Energy Flash', '2'), typed(104, '', '', '3')])).toEqual(['100 Joey Beltram — Energy Flash']);
+  });
+
+  it('are taken in the order they were said, so one more is read on top of what was read before it', () => {
+    // Each within five seconds of the one before: the one moment, which starts at the earliest and has the last word said of it.
+    expect(tracks([at(105, 'Orbital', 'Chime', '1'), at(110, 'Joey Beltram', 'Energy Flash', '2'), at(100, 'LFO', 'LFO', '3')])).toEqual(['100 LFO — LFO']);
+    // Said in order of time, the third is ten seconds from where the first two start, and a track of its own.
+    expect(tracks([at(100, 'LFO', 'LFO', '1'), at(105, 'Orbital', 'Chime', '2'), at(110, 'Joey Beltram', 'Energy Flash', '3')])).toEqual(['100 Orbital — Chime', '110 Joey Beltram — Energy Flash']);
+  });
+
+  it('are said of the nearest moment they are within five seconds of, and of two as near, the earlier', () => {
+    const two = [at(100, '', '', '1'), at(108, '', '', '2')];
+    expect(tracks([...two, at(105, 'Orbital', 'Chime', '3')])).toEqual(['100 ??', '105 Orbital — Chime']);
+    expect(tracks([...two, at(104, 'Orbital', 'Chime', '3')])).toEqual(['100 Orbital — Chime', '108 ??']);
+  });
+
+  it('leave the track before them where it is, however rough the times it was made from', () => {
+    // Two people asked about a spot, fifteen seconds apart: one moment, from the earlier time. A point marked
+    // six seconds into it is the next track, and the spot is still there, six seconds long.
+    expect(tracks([typed(2800, '', '', '1'), typed(2815, '', '', '2'), at(2806, '', '', '3')])).toEqual(['2800 ??', '2806 ??']);
+  });
+
+  it('put a name right without moving where the track ends, or lifting a record off the one it was brought in over', () => {
+    // "0:58–3:40" in an old comment, and the name put right with the form since.
+    expect(spans([typed(58, 'Orbital', 'Chime', '1', { end: 220 }), typed(900, 'LFO', 'LFO', '1'), at(58, 'Orbital', 'Belfast', '2')])).toEqual(['58-220 Belfast', '900-1140 LFO']);
+    // "+ [5:00]": a record brought in over the one playing, which plays on under it to the next that isn't one.
+    const layered = [typed(0, 'Orbital', 'Chime', '1'), typed(300, 'Tangerine Dream', 'Love On A Real Train', '1', { layer: true }), typed(400, 'LFO', 'LFO', '1')];
+    expect(spans(layered)).toEqual(['0-400 Chime', '300-400 Love On A Real Train', '400-640 LFO']);
+    expect(spans([...layered, at(300, 'Tangerine Dream', 'Love On A Real Train (Edit)', '2')])).toEqual(['0-400 Chime', '300-400 Love On A Real Train (Edit)', '400-640 LFO']);
+  });
+
+  it('give a track its start where nobody had: one that heads a list is only taken to open the side', () => {
+    expect(tracks([typed(0, 'Orbital', 'Chime', '1', { weak: true }), at(4, 'Orbital', 'Chime', '2')])).toEqual(['4 Orbital — Chime']);
+    // A time somebody did give stands, where it is the earlier.
+    expect(tracks([typed(0, 'Orbital', 'Chime', '1'), at(4, 'Orbital', 'Chime', '2')])).toEqual(['0 Orbital — Chime']);
   });
 
   describe('a mark taken away', () => {
@@ -358,6 +398,11 @@ describe('IDs made with the site’s own form, which places them to the second',
 
     it('takes nothing from a moment that starts somewhere else', () => {
       expect(tracks([at(240, 'Orbital', 'Chime', '1'), gone(300, '2')])).toEqual(['240 Orbital — Chime']);
+    });
+
+    it('is taken in its turn among the IDs: what it took away is gone by the time the next is said', () => {
+      // A point marked and taken away, then two more near where it was, the second four seconds before the first.
+      expect(tracks([at(100, '', '', '1'), gone(100, '2'), at(107, '', '', '3'), at(103, 'Orbital', 'Chime', '4')])).toEqual(['103 Orbital — Chime']);
     });
 
     it('is undone by deleting it: the reader has only what is still there to read', () => {

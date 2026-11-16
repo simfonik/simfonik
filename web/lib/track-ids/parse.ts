@@ -1,6 +1,6 @@
 // Reads the timed track IDs that visitors have been leaving in comments since 2009 and reconciles them
-// into one proposal per moment of tape. Pure functions, no I/O.
-import { ONE_MOMENT } from './compose';
+// into what is said of each moment of tape. Pure functions, no I/O.
+import { ROUGHLY, momentOf, sameRecord, type Moment } from './moments';
 
 export type Sighting = {
   side: number; // index into the tape's sides
@@ -348,37 +348,6 @@ export function parseComment(content: string, author: string, date: string, titl
  */
 export const trusted = (sightings: Sighting[], sides: number) => sightings.filter((s) => (!s.unsure || sides === 1) && (!s.sideless || sides <= 2));
 
-/** Another thing someone said about the same moment: a rival ID, or a hint about an unnamed track. */
-export type Opinion = { artist: string; title: string; known: boolean; author: string; date: string };
-export type Proposal = Sighting & {
-  end: number;
-  voices: number;
-  also: Opinion[];
-  /** The end is a guess: the last thing anyone timed on this side. */
-  open?: boolean;
-  /**
-   * The same record said again further on, with nothing else between: one play, which this proposal is.
-   * The later sayings are kept, as the proposals they would otherwise have been, because they are plays of
-   * their own again as soon as something comes between them and this, or this is taken away.
-   */
-  again?: { start: number; end: number; artist: string; title: string; author: string; date: string }[];
-};
-
-type Named = { artist: string; title: string };
-const words = (s: Named) => new Set(`${s.artist} ${s.title}`.toLowerCase().replace(/\([^)]*\)/g, "").match(/[a-z0-9]{3,}/g) ?? []);
-function sameTrack(a: Named, b: Named) {
-  const wa = words(a);
-  const wb = words(b);
-  const small = wa.size <= wb.size ? wa : wb;
-  const big = small === wa ? wb : wa;
-  if (small.size < 2) return false;
-  // "Brazllia" and "Brazillia" are the same word to a person.
-  const near = (w: string) => big.has(w) || (w.length >= 5 && [...big].some((o) => Math.abs(o.length - w.length) <= 1 && o.slice(0, 3) === w.slice(0, 3) && o.slice(-2) === w.slice(-2)));
-  let hit = 0;
-  small.forEach((w) => near(w) && hit++);
-  return hit / small.size >= 0.7;
-}
-
 /**
  * Some lists time a two-sided tape as one recording: the clock runs on through side B, whose tracks are then
  * at 47:04, 51:08 … 1:27:43. Those times mean nothing on a side that starts again at 0:00, so once the page
@@ -417,72 +386,62 @@ export function splitWholeTape(sightings: Sighting[], lengths: number[]): Sighti
   });
 }
 
-/** One proposal per moment: the newest identification wins, and an ID always beats a question mark. */
-export function reconcile(read: Sighting[], lengths: number[]): Proposal[] {
+/**
+ * What the comments say of each moment of each side: one list of moments per side. The newest identification
+ * wins a moment, and an ID always beats a question mark. `settle` (moments.ts) puts a side's moments in order
+ * of time and makes its tracks of them.
+ */
+export function reconcile(read: Sighting[], lengths: number[]): Moment[][] {
   const sightings = splitWholeTape(read, lengths);
-  const out: Proposal[] = [];
-  lengths.forEach((length, side) => {
-    const here = sightings.filter((s) => s.side === side && !s.gone && s.start < length).sort((a, b) => a.start - b.start || a.date.localeCompare(b.date));
-    // Where a moment starts: the earliest time anyone actually gave for it.
-    const shown = (g: Sighting[]) => (g.find((s) => !s.weak) ?? g[0]).start;
-    // What people type is rough: said within 20 seconds, it is said of one moment.
+  const inOrder = (g: Sighting[]) => g.sort((a, b) => a.start - b.start || a.date.localeCompare(b.date));
+  // Where a moment starts: the earliest time anyone actually gave for it.
+  const shown = (g: Sighting[]) => (g.find((s) => !s.weak) ?? g[0]).start;
+  return lengths.map((length, side) => {
+    const here = sightings.filter((s) => s.side === side && s.start < length);
+    // What people type is rough: said within ROUGHLY of each other, it is said of one moment.
     const groups: Sighting[][] = [];
-    for (const s of here.filter((x) => !x.exact)) {
+    for (const s of inOrder(here.filter((x) => !x.exact))) {
       const g = groups[groups.length - 1];
-      if (g && s.start - g[0].start <= 20) g.push(s);
+      if (g && s.start - g[0].start <= ROUGHLY) g.push(s);
       else groups.push([s]);
     }
-    // A time from the site's own form is exact. It is said of the moment that starts within ONE_MOMENT of
-    // it, and is otherwise a moment of its own, whoever said what nearby: twelve seconds into a track, an
-    // ID made with the form is the next track, not that one put right. (The tape page works on the same
-    // rule before anything is posted: `withChanges` in side.ts.)
-    for (const s of here.filter((x) => x.exact)) {
-      const g = groups.find((group) => Math.abs(shown(group) - s.start) <= ONE_MOMENT);
-      if (g) g.splice(0, g.length, ...[...g, s].sort((a, b) => a.start - b.start || a.date.localeCompare(b.date)));
-      else groups.push([s]);
+    // What is made with the site's own form is exact, and is taken in the order it was said. It is said of
+    // the moment that starts within ONE_MOMENT of it, and is otherwise a moment of its own, whoever said
+    // what nearby: twelve seconds into a track, an ID made with the form is the next track, not that one
+    // put right. A mark taken away (see compose.ts) is taken from the moment it is said of, and takes with
+    // it everything said of that moment before; what is said after stands, so the track can be ID'd again.
+    // (The tape page takes a visitor's changes the same way, after all of these: `withChanges` in side.ts.)
+    for (const s of here.filter((x) => x.exact).sort((a, b) => a.date.localeCompare(b.date))) {
+      const at = momentOf(groups.map(shown), s.start);
+      if (s.gone) {
+        if (at < 0) continue;
+        const left = groups[at].filter((x) => x.date >= s.date);
+        if (left.length) groups[at] = left;
+        else groups.splice(at, 1);
+      } else if (at < 0) groups.push([s]);
+      else groups[at] = inOrder([...groups[at], s]);
     }
-    groups.sort((a, b) => a[0].start - b[0].start);
-    // A mark taken away (see compose.ts) is taken from the moment that starts where it says, and takes with
-    // it everything said of that moment before. What is said after stands: the track can be ID'd again.
-    for (const gone of sightings.filter((s) => s.side === side && s.gone)) {
-      const i = groups.findIndex((g) => Math.abs(shown(g) - gone.start) <= ONE_MOMENT);
-      if (i < 0) continue;
-      groups[i] = groups[i].filter((s) => s.date >= gone.date);
-      if (groups[i].length === 0) groups.splice(i, 1);
-    }
-    groups.forEach((g, i) => {
+    return groups.map((g): Moment => {
       const known = g.filter((s) => s.known && (s.artist || s.title));
       const stated = known.filter((s) => !s.weak);
       const best = (stated.length ? stated : known.length ? known : g).reduce((a, b) => (b.date >= a.date ? b : a));
-      // A layered record runs to whatever starts next; the record under it runs on to the next one that isn't a layer.
-      const isLayer = (grp?: Sighting[]) => Boolean(grp?.length && grp.every((x) => x.layer));
-      let j = i + 1;
-      if (!isLayer(g)) while (isLayer(groups[j])) j++;
-      const next = groups[j]?.[0].start ?? Math.min(length, best.start + 240);
-      const end = best.end && best.end > best.start ? Math.min(best.end, length) : next;
-      // "Reach Up To Mars at 30:24" a minute into a track already named that is the same track, not a new one.
-      const prev = out[out.length - 1];
-      if (prev && prev.side === side && best.known && sameTrack(prev, best)) {
-        prev.voices = new Set([prev.author, ...g.map((s) => s.author)]).size + Math.max(0, prev.voices - 1);
-        if (end - best.start >= 5) prev.again = [...(prev.again ?? []), { start: shown(g), end, artist: best.artist, title: best.title, author: best.author, date: best.date }];
-        prev.end = Math.max(prev.end, end);
-        return;
-      }
-      // Keep what else was said here: IDs that name a different record, and hints about one nobody has named.
-      const also: Opinion[] = [];
-      for (const s of [...g].sort((a, b) => b.date.localeCompare(a.date))) {
-        if (s === best || !(s.artist || s.title)) continue;
-        if (s.known && !s.artist) continue; // a bare phrase is more likely talk than a rival ID
-        if (s.known ? sameTrack(best, s) : best.known) continue;
-        if (!s.known && s.title === best.title) continue;
-        if (also.some((o) => o.known === s.known && (s.known ? sameTrack(o as Sighting, s) : o.title === s.title))) continue;
-        also.push({ artist: s.artist, title: s.title, known: s.known, author: s.author, date: s.date });
-      }
-      const open = !(best.end && best.end > best.start) && !groups[j];
-      if (end - best.start >= 5) out.push({ ...best, start: shown(g), end, voices: new Set(g.map((s) => s.author)).size, also, open: open || undefined });
+      // Where it ends is whoever last said so, whatever name the moment has come to since.
+      const ended = g.filter((s) => s.end !== undefined && s.end > s.start);
+      const typed = g.filter((s) => !s.exact);
+      return {
+        start: shown(g),
+        artist: best.artist,
+        title: best.title,
+        known: best.known,
+        by: best.author,
+        date: best.date,
+        ...(ended.length ? { until: ended.reduce((a, b) => (b.date >= a.date ? b : a)).end } : {}),
+        // A record written as brought in over another stays one when its name is put right with the form.
+        ...(typed.length && typed.every((s) => s.layer) ? { layer: true } : {}),
+        ...(g.every((s) => s.weak) ? { guessed: true } : {}),
+      };
     });
   });
-  return out;
 }
 
 // Running orders: tracklists people posted in order but without times.
@@ -547,8 +506,6 @@ export function runningOrders(listed: Listed[], sides: number): Listed[][] {
   });
 }
 
-/** True when a marked track already carries this listed name. */
-export const isSameRecord = (a: Named, b: Named) => sameTrack(a, b);
 
 
 // Running tracklists: a side written out in order, and written out again each time a track is ID'd.
@@ -700,7 +657,7 @@ function parseRunning(content: string, titles: SideNames = []): { rows: Row[]; h
   return { rows, headed, prose: prose.join("\n") };
 }
 
-const sameRow = (a: Row, b: Row) => sameTrack(a, b) || squash(`${a.artist} ${a.title}`) === squash(`${b.artist} ${b.title}`);
+const sameRow = (a: Row, b: Row) => sameRecord(a, b) || squash(`${a.artist} ${a.title}`) === squash(`${b.artist} ${b.title}`);
 
 /**
  * Passes times from one version of a side to the next. Rows that are the same in both are the fixed points;
@@ -842,7 +799,7 @@ export function digest(comments: Said[], titles: SideNames = []): { sightings: S
     posts.forEach((post, p) => {
       const loose = post.filter((x) => x.sideless);
       if (loose.length < 3) return;
-      const again = (e: Sighting) => loose.some((x) => Math.abs(x.start - e.start) <= 5 && !(named(x) && named(e) && !sameTrack(x, e)));
+      const again = (e: Sighting) => loose.some((x) => Math.abs(x.start - e.start) <= 5 && !(named(x) && named(e) && !sameRecord(x, e)));
       let most = 0;
       let where: number | null = null;
       for (const earlier of posts.slice(0, p)) {
@@ -869,6 +826,6 @@ export function digest(comments: Said[], titles: SideNames = []): { sightings: S
   // is three tracks, and then only a stated time close by is the same one.
   const stated = [...sightings];
   for (const { s, once } of inferred)
-    if (s.weak || !stated.some((x) => x.side === s.side && x.known && sameTrack(x, s) && (once || Math.abs(x.start - s.start) <= 120))) sightings.push(s);
+    if (s.weak || !stated.some((x) => x.side === s.side && x.known && sameRecord(x, s) && (once || Math.abs(x.start - s.start) <= 120))) sightings.push(s);
   return { sightings, listed };
 }

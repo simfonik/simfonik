@@ -115,6 +115,45 @@ describe('a moment with nothing marked', () => {
   });
 });
 
+describe('a side’s last moments, where no track has room to start', () => {
+  const SHORT = [{ position: 'A', tracks: OWN, length: 900 }];
+
+  it('offer no new track, on the line or on a row, and nothing to ID where nothing is marked', async () => {
+    const page = tapePage({ sides: SHORT, length: 900 });
+    await page.read();
+    // Five seconds from the end a track can still start, and be the side's last.
+    await page.at(895);
+    expect(page.has(NEW_UNKNOWN)).toBe(true);
+    expect(page.pluses()).toHaveLength(4);
+    await page.at(896);
+    expect(page.has(NEW_UNKNOWN)).toBe(false);
+    expect(page.pluses()).toEqual([]);
+    expect(page.button('Know this track? ID it')).toHaveAttribute('aria-disabled', 'true');
+    await page.user.click(page.button('Know this track? ID it'));
+    expect(screen.queryByRole('textbox', { name: 'Artist' })).not.toBeInTheDocument();
+  });
+
+  it('still let a track that is playing there be ID’d: that is said of where it starts', async () => {
+    const page = tapePage({ sides: SHORT, length: 900, posted: [{ by: 'Josh', says: '[14:00] ? - ?' }] });
+    await page.read();
+    await page.at(897);
+    expect(page.line()).toBe('Unknown track. Know it? ID it');
+    await page.user.click(page.button('Unknown track. Know it? ID it'));
+    expect(screen.getByRole('form', { name: 'ID the track at 0:14:00' })).toBeInTheDocument();
+  });
+
+  it('are the same on a phone: the tray’s buttons keep their places and do nothing', async () => {
+    const page = tapePage({ sides: SHORT, length: 900, phone: true });
+    await page.read();
+    await page.at(897);
+    const tray = within(page.tray() as HTMLElement);
+    expect(tray.getByRole('button', { name: 'ID it' })).toHaveAttribute('aria-disabled', 'true');
+    expect(tray.getByRole('button', { name: NEW_UNKNOWN })).toHaveAttribute('aria-disabled', 'true');
+    await page.user.click(tray.getByRole('button', { name: 'ID it' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
 describe('a point the visitor marked without a name, not yet posted', () => {
   const marked = async (setup: Parameters<typeof tapePage>[0] = {}) => {
     const page = tapePage(setup);

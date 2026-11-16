@@ -14,6 +14,9 @@ export const rememberedName = () => {
 
 const FAILED = 'That didn’t post. Please try again.';
 
+/** The most a comment may hold, in characters, by the route that takes them (app/api/comments/submit). */
+export const LONGEST_COMMENT = 5000;
+
 /**
  * Posts lines in the site's own form (compose.ts) as one comment under the visitor's name. Gives back
  * nothing when it posted, and otherwise what to tell the visitor.

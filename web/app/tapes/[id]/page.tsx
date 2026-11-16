@@ -179,7 +179,17 @@ export default async function Page({ params }: Props) {
       <JsonLd data={generateTapeSchema(tape)} />
       
       <AudioCoordinator />
-      <TapeTrackIdsProvider tapeId={tape.id} sides={tape.sides.map(({ position, title, tracks }) => ({ position, title, tracks }))}>
+      <TapeTrackIdsProvider
+        tapeId={tape.id}
+        sides={tape.sides.map(({ position, title, tracks, audio_links }, index) => ({
+          position,
+          title,
+          tracks,
+          length: lengths?.[index] ?? null,
+          // No audio the page can play: the side's tracks can be listed, and not gone to.
+          silent: !(audio_links[0] && isStreamable(audio_links[0].url)),
+        }))}
+      >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       
       {/* Mobile-only Header */}

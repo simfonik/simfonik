@@ -1,0 +1,111 @@
+// What a side's comments come to, moment by moment, and the tracks that makes.
+//
+// The reader works a side's moments out from everything the comments say (`reconcile` in parse.ts). The tape
+// page adds what a visitor has said since (`withChanges` in side.ts). Both then lay the moments out as tracks
+// with the one function here, `settle`, so what the page shows for a change before it is posted is what the
+// reader says once it is a comment. Pure, and all the browser needs of the reader.
+
+/**
+ * How close an ID in the site's form must be to where a track starts, in seconds, to be said of that track:
+ * it is then that track put right. Further off it is a track of its own. The form places an ID to the
+ * second, and a correction made with it lands on the very second of what it corrects, so little room is
+ * needed.
+ */
+export const ONE_MOMENT = 5;
+
+/** Two times typed into sentences are rougher: this many seconds apart or closer, they are said of one moment. */
+export const ROUGHLY = 20;
+
+/** How long the last track anyone timed on a side is taken to play, in seconds: nobody has said what follows it. */
+export const UNENDED = 240;
+
+/** The shortest stretch of a side that is a track, in seconds. Nothing starts closer than this to a side's end. */
+export const SHORTEST = 5;
+
+/** Two times that are one moment of a side. */
+export const near = (a: number, b: number) => Math.abs(a - b) <= ONE_MOMENT;
+
+/**
+ * Of some starts, the one a time is a moment of: the nearest within ONE_MOMENT, and of two as near, the
+ * earlier. Its place among them, or -1. (A null is a line with no time yet.)
+ */
+export function momentOf(starts: (number | null)[], time: number): number {
+  let found = -1;
+  let far = Infinity;
+  starts.forEach((start, k) => {
+    if (start === null || !near(start, time)) return;
+    const off = Math.abs(start - time);
+    if (off < far || (off === far && start < (starts[found] as number))) {
+      found = k;
+      far = off;
+    }
+  });
+  return found;
+}
+
+/** What the comments say starts at one moment of a side. Times in seconds. */
+export type Moment = {
+  start: number;
+  artist: string;
+  title: string;
+  /** False where someone marked the spot or asked about it and nobody has named the track. */
+  known: boolean;
+  /** Who said so. */
+  by: string;
+  /** When, as the comments date it: of two, the later said sorts after the earlier. */
+  date: string;
+  /** Where the track ends, where a comment says. */
+  until?: number;
+  /** A record brought in over the one already playing, which plays on under it. */
+  layer?: boolean;
+  /** Nobody gave the start as a time: it is worked out (a track that heads a list is taken to open the side). */
+  guessed?: boolean;
+};
+
+/** One identified stretch of a side: a moment, and where the track that starts at it ends. */
+export type TrackId = Moment & { end: number };
+
+type Named = { artist: string; title: string };
+const words = (s: Named) => new Set(`${s.artist} ${s.title}`.toLowerCase().replace(/\([^)]*\)/g, '').match(/[a-z0-9]{3,}/g) ?? []);
+
+/**
+ * Whether two names are one record, as people write them: most of the words of the shorter are in the longer.
+ * It wants two words of some length in common, so that "Go" in one comment and "Go" in another prove nothing.
+ */
+export function sameRecord(a: Named, b: Named) {
+  const wa = words(a);
+  const wb = words(b);
+  const small = wa.size <= wb.size ? wa : wb;
+  const big = small === wa ? wb : wa;
+  if (small.size < 2) return false;
+  // "Brazllia" and "Brazillia" are the same word to a person.
+  const close = (w: string) => big.has(w) || (w.length >= 5 && [...big].some((o) => Math.abs(o.length - w.length) <= 1 && o.slice(0, 3) === w.slice(0, 3) && o.slice(-2) === w.slice(-2)));
+  let hit = 0;
+  small.forEach((w) => close(w) && hit++);
+  return hit / small.size >= 0.7;
+}
+
+/**
+ * The tracks a side's moments make, in order of time. `length` is the side's, in seconds, where it has been
+ * measured.
+ *
+ * · A track runs to where a comment says it ends, and otherwise until the next one starts. The last on a
+ *   side, with nothing after it to say, is taken to play UNENDED seconds, or to the side's end.
+ * · A layered record runs to whatever starts next; the record under it plays on to the next that isn't a layer.
+ * · A record named again, with nothing else between, is the same play said twice: the earlier start stands.
+ *   ("Reach Up To Mars at 30:24", a minute into a track already named that, is no new track.)
+ * · Nothing shorter than SHORTEST is a track.
+ */
+export function settle<M extends Moment>(moments: M[], length = Infinity): (M & { end: number })[] {
+  const inOrder = [...moments].sort((a, b) => a.start - b.start);
+  const tracks: (M & { end: number })[] = [];
+  inOrder.forEach((moment, i) => {
+    let next = i + 1;
+    if (!moment.layer) while (inOrder[next]?.layer) next++;
+    const end = moment.until !== undefined && moment.until > moment.start ? Math.min(moment.until, length) : (inOrder[next]?.start ?? Math.min(length, moment.start + UNENDED));
+    const before = tracks[tracks.length - 1];
+    if (before && moment.known && sameRecord(before, moment)) before.end = Math.max(before.end, end);
+    else if (end - moment.start >= SHORTEST) tracks.push({ ...moment, end });
+  });
+  return tracks;
+}

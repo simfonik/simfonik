@@ -81,11 +81,11 @@ export function tapePage({ sides = ONE_SIDE, archive = [], posted = [], phone = 
       return json({ success: true });
     }
     if (server.hold) await server.hold;
-    if (to.startsWith('/api/track-ids/')) {
-      const said = [...archive, ...(server.down ? [] : server.comments.map((c) => ({ author: c.author_name, date: c.created_at, content: c.content })))];
-      return json({ ...readSaid({ id: 'tape-1', sides: sides as never }, said), complete: !server.down });
-    }
-    return server.down ? json({ error: 'down' }, 500) : json(server.comments);
+    if (!to.startsWith('/api/track-ids/')) throw new Error(`The page asked for ${to}`);
+    // As read.ts answers: the comments and what they and the archive say; the archive alone when the newer ones can't be had.
+    const comments = server.down ? [] : server.comments;
+    const said = [...archive, ...comments.map((c) => ({ author: c.author_name, date: c.created_at, content: c.content }))];
+    return json({ comments, ...readSaid({ id: 'tape-1', sides: sides as never }, said), complete: !server.down });
   });
   global.fetch = fetched as unknown as typeof fetch;
 

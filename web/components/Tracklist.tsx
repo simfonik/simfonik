@@ -1,17 +1,14 @@
 'use client';
 
 import { FormEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { idPlace, splitPost, type RunningOrder } from '../lib/track-ids/compose';
-import { contributors, couldStartAt, playingAt, type Row } from '../lib/track-ids/side';
+import { idPlace, readComposed, type RunningOrder } from '../lib/track-ids/compose';
+import { contributors, couldStartAt, isUnposted, playingAt, type Row } from '../lib/track-ids/side';
 import { formatTime } from '../lib/time-utils';
 import { usePlayhead, useTapeTrackIds } from './TapeTrackIds';
 
 /** A long side shows this many tracks before the rest are asked for. */
 const COLLAPSED_COUNT = 20;
 const NONE = new Set<number>();
-
-/** The visitor's own, waiting to be posted. */
-const isUnposted = (row: Row) => Boolean(row.mine && !row.mine.sent);
 
 const names = (people: string[]) => {
   const [a, b, c, ...rest] = people;
@@ -75,8 +72,8 @@ export function Tracklist() {
   // top of what they say). A time given is a whole second, so it is the whole second that is asked about.
   const [liveSide, litRow, couldStart] = usePlayhead((head) => {
     if (!head.started) return '-1|-1|';
-    const rows = sides[head.side]?.rows ?? [];
-    return `${head.side}|${playingAt(rows, head.time)}|${read === 'reading' ? '' : couldStartAt(rows, Math.floor(head.time)).join(',')}`;
+    const { rows = [], length } = sides[head.side] ?? {};
+    return `${head.side}|${playingAt(rows, head.time)}|${read === 'reading' ? '' : couldStartAt(rows, Math.floor(head.time), length).join(',')}`;
   }).split('|');
   const live = Number(liveSide);
   const lit = Number(litRow);
@@ -95,9 +92,9 @@ export function Tracklist() {
   const mark = (side: number, k: number) => {
     const head = playhead();
     const time = Math.floor(head.time);
-    const rows = sides[side].rows;
+    const { rows, length } = sides[side];
     // The + was there when it was pressed; the tape may have reached another track's start since.
-    if (head.side !== side || !couldStartAt(rows, time).includes(k)) return;
+    if (head.side !== side || !couldStartAt(rows, time, length).includes(k)) return;
     // A line the list has down as unknown is marked, not named: it is still nobody's ID.
     say({ side, time, artist: rows[k].known ? rows[k].artist : '', title: rows[k].known ? rows[k].title : '' });
     setThanks('');
@@ -159,6 +156,7 @@ export function Tracklist() {
                 summary={progress(rows, order)}
                 rows={rows}
                 position={place(i)}
+                silent={Boolean(tape[i].silent)}
                 lit={live === i ? lit : -1}
                 markable={live === i ? markable : NONE}
                 onPlay={(start) => goTo(place(i), start)}
@@ -237,6 +235,8 @@ type SideListProps = {
   rows: Row[];
   /** The side's label as the site shows it, or null on a tape that is one recording. */
   position: string | null;
+  /** The site has no audio for the side: its times say where a track is, and can't be gone to. */
+  silent: boolean;
   /** The row playing, or -1. */
   lit: number;
   /** The rows that could be given the moment the tape is at as their start, by their place in `rows`. */
@@ -247,18 +247,20 @@ type SideListProps = {
   onIdentify: (start: number) => void;
 };
 
-function SideList({ heading, summary, rows, position, lit, markable, onPlay, onMark, onUndo, onIdentify }: SideListProps) {
+function SideList({ heading, summary, rows, position, silent, lit, markable, onPlay, onMark, onUndo, onIdentify }: SideListProps) {
   const collapsible = rows.length > COLLAPSED_COUNT;
+  // A side that is short when it first shows is never folded later, when a row is added to it.
   const [expanded, setExpanded] = useState(!collapsible);
   const firstRevealed = useRef<HTMLLIElement>(null);
   const listId = useId();
   const all = expanded || !collapsible;
 
-  // The control goes when the rest are shown; the keyboard goes on to the first of them, not back to the
-  // top of the page.
+  // "Show all" goes when the rest are shown; the keyboard goes on to the first of them, not back to the top
+  // of the page. Only then: a row added to a side that was never folded moves the keyboard nowhere.
+  const [shownAll, setShownAll] = useState(false);
   useEffect(() => {
-    if (expanded && collapsible) firstRevealed.current?.focus();
-  }, [expanded, collapsible]);
+    if (shownAll) firstRevealed.current?.focus();
+  }, [shownAll]);
 
   return (
     <div>
@@ -279,7 +281,9 @@ function SideList({ heading, summary, rows, position, lit, markable, onPlay, onM
               className="tracklist-row"
             >
               <span>
-                {row.start !== null ? (
+                {row.start !== null && silent ? (
+                  <span className="tracklist-n">{formatTime(row.start)}</span>
+                ) : row.start !== null ? (
                   <button
                     type="button"
                     onClick={() => onPlay(row.start as number)}
@@ -326,7 +330,8 @@ function SideList({ heading, summary, rows, position, lit, markable, onPlay, onM
                   </button>
                 ) : (
                   !row.known &&
-                  row.start !== null && (
+                  row.start !== null &&
+                  !silent && (
                     <button type="button" onClick={() => onIdentify(row.start as number)} className="tracklist-cue" aria-label={`ID the unknown track at ${idPlace(position, row.start)}`}>
                       ID it
                     </button>
@@ -340,7 +345,10 @@ function SideList({ heading, summary, rows, position, lit, markable, onPlay, onM
       {!all && (
         <button
           type="button"
-          onClick={() => setExpanded(true)}
+          onClick={() => {
+            setExpanded(true);
+            setShownAll(true);
+          }}
           aria-expanded={false}
           aria-controls={listId}
           className={`cursor-pointer -mt-2 flex min-h-11 items-center gap-2 ${small} transition-colors hover:text-[var(--text)]`}
@@ -369,13 +377,16 @@ function TrackName({ row }: { row: Row }) {
  * with who posted it and when. Shut until asked for. A tape nobody has ID'd through the site has none.
  */
 function History() {
-  const { comments, goTo } = useTapeTrackIds();
+  const { comments, tape, goTo } = useTapeTrackIds();
   const [open, setOpen] = useState(false);
   const listId = useId();
 
+  // The reader's own test of what is a post of IDs (and for which sides), so what is listed here is what was
+  // read as one, and what is left out of the comments is what is listed here.
+  const positions = tape.map((side) => side.position);
   const posts = (comments ?? [])
     .flatMap((comment) => {
-      const ids = splitPost(comment.content);
+      const ids = readComposed(comment.content, positions);
       return ids ? [{ ...comment, ids }] : [];
     })
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
@@ -398,12 +409,17 @@ function History() {
           <li key={post.id} className="id-log-entry">
             <div className="min-w-0">
               {post.ids.map((id, k) => {
-                const at = idPlace(id.position, id.time);
+                const position = tape.length > 1 ? tape[id.side].position : null;
+                const at = idPlace(position, id.start);
                 return (
                   <p key={k} className="comment-id">
-                    <button type="button" onClick={() => goTo(id.position, id.time)} className="comment-time" aria-label={`Play from ${at}`}>
-                      {at}
-                    </button>{' '}
+                    {tape[id.side].silent ? (
+                      <span className="tabular-nums text-[var(--muted)]">{at}</span>
+                    ) : (
+                      <button type="button" onClick={() => goTo(position, id.start)} className="comment-time" aria-label={`Play from ${at}`}>
+                        {at}
+                      </button>
+                    )}{' '}
                     {id.gone ? <span className="text-[var(--muted)]">Removed</span> : [id.artist, id.title].filter(Boolean).join(' — ') || 'Unknown track'}
                   </p>
                 );

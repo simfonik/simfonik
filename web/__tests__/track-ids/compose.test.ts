@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import tapes from '@/data/tapes.json';
-import { clock, composeId, composeRemoval, idAt, idLabel, idPlace, readComposed, splitComposed, splitPost, type TrackId } from '@/lib/track-ids/compose';
+import { clock, composeId, composeRemoval, idLabel, idPlace, readComposed, splitComposed } from '@/lib/track-ids/compose';
 
 type Tape = { id: string; sides: { position: string }[] };
 
@@ -17,6 +17,16 @@ describe('IDs the site writes', () => {
     expect(composeId({ position: null, time: 3723, artist: 'LFO', title: 'LFO  (Leeds Warehouse Mix)' })).toBe('[1:02:03] LFO - LFO (Leeds Warehouse Mix)');
     // A name the visitor didn't know keeps its place.
     expect(composeId({ position: '1A', time: 5, artist: '', title: 'Go' })).toBe('[1A 0:05] ? - Go');
+  });
+
+  it('closes up a dash inside an artist’s name, which would otherwise read back as where the title starts', () => {
+    const written = composeId({ position: null, time: 60, artist: 'Jean - Michel Jarre', title: 'Oxygene - Part IV' });
+    expect(written).toBe('[1:00] Jean-Michel Jarre - Oxygene - Part IV');
+    expect(splitComposed(written)).toMatchObject({ artist: 'Jean-Michel Jarre', title: 'Oxygene - Part IV' });
+    // A name that is only a question mark reads back as no name, as one left empty does.
+    expect(splitComposed(composeId({ position: null, time: 60, artist: '?', title: 'Go' }))).toMatchObject({ artist: '', title: 'Go' });
+    // Whatever the names, the line never reads as the one that takes a mark away.
+    expect(splitComposed(composeId({ position: null, time: 60, artist: '', title: 'no track starts here' }))).toMatchObject({ title: 'no track starts here', gone: false });
   });
 
   it('reads back exactly what it wrote, on every side of every tape', () => {
@@ -49,10 +59,9 @@ describe('IDs the site writes', () => {
 
   it('reads a post of several lines as so many IDs, and a comment with any talk in it as talk', () => {
     const post = ['[A 0:00] The Prodigy - Hyperspeed', '[A 3:41] Butsch - The Count', '', '[A 2:10] no track starts here'].join('\n');
-    expect(splitPost(post)?.map((id) => [id.time, id.artist, id.gone])).toEqual([[0, 'The Prodigy', false], [221, 'Butsch', false], [130, '', true]]);
-    expect(readComposed(post, ['A', 'B'])?.map((id) => [id.side, id.start])).toEqual([[0, 0], [0, 221], [0, 130]]);
-    expect(splitPost('[A 0:00] The Prodigy - Hyperspeed\nwhat a tune')).toBeNull();
-    expect(splitPost('   ')).toBeNull();
+    expect(readComposed(post, ['A', 'B'])?.map((id) => [id.side, id.start, id.artist, id.gone])).toEqual([[0, 0, 'The Prodigy', false], [0, 221, 'Butsch', false], [0, 130, '', true]]);
+    expect(readComposed('[A 0:00] The Prodigy - Hyperspeed\nwhat a tune', ['A', 'B'])).toBeNull();
+    expect(readComposed('   ', ['A', 'B'])).toBeNull();
     // One line for a side the tape doesn't have, and the whole comment is left to the reader of prose.
     expect(readComposed('[A 0:00] The Prodigy - Hyperspeed\n[C 3:41] Butsch - The Count', ['A', 'B'])).toBeNull();
   });
@@ -68,22 +77,12 @@ describe('IDs the site writes', () => {
   });
 });
 
-describe('the ID at a moment of the tape', () => {
-  const ids: TrackId[] = [
-    { start: 0, end: 120, artist: 'Moby', title: 'Go', known: true, by: 'a', date: '2020-01-01' },
-    { start: 120, end: 300, artist: '', title: '', known: false, by: 'b', date: '2020-01-01' },
-    { start: 400, end: 500, artist: '', title: 'Cubik', known: true, by: 'c', date: '2020-01-01' },
+describe('an ID, as the page says it', () => {
+  const ids = [
+    { artist: 'Moby', title: 'Go', known: true },
+    { artist: '', title: '', known: false },
+    { artist: '', title: 'Cubik', known: true },
   ];
-
-  it('is the track whose stretch holds that moment, and nothing in a gap', () => {
-    expect(idAt(ids, 0)?.title).toBe('Go');
-    expect(idAt(ids, 119.9)?.title).toBe('Go');
-    expect(idAt(ids, 120)?.known).toBe(false);
-    expect(idAt(ids, 350)).toBeNull();
-    expect(idAt(ids, 499)?.title).toBe('Cubik');
-    expect(idAt(ids, 500)).toBeNull();
-    expect(idAt([], 10)).toBeNull();
-  });
 
   it('is said in one line', () => {
     expect(idLabel(ids[0])).toBe('Moby — Go');

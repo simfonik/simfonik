@@ -87,6 +87,30 @@ describe('what the tracklist is made of', () => {
     expect(page.rows()).toHaveLength(23);
     expect(within(page.tracklist() as HTMLElement).getAllByRole('listitem')[20]).toHaveFocus();
   });
+
+  it('shows the whole of a side that was short when it first showed, and leaves the keyboard where it was when a twenty-first track is added', async () => {
+    // Twenty records, each its own: 00 and "0000", 01 and "0101".
+    const twenty = Array.from({ length: 20 }, (_, k) => `[${k}:00] Artist${String(k).padStart(2, '0')} - ${String(k).padStart(2, '0').repeat(2)}`).join('\n');
+    const page = tapePage({ posted: [{ by: 'Rents', says: twenty }] });
+    await page.read();
+    expect(page.rows()).toHaveLength(20);
+    await page.at(1500);
+    await page.user.click(page.button(/^New unknown/));
+    await waitFor(() => expect(page.rows()).toHaveLength(21));
+    expect(document.activeElement?.tagName).not.toBe('LI');
+  });
+
+  it('on a side the site has no audio for, says when its tracks start and offers nothing that would take the tape there', async () => {
+    const page = tapePage({ sides: [{ position: 'A' }, { position: 'B', silent: true }], posted: [{ by: 'Josh', says: '[A 1:00] Orbital - Chime\n[B 12:34] Moby - Go\n[B 20:00] ? - ?' }] });
+    await page.read();
+    expect(page.rows()).toEqual(['0:01:00Orbital — Chime', '0:12:34Moby — Go', '0:20:00Unknown track']);
+    expect(page.has('Play from A 0:01:00')).toBe(true);
+    expect(page.has(/^Play from B/)).toBe(false);
+    expect(page.has(/^ID it/)).toBe(false);
+    // Nor in the history of posts, which lists the same times.
+    await page.user.click(page.button('History · 1 post'));
+    expect(screen.getAllByRole('button', { name: /^Play from/ }).map((button) => button.getAttribute('aria-label'))).toEqual(['Play from A 0:01:00', 'Play from A 0:01:00']);
+  });
 });
 
 describe('who the tracklist is owed to', () => {

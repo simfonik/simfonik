@@ -29,17 +29,20 @@ export function AudioPlayer({ src, title, tapeId, sidePosition, wave, length, si
     sidePosition 
   });
 
-  // A time pressed in a comment takes the tape there and plays it.
+  // A time pressed in the tracklist takes the tape there and plays it, where it is a time on this side: on
+  // a tape with sides, this player has only the one.
   const { play, seek } = controls;
   const { isPlaying } = state;
   const { setPlayer } = trackIds;
+  const here = sideCount > 1 ? sidePosition ?? null : null;
   useEffect(() => {
-    setPlayer((_position, time) => {
+    setPlayer((position, time) => {
+      if (position !== here) return;
       seek(time);
       if (!isPlaying) play();
     });
     return () => setPlayer(null);
-  }, [setPlayer, isPlaying, play, seek]);
+  }, [setPlayer, here, isPlaying, play, seek]);
 
   // The tracklist, down the page, lights the track playing and can time one that starts now.
   const { report } = trackIds;
@@ -75,7 +78,7 @@ export function AudioPlayer({ src, title, tapeId, sidePosition, wave, length, si
         {tapeId && (
           <TrackIds
             side={sideIndex}
-            position={sideCount > 1 ? sidePosition ?? null : null}
+            position={here}
             time={state.currentTime}
             isPlaying={state.isPlaying}
             onToggle={state.isPlaying ? controls.pause : controls.play}

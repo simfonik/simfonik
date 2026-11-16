@@ -1,7 +1,8 @@
 // What the parts of a tape page share (components/TapeTrackIds.tsx): the reading of the comments, the
 // visitor's changes and what becomes of them, and the posting.
 import { screen, waitFor, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi, type Mock } from 'vitest';
+import { clock } from '@/lib/track-ids/compose';
 import { hold, KEPT, tapePage } from './tape';
 
 const NEW_UNKNOWN = /^New unknown/;
@@ -32,6 +33,40 @@ describe('the reading of the comments', () => {
     expect(page.line()).toBe('808 State — CubikNew IDNew unknown');
     expect(page.marks()).toBe('5');
     expect(page.reads()).toBe(2);
+  });
+
+  it('takes a comment for a post of IDs only where the reader does: on a tape with sides, lines with no side, or a side it hasn’t got, are talk', async () => {
+    const page = tapePage({
+      sides: [{ position: 'A' }, { position: 'B' }],
+      posted: [{ by: 'Rents', says: '[12:34] Moby - Go\n[15:00] Orbital - Chime' }, { by: 'Josh', says: '[C 1:00] LFO - LFO' }, { by: 'Softboiled', says: '[B 2:00] Altern 8 - Infiltrate 202' }],
+    });
+    await page.read();
+    const comments = within(screen.getByTestId('comments'));
+    expect(comments.getByText('Rents')).toBeInTheDocument();
+    expect(comments.getByText('[C 1:00] LFO - LFO')).toBeInTheDocument();
+    expect(comments.queryByText('Softboiled')).not.toBeInTheDocument();
+    // And only the one that is a post of IDs is in the tracklist's history.
+    expect(page.has('History · 1 post')).toBe(true);
+  });
+
+  it('keeps the comments it had when it can’t be done again just then', async () => {
+    const page = tapePage({ posted: [{ by: 'Rents', says: 'what a tape' }] });
+    await page.read();
+    // The newer comments can't be had: the reading is the archive's alone, and has no comments in it.
+    page.server.down = true;
+    page.shared().reread();
+    await waitFor(() => expect(page.shared().read).toBe('short'));
+    expect(screen.getByText('what a tape')).toBeInTheDocument();
+    // Nor can the site be reached at all.
+    page.server.down = false;
+    page.shared().reread();
+    await waitFor(() => expect(page.shared().read).toBe('read'));
+    const failed = vi.spyOn(console, 'error').mockImplementation(() => {});
+    (global.fetch as unknown as Mock).mockRejectedValueOnce(new Error('offline'));
+    page.shared().reread();
+    await waitFor(() => expect(page.shared().read).toBe('short'));
+    expect(failed).toHaveBeenCalledWith('Failed to load track IDs:', expect.any(Error));
+    expect(screen.getByText('what a tape')).toBeInTheDocument();
   });
 });
 
@@ -138,6 +173,50 @@ describe('a post', () => {
     first.go();
     await waitFor(() => expect(page.shared().sides[0].rows.every((row) => !row.mine)).toBe(true));
     expect(page.rows()).toEqual(['0:01:40Unknown trackID it', '0:03:20Unknown trackID it']);
+  });
+
+  describe('of more than one comment holds', () => {
+    // Forty tracks, each with a title as long as the blanks allow: about three comments' worth. (Each is
+    // its own record: 01 and "0101…", 02 and "0202…".)
+    const nth = (k: number) => String(k + 1).padStart(2, '0');
+    const sitting = Array.from({ length: 40 }, (_, k) => said(100 * (k + 1), `Artist${nth(k)}`, nth(k).repeat(75)));
+    const fits = (comment: string) => comment.length <= 5000;
+
+    it('goes up as several, one after another, every line of it, in order of time', async () => {
+      const page = tapePage();
+      await page.read();
+      for (const change of sitting) page.shared().say(change);
+      await waitFor(() => expect(page.bar()).toHaveTextContent('40 times not posted'));
+      await page.user.click(within(page.bar() as HTMLElement).getByRole('button', { name: 'Post' }));
+      await waitFor(() => expect(page.bar()).toBeNull());
+      expect(page.posts().length).toBeGreaterThan(1);
+      expect(page.posts().every(fits)).toBe(true);
+      expect(page.posts().join('\n').split('\n').map((line) => line.split(' - ')[0])).toEqual(sitting.map((change) => `[${clock(change.time)}] ${change.artist}`));
+      await waitFor(() => expect(page.shared().sides[0].rows.every((row) => !row.mine)).toBe(true));
+      expect(page.shared().sides[0].rows).toHaveLength(40);
+    });
+
+    it('leaves waiting what didn’t go up when one of them is refused, and has what did as posted', async () => {
+      const page = tapePage();
+      await page.read();
+      for (const change of sitting) page.shared().say(change);
+      await waitFor(() => expect(page.bar()).toHaveTextContent('40 times not posted'));
+      // The site takes the first comment and refuses the second.
+      const fetched = global.fetch as unknown as Mock;
+      const answer = fetched.getMockImplementation() as typeof fetch;
+      let posts = 0;
+      fetched.mockImplementation(async (url: RequestInfo | URL, init?: RequestInit) => {
+        if (String(url) === '/api/comments/submit' && ++posts === 2) return new Response(JSON.stringify({ error: 'Too many requests. Please try again later.' }), { status: 429 });
+        return answer(url, init);
+      });
+      await page.user.click(within(page.bar() as HTMLElement).getByRole('button', { name: 'Post' }));
+      expect(await within(page.bar() as HTMLElement).findByRole('alert')).toHaveTextContent('Too many requests. Please try again later.');
+      expect(page.server.comments).toHaveLength(1);
+      const went = page.server.comments[0].content.split('\n').length;
+      expect(went).toBeGreaterThan(5);
+      await waitFor(() => expect(page.bar()).toHaveTextContent(`${40 - went} times not posted`));
+      expect(page.shared().sides[0].rows).toHaveLength(40);
+    });
   });
 
   it('still shows as posted where the comments can’t be read again just then', async () => {

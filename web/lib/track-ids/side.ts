@@ -3,7 +3,7 @@
 // from three things:
 //
 //   the side's list          its tracks in order, from the tape's own tracklist or one kept in the comments
-//   the IDs                  what the comments say is on the side, as the reader has it (read.ts)
+//   the side's moments       what the comments say starts where on the side, as the reader has it (said.ts)
 //   the visitor's changes    what this visitor has said since, which the comments as last read don't have
 //
 // Everything else here is a question asked of those rows: what is playing, whether a track could start at a
@@ -12,31 +12,26 @@
 //
 // The rules the rows keep:
 //
-// 1. One moment, one track. Two starts are never within ONE_MOMENT of each other. Something said of a moment
-//    that is already marked is said of that mark: a name puts it right, and nothing new starts.
+// 1. One moment, one track. Something said within ONE_MOMENT of where a track starts is said of that track:
+//    a name puts it right, and nothing new starts. The page offers a new track only further off than that.
 // 2. Down a side, times only rise. A line of the list takes an ID's time only where that keeps the list's
 //    lines in the list's order; an ID that names a line but would break the order is shown by its time, as a
 //    track of its own.
-// 3. The visitor's changes are IDs like any other. They go through the same working out as the comments'
-//    IDs, so what a change does on the page before it is posted is what it does once it is a comment. (The
-//    reader's rules for a time made with the site's form are mirrored in `withChanges`; see `reconcile` in
-//    parse.ts.) Where the comments turn out to say otherwise, the next read of them puts the page right.
+// 3. The visitor's changes are IDs like any other. `withChanges` takes each as the reader takes a comment in
+//    the site's form, and the side's tracks are then made by the function the reader's are (`settle` in
+//    moments.ts). So what a change does on the page before it is posted is what it does once it is a
+//    comment. Where the comments turn out to say otherwise, the next read of them puts the page right.
 //
 // Pure functions, used in the browser.
-import { ONE_MOMENT, type RunningOrder, type TrackId } from './compose';
-import { isSameRecord } from './parse';
-
-/** How long a track with no known end is taken to play, as the reader takes it (`reconcile`). */
-export const UNENDED = 240;
-
-/** A time in a list and a time in an ID this close are the same moment, as the reader has it. */
-const ROUGHLY = 20;
+import { composeId, composeRemoval, splitComposed, type Composed, type RunningOrder } from './compose';
+import { ROUGHLY, SHORTEST, momentOf, sameRecord, settle, type Moment, type TrackId } from './moments';
 
 /**
- * When the visitor's own change was said, as a date: after any the comments have, and after the changes the
- * visitor made before it. It is the newest word.
+ * When the visitor's own change was said, as a date: after any the comments have. What was posted together
+ * was said together, as the lines of one comment are, each post after the one before; what waits to be
+ * posted is the newest word of all.
  */
-const newest = (nth: number) => `~${String(nth).padStart(6, '0')}`;
+const saidWhen = (change: Change) => (change.sent ? `~${String(change.sent.read).padStart(6, '0')}` : '~~');
 
 /**
  * Something the visitor has said about a side that the comments, as the page last read them, don't have. It
@@ -95,54 +90,47 @@ export type Row = {
 // are the same record however short: "Moby - Go" is on the tape once "Moby — Go" is.
 type Named = { artist: string; title: string };
 const spelt = (x: Named) => `${x.artist} ${x.title}`.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-const same = (a: Named, b: Named) => isSameRecord(a, b) || spelt(a) === spelt(b);
-
-const near = (a: number, b: number) => Math.abs(a - b) <= ONE_MOMENT;
+const same = (a: Named, b: Named) => sameRecord(a, b) || spelt(a) === spelt(b);
 
 /**
- * The side's IDs as they will be once the visitor's changes are comments too, in order of time. The rules
- * are the reader's for a time made with the site's form:
+ * The side's tracks as they will be once the visitor's changes are comments too, in order of time: what the
+ * comments say of the side's moments, then each change in the order it was made, taken as the reader takes
+ * a comment in the site's form (`reconcile` in parse.ts), and the whole laid out as tracks (`settle`).
+ * `length` is the side's, in seconds, where it has been measured.
  *
- * · A change at a moment the side has marked is about that mark. A name replaces what was there, and a
- *   name always beats a mark without one. The visitor's own unposted change never replaces a name: it was
- *   made when there was none to replace, and one has turned up since.
- * · A change at a moment of its own is a new track from there.
- * · A mark taken away is gone, and what played before it plays on.
- * · A record named again, with nothing else between, is the same play said twice: the earlier start stands.
- *   The reader has folded such sayings already and kept the later ones (`again`). They are laid out here
- *   as IDs before anything else is done, and folded again at the end, so that a change which comes between
- *   two of them, or takes the first away, parts them as the reader will.
- *
- * Each ID runs until the next one starts.
+ * · A change is read as its line of a comment will be: its time to the second, its names as written there.
+ * · A change at a moment the side has marked is about that mark. A name replaces what was there, and a name
+ *   always beats a mark without one. The visitor's own unposted change never replaces a name: it was made
+ *   when there was none to replace, and one has turned up since.
+ * · A change further off is a new track from there.
+ * · A mark taken away is gone, with everything said of it.
  */
-export function withChanges(posted: TrackId[], changes: Change[]): Timed[] {
-  const ids: Timed[] = posted.flatMap(({ again = [], ...id }) => [id, ...again.map((later) => ({ ...later, known: true }))]);
-  changes.forEach((change, nth) => {
-    const at = ids.reduce((best, id, k) => (near(id.start, change.time) && (best < 0 || Math.abs(id.start - change.time) < Math.abs(ids[best].start - change.time)) ? k : best), -1);
-    if (change.gone) {
-      if (at < 0) return;
-      // What played up to the mark now plays on: its end was only ever where the mark began.
-      const [gone] = ids.splice(at, 1);
-      const before = ids.findLast((id) => id.start < gone.start);
-      if (before && before.end === gone.start) before.end = before.start + UNENDED;
-      return;
+export function withChanges(said: Moment[], changes: Change[], length = Infinity): Timed[] {
+  const moments: (Moment & { mine?: Change })[] = [...said];
+  for (const change of changes) {
+    const where = { position: null, time: change.time };
+    // A line the site writes always reads back (compose.test.ts holds it to that on every tape).
+    const line = splitComposed(change.gone ? composeRemoval(where) : composeId({ ...where, artist: change.artist, title: change.title })) as Composed;
+    // Nothing is said of a side past its end.
+    if (line.time >= length) continue;
+    const at = momentOf(moments.map((moment) => moment.start), line.time);
+    if (line.gone) {
+      if (at >= 0) moments.splice(at, 1);
+      continue;
     }
-    const known = Boolean(change.artist || change.title);
-    const said = { artist: change.artist, title: change.title, known, by: change.sent?.by ?? '', date: newest(nth), mine: change };
-    if (at < 0) ids.push({ start: change.time, end: change.time + UNENDED, ...said });
-    else if (change.sent ? known || !ids[at].known : known && !ids[at].known) ids[at] = { ...ids[at], start: Math.min(ids[at].start, change.time), ...said };
-  });
-  ids.sort((a, b) => a.start - b.start);
-
-  const out: Timed[] = [];
-  ids.forEach((id, k) => {
-    const next = ids[k + 1];
-    const one = next && next.start < id.end ? { ...id, end: next.start } : id;
-    const before = out[out.length - 1];
-    if (before && one.known && isSameRecord(before, one)) before.end = Math.max(before.end, one.end);
-    else out.push(one);
-  });
-  return out;
+    const known = Boolean(line.artist || line.title);
+    const word = { artist: line.artist, title: line.title, known, by: change.sent?.by ?? '', date: saidWhen(change), mine: change };
+    if (at < 0) {
+      moments.push({ start: line.time, ...word });
+      continue;
+    }
+    const { guessed, ...was } = moments[at];
+    const wins = change.sent ? known || !was.known : known && !was.known;
+    // What is posted is said of the moment whether or not it is the moment's last word, and a moment starts
+    // at the earliest time anyone gave for it. An unposted change that changes nothing isn't there at all.
+    if (wins || change.sent) moments[at] = { ...was, start: guessed ? line.time : Math.min(was.start, line.time), ...(wins ? word : {}) };
+  }
+  return settle(moments, length);
 }
 
 /**
@@ -270,19 +258,27 @@ export function sideRows(order: RunningOrder | null, ids: Timed[]): Row[] {
  * shows nowhere has been overtaken: since it was made, the comments have come to say the same of that
  * moment, or something else.
  */
-export function standing(order: RunningOrder | null, posted: TrackId[], changes: Change[]): Change[] {
-  const shown = new Set(sideRows(order, withChanges(posted, changes)).map((row) => row.mine));
+export function standing(order: RunningOrder | null, said: Moment[], changes: Change[], length = Infinity): Change[] {
+  const shown = new Set(sideRows(order, withChanges(said, changes, length)).map((row) => row.mine));
   return changes.filter((change) => change.sent || shown.has(change));
 }
 
-/** The row playing at a moment, by its place in `rows`, or -1: the last to start, if it hasn't ended. */
-export function playingAt(rows: Row[], time: number): number {
-  const k = rows.findLastIndex((row) => row.start !== null && row.start <= time);
-  return k >= 0 && time < (rows[k].end as number) ? k : -1;
-}
+/**
+ * What is playing at a time, of a side's rows or of its marks, by its place among them, or -1: the last to
+ * have started that hasn't ended. (Under a record layered over it, the one before plays on, and is what is
+ * playing again when the layer ends.)
+ */
+export const playingAt = (tracks: { start: number | null; end: number | null }[], time: number) =>
+  tracks.findLastIndex((track) => track.start !== null && track.start <= time && time < (track.end as number));
 
-/** The row that starts within a moment of a time, by its place in `rows`, or -1. Nothing else can start there. */
-export const startingAt = (rows: Row[], time: number) => rows.findIndex((row) => row.start !== null && near(row.start, time));
+/** The row a time is a moment of, by its place in `rows`, or -1: its track starts there, and nothing else can. */
+export const startingAt = (rows: Row[], time: number) => momentOf(rows.map((row) => row.start), time);
+
+/**
+ * Whether a track could start at a moment of a side: nothing starts within a moment of it already, and the
+ * side has room left for a track. `length` is the side's, in seconds, where it has been measured.
+ */
+export const canStartAt = (rows: Row[], time: number, length = Infinity) => startingAt(rows, time) < 0 && time <= length - SHORTEST;
 
 // The answer changes only when the moment passes a row's start or comes within a moment of one, and it is
 // asked for every time the tape moves on, so it is kept for as long as the rows are the same rows.
@@ -293,7 +289,8 @@ const could = new WeakMap<Row[], Map<string, number[]>>();
  * which giving them that moment is what would happen (`sideRows`). It is why a + on a row never does
  * anything but give that row its time.
  *
- * None, if something starts within a moment of it already. Otherwise the lines with no time that the moment
+ * None, if something starts within a moment of it already, or it is in the side's last moments (`length` is
+ * the side's, where it has been measured). Otherwise the lines with no time that the moment
  * falls among, between the last line timed before it and the first timed after (a line whose time is only
  * standing in for it, `filled`, is no such bound: it gives way to a line that is timed in its own right),
  * less these:
@@ -304,9 +301,9 @@ const could = new WeakMap<Row[], Map<string, number[]>>();
  * · A line naming the record that is playing just before the moment, or the one that starts next: said
  *   there, it would be that same play said again.
  */
-export function couldStartAt(rows: Row[], time: number): number[] {
+export function couldStartAt(rows: Row[], time: number, length = Infinity): number[] {
   const last = rows.findLastIndex((row) => row.start !== null && row.start < time);
-  const free = startingAt(rows, time) < 0;
+  const free = canStartAt(rows, time, length);
   const key = `${last}|${free}`;
   const known = could.get(rows)?.get(key);
   if (known) return known;
@@ -326,7 +323,7 @@ export function couldStartAt(rows: Row[], time: number): number[] {
       if (!row.known) {
         if (!unnamed) out.push(k);
         unnamed = true;
-      } else if (!(before && isSameRecord(before, row)) && !(next?.known && isSameRecord(row, next)) && !among.slice(0, i).some((earlier) => earlier.row.start === null && earlier.row.known && same(earlier.row, row))) out.push(k);
+      } else if (!(before && sameRecord(before, row)) && !(next?.known && sameRecord(row, next)) && !among.slice(0, i).some((earlier) => earlier.row.start === null && earlier.row.known && same(earlier.row, row))) out.push(k);
     });
   }
   could.set(rows, (could.get(rows) ?? new Map()).set(key, out));
@@ -355,6 +352,7 @@ export function suggest(rows: Row[], start: number, length: number | null, most 
   const after = [...marks, ...(length ? [{ time: length, i: lines.length }] : [])].find((m) => m.time > start);
   const expected = after ? before.i + ((start - before.time) / (after.time - before.time)) * (after.i - before.i) : open.filter((row) => row.start !== null && row.start < start).length;
 
+  // (Not held to the side's end: the moment is one something is already being said of.)
   return couldStartAt(open, start)
     .map((k) => open[k])
     .filter((row) => row.known && row.artist && row.title)

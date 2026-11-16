@@ -381,8 +381,12 @@ body::before {
   color: var(--text);
 }
 @media (hover: hover) and (pointer: fine) {
-  .track-ids-line:hover { text-decoration: underline; }
+  .track-ids-line:not([aria-disabled="true"]):hover { text-decoration: underline; }
 }
+/* In a side's last moments there is no room left for a track to start, so nothing to ID: the line keeps its
+   place and does nothing. */
+.track-ids-line[aria-disabled="true"] { cursor: default; }
+.track-ids-line[aria-disabled="true"] .track-ids-cue { color: var(--muted); }
 /* Said beside a mark that is the visitor's own and not posted yet, wherever the mark is shown. */
 .track-ids-state {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
@@ -392,7 +396,7 @@ body::before {
   white-space: nowrap;
   color: var(--muted);
 }
-.track-ids-line:active { opacity: 0.6; }
+.track-ids-line:not([aria-disabled="true"]):active { opacity: 0.6; }
 .track-ids-line:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 /* The line with its blanks open. Everything is the line's own type, so ID'ing a track reads as writing on the
    line and not as filling in a form: the place on the tape said quietly, a rule under each blank that comes
