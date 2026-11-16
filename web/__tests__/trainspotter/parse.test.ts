@@ -7,7 +7,7 @@
 import { describe, expect, it } from 'vitest';
 import comments from '@/data/tape-comments.json';
 import tapes from '@/data/tapes.json';
-import { digest, parseComment, reconcile, runningOrders, splitWholeTape, type Said, type Sighting } from '@/app/proto/trainspotter/parse';
+import { digest, isIdPost, parseComment, reconcile, runningOrders, splitWholeTape, type Said, type Sighting } from '@/app/proto/trainspotter/parse';
 
 const clock = (s: number) => `${Math.floor(s / 3600)}:${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
@@ -235,5 +235,21 @@ describe('a list that times a two-sided tape as one recording', () => {
     const theirs = [at(0, 53 * 60, 'x'), at(0, 80 * 60, 'y')];
     const other = at(1, 600, 'Someone else on B', { author: 'Omar', date: '2024-05-01' });
     expect(where([...theirs, other])).toContain('B 0:10:00 Someone else on B');
+  });
+});
+
+describe('a post of track IDs made on the tape page', () => {
+  it('is told from talk, and left out of this reading: a mark taken away is no track, and no archived comment is one', () => {
+    const posts = ['[1:09] Butsch - The Count', '[0:01] no track starts here\n[0:05] The Prodigy - Hyperspeed (G-Force Part 2)', '[1:09] Butsch - The Count (Test Mix) [was Butsch - The Count]\n'];
+    for (const content of posts) expect(isIdPost(content, ['A']), content).toBe(true);
+    expect(isIdPost('[B 12:34] ? - ?', ['A', 'B'])).toBe(true);
+    // Talk: a line of it among the IDs, no side said on a tape with sides, a side the tape hasn't got, nothing at all.
+    for (const content of ['what a tape', '[1:09] Butsch - The Count\nlove this one', '[1:09] great bit', '']) expect(isIdPost(content, ['A']), content).toBe(false);
+    expect(isIdPost('[12:34] Moby - Go', ['A', 'B'])).toBe(false);
+    expect(isIdPost('[Z 12:34] Moby - Go', ['A', 'B'])).toBe(false);
+    const all = comments as Record<string, { content: string }[]>;
+    for (const tape of tapes as { id: string; sides: { position: string }[] }[]) {
+      for (const { content } of all[tape.id] ?? []) expect(isIdPost(content, tape.sides.map((side) => side.position)), content.slice(0, 60)).toBe(false);
+    }
   });
 });

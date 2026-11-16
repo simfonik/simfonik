@@ -662,6 +662,24 @@ function carry(older: Row[], newer: Row[]) {
   closeGap();
 }
 
+// A comment made with the tape page's own form for track IDs: every line `[B 12:34] Artist - Title`, or
+// `[B 12:34] no track starts here` to take a mark away, for a side the tape has (and no side said only where
+// the tape is one recording). Those are exact, and corrections among them go by rules the tape page's reader
+// has and this prototype's does not: read as talk, a mark taken away turns up as a track called "no track
+// starts here", and two IDs twelve seconds apart as one. Until the prototype reads them with that reader,
+// it leaves them out. A tape's IDs made there are on its own page.
+const ID_LINE = /^\[(?:(\S+) )?\d{1,3}:\d{2}(?::\d{2})?\] (?:.+ - .+|no track starts here)$/i;
+export const isIdPost = (content: string, positions: string[]) => {
+  const lines = content.split(/\r?\n/).filter((line) => line.trim());
+  return (
+    lines.length > 0 &&
+    lines.every((line) => {
+      const label = ID_LINE.exec(line.trim())?.[1];
+      return ID_LINE.test(line.trim()) && (label ? positions.includes(label) : positions.length === 1);
+    })
+  );
+};
+
 export type Said = { author: string; date: string; content: string };
 // "Josh" and "Josh McClintock" are one keeper.
 const sameAuthor = (a: string, b: string) => {

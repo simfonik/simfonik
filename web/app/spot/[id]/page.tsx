@@ -2,15 +2,30 @@
 // The page is at /spot/<tape>, a short address to pass around; what it is made of is in app/proto/trainspotter.
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTapeById } from "../../../lib/data";
+import { getCoverImageWithFallback, getTapeById } from "../../../lib/data";
 import { readTape, tapeIndex } from "../../proto/trainspotter/comments";
 import { Trainspotter } from "../../proto/trainspotter/trainspotter";
 import "../../proto/trainspotter/trainspotter.css";
 
-export const metadata: Metadata = {
-  title: "Prototype: Trainspotter",
-  robots: { index: false, follow: false },
-};
+// What a link to the page shows where it is pasted: the tape, what the page is for, and the tape's own
+// picture. (The address in it is this deployment's, where there is one: the page is not on the live site.)
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const tape = getTapeById((await params).id);
+  const robots = { index: false, follow: false };
+  if (!tape) return { title: "Trainspotter", robots };
+  const djs = tape.djs.length > 2 ? `${tape.djs[0].name}, ${tape.djs[1].name}, ...` : tape.djs.map((dj) => dj.name).join(", ");
+  const title = `Trainspotter: ${djs} — ${tape.title}`;
+  const description = "Play the tape, see the tracks other people have named, and ID the ones you know.";
+  const image = `https://simfonik.com${getCoverImageWithFallback(tape)}`;
+  const host = process.env.VERCEL_BRANCH_URL ?? process.env.VERCEL_URL;
+  return {
+    title,
+    description,
+    robots,
+    openGraph: { title, description, type: "website", images: [{ url: image, alt: `${tape.title} cover` }], ...(host ? { url: `https://${host}/spot/${tape.id}` } : {}) },
+    twitter: { card: "summary_large_image", title, description, images: [image] },
+  };
+}
 
 export default async function TrainspotterPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

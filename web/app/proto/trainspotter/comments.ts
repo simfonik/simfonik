@@ -2,7 +2,7 @@
 import { unstable_cache } from "next/cache";
 import { COMMENTS_CACHE_TAG, getPaginatedComments } from "../../../lib/comments";
 import { getAllTapes, getCommentsForTape } from "../../../lib/data";
-import { digest, reconcile, runningOrders, type Listed, type Said, type Sighting } from "./parse";
+import { digest, isIdPost, reconcile, runningOrders, type Listed, type Said, type Sighting } from "./parse";
 import type { TapeEntry } from "./tape-switcher";
 
 type Tape = ReturnType<typeof getAllTapes>[number];
@@ -19,11 +19,14 @@ type Tape = ReturnType<typeof getAllTapes>[number];
 async function everyone(): Promise<{ said: (tapeId: string) => Said[]; complete: boolean }> {
   const { comments, total } = await getPaginatedComments(1, 5000);
   const live = [...comments].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  const positions = new Map(getAllTapes().map((tape) => [tape.id, tape.sides.map((side) => side.position)]));
   return {
     complete: total > 0,
     said: (tapeId) => [
       ...getCommentsForTape(tapeId).map((c) => ({ author: c.author, date: c.date, content: c.content })),
-      ...live.filter((c) => c.tape_id === tapeId).map((c) => ({ author: c.author_name, date: new Date(c.created_at).toISOString().slice(0, 10), content: c.content })),
+      ...live
+        .filter((c) => c.tape_id === tapeId && !isIdPost(c.content, positions.get(tapeId) ?? []))
+        .map((c) => ({ author: c.author_name, date: new Date(c.created_at).toISOString().slice(0, 10), content: c.content })),
     ],
   };
 }
