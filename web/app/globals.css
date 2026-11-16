@@ -451,7 +451,10 @@ body::before {
 .tracklist-blanks { grid-column: 1 / -1; }
 .tracklist-blanks:has(p:not(:empty)) { padding-bottom: 0.5rem; }
 .tracklist-row:has(> .tracklist-blanks) { padding-block: 0; background: var(--bg-hover); }
-.tracklist-blanks .track-ids-when { width: 3.25rem; }
+@media (hover: hover) and (pointer: fine) {
+  /* (At a mouse's smaller type. A finger's is larger, and the blank keeps the width a time needs.) */
+  .tracklist-blanks .track-ids-when { width: 3.25rem; }
+}
 .track-ids-field::placeholder { color: var(--muted); }
 .track-ids-field:focus-visible { --rule: var(--text); background-size: 100% 1.5px; }
 .track-ids-post {
@@ -704,12 +707,24 @@ button.tracklist-n { min-width: 3rem; text-align: left; }
    the rows there is most to do with. A mouse also finds it on the row under it, and the keyboard on the
    row it is in; a finger reaches any other track by playing it. */
 .tracklist-edit { color: var(--muted); }
-.tracklist-row:not([aria-current], [data-movable]) .tracklist-edit { display: none; }
+/* Where it isn't shown to a finger it is still there for a screen reader and for a keyboard, which shows it:
+   one pixel of it, with no place to press. */
+.tracklist-row:not([aria-current], [data-movable], :focus-within) .tracklist-edit {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 @media (hover: hover) and (pointer: fine) {
-  .tracklist-row:not([aria-current], [data-movable]) .tracklist-edit { display: inline; opacity: 0; }
-  .tracklist-row:is(:hover, :focus-within) .tracklist-edit { opacity: 1; }
+  .tracklist-row:not([aria-current], [data-movable], :focus-within) .tracklist-edit { position: relative; width: auto; height: auto; margin: 0 0 0 0.75em; overflow: visible; clip-path: none; opacity: 0; }
+  .tracklist-row:hover .tracklist-edit { opacity: 1; }
   .tracklist-edit:hover { color: var(--text); }
 }
+/* Two cues on a row stand far enough apart that the place to press one never lies over the other's. */
+.tracklist-cue + .tracklist-cue { margin-left: 1rem; }
 /* On a phone the line under the bar gives way to the tray (below): a track's name and the words beside it
    don't fit on one line there. */
 @media (max-width: 39.99rem) {

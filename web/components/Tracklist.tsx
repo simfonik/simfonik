@@ -135,6 +135,8 @@ export function Tracklist() {
     setStatus('sending');
     setMessage('');
     const posted = count(unposted.length);
+    // The bar goes when nothing is pending; a keyboard that was in it is then put on the tracklist's heading.
+    const inBar = (e.currentTarget as HTMLElement).contains(document.activeElement);
     const failed = await send(unposted, poster);
     if (failed) {
       setStatus('error');
@@ -143,18 +145,26 @@ export function Tracklist() {
     }
     setStatus('idle');
     setThanks(`Posted ${posted}. Thanks.`);
+    if (inBar) heading.current?.focus({ preventScroll: true });
   }
 
   const credit = contributors(sides.map(({ rows, order }) => ({ rows, keeper: order?.by ?? null })));
   // Said for as long as a line lacks a posted time: it stays put while the visitor gives theirs.
   const waiting = sides.some(({ rows }) => rows.some((row) => row.n !== null && (row.start === null || isUnposted(row))));
   const headingId = useId();
+  const heading = useRef<HTMLHeadingElement>(null);
+  // A link to the tracklist (the home page's list of track IDs has one) finds nothing to go to on a tape
+  // whose list is all from the comments, until they have been read: it is gone to when it is there.
+  const listed = sides.some(({ rows }) => rows.length > 0);
+  useEffect(() => {
+    if (listed && window.location.hash === '#tracklist') document.getElementById('tracklist')?.scrollIntoView();
+  }, [listed]);
   if (sides.every(({ rows }) => rows.length === 0)) return null;
 
   return (
     <section id="tracklist" className="scroll-mt-4 border-t-[1.5px] border-[var(--border)] pt-14 mt-16" aria-labelledby={headingId}>
       <div className="max-w-3xl">
-        <h2 id={headingId} className="font-display text-4xl sm:text-5xl leading-[0.95] text-[var(--text)] mb-5">
+        <h2 ref={heading} id={headingId} tabIndex={-1} className="font-display text-4xl sm:text-5xl leading-[0.95] text-[var(--text)] mb-5 outline-none">
           Tracklist
         </h2>
         {credit.length > 0 && (
@@ -195,7 +205,7 @@ export function Tracklist() {
                 to ask for, the count has the bar's first line and the name and Post its second. */}
             <div className="mx-auto max-w-7xl px-4 sm:px-6">
               <div className="flex max-w-3xl flex-wrap items-center gap-x-4">
-                <p className={`${small} min-w-0 ${remembered ? 'flex-1' : 'w-full pt-2'}`}>
+                <p aria-live="polite" className={`${small} min-w-0 ${remembered ? 'flex-1' : 'w-full pt-2'}`}>
                   {count(unposted.length)} pending
                 </p>
                 {!remembered && (
@@ -294,6 +304,8 @@ function SideList({ heading, summary, rows, position, silent, lit, markable, mov
   useLayoutEffect(() => {
     if (expanded || lit < COLLAPSED_COUNT || !whole.current) return;
     folded.current = { bottom: whole.current.getBoundingClientRect().bottom, scroll: window.scrollY };
+    // "Show all" goes with the fold: a keyboard that was on it goes on to the first row it would have shown.
+    if (whole.current.querySelector('[aria-expanded="false"]') === document.activeElement) setShownAll(true);
     setExpanded(true);
   }, [expanded, lit]);
   useLayoutEffect(() => {
@@ -371,7 +383,7 @@ function SideList({ heading, summary, rows, position, silent, lit, markable, mov
                     ) : (
                       // The line's number stands where its time will go, and is pressed to give it one by hand.
                       row.n !== null && (
-                        <button type="button" onClick={() => onEdit(null, row.n)} className="tracklist-n" aria-label={`Set the time for ${row.known ? label : `track ${row.n}`}`} title="Set its time">
+                        <button type="button" onClick={() => onEdit(null, row.n)} className="tracklist-n" aria-label={`${String(row.n).padStart(2, '0')}, set the time for ${row.known ? label : `track ${row.n}`}`} title="Set its time">
                           {String(row.n).padStart(2, '0')}
                         </button>
                       )

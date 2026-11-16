@@ -60,7 +60,18 @@ describe('IDs the site writes', () => {
     expect(splitComposed('[1:00] Moby - Go [was Moby - Go [Woodtick Mix]]')?.line).toEqual({ artist: 'Moby', title: 'Go [Woodtick Mix]' });
   });
 
-  it('has a pattern a database can tell a post of IDs by, which says what the reader says of every comment', () => {
+  it('reads nothing longer than a comment may be, and takes the longest line apart in no time', () => {
+    expect(readComposed(`[1:00] Moby - ${'Go '.repeat(2000)}`, ['A'])).toBeNull();
+    // A line with a thousand "[was" and no end to any of them: read at once, as a title.
+    const started = performance.now();
+    const title = `Go${' [was x'.repeat(700)}`;
+    expect(splitComposed(`[1:00] Moby - ${title}`)).toEqual({ position: null, time: 60, artist: 'Moby', title, gone: false });
+    expect(performance.now() - started).toBeLessThan(50);
+    // The last "[was" is the one that says: a title may have the words in it.
+    expect(splitComposed('[1:00] Moby - Go [was here] [was Moby - Go]')).toMatchObject({ title: 'Go [was here]', line: { artist: 'Moby', title: 'Go' } });
+  });
+
+  it('has a pattern a database can find every plain post of IDs by, and some comments besides, which the reader then sorts', () => {
     const post = new RegExp(ID_POST, 'i');
     const posts = ['[1:00] Moby - Go', '[B 1:02:03] ? - ?', '[A 12:34] no track starts here', '[1:00] Moby - Go\n[2:00] LFO - LFO\n', '[1:00] Moby - Go\r\n[2:00] No Track Starts Here', '[B 12:34] Moby - Go (Woodtick Mix) [was Moby - Go]'];
     const talk = ['what a tape', '[1:00] great bit', 'Moby - Go at [1:00]', '[1:00] Moby - Go\nlove this one', 'Side A\n[00:00] Hope - Tree Frog', '[1:00]Moby - Go', ''];
@@ -68,6 +79,9 @@ describe('IDs the site writes', () => {
     const sides = (content: string) => (/^\[[AB] /.test(content) ? ['A', 'B'] : ['A']);
     for (const content of posts) expect([post.test(content), readComposed(content, sides(content)) !== null], content).toEqual([true, true]);
     for (const content of talk) expect([post.test(content), readComposed(content, sides(content)) !== null], content).toEqual([false, false]);
+    // What the pattern can't know, and so takes for a post where the reader doesn't: a time and a name with
+    // no side said, on a tape with sides, and a side the tape hasn't got. These are talk, and stay in the talk.
+    for (const content of ['[12:30] Moby - Go', '[Z 1:00] Moby - Go']) expect([post.test(content), readComposed(content, ['A', 'B']) !== null], content).toEqual([true, false]);
     // Every comment in the archive, each on its own tape: none was made with the form, and none reads as if it were.
     for (const [tapeId, said] of Object.entries(comments as Record<string, { content: string }[]>)) {
       const positions = (tapes as Tape[]).find((tape) => tape.id === tapeId)?.sides.map((side) => side.position) ?? [];

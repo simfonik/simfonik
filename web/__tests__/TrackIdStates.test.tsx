@@ -177,7 +177,7 @@ describe('a point the visitor marked without a name, not yet posted', () => {
     const page = await marked();
     await page.at(130);
     await page.user.click(page.button('Unknown track. Know it? ID it'));
-    await page.user.click(page.button('Use the tape’s time, 0:02:10'));
+    await page.user.click(page.button('Use 0:02:10, the tape’s time'));
     // Nothing has moved until it is posted.
     expect(page.marks()).toBe('100?');
     await page.user.type(screen.getByRole('textbox', { name: 'Starts at' }), '{Enter}');
@@ -460,6 +460,27 @@ describe('a track the comments have ID’d', () => {
     expect(page.button('Edit Joey Beltram — Energy Flash, at 0:05:00')).toHaveFocus();
   });
 
+  it('Edit on another row while one row’s blanks are open: they open for that row, and the keyboard goes into them', async () => {
+    const page = tape();
+    await page.read();
+    await page.at(100);
+    await page.user.click(page.button('Edit Joey Beltram — Energy Flash, at 0:05:00'));
+    expect(artist()).toHaveFocus();
+    await page.user.click(page.button('Edit Orbital — Chime, at 0:00:00'));
+    expect(screen.getByRole('form', { name: 'ID the track at 0:00:00' })).toBeInTheDocument();
+    expect(artist()).toHaveValue('Orbital');
+    expect(artist()).toHaveFocus();
+  });
+
+  it('a time typed in figures alone, as a phone’s number keys give it: read as minutes and seconds', async () => {
+    const page = tape();
+    await page.read();
+    await page.at(100);
+    await page.user.click(page.button('Edit Joey Beltram — Energy Flash, at 0:05:00'));
+    await retime(page, '610');
+    await waitFor(() => expect(page.posts()).toEqual(['[5:00] no track starts here\n[6:10] Joey Beltram - Energy Flash']));
+  });
+
   it('a time typed over its own: the track is moved there, in one post, and is there everywhere at once', async () => {
     const page = tape();
     await page.read();
@@ -493,7 +514,7 @@ describe('a track the comments have ID’d', () => {
     await page.at(100);
     await page.user.click(page.button('Edit Joey Beltram — Energy Flash, at 0:05:00'));
     await retime(page, 'soon');
-    expect(screen.getByRole('alert')).toHaveTextContent('Enter the time like 0:05:00.');
+    expect(screen.getByRole('alert')).toHaveTextContent('Enter the time, like 5:00 or 500.');
     expect(startsAt()).toHaveFocus();
     await retime(page, '0:03');
     expect(screen.getByRole('alert')).toHaveTextContent('Another track starts at 0:00:00.');
@@ -530,7 +551,7 @@ describe('a track the comments have ID’d', () => {
     expect(screen.getByRole('form', { name: 'ID the track at 0:05:00' })).toBeInTheDocument();
     // The tape is left where it is: that is where the track is to be moved to.
     expect(page.went).not.toHaveBeenCalled();
-    await page.user.click(page.button('Use the tape’s time, 0:04:40'));
+    await page.user.click(page.button('Use 0:04:40, the tape’s time'));
     expect(startsAt()).toHaveValue('0:04:40');
     expect(page.posts()).toEqual([]);
     await page.user.type(startsAt(), '{Enter}');
@@ -545,7 +566,7 @@ describe('a track the comments have ID’d', () => {
     await page.at(341.5);
     await page.user.click(page.button('Now playing: Joey Beltram — Energy Flash. Correct this ID'));
     const reading = hold(page.server);
-    await page.user.click(page.button('Use the tape’s time, 0:05:41'));
+    await page.user.click(page.button('Use 0:05:41, the tape’s time'));
     await page.user.type(startsAt(), '{Enter}');
     await waitFor(() => expect(page.posts()).toEqual(['[5:00] no track starts here\n[5:41] Joey Beltram - Energy Flash']));
     await waitFor(() => expect(page.rows()).toEqual(['0:00:00Orbital — Chime', '0:05:41Joey Beltram — Energy Flash']));
@@ -778,8 +799,8 @@ describe('a line of the tape’s tracklist, edited from its row', () => {
     // It is a line of the list being given its time, not a moment being marked.
     expect(page.has(/^Mark unknown/)).toBe(false);
     await page.user.keyboard('{Escape}');
-    expect(page.button('Set the time for Phenomania — Caramelle')).toHaveFocus();
-    await page.user.click(page.button('Set the time for Phenomania — Caramelle'));
+    expect(page.button('04, set the time for Phenomania — Caramelle')).toHaveFocus();
+    await page.user.click(page.button('04, set the time for Phenomania — Caramelle'));
     expect(startsAt()).toHaveFocus();
   });
 
@@ -788,7 +809,7 @@ describe('a line of the tape’s tracklist, edited from its row', () => {
     await page.read();
     await page.user.click(page.button('Edit Phenomania — Caramelle'));
     await page.user.type(startsAt(), 'soon{Enter}');
-    expect(screen.getByRole('alert')).toHaveTextContent('Enter the time like 0:05:00.');
+    expect(screen.getByRole('alert')).toHaveTextContent('Enter the time, like 5:00 or 500.');
     await page.user.clear(startsAt());
     await page.user.type(startsAt(), '2:03{Enter}');
     expect(screen.getByRole('alert')).toHaveTextContent('Another track starts at 0:02:00.');
@@ -823,11 +844,11 @@ describe('a line of the tape’s tracklist, edited from its row', () => {
     await page.read();
     // Hard by another track's start no line could be the one starting, and each has its number, not a +.
     await page.at(121);
-    await page.user.click(page.button('Set the time for Phenomania — Caramelle'));
+    await page.user.click(page.button('04, set the time for Phenomania — Caramelle'));
     const sheet = within(screen.getByRole('dialog', { name: 'The time track 4 starts' }));
     expect(sheet.queryByRole('textbox', { name: 'Your name' })).not.toBeInTheDocument();
     await page.at(400);
-    await page.user.click(sheet.getByRole('button', { name: 'Use the tape’s time, 0:06:40' }));
+    await page.user.click(sheet.getByRole('button', { name: 'Use 0:06:40, the tape’s time' }));
     await page.user.click(sheet.getByRole('button', { name: /^Add/ }));
     await waitFor(() => expect(page.rows()[3]).toBe('0:06:40Phenomania — CaramelleUndo'));
     expect(page.posts()).toEqual([]);

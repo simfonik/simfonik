@@ -123,20 +123,20 @@ describe('the blanks, in the line under the player', () => {
     await page.user.click(page.button('Now playing: Orbital — Chime. Correct this ID'));
     const time = screen.getByRole('textbox', { name: 'Starts at' });
     // It is the time the blank already has: nothing to use.
-    expect(page.button('Use the tape’s time, 0:00:00')).toHaveAttribute('aria-disabled', 'true');
+    expect(page.button('Use 0:00:00, the tape’s time')).toHaveAttribute('aria-disabled', 'true');
     // The tape plays on under the blanks, and it follows. A time is put right by as little as a second.
     await page.at(3);
-    expect(page.button('Use the tape’s time, 0:00:03')).toHaveAttribute('aria-disabled', 'false');
-    expect(page.button('Use the tape’s time, 0:00:03')).toHaveTextContent('Use 0:00:03');
+    expect(page.button('Use 0:00:03, the tape’s time')).toHaveAttribute('aria-disabled', 'false');
+    expect(page.button('Use 0:00:03, the tape’s time')).toHaveTextContent('Use 0:00:03');
     // Not where another track starts within a moment: pressed, it does nothing.
     await page.at(297);
-    expect(page.button('Use the tape’s time, 0:04:57')).toHaveAttribute('aria-disabled', 'true');
-    await page.user.click(page.button('Use the tape’s time, 0:04:57'));
+    expect(page.button('Use 0:04:57, the tape’s time')).toHaveAttribute('aria-disabled', 'true');
+    await page.user.click(page.button('Use 0:04:57, the tape’s time'));
     expect(time).toHaveValue('0:00:00');
     await page.at(100);
-    await page.user.click(page.button('Use the tape’s time, 0:01:40'));
+    await page.user.click(page.button('Use 0:01:40, the tape’s time'));
     expect(time).toHaveValue('0:01:40');
-    expect(page.button('Use the tape’s time, 0:01:40')).toHaveAttribute('aria-disabled', 'true');
+    expect(page.button('Use 0:01:40, the tape’s time')).toHaveAttribute('aria-disabled', 'true');
     expect(page.posts()).toEqual([]);
     expect(page.has(/instead$/)).toBe(false);
   });
@@ -232,7 +232,7 @@ describe('the sheet, on a phone', () => {
     await page.user.click(within(page.tray() as HTMLElement).getByRole('button', { name: 'Edit ID' }));
     const sheet = screen.getByRole('dialog', { name: 'ID the track at 0:00:00' });
     expect(within(sheet).getByRole('button', { name: 'Remove this ID' })).toBeInTheDocument();
-    expect(within(sheet).getByRole('button', { name: 'Use the tape’s time, 0:01:40' })).toBeInTheDocument();
+    expect(within(sheet).getByRole('button', { name: 'Use 0:01:40, the tape’s time' })).toBeInTheDocument();
     // And the time, which can be typed over.
     expect(within(sheet).getByRole('textbox', { name: 'Starts at' })).toHaveValue('0:00:00');
   });

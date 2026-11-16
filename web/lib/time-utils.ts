@@ -15,12 +15,16 @@ export function formatTimeAgo(dateString: string): string {
 }
 
 /**
- * A time as a visitor types one: 0:05:00, 5:00 or 1:02:03, with a colon between the parts, or a full stop or
- * a space (a phone's number keys don't always have the colon). In seconds, or null if it is no time.
+ * A time as a visitor types one: 0:05:00, 5:00 or 1:02:03, with a colon between the parts, or a full stop, a
+ * comma or a space. A phone's number keys have no colon, and some have nothing but the figures, so figures
+ * alone are read from the right, two for the seconds and two for the minutes: 500 is 5:00, and 10203 is
+ * 1:02:03. In seconds, or null if it is no time.
  */
 export function parseTime(text: string): number | null {
-  const parts = text.trim().split(/[:.\s]+/);
-  if (parts.length < 2 || parts.length > 3 || parts.some((part) => !/^\d{1,3}$/.test(part))) return null;
+  const typed = text.trim();
+  const parts = /^\d{1,7}$/.test(typed) ? [typed.slice(0, -4), typed.slice(-4, -2), typed.slice(-2)].filter(Boolean) : typed.split(/[:.,\s]+/);
+  if (parts.length < 1 || parts.length > 3 || parts.some((part) => !/^\d{1,3}$/.test(part))) return null;
+  if (parts.length === 1) return Number(parts[0]) < 60 ? Number(parts[0]) : null;
   const [secs, mins, hours = 0] = parts.map(Number).reverse();
   return secs < 60 && (parts.length === 2 || mins < 60) ? hours * 3600 + mins * 60 + secs : null;
 }

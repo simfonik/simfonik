@@ -21,14 +21,18 @@ type Act = 'id' | 'remove' | 'mark';
  */
 const PHONE = '(max-width: 39.99rem)';
 
+// (Outside the component: a new function each time would have the listener taken off and put back on with
+// every tick of the tape.)
+const watchPhone = (changed: () => void) => {
+  const media = window.matchMedia(PHONE);
+  media.addEventListener('change', changed);
+  return () => media.removeEventListener('change', changed);
+};
+
 /** Whether the screen is that narrow, kept up to date. Not before the page is in a browser. */
 function useOnPhone() {
   return useSyncExternalStore(
-    (changed) => {
-      const media = window.matchMedia(PHONE);
-      media.addEventListener('change', changed);
-      return () => media.removeEventListener('change', changed);
-    },
+    watchPhone,
     () => window.matchMedia(PHONE).matches,
     () => false,
   );
@@ -150,6 +154,9 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   const [artist, setArtist] = useState('');
   const [title, setTitle] = useState('');
   const [name, setName] = useState('');
+  // Counts each time the blanks are opened, for a track or for another while they are open, so the keyboard
+  // goes into them every time.
+  const [opened, setOpened] = useState(0);
   const [status, setStatus] = useState<'idle' | 'sending' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [thanks, setThanks] = useState('');
@@ -161,12 +168,16 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   const titleField = useRef<HTMLInputElement>(null);
   const nameField = useRef<HTMLInputElement>(null);
   const messageId = useId();
+  // Whether the blanks were opened from a row of the tracklist, and not from the line or the tray.
+  const fromRow = useRef(false);
 
   // `start` is the moment the blanks are for; null with `marked` a line of the list that has no time yet.
   const begin = (marked: Row | null, start: number | null, inRow = false) => {
     const onPhone = window.matchMedia(PHONE).matches;
     const remembered = rememberedName();
     const untimed = start === null ? (marked?.n ?? null) : null;
+    setOpened((count) => count + 1);
+    fromRow.current = inRow;
     setAt(start ?? now);
     setLineNo(untimed);
     setWhen(start === null ? '' : formatTime(start));
@@ -264,21 +275,24 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   // The keyboard follows: into the blanks as they open, on to the name when it is asked for, and back to the
   // line when they shut.
   const wasOpen = useRef(false);
-  const wasInRow = useRef(false);
+  const taken = useRef(0);
   useEffect(() => {
     if (at === null) {
-      // From a row, the keyboard goes back to the row (the tracklist sees to it), not up the page to the line.
-      if (wasOpen.current && !wasInRow.current) (trayId.current ?? line.current)?.focus();
+      // Opened from a row, the keyboard goes back to the row (the tracklist sees to it, or on a phone the
+      // sheet does as it closes), not up the page to the line.
+      if (wasOpen.current && !fromRow.current) (trayId.current ?? line.current)?.focus();
       wasOpen.current = false;
       return;
     }
-    // In a row the blanks are there once the row has made its place for them.
-    if (editing && !slot) return;
-    // A line waiting for its time is first of all given one.
-    if (!wasOpen.current) focus((lineNo !== null ? timeField : artistField).current, sheet);
     wasOpen.current = true;
-    wasInRow.current = editing !== null;
-  }, [at, sheet, editing, slot, lineNo]);
+    // In a row the blanks are there once the row has made its place for them. (Opened for one row while
+    // open in another, they are for a moment still in the old row's place, which has left the page.)
+    if (editing && !slot?.isConnected) return;
+    if (taken.current === opened) return;
+    taken.current = opened;
+    // A line waiting for its time is first of all given one.
+    focus((lineNo !== null ? timeField : artistField).current, sheet);
+  }, [at, sheet, editing, slot, lineNo, opened]);
   useEffect(() => {
     if (nameWanted > 0) focus(nameField.current, sheet);
   }, [nameWanted, sheet]);
@@ -343,7 +357,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
     let to = at;
     if (what !== 'remove') {
       const entered = parseTime(when);
-      if (entered === null) return refuse('Enter the time like 0:05:00.', timeField.current);
+      if (entered === null) return refuse('Enter the time, like 5:00 or 500.', timeField.current);
       const unchanged = lineNo === null && entered === at;
       const others = rows.filter((row) => row !== mark);
       const taken = others[startingAt(others, entered)];
@@ -450,9 +464,9 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   const timeBlank = (
     <>
       {position !== null && <span className="track-ids-where">{position}</span>}
-      <input ref={timeField} value={when} onChange={typed(setWhen)} onKeyDown={nudge} placeholder="0:00:00" aria-label="Starts at" aria-describedby={message ? messageId : undefined} inputMode="numeric" autoComplete="off" maxLength={9} enterKeyHint="send" className="track-ids-field track-ids-when" />
+      <input ref={timeField} value={when} onChange={typed(setWhen)} onKeyDown={nudge} placeholder="0:00:00" aria-label="Starts at" aria-describedby={message ? messageId : undefined} inputMode="decimal" autoComplete="off" maxLength={9} enterKeyHint="send" className="track-ids-field track-ids-when" />
       {played && !(askName && !sheet) && (
-        <button type="button" onClick={use} aria-disabled={!usable} className="track-ids-post track-ids-use" aria-label={`Use the tape’s time, ${formatTime(now)}`} title="Where the tape is now">
+        <button type="button" onClick={use} aria-disabled={!usable} className="track-ids-post track-ids-use" aria-label={`Use ${formatTime(now)}, the tape’s time`} title="Where the tape is now">
           Use {formatTime(now)}
         </button>
       )}
@@ -477,7 +491,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   // opened from.
   const inRow = editing !== null;
   const blanks = at !== null && !sheet && (
-    <form onSubmit={post} noValidate onKeyDown={(e) => e.key === 'Escape' && shut()} aria-label={purpose} className={inRow ? undefined : 'mt-2'}>
+    <form onSubmit={post} noValidate onKeyDown={(e) => e.key === 'Escape' && !e.nativeEvent.isComposing && shut()} aria-label={purpose} className={inRow ? undefined : 'mt-2'}>
       {/* The line itself, with blanks where the names go: the same type in the same place, a rule under
           each blank, and no boxes. */}
       <div className="flex min-h-11 items-center gap-x-3">

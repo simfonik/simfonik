@@ -83,7 +83,21 @@ export const composeRemoval = ({ position, time }: { position: string | null; ti
 
 const COMPOSED = /^\[(?:(\S+) )?(\d{1,3}):(\d{2})(?::(\d{2}))?\] (?:(.+?) - (.+)|(no track starts here))$/i;
 
-const WAS = /^(.+) \[was (.+?) - (.+)\]$/i;
+/** A comment holds this much, in characters; nothing longer is read as a post of IDs or taken as a comment. */
+export const LONGEST_COMMENT = 5000;
+
+// A title that says which line of the list the ID is: "Go (Woodtick Mix) [was Moby - Go]". Taken apart by
+// hand, at the last " [was " and the first " - " after it, in one pass over the line: a pattern for it backs
+// up again and again over a long line that has many of the one and none of the other.
+function listedAs(title: string): { title: string; line: Named } | null {
+  const lower = title.toLowerCase();
+  const at = lower.endsWith(']') ? lower.lastIndexOf(' [was ') : -1;
+  if (at < 1) return null;
+  const was = title.slice(at + 6, -1);
+  const dash = was.indexOf(' - ');
+  if (dash < 1 || dash + 3 >= was.length) return null;
+  return { title: title.slice(0, at), line: { artist: was.slice(0, dash), title: was.slice(dash + 3) } };
+}
 
 /**
  * `gone` is true for a line that takes the mark at its time away; it has no names. `line` is the list's own
@@ -101,14 +115,14 @@ export function splitComposed(line: string): Composed | null {
   const [, position, a, b, c, artist, title, gone] = m;
   const time = c === undefined ? Number(a) * 60 + Number(b) : Number(a) * 3600 + Number(b) * 60 + Number(c);
   const name = (s = '') => (s.trim() === '?' ? '' : s.trim());
-  const was = title === undefined ? null : WAS.exec(title);
+  const was = title === undefined ? null : listedAs(title);
   return {
     position: position ?? null,
     time,
     artist: name(artist),
-    title: name(was ? was[1] : title),
+    title: name(was ? was.title : title),
     gone: Boolean(gone),
-    ...(was ? { line: { artist: name(was[2]), title: name(was[3]) } } : {}),
+    ...(was ? { line: { artist: name(was.line.artist), title: name(was.line.title) } } : {}),
   };
 }
 
@@ -119,6 +133,7 @@ export function splitComposed(line: string): Composed | null {
  * label on a tape with sides. Such a comment is read like any other.
  */
 export function readComposed(content: string, positions: string[]): (Named & { side: number; start: number; gone: boolean; line?: Named })[] | null {
+  if (content.length > LONGEST_COMMENT) return null;
   const ids = [];
   for (const line of content.split(/\r?\n/)) {
     if (!line.trim()) continue;
@@ -132,10 +147,12 @@ export function readComposed(content: string, positions: string[]): (Named & { s
 }
 
 /**
- * A comment that is a post of track IDs, as a database can tell one: every line of it in the form above. A
- * POSIX pattern (and a JavaScript one), to be matched without regard to case. It is `readComposed`'s test
- * less the one thing a database can't know, whether the tape has a side by the label written; where it
- * matters to be exact, what it finds is put to `readComposed` as well.
+ * A comment that may be a post of track IDs, as a database can tell one: every line of it in the form above.
+ * A POSIX pattern (and a JavaScript one), to be matched without regard to case. It finds every comment
+ * `readComposed` reads as IDs that is written in plain spaces and line ends, and some that `readComposed`
+ * does not: the database can't know whether the tape has a side by the label written, or that a line with
+ * no label is on a tape with sides. So what it finds is always put to `readComposed` as well, and nothing is
+ * taken for a post of IDs, or left out as one, on its word alone.
  */
 export const ID_POST = '^\\s*(\\[([^\\] ]+ )?[0-9]{1,3}:[0-9]{2}(:[0-9]{2})?\\] ([^\\n]+ - [^\\n]+|no track starts here)\\s*)+$';
 
