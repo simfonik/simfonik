@@ -132,6 +132,14 @@ export function readComposed(content: string, positions: string[]): (Named & { s
 }
 
 /**
+ * A comment that is a post of track IDs, as a database can tell one: every line of it in the form above. A
+ * POSIX pattern (and a JavaScript one), to be matched without regard to case. It is `readComposed`'s test
+ * less the one thing a database can't know, whether the tape has a side by the label written; where it
+ * matters to be exact, what it finds is put to `readComposed` as well.
+ */
+export const ID_POST = '^\\s*(\\[([^\\] ]+ )?[0-9]{1,3}:[0-9]{2}(:[0-9]{2})?\\] ([^\\n]+ - [^\\n]+|no track starts here)\\s*)+$';
+
+/**
  * Where an ID is, as the page shows it wherever one appears: the side's label on a tape with sides, then the
  * time the way the player writes times. "A 0:01:55"; on a tape that is one recording, "0:01:55". (The comment
  * an ID is kept as writes its time the shorter way people do, `[A 1:55]`; see `composeId`.)

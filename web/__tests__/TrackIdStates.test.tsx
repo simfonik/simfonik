@@ -542,6 +542,31 @@ describe('a track the comments have ID’d', () => {
     expect(page.rows()).toEqual(['0:00:00Orbital — Chime', '0:05:41Joey Beltram — Energy Flash']);
   });
 
+  it('New ID inside it, named as the track playing or the one that starts next: it is not taken, and says why', async () => {
+    const page = tape();
+    await page.read();
+    await page.at(100);
+    await page.user.click(page.button(NEW_ID));
+    await page.user.type(artist(), 'Orbital');
+    await page.user.type(title(), 'Chime{Enter}');
+    expect(screen.getByRole('alert')).toHaveTextContent('That track is already here, at 0:00:00. One track can’t play twice in a row.');
+    await page.user.clear(artist());
+    await page.user.type(artist(), 'Joey Beltram');
+    await page.user.clear(title());
+    await page.user.type(title(), 'Energy Flash{Enter}');
+    expect(screen.getByRole('alert')).toHaveTextContent('That track is already here, at 0:05:00.');
+    expect(page.posts()).toEqual([]);
+    // With another track between the two, the same track again is another play of it.
+    const again = tapePage({ posted: [{ by: 'Josh', says: '[0:00] Orbital - Chime\n[5:00] Joey Beltram - Energy Flash' }] });
+    await again.read();
+    await again.at(500);
+    await again.user.click(again.button(NEW_ID));
+    await again.user.type(artist(), 'Orbital');
+    await again.user.type(title(), 'Chime{Enter}');
+    await waitFor(() => expect(again.posts()).toEqual(['[8:20] Orbital - Chime']));
+    await waitFor(() => expect(again.rows()).toEqual(['0:00:00Orbital — Chime', '0:05:00Joey Beltram — Energy Flash', '0:08:20Orbital — Chime']));
+  });
+
   it('New ID inside it: a new track from there, and this one ends where that starts', async () => {
     const page = tape();
     await page.read();

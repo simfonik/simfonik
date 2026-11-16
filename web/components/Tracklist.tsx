@@ -153,7 +153,7 @@ export function Tracklist() {
   if (sides.every(({ rows }) => rows.length === 0)) return null;
 
   return (
-    <section className="border-t-[1.5px] border-[var(--border)] pt-14 mt-16" aria-labelledby={headingId}>
+    <section id="tracklist" className="scroll-mt-4 border-t-[1.5px] border-[var(--border)] pt-14 mt-16" aria-labelledby={headingId}>
       <div className="max-w-3xl">
         <h2 id={headingId} className="font-display text-4xl sm:text-5xl leading-[0.95] text-[var(--text)] mb-5">
           Tracklist

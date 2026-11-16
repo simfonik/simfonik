@@ -3,6 +3,7 @@
 import { FormEvent, RefObject, useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { idLabel, idPlace } from '../lib/track-ids/compose';
+import { sameRecord } from '../lib/track-ids/moments';
 import { rememberedName } from '../lib/track-ids/post';
 import { asListed, canStartAt, isUnposted, playingAt, saidBy, startingAt, suggest, type Change, type Row } from '../lib/track-ids/side';
 import { formatTime, parseTime } from '../lib/time-utils';
@@ -349,6 +350,13 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
       if (!unchanged && taken) return refuse(`Another track starts at ${formatTime(taken.start as number)}.`, timeField.current);
       if (!unchanged && !canStartAt(others, entered, end)) return refuse('That is past where a track could start on this side.', timeField.current);
       to = entered;
+    }
+    // One track can't follow itself: named again where it is already playing, or just before where it
+    // starts, it is taken as the one play (`settle`), and the ID would show nowhere. So it is not taken.
+    if (what === 'id' && (artist.trim() || title.trim())) {
+      const others = rows.filter((row) => row !== mark && row.start !== null);
+      const twin = [others.findLast((row) => (row.start as number) < to), others.find((row) => (row.start as number) > to)].find((row) => row?.known && sameRecord(row, { artist, title }));
+      if (twin) return refuse(`That track is already here, at ${formatTime(twin.start as number)}. One track can’t play twice in a row.`, artistField.current);
     }
     // The list's own words for the track, where the names in the blanks are not the list's: the ID says
     // which line it is, and the line stays that line under its new name (compose.ts).

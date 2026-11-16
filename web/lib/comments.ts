@@ -1,6 +1,7 @@
 import { unstable_cache } from 'next/cache';
 import { sql } from './db';
 import { getTapeById } from './data';
+import { ID_POST, readComposed } from './track-ids/compose';
 
 export const COMMENTS_CACHE_TAG = 'comments';
 
@@ -25,6 +26,9 @@ export type RecentComment = {
   tape_title: string;
   dj_names: string;
 };
+
+/** A post of track IDs made on a tape's page (lib/track-ids/compose.ts), for the home page: who, on which tape, and how many. */
+export type RecentIds = RecentComment & { count: number };
 
 export type PaginatedComment = {
   id: number;
@@ -51,27 +55,45 @@ export const getTapeComments = unstable_cache(
   cacheOptions
 );
 
-const fetchRecentRows = unstable_cache(
+// The newest of each kind, talk and posts of track IDs, so that a run of one never crowds out the other.
+const fetchRecentTalk = unstable_cache(
   async (limit: number) => {
     const { rows } = await sql`
-      SELECT id, tape_id, author_name, created_at
+      SELECT id, tape_id, author_name, content, created_at
       FROM comments
-      WHERE approved = true
+      WHERE approved = true AND content !~* ${ID_POST}
       ORDER BY created_at DESC
       LIMIT ${limit}
     `;
-    return rows as Omit<TapeComment, 'content'>[];
+    return rows as TapeComment[];
   },
-  ['recent-comments'],
+  ['recent-talk'],
   cacheOptions
 );
 
+const fetchRecentIdPosts = unstable_cache(
+  async (limit: number) => {
+    const { rows } = await sql`
+      SELECT id, tape_id, author_name, content, created_at
+      FROM comments
+      WHERE approved = true AND content ~* ${ID_POST}
+      ORDER BY created_at DESC
+      LIMIT ${limit}
+    `;
+    return rows as TapeComment[];
+  },
+  ['recent-id-posts'],
+  cacheOptions
+);
+
+// The comments page lists what people have said. Posts of track IDs are on each tape's page, in its tracklist
+// and that tracklist's history.
 const fetchApprovedCount = unstable_cache(
   async () => {
     const { rows } = await sql`
       SELECT COUNT(*) as count
       FROM comments
-      WHERE approved = true
+      WHERE approved = true AND content !~* ${ID_POST}
     `;
     return parseInt(rows[0].count);
   },
@@ -85,7 +107,7 @@ const fetchPaginatedRows = unstable_cache(
     const { rows } = await sql`
       SELECT id, tape_id, author_name, content, created_at
       FROM comments
-      WHERE approved = true
+      WHERE approved = true AND content !~* ${ID_POST}
       ORDER BY created_at DESC
       LIMIT ${perPage}
       OFFSET ${offset}
@@ -96,37 +118,45 @@ const fetchPaginatedRows = unstable_cache(
   cacheOptions
 );
 
-export async function getRecentComments(limit = 10): Promise<RecentComment[]> {
+// How many posts of IDs are looked at for the home page: one sitting at one tape is often a dozen posts.
+const ID_POSTS_READ = 40;
+
+/**
+ * The newest of what has been said and the newest track IDs, `each` rows of each at the most, for the home
+ * page. One person's posts of IDs on one tape are one row, at the time of the newest, with the IDs of all of
+ * them counted: a sitting is told once. A post that only takes marks away is no news and is left out.
+ */
+export async function getRecentActivity(each = 4): Promise<{ comments: RecentComment[]; ids: RecentIds[] }> {
   try {
-    const rows = await fetchRecentRows(limit);
-
-    // Enrich with tape data
-    const enrichedComments = rows.map((comment) => {
+    // A few more than asked for: the reader's test may send one or two the other way.
+    const [talk, posts] = await Promise.all([fetchRecentTalk(each + 4), fetchRecentIdPosts(ID_POSTS_READ)]);
+    const comments: RecentComment[] = [];
+    const ids: RecentIds[] = [];
+    const sittings = new Map<string, RecentIds>();
+    for (const comment of [...talk, ...posts].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())) {
       const tape = getTapeById(comment.tape_id);
-      
-      if (!tape) {
-        return null;
+      if (!tape) continue;
+      // Truncate DJ names for display: show first 2 DJs + "..." if more
+      const djNames = tape.djs.length > 2 ? `${tape.djs[0].name}, ${tape.djs[1].name}, ...` : tape.djs.map((dj) => dj.name).join(', ');
+      const row = { id: comment.id, tape_id: comment.tape_id, author_name: comment.author_name, created_at: comment.created_at, tape_title: tape.title, dj_names: djNames };
+      const post = readComposed(comment.content, tape.sides.map((side) => side.position));
+      const count = post?.filter((id) => !id.gone).length;
+      if (!post) comments.push(row);
+      else if (count) {
+        const key = `${comment.author_name}\n${comment.tape_id}`;
+        const sitting = sittings.get(key);
+        if (sitting) sitting.count += count;
+        else {
+          const first = { ...row, count };
+          sittings.set(key, first);
+          ids.push(first);
+        }
       }
-
-      // Truncate DJ names for ticker display: show first 2 DJs + "..." if more
-      const djNames = tape.djs.length > 2
-        ? `${tape.djs[0].name}, ${tape.djs[1].name}, ...`
-        : tape.djs.map(dj => dj.name).join(', ');
-
-      return {
-        id: comment.id,
-        tape_id: comment.tape_id,
-        author_name: comment.author_name,
-        created_at: comment.created_at,
-        tape_title: tape.title,
-        dj_names: djNames,
-      };
-    }).filter((comment): comment is RecentComment => comment !== null);
-
-    return enrichedComments;
+    }
+    return { comments: comments.slice(0, each), ids: ids.slice(0, each) };
   } catch (error) {
-    console.error('Error fetching recent comments:', error);
-    return [];
+    console.error('Error fetching recent activity:', error);
+    return { comments: [], ids: [] };
   }
 }
 

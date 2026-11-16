@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import comments from '@/data/tape-comments.json';
 import tapes from '@/data/tapes.json';
-import { clock, composeId, composeRemoval, idLabel, idPlace, readComposed, splitComposed } from '@/lib/track-ids/compose';
+import { clock, composeId, composeRemoval, ID_POST, idLabel, idPlace, readComposed, splitComposed } from '@/lib/track-ids/compose';
 
 type Tape = { id: string; sides: { position: string }[] };
 
@@ -57,6 +58,21 @@ describe('IDs the site writes', () => {
     // A title that ends in brackets of its own is a title.
     expect(splitComposed('[1:00] Moby - Go [Woodtick Mix]')).toEqual({ position: null, time: 60, artist: 'Moby', title: 'Go [Woodtick Mix]', gone: false });
     expect(splitComposed('[1:00] Moby - Go [was Moby - Go [Woodtick Mix]]')?.line).toEqual({ artist: 'Moby', title: 'Go [Woodtick Mix]' });
+  });
+
+  it('has a pattern a database can tell a post of IDs by, which says what the reader says of every comment', () => {
+    const post = new RegExp(ID_POST, 'i');
+    const posts = ['[1:00] Moby - Go', '[B 1:02:03] ? - ?', '[A 12:34] no track starts here', '[1:00] Moby - Go\n[2:00] LFO - LFO\n', '[1:00] Moby - Go\r\n[2:00] No Track Starts Here', '[B 12:34] Moby - Go (Woodtick Mix) [was Moby - Go]'];
+    const talk = ['what a tape', '[1:00] great bit', 'Moby - Go at [1:00]', '[1:00] Moby - Go\nlove this one', 'Side A\n[00:00] Hope - Tree Frog', '[1:00]Moby - Go', ''];
+    // (A line with a side's label is of a tape with sides, and one without is of a tape that is one recording.)
+    const sides = (content: string) => (/^\[[AB] /.test(content) ? ['A', 'B'] : ['A']);
+    for (const content of posts) expect([post.test(content), readComposed(content, sides(content)) !== null], content).toEqual([true, true]);
+    for (const content of talk) expect([post.test(content), readComposed(content, sides(content)) !== null], content).toEqual([false, false]);
+    // Every comment in the archive, each on its own tape: none was made with the form, and none reads as if it were.
+    for (const [tapeId, said] of Object.entries(comments as Record<string, { content: string }[]>)) {
+      const positions = (tapes as Tape[]).find((tape) => tape.id === tapeId)?.sides.map((side) => side.position) ?? [];
+      for (const { content } of said) expect([post.test(content), readComposed(content, positions) !== null], content.slice(0, 60)).toEqual([false, false]);
+    }
   });
 
   it('takes its own form apart without knowing the tape, for showing in the comments', () => {
