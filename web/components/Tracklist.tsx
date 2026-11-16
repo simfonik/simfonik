@@ -54,7 +54,8 @@ const chevron = (
  * time carries its number in the list where the time will go. While its side plays, the rows that could be
  * the track starting now have a + there instead, and pressing it gives the row that moment. A row that has
  * its time has "Edit", which opens the blanks at the player for that track: its name put right, its time
- * moved to where the tape is, or the ID taken away.
+ * moved, or the ID taken away. With a mouse the blanks open in the row itself (the row makes a place for
+ * them, and components/TrackIds.tsx puts them there); on a phone they are the sheet.
  *
  * What the visitor has said and not posted (a + here, a point marked by ear up at the player) is on its row
  * like any other time, in full colour, with the way to take it back. A bar at the foot of the screen says how
@@ -64,7 +65,7 @@ const chevron = (
  * and out of the comments, where a run of them would bury the talk.
  */
 export function Tracklist() {
-  const { tape, sides, read, name: remembered, unposted, goTo, playhead, say, unsay, post: send, ask } = useTapeTrackIds();
+  const { tape, sides, read, name: remembered, unposted, goTo, playhead, say, unsay, post: send, ask, editing, setSlot } = useTapeTrackIds();
   const several = tape.length > 1;
   const labelled = several || Boolean(tape[0]?.title);
   const place = (side: number) => (several ? tape[side].position : null);
@@ -176,6 +177,8 @@ export function Tracklist() {
                 lit={live === i ? lit : -1}
                 markable={live === i ? markable : NONE}
                 movable={live === i ? movable : NONE}
+                editing={editing && editing.position === place(i) ? editing.time : null}
+                slot={setSlot}
                 onPlay={(start) => goTo(place(i), start)}
                 onMark={(k) => mark(i, k)}
                 onUndo={unsay}
@@ -196,10 +199,10 @@ export function Tracklist() {
                   <span className="inline-block">{count(unposted.length)} not posted</span>
                   {remembered && (
                     <>
-                      {' '}
-                      <span className="inline-block">
-                        as <span className="text-[var(--text)]">{remembered}</span>
-                      </span>
+                          {' '}
+                          <span className="inline-block">
+                            as <span className="text-[var(--text)]">{remembered}</span>
+                          </span>
                     </>
                   )}
                 </p>
@@ -261,6 +264,9 @@ type SideListProps = {
   markable: Set<number>;
   /** The timed rows whose time could be moved to the moment the tape is at. */
   movable: Set<number>;
+  /** The start of the row whose blanks are open in it, or null, and how the row gives them their place. */
+  editing: number | null;
+  slot: (place: HTMLElement | null) => void;
   onPlay: (start: number) => void;
   onMark: (row: number) => void;
   onUndo: (change: NonNullable<Row['mine']>) => void;
@@ -268,7 +274,7 @@ type SideListProps = {
   onEdit: (start: number) => void;
 };
 
-function SideList({ heading, summary, rows, position, silent, lit, markable, movable, onPlay, onMark, onUndo, onIdentify, onEdit }: SideListProps) {
+function SideList({ heading, summary, rows, position, silent, lit, markable, movable, editing, slot, onPlay, onMark, onUndo, onIdentify, onEdit }: SideListProps) {
   const collapsible = rows.length > COLLAPSED_COUNT;
   // A side that is short when it first shows is never folded later, when a row is added to it.
   const [expanded, setExpanded] = useState(!collapsible);
@@ -302,12 +308,25 @@ function SideList({ heading, summary, rows, position, silent, lit, markable, mov
     if (was.bottom <= 0) window.scrollTo({ top: was.scroll + grew, behavior: 'instant' });
   }, [expanded]);
 
+  // When the blanks in a row shut with the keyboard still in them, it goes to what opened them in that row;
+  // or, the track having been moved or taken away, to the row now nearest in time to where it was.
+  const list = useRef<HTMLOListElement>(null);
+  const edited = useRef<number | null>(null);
+  useEffect(() => {
+    const was = edited.current;
+    edited.current = editing;
+    if (was === null || editing !== null || document.activeElement !== document.body) return;
+    const far = (row: HTMLElement) => Math.abs(Number(row.dataset.start) - was);
+    const [nearest] = [...(list.current?.querySelectorAll<HTMLElement>('[data-start]') ?? [])].sort((a, b) => far(a) - far(b));
+    (nearest?.querySelector<HTMLElement>('.tracklist-cue') ?? nearest?.querySelector<HTMLElement>('.tracklist-time'))?.focus({ preventScroll: true });
+  }, [editing]);
+
   return (
     <div ref={whole}>
       {heading && <h3 className="font-display text-xl leading-tight text-[var(--text)] mb-1">{heading}</h3>}
       {summary && <p className={`${small} mb-3`}>{summary}</p>}
       {/* Pulled out by a row's own padding, so what is in the rows starts on the edge the heading does. */}
-      <ol id={listId} className={`-mx-2${all ? '' : ' tracklist-fade'}`}>
+      <ol ref={list} id={listId} className={`-mx-2${all ? '' : ' tracklist-fade'}`}>
         {rows.map((row, k) => {
           const label = row.known ? [row.artist, row.title].filter(Boolean).join(' — ') : 'Unknown track';
           const unposted = isUnposted(row);
@@ -319,8 +338,13 @@ function SideList({ heading, summary, rows, position, silent, lit, markable, mov
               hidden={!all && k >= COLLAPSED_COUNT}
               aria-current={k === lit ? 'true' : undefined}
               data-movable={movable.has(k) ? '' : undefined}
+              data-start={row.start ?? undefined}
               className="tracklist-row"
             >
+              {row.start !== null && row.start === editing ? (
+                <div ref={slot} className="tracklist-blanks" />
+              ) : (
+                <>
               <span>
                 {row.start !== null && silent ? (
                   <span className="tracklist-n">{formatTime(row.start)}</span>
@@ -383,6 +407,8 @@ function SideList({ heading, summary, rows, position, silent, lit, markable, mov
                   ))
                 )}
               </span>
+                </>
+              )}
             </li>
           );
         })}

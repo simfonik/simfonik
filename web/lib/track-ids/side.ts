@@ -103,11 +103,21 @@ const same = (a: Named, b: Named) => sameRecord(a, b) || spelt(a) === spelt(b);
  *   always beats a mark without one. The visitor's own unposted change never replaces a name: it was made
  *   when there was none to replace, and one has turned up since.
  * · A change further off is a new track from there.
- * · A mark taken away is gone, with everything said of it.
+ * · A mark taken away is gone, with everything said of it before. What is said of it in the same post
+ *   stands, as the reader has it: so of changes said together, what they take away is taken away first, and
+ *   a track moved by a few seconds isn't taken away with the ID that moved it.
  */
 export function withChanges(said: Moment[], changes: Change[], length = Infinity): Timed[] {
   const moments: (Moment & { mine?: Change })[] = [...said];
-  for (const change of changes) {
+  const inOrder: Change[] = [];
+  for (let from = 0; from < changes.length; ) {
+    let to = from + 1;
+    while (to < changes.length && saidWhen(changes[to]) === saidWhen(changes[from])) to++;
+    const together = changes.slice(from, to);
+    inOrder.push(...together.filter((change) => change.gone), ...together.filter((change) => !change.gone));
+    from = to;
+  }
+  for (const change of inOrder) {
     const where = { position: null, time: change.time };
     // A line the site writes always reads back (compose.test.ts holds it to that on every tape).
     const line = splitComposed(change.gone ? composeRemoval(where) : composeId({ ...where, artist: change.artist, title: change.title })) as Composed;

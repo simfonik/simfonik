@@ -433,6 +433,18 @@ body::before {
 @media (hover: hover) and (pointer: fine) {
   .track-ids-field { font-size: 12px; }
 }
+/* The time is a blank too, as wide as a time and no wider, with its figures in columns. It is as quiet as
+   the time it stands in for until it is the blank being typed in. */
+.track-ids-when { flex: none; width: 8ch; font-variant-numeric: tabular-nums; letter-spacing: normal; color: var(--muted); }
+.track-ids-when:focus-visible { color: var(--text); }
+/* In the sheet it has a row and a label of its own, and reads as the other blanks do. */
+.id-sheet .track-ids-when { color: var(--text); }
+/* The blanks open in a row of the tracklist: across the whole row, which gives up its own padding to the
+   blanks' height, with the time's blank as wide as the column of times it stands in. */
+.tracklist-blanks { grid-column: 1 / -1; }
+.tracklist-blanks:has(p:not(:empty)) { padding-bottom: 0.5rem; }
+.tracklist-row:has(> .tracklist-blanks) { padding-block: 0; background: var(--bg-hover); }
+.tracklist-blanks .track-ids-when { width: 3.25rem; }
 .track-ids-field::placeholder { color: var(--muted); }
 .track-ids-field:focus-visible { --rule: var(--text); background-size: 100% 1.5px; }
 .track-ids-post {

@@ -5,13 +5,13 @@ import { createPortal } from 'react-dom';
 import { idLabel, idPlace } from '../lib/track-ids/compose';
 import { rememberedName } from '../lib/track-ids/post';
 import { canMoveTo, canStartAt, isUnposted, playingAt, saidBy, startingAt, suggest, type Change, type Row } from '../lib/track-ids/side';
-import { formatTime } from '../lib/time-utils';
+import { formatTime, parseTime } from '../lib/time-utils';
 import { usePlayhead, useSide, useTapeTrackIds } from './TapeTrackIds';
 
 /** The most an artist or a title may run to, in characters: far past any real one, and a comment line stays a line. */
 const NAME_LENGTH = 150;
 
-/** What the blanks are about to do: post the ID in them, take the mark away, or move it to where the tape is. */
+/** What the blanks are about to do: post what is in them, take the mark away, or move it to where the tape is. */
 type Act = 'id' | 'remove' | 'move';
 
 /**
@@ -95,7 +95,11 @@ type Props = {
  * The blanks are always about one mark: the track playing, or, with nothing playing, a new one at this
  * moment. A name already there is pressed to put it right. A mark can also be taken away, or moved to where
  * the tape is now, earlier or later, as long as no other track starts between the two; both are posts like
- * any other. (A track that isn't the one playing is reached from its row in the tracklist.)
+ * any other. The time in the blanks is a blank too: typed over, the track is moved to the time typed, wherever
+ * a track could start.
+ *
+ * A track that isn't the one playing is reached from its row in the tracklist, and with a mouse its blanks
+ * open in that row, where the visitor is looking, and the tape is left where it is.
  *
  * Beside the line are the two ways to say that a track starts here: "New ID" opens the blanks to say which,
  * and "New unknown" says only that one does, in one press, so a visitor can go through a tape setting the
@@ -115,7 +119,7 @@ type Props = {
  */
 export function TrackIds({ side, position, time, isPlaying, onToggle, length = null }: Props) {
   const { rows, order, length: end } = useSide(side);
-  const { read, say, unsay, post: send, asked, answered } = useTapeTrackIds();
+  const { read, say, unsay, post: send, asked, answered, editing, setEditing, slot } = useTapeTrackIds();
   const played = usePlayhead((head) => head.started);
   const now = Math.floor(time);
   const playing = rows[playingAt(rows, time)] ?? null;
@@ -139,6 +143,8 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   // Counts each time the name is asked for after the blanks are open, so the keyboard can go to it.
   const [nameWanted, setNameWanted] = useState(0);
   const [offers, setOffers] = useState<Row[]>([]);
+  // The time as it stands in its blank, which the visitor may type over.
+  const [when, setWhen] = useState('');
   const [artist, setArtist] = useState('');
   const [title, setTitle] = useState('');
   const [name, setName] = useState('');
@@ -148,15 +154,18 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   const line = useRef<HTMLButtonElement>(null);
   const trayId = useRef<HTMLButtonElement>(null);
   const dialog = useRef<HTMLDialogElement>(null);
+  const timeField = useRef<HTMLInputElement>(null);
   const artistField = useRef<HTMLInputElement>(null);
   const titleField = useRef<HTMLInputElement>(null);
   const nameField = useRef<HTMLInputElement>(null);
   const messageId = useId();
 
-  const begin = (marked: Row | null, start: number) => {
+  const begin = (marked: Row | null, start: number, inRow = false) => {
     const onPhone = window.matchMedia(PHONE).matches;
     const remembered = rememberedName();
     setAt(start);
+    setWhen(formatTime(start));
+    setEditing(inRow && !onPhone ? { position, time: start } : null);
     setThere(marked && played && read !== 'reading' && canMoveTo(rows, marked, now, end) ? now : null);
     setDoing('id');
     setArtist(marked?.known ? marked.artist : '');
@@ -191,14 +200,23 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   // and the tape's place as they are when the asking is heard.
   const answer = useRef<(time: number) => void>(() => {});
   useEffect(() => {
-    answer.current = (start) => begin(rows.find((row) => row.start === start) ?? null, start);
+    answer.current = (start) => begin(rows.find((row) => row.start === start) ?? null, start, true);
   });
   useEffect(() => {
     if (!asked || asked.position !== position) return;
     answered();
     answer.current(asked.time);
   }, [asked, position, answered]);
-  const shut = () => setAt(null);
+  const shut = () => {
+    setAt(null);
+    setEditing(null);
+  };
+  // Blanks open in a row go when the row does (the comments, read again, may no longer have the track).
+  const rowGone = editing !== null && at !== null && !rows.some((row) => row.start === editing.time);
+  useEffect(() => {
+    if (rowGone) shut();
+  });
+  useEffect(() => () => setEditing(null), [setEditing]);
   // The sheet goes back down the way it came up; the blanks in the line just go.
   const leave = () => (sheet && dialog.current ? dismiss(dialog.current) : shut());
 
@@ -235,12 +253,20 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   // The keyboard follows: into the blanks as they open, on to the name when it is asked for, and back to the
   // line when they shut.
   const wasOpen = useRef(false);
+  const wasInRow = useRef(false);
   useEffect(() => {
     if (at === null) {
-      if (wasOpen.current) (trayId.current ?? line.current)?.focus();
-    } else if (!wasOpen.current) focus(artistField.current, sheet);
-    wasOpen.current = at !== null;
-  }, [at, sheet]);
+      // From a row, the keyboard goes back to the row (the tracklist sees to it), not up the page to the line.
+      if (wasOpen.current && !wasInRow.current) (trayId.current ?? line.current)?.focus();
+      wasOpen.current = false;
+      return;
+    }
+    // In a row the blanks are there once the row has made its place for them.
+    if (editing && !slot) return;
+    if (!wasOpen.current) focus(artistField.current, sheet);
+    wasOpen.current = true;
+    wasInRow.current = editing !== null;
+  }, [at, sheet, editing, slot]);
   useEffect(() => {
     if (nameWanted > 0) focus(nameField.current, sheet);
   }, [nameWanted, sheet]);
@@ -261,6 +287,15 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   };
   const typed = (set: (value: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
     set(e.target.value);
+    settle();
+  };
+  // In the time's blank the up and down arrows move it a second at a time, ten with Shift held.
+  const nudge = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const by = e.key === 'ArrowUp' ? 1 : e.key === 'ArrowDown' ? -1 : 0;
+    const time = parseTime(when);
+    if (!by || time === null) return;
+    e.preventDefault();
+    setWhen(formatTime(Math.max(0, time + by * (e.shiftKey ? 10 : 1))));
     settle();
   };
   const take = (offer: Row) => {
@@ -284,21 +319,37 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
 
   async function act(what: Act) {
     if (status === 'sending' || at === null) return;
-    // The visitor's own unposted mark is theirs to take back: nothing was said, so nothing is posted.
-    if (what === 'remove' && mark?.mine && !mark.mine.sent) {
-      unsay(mark.mine);
+    // The visitor's own unposted mark is theirs to take back or move: nothing was said, so nothing is posted.
+    const own = mark?.mine && !mark.mine.sent ? mark.mine : null;
+    if (what === 'remove' && own) {
+      unsay(own);
       setThanks('Taken back.');
       return leave();
     }
-    // And theirs to move: it is said again at the new moment, and waits to be posted as it did.
-    if (what === 'move' && there !== null && mark?.mine && !mark.mine.sent) {
-      unsay(mark.mine);
-      say({ side, time: there, artist, title });
-      setThanks(`Moved to ${idPlace(position, there)}. Not posted yet.`);
+    // Where the track is to start: where the tape was, for "Starts at … instead", or else the time in its
+    // blank. A time other than the one it has must be one a track could start at with this one set aside.
+    let to = at;
+    if (what === 'move' && there !== null) to = there;
+    else if (what === 'id') {
+      const entered = parseTime(when);
+      if (entered === null) return refuse('Enter the time like 0:05:00.', timeField.current);
+      const others = rows.filter((row) => row !== mark);
+      const taken = others[startingAt(others, entered)];
+      if (entered !== at && taken) return refuse(`Another track starts at ${formatTime(taken.start as number)}.`, timeField.current);
+      if (entered !== at && !canStartAt(others, entered, end)) return refuse('That is past where a track could start on this side.', timeField.current);
+      to = entered;
+    }
+    const moved = mark !== null && to !== at;
+    const renamed = artist.trim() !== (mark?.known ? mark.artist : '') || title.trim() !== (mark?.known ? mark.title : '');
+    // Moved and nothing more, the visitor's own is said again at the new moment, and waits to be posted as it did.
+    if (own && moved && !(what === 'id' && renamed)) {
+      unsay(own);
+      say({ side, time: to, artist, title });
+      setThanks(`Moved to ${idPlace(position, to)}. Not posted yet.`);
       return leave();
     }
     // Only an ID needs a name: a mark is taken away or moved as it is, named or not.
-    if (what === 'id' && !artist.trim() && !title.trim()) return refuse('Enter the artist or the title.', artistField.current);
+    if (what === 'id' && !moved && !artist.trim() && !title.trim()) return refuse('Enter the artist or the title.', artistField.current);
     if (!name.trim()) {
       if (askName) return refuse('Enter your name.', nameField.current);
       // The line asks for the name as a step of its own, and the step ends in what was being done.
@@ -306,16 +357,18 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
       return wantName();
     }
     // Taking a mark away is one line; moving it is that line and the ID at its new place, in one post.
-    const gone: Change[] = mark && what !== 'id' ? [{ side, time: mark.start as number, artist: '', title: '', gone: true }] : [];
-    const id: Change[] = what === 'remove' ? [] : [{ side, time: what === 'move' && there !== null ? there : at, artist, title }];
+    const gone: Change[] = mark && !own && (what === 'remove' || moved) ? [{ side, time: mark.start as number, artist: '', title: '', gone: true }] : [];
+    const id: Change[] = what === 'remove' ? [] : [{ side, time: to, artist, title }];
 
     setStatus('sending');
     setMessage('');
     const failed = await send([...gone, ...id], name);
     // In the line the name, once asked for, is the only blank there is.
     if (failed) return refuse(failed, askName && !sheet ? nameField.current : artistField.current);
+    // The visitor's own mark, named and moved in one go, has been posted where it went: it no longer waits where it was.
+    if (own && moved) unsay(own);
     setStatus('idle');
-    setThanks(what === 'remove' ? 'Removed.' : what === 'move' ? 'Moved. Thanks.' : 'Posted. Thanks.');
+    setThanks(what === 'remove' ? 'Removed.' : moved ? 'Moved. Thanks.' : 'Posted. Thanks.');
     leave();
   }
   const post = (e: FormEvent) => {
@@ -347,6 +400,13 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
       </button>
     </>
   );
+  // The time, in the same quiet type as before, and a blank: with the side's label before it where the tape has sides.
+  const timeBlank = (
+    <>
+      {position !== null && <span className="track-ids-where">{position}</span>}
+      <input ref={timeField} value={when} onChange={typed(setWhen)} onKeyDown={nudge} aria-label="Starts at" aria-describedby={message ? messageId : undefined} inputMode="numeric" autoComplete="off" maxLength={9} enterKeyHint="send" className="track-ids-field track-ids-when" />
+    </>
+  );
   const cross = (
     <svg className="h-3 w-3" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
       <path d="M1 1l12 12M13 1L1 13" />
@@ -362,9 +422,53 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   // Said beside a mark wherever it is the visitor's own and not posted, so no part of the page shows it as the tape's.
   const unposted = playing !== null && isUnposted(playing);
 
+  // The blanks, where there is no sheet: in the line's own place, or in the row of the tracklist they were
+  // opened from.
+  const inRow = editing !== null;
+  const blanks = at !== null && !sheet && (
+    <form onSubmit={post} noValidate onKeyDown={(e) => e.key === 'Escape' && shut()} aria-label={`ID the track at ${where}`} className={inRow ? undefined : 'mt-2'}>
+      {/* The line itself, with blanks where the names go: the same type in the same place, a rule under
+          each blank, and no boxes. */}
+      <div className="flex min-h-11 items-center gap-x-3">
+        {timeBlank}
+        {askName ? (
+          <input ref={nameField} value={name} onChange={typed(setName)} placeholder="Your name" aria-label="Your name" aria-describedby={message ? messageId : undefined} autoComplete="name" maxLength={100} enterKeyHint="send" className="track-ids-field" />
+        ) : (
+          <>
+            <input ref={artistField} value={artist} onChange={typed(setArtist)} placeholder="Artist" aria-label="Artist" maxLength={NAME_LENGTH} aria-describedby={message ? messageId : undefined} autoComplete="off" autoCapitalize="words" enterKeyHint="send" className="track-ids-field" />
+            <span aria-hidden className="text-[var(--muted)]">
+              —
+            </span>
+            <input value={title} onChange={typed(setTitle)} placeholder="Title" aria-label="Title" maxLength={NAME_LENGTH} autoComplete="off" autoCapitalize="words" enterKeyHint="send" className="track-ids-field" />
+          </>
+        )}
+        <div className="flex items-center">
+          <button type="submit" aria-disabled={sending} className="track-ids-post">
+            {posting}
+          </button>
+          <button type="button" onClick={shut} aria-label="Cancel" className="track-ids-shut">
+            {cross}
+          </button>
+        </div>
+      </div>
+      {offers.length > 0 && !askName && (
+        <div role="group" aria-label={from} className="track-ids-offers">
+          {offers.map((offer) => (
+            <button key={offer.n} type="button" onClick={() => take(offer)} className="track-ids-offer" title={from}>
+              <span>{offer.n}</span>
+              {offer.artist} — {offer.title}
+            </button>
+          ))}
+        </div>
+      )}
+      {upkeep && !askName && <div className="flex flex-wrap gap-x-6">{upkeep}</div>}
+      {complaint}
+    </form>
+  );
+
   return (
     <div className="track-ids">
-      {at === null || sheet ? (
+      {at === null || sheet || inRow ? (
         // As tall as the blanks that take its place, so nothing below moves when they do. Under the sheet it
         // stays as it was.
         <div className="track-ids-row mt-2 flex min-h-11 items-center gap-x-3">
@@ -391,45 +495,9 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
           )}
         </div>
       ) : (
-        <form onSubmit={post} noValidate onKeyDown={(e) => e.key === 'Escape' && shut()} aria-label={`ID the track at ${where}`} className="mt-2">
-          {/* The line itself, with blanks where the names go: the same type in the same place, a rule under
-              each blank, and no boxes. */}
-          <div className="flex min-h-11 items-center gap-x-3">
-            <span className="track-ids-where">{where}</span>
-            {askName ? (
-              <input ref={nameField} value={name} onChange={typed(setName)} placeholder="Your name" aria-label="Your name" aria-describedby={message ? messageId : undefined} autoComplete="name" maxLength={100} enterKeyHint="send" className="track-ids-field" />
-            ) : (
-              <>
-                <input ref={artistField} value={artist} onChange={typed(setArtist)} placeholder="Artist" aria-label="Artist" maxLength={NAME_LENGTH} aria-describedby={message ? messageId : undefined} autoComplete="off" autoCapitalize="words" enterKeyHint="send" className="track-ids-field" />
-                <span aria-hidden className="text-[var(--muted)]">
-                  —
-                </span>
-                <input value={title} onChange={typed(setTitle)} placeholder="Title" aria-label="Title" maxLength={NAME_LENGTH} autoComplete="off" autoCapitalize="words" enterKeyHint="send" className="track-ids-field" />
-              </>
-            )}
-            <div className="flex items-center">
-              <button type="submit" aria-disabled={sending} className="track-ids-post">
-                {posting}
-              </button>
-              <button type="button" onClick={shut} aria-label="Cancel" className="track-ids-shut">
-                {cross}
-              </button>
-            </div>
-          </div>
-          {offers.length > 0 && !askName && (
-            <div role="group" aria-label={from} className="track-ids-offers">
-              {offers.map((offer) => (
-                <button key={offer.n} type="button" onClick={() => take(offer)} className="track-ids-offer" title={from}>
-                  <span>{offer.n}</span>
-                  {offer.artist} — {offer.title}
-                </button>
-              ))}
-            </div>
-          )}
-          {upkeep && !askName && <div className="flex flex-wrap gap-x-6">{upkeep}</div>}
-          {complaint}
-        </form>
+        blanks
       )}
+      {inRow && slot && createPortal(blanks, slot)}
       {at !== null && sheet && (
         <dialog
           ref={dialog}
@@ -452,7 +520,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
                 {cross}
               </button>
               <p className="id-sheet-label min-w-0 flex-1 truncate">
-                ID this track <span className="id-sheet-where">{where}</span>
+                ID this track
               </p>
               <button type="submit" aria-disabled={sending} className="poster-btn id-sheet-post">
                 {posting}
@@ -475,6 +543,10 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
             {/* A phone's keyboard would put "Altern 8" right and offer words for "Orbital": neither helps. The
                 blanks stand a little apart, so each reads as a line of its own. */}
             <div className="grid gap-2">
+              <label className="id-sheet-label flex items-center gap-3">
+                Starts at
+                {timeBlank}
+              </label>
               <input ref={artistField} value={artist} onChange={typed(setArtist)} onKeyDown={onward(titleField)} placeholder="Artist" aria-label="Artist" maxLength={NAME_LENGTH} aria-describedby={message ? messageId : undefined} autoComplete="off" autoCapitalize="words" autoCorrect="off" spellCheck={false} enterKeyHint="next" className="track-ids-field" />
               <input ref={titleField} value={title} onChange={typed(setTitle)} onKeyDown={askName && !name.trim() ? onward(nameField) : undefined} placeholder="Title" aria-label="Title" maxLength={NAME_LENGTH} autoComplete="off" autoCapitalize="words" autoCorrect="off" spellCheck={false} enterKeyHint={askName && !name.trim() ? 'next' : 'send'} className="track-ids-field" />
               {askName && (

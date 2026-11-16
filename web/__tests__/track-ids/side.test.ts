@@ -34,6 +34,17 @@ describe('a side’s tracks with the visitor’s changes among them', () => {
     expect(times(withChanges(posted, []))).toEqual(['0-240 Orbital / Chime', '240-480 ??', '600-1200 Joey Beltram / Energy Flash']);
   });
 
+  it('have a track moved a few seconds as moved, whichever of the post’s two lines comes first', () => {
+    // The ID at its new time is within a moment of the old one: taken first, it is said of the track being
+    // taken away, and must not go with it.
+    const moved = (to: number) => [gone(600), said(to, 'Joey Beltram', 'Energy Flash', sent)];
+    for (const to of [595, 597, 603, 605]) {
+      const tracks = ['0-240 Orbital / Chime', '240-480 ??', `${to}-${to + 600} Joey Beltram / Energy Flash`];
+      expect(times(withChanges(posted, moved(to))), `to ${to}`).toEqual(tracks);
+      expect(times(withChanges(posted, moved(to).reverse())), `to ${to}, the ID first`).toEqual(tracks);
+    }
+  });
+
   it('have a change at a moment of its own as a new track from there, until the next one starts', () => {
     const change = said(500);
     const ids = withChanges(posted, [change]);
@@ -581,9 +592,12 @@ describe('every side in the archive', () => {
         cases.push({ what: 'removed', changes: [gone] });
         cases.push({ what: 'renamed', changes: [said(row.start, 'Zzyzx Road', 'Quite Unlike Anything', posted)] });
         const rest = rows.filter((r) => r !== row);
-        for (const off of [-30, -9, -3, 3, 9, 30]) {
+        for (const off of [-30, -9, -5, -3, -1, 1, 3, 5, 9, 30]) {
           const to = row.start + off;
-          if (to >= 0 && canStartAt(rest, to, end)) cases.push({ what: 'moved', changes: [gone, said(to, row.known ? row.artist : '', row.known ? row.title : '', posted)] });
+          if (to < 0 || !canStartAt(rest, to, end)) continue;
+          // In either order: the page keeps the changes of a post in the order of the comment's lines, which is by time.
+          const id = said(to, row.known ? row.artist : '', row.known ? row.title : '', posted);
+          cases.push({ what: 'moved', changes: [gone, id] }, { what: 'moved', changes: [id, gone] });
         }
       }
 

@@ -14,6 +14,17 @@ export function formatTimeAgo(dateString: string): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
+/**
+ * A time as a visitor types one: 0:05:00, 5:00 or 1:02:03, with a colon between the parts, or a full stop or
+ * a space (a phone's number keys don't always have the colon). In seconds, or null if it is no time.
+ */
+export function parseTime(text: string): number | null {
+  const parts = text.trim().split(/[:.\s]+/);
+  if (parts.length < 2 || parts.length > 3 || parts.some((part) => !/^\d{1,3}$/.test(part))) return null;
+  const [secs, mins, hours = 0] = parts.map(Number).reverse();
+  return secs < 60 && (parts.length === 2 || mins < 60) ? hours * 3600 + mins * 60 + secs : null;
+}
+
 /** A time on a tape side, always h:mm:ss with its zeros (0:01:55): how the player and every track ID say one. */
 export function formatTime(seconds: number): string {
   if (!isFinite(seconds)) return '0:00:00';

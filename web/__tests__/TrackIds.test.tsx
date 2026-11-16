@@ -229,6 +229,8 @@ describe('the sheet, on a phone', () => {
     const sheet = screen.getByRole('dialog', { name: 'ID the track at 0:00:00' });
     expect(within(sheet).getByRole('button', { name: 'Remove this ID' })).toBeInTheDocument();
     expect(within(sheet).getByRole('button', { name: 'Starts at 0:01:40 instead' })).toBeInTheDocument();
+    // And the time, which can be typed over.
+    expect(within(sheet).getByRole('textbox', { name: 'Starts at' })).toHaveValue('0:00:00');
   });
 });
 
