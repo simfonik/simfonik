@@ -81,12 +81,46 @@ export function tracklistRows(order: RunningOrder | null, ids: TrackId[]): Track
     const said = id?.known ? id : line;
     return { n: line.n, artist: said.artist, title: said.title, known: said.known, start: id?.start ?? null, end: id?.end ?? null, by: id?.by ?? null, ...(line.link ? { link: line.link } : {}), ...(line.duration ? { duration: line.duration } : {}) };
   });
-  for (const id of timed) {
-    if (taken.has(id)) continue;
-    const after = rows.findLastIndex((row) => row.start !== null && row.start <= id.start);
-    rows.splice(after + 1, 0, fromId(id));
+  return placeByTime(rows, timed.filter((id) => !taken.has(id)).map(fromId));
+}
+
+/**
+ * Rows that are not lines of the list (an ID the list has no line for, a point marked by ear) take their
+ * place among those that are by time: each after the last row known to start before it. The lines keep the
+ * list's order. Done again whenever a line gets a time, or a row that was after it could be left ahead of it.
+ */
+export function placeByTime<Line extends { start: number | null }, Other extends { start: number | null }>(lines: Line[], others: Other[]): (Line | Other)[] {
+  const rows: (Line | Other)[] = [...lines];
+  for (const other of [...others].sort((a, b) => (a.start as number) - (b.start as number))) {
+    const after = rows.findLastIndex((row) => row.start !== null && row.start <= (other.start as number));
+    rows.splice(after + 1, 0, other);
   }
   return rows;
+}
+
+/**
+ * Which rows could be given a moment of the side as their start without breaking the list's order: lines of
+ * the list with no time yet, where every timed line above them starts before that moment and every timed
+ * line below them after it. A list says what order its tracks play in, and a time may not say otherwise.
+ * The numbers are the rows' places in `rows`.
+ */
+export function couldStartAt(rows: { n: number | null; start: number | null }[], time: number): number[] {
+  const lines = rows.map((row, k) => ({ row, k })).filter(({ row }) => row.n !== null);
+  // The latest start above each line, and the earliest below it.
+  const above: number[] = [];
+  let latest = -Infinity;
+  for (const { row } of lines) {
+    above.push(latest);
+    if (row.start !== null) latest = Math.max(latest, row.start);
+  }
+  const out: number[] = [];
+  let earliest = Infinity;
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const { row, k } = lines[i];
+    if (row.start === null && above[i] < time && time < earliest) out.push(k);
+    if (row.start !== null) earliest = Math.min(earliest, row.start);
+  }
+  return out.reverse();
 }
 
 /** A line is done when it has a name and a time. */

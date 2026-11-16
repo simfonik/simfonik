@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { RunningOrder, TrackId } from '@/lib/track-ids/compose';
-import { contributors, isDone, tracklistRows } from '@/lib/track-ids/tracklist';
+import { contributors, couldStartAt, isDone, placeByTime, tracklistRows } from '@/lib/track-ids/tracklist';
 
 const id = (start: number, artist: string, title: string, by = 'Rents'): TrackId => ({ start, end: start + 240, artist, title, known: Boolean(artist || title), by });
 const order: RunningOrder = {
@@ -65,6 +65,50 @@ describe('a side’s tracklist', () => {
       '9 805 Sound Set / So In Love With You',
       '- 900 Oval Emotion / Do It',
     ]);
+  });
+});
+
+describe('the order of a side’s rows', () => {
+  const line = (n: number, start: number | null) => ({ n, start });
+  const other = (start: number) => ({ n: null, start });
+
+  it('is the list’s for its lines, and by time for whatever is not a line of it', () => {
+    expect(placeByTime([line(1, 0), line(2, null), line(3, 400)], [other(450), other(100)])).toEqual([line(1, 0), other(100), line(2, null), line(3, 400), other(450)]);
+  });
+
+  it('keeps a row that is not a line in its place by time when a line beside it is given one', () => {
+    // An ID with no line in the list, at 9:52, after the last line timed before it.
+    expect(placeByTime([line(12, 496), line(13, null), line(14, null)], [other(592)])).toEqual([line(12, 496), other(592), line(13, null), line(14, null)]);
+    // Line 13 is then timed at 8:42: the ID at 9:52 is after it, not before.
+    expect(placeByTime([line(12, 496), line(13, 522), line(14, null)], [other(592)])).toEqual([line(12, 496), line(13, 522), other(592), line(14, null)]);
+  });
+});
+
+describe('the lines that could start at a moment', () => {
+  const rows = [
+    { n: 1, start: 0 },
+    { n: 2, start: null },
+    { n: null, start: 150 },
+    { n: 3, start: 400 },
+    { n: 4, start: null },
+    { n: 5, start: null },
+  ];
+
+  it('are those with no time, between the timed lines the moment falls between', () => {
+    expect(couldStartAt(rows, 200)).toEqual([1]);
+    expect(couldStartAt(rows, 450)).toEqual([4, 5]);
+  });
+
+  it('are never a line the list has above one timed earlier, or below one timed later', () => {
+    // Line 2 is above line 3, which starts at 400: it cannot start at 450.
+    expect(couldStartAt(rows, 450)).not.toContain(1);
+    // Lines 4 and 5 are below it: they cannot start at 200.
+    expect(couldStartAt(rows, 200)).not.toContain(4);
+  });
+
+  it('are never a row that is not a line of the list, or one that has its time', () => {
+    expect(couldStartAt(rows, 160)).toEqual([1]);
+    expect(couldStartAt([{ n: null, start: 0 }], 100)).toEqual([]);
   });
 });
 

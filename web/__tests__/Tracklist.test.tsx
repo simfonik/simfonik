@@ -224,6 +224,30 @@ describe('the tape page’s tracklist', () => {
       expect(window.localStorage.getItem('simfonik:id-marks:tape-1')).toBeNull();
     });
 
+    it('keep the side in order of time: an ID the list has no line for stays after a line that is then timed before it', async () => {
+      const user = userEvent.setup();
+      sides = [[id(0, 'The Prodigy', 'Hyperspeed (G-Force Part 2)'), id(592, 'Stakker', 'Humanoid')]];
+      page();
+      await waitFor(() => expect(rows()).toEqual(['0:00:00The Prodigy — Hyperspeed (G-Force Part 2)', '0:09:52Stakker — Humanoid', '02Butsch — The Count(4:10)', '03Rhythm For Reasons — Grand National']));
+
+      await playing(0, 522);
+      await user.click(plus('Butsch — The Count'));
+      expect(rows()).toEqual(['0:00:00The Prodigy — Hyperspeed (G-Force Part 2)', '0:08:42Butsch — The Count(4:10)Undo', '0:09:52Stakker — Humanoid', '03Rhythm For Reasons — Grand National']);
+    });
+
+    it('cannot be given against the list’s order: the + is only on the lines that could start where the tape is', async () => {
+      sides = [[id(0, 'The Prodigy', 'Hyperspeed (G-Force Part 2)'), id(400, 'Rhythm For Reasons', 'Grand National')]];
+      page([{ position: 'A', tracks: [...OWN, { artist: 'Phenomania', title: 'Caramelle' }] }]);
+      await screen.findByRole('button', { name: 'Play from 0:06:40' });
+      const offered = () => screen.queryAllByRole('button', { name: /starts here$/ }).map((b) => b.getAttribute('aria-label'));
+
+      // Before the third line's start, only the second can start; after it, only the fourth.
+      await playing(0, 200);
+      expect(offered()).toEqual(['Butsch — The Count starts here']);
+      await playing(0, 450);
+      expect(offered()).toEqual(['Phenomania — Caramelle starts here']);
+    });
+
     it('can each be taken back before they are posted', async () => {
       const user = userEvent.setup();
       page();
