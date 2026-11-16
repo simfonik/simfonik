@@ -12,8 +12,8 @@ import { usePlayhead, useSide, useTapeTrackIds } from './TapeTrackIds';
 /** The most an artist or a title may run to, in characters: far past any real one, and a comment line stays a line. */
 const NAME_LENGTH = 150;
 
-/** What the blanks are about to do: post what is in them, or take the mark away. */
-type Act = 'id' | 'remove';
+/** What the blanks are about to do: post what is in them, take the mark away, or mark the moment with no name. */
+type Act = 'id' | 'remove' | 'mark';
 
 /**
  * A screen as narrow as a phone's. There the blanks are a sheet over the page, with a row each, and the line
@@ -101,18 +101,18 @@ type Props = {
  * A track that isn't the one playing is reached from its row in the tracklist, and with a mouse its blanks
  * open in that row, where the visitor is looking, and the tape is left where it is.
  *
- * Beside the line are the two ways to say that a track starts here: "New ID" opens the blanks to say which,
- * and "New unknown" says only that one does, in one press, so a visitor can go through a tape setting the
- * points and leave the names to whoever knows them. Neither is there within a moment of a track's start:
- * one moment, one track. A new unknown is the visitor's own until they post what they have (the tracklist
- * keeps the count and the Post), and until then it is taken back, or ID'd, like any other mark. (The tray,
- * on a phone, has room for the one of them, and there it has no "New ID" beside it to be read against: it
- * says "New track".)
+ * Beside the line is "New track": a track starts here, whatever is playing. With a mouse it opens the blanks
+ * for this moment, to say which track; under them is "Mark unknown", which says only that one starts, so a
+ * visitor can set the points and leave the names to whoever knows them. It is not there within a moment of
+ * a track's start: one moment, one track. A mark with no name is the visitor's own until they post what they
+ * have (the tracklist keeps the count and the Post), and until then it is taken back, or ID'd, like any
+ * other mark.
  *
  * On a phone the line has no room for a track's name and the words beside it, and it is at the top of a long
  * page. There, once the tape has been played, all of it is in a tray at the foot of the screen instead: the
- * name on two lines, then play, the ID and the new unknown, each always in its place so none moves under a
- * thumb. A new track the visitor can name is marked and then ID'd.
+ * name on two lines, then play, the ID and "New track", each always in its place so none moves under a
+ * thumb. There "New track" marks the point in one press, with no name: a tape is gone through by ear with a
+ * thumb, and the track is ID'd after.
  *
  * Where the side has a list of its tracks, the two lines of it likeliest to be the track being ID'd are
  * offered, and pressing one writes it into the blanks.
@@ -193,7 +193,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
     const marked = playing ?? rows[startingAt(rows, now)] ?? null;
     begin(marked, marked?.start ?? now);
   };
-  /** "New ID": a track starts here, whatever is playing, and the visitor will say which. */
+  /** "New track", with a mouse: a track starts here, whatever is playing, and the blanks open to say which. */
   const openNew = () => begin(null, now);
   const markHere = () => {
     if (!free) return;
@@ -341,7 +341,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
     // Where the track is to start is the time in its blank. A time other than the one it has must be one a
     // track could start at with this one set aside.
     let to = at;
-    if (what === 'id') {
+    if (what !== 'remove') {
       const entered = parseTime(when);
       if (entered === null) return refuse('Enter the time like 0:05:00.', timeField.current);
       const unchanged = lineNo === null && entered === at;
@@ -350,6 +350,12 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
       if (!unchanged && taken) return refuse(`Another track starts at ${formatTime(taken.start as number)}.`, timeField.current);
       if (!unchanged && !canStartAt(others, entered, end)) return refuse('That is past where a track could start on this side.', timeField.current);
       to = entered;
+    }
+    // "Mark unknown": only that a track starts there. It is the visitor's own, and waits to be posted.
+    if (what === 'mark') {
+      say({ side, time: to, artist: '', title: '' });
+      setThanks(`Marked ${idPlace(position, to)}. Not posted yet.`);
+      return leave();
     }
     // One track can't follow itself: named again where it is already playing, or just before where it
     // starts, it is taken as the one play (`settle`), and the ID would show nowhere. So it is not taken.
@@ -420,11 +426,16 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   // What can be done with a mark already on the tape besides putting its name right.
   // The visitor's own unposted mark is taken back, as on its row in the tracklist, and nothing is posted. Any
   // other is taken away with a post.
-  const upkeep = mark && (
+  // And under the blanks for a moment with nothing marked, the way to mark it without a name.
+  const upkeep = mark ? (
     <button type="button" onClick={() => act('remove')} aria-disabled={sending} className="track-ids-post">
       {isUnposted(mark) ? 'Undo' : mark.known ? 'Remove this ID' : 'Remove this mark'}
     </button>
-  );
+  ) : lineNo === null ? (
+    <button type="button" onClick={() => act('mark')} aria-disabled={sending} className="track-ids-post" aria-label="Mark unknown: a track starts here, and you don’t know what it is" title="A track starts here, and you don’t know what it is">
+      Mark unknown
+    </button>
+  ) : null;
   // The time, in the same quiet type as before, and a blank: with the side's label before it where the tape
   // has sides. Beside it, once the tape has been played, is where the tape is now, which follows the tape and
   // is pressed to write that time into the blank: a time found by ear needs no typing. Nothing is posted by
@@ -523,14 +534,9 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
           )}
           {unposted && <span className="track-ids-state">Pending</span>}
           {/* Not within a moment of a track's start: what is said there is said of that track. */}
-          {free && playing?.known && (
-            <button type="button" onClick={openNew} className="track-ids-post" aria-label="New ID: a track starts here, and you know what it is" title="A track starts here, and you know what it is">
-              New ID
-            </button>
-          )}
           {free && (
-            <button type="button" onClick={markHere} className="track-ids-post" aria-label="New unknown: a track starts here, and you don’t know what it is" title="A track starts here, and you don’t know what it is">
-              New unknown
+            <button type="button" onClick={openNew} className="track-ids-post" aria-label="New track: a track starts here" title="A track starts here">
+              New track
             </button>
           )}
         </div>

@@ -42,11 +42,12 @@ describe('what the tracklist is made of', () => {
     expect(screen.getByText('2 of 3 timed')).toBeInTheDocument();
   });
 
-  it('is a list someone kept in the comments, said to be theirs, where the tape has none of its own', async () => {
+  it('is a list someone kept in the comments, where the tape has none of its own', async () => {
     const page = tapePage({ archive: [old('Side 1\n1. Orbital - Chime\n2. ??\n3. LFO - LFO', 'Josh')], posted: [{ by: 'Softboiled', says: '[0:00] Orbital - Chime' }] });
     await page.read();
     expect(page.rows()).toEqual(['0:00:00Orbital — Chime', '02Unknown track', '03LFO — LFO']);
-    expect(screen.getByText('1 of 3 timed · 1 unknown · Josh’s list')).toBeInTheDocument();
+    // Whose list it is is said once, with everyone else the tracklist is owed to, above it.
+    expect(screen.getByText('1 of 3 timed · 1 unknown')).toBeInTheDocument();
   });
 
   it('is the IDs in order of time where there is no list, and all that is left to say when every track has both', async () => {
@@ -112,7 +113,7 @@ describe('what the tracklist is made of', () => {
     await page.read();
     expect(page.rows()).toHaveLength(20);
     await page.at(1500);
-    await page.user.click(page.button(/^New unknown/));
+    await page.mark();
     await waitFor(() => expect(page.rows()).toHaveLength(21));
     expect(document.activeElement?.tagName).not.toBe('LI');
   });

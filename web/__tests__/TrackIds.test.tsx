@@ -41,7 +41,7 @@ describe('the blanks, in the line under the player', () => {
     expect(screen.getAllByRole('status')[0]).toHaveTextContent('Posted. Thanks.');
 
     await page.at(900, { side: 1 });
-    await page.user.click(page.button(/^New ID/));
+    await page.user.click(page.button(/^New track/));
     await page.user.type(artist(), 'LFO');
     await page.user.type(title(), 'LFO{Enter}');
     await waitFor(() => expect(page.posts()).toHaveLength(2));
@@ -56,7 +56,7 @@ describe('the blanks, in the line under the player', () => {
     expect(title()).toHaveValue('Chime');
     await page.user.keyboard('{Escape}');
 
-    await page.user.click(page.button(/^New ID/));
+    await page.user.click(page.button(/^New track/));
     expect(artist()).toHaveValue('');
     await page.user.keyboard('{Escape}');
 

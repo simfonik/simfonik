@@ -31,7 +31,6 @@ function progress(all: Row[], order: RunningOrder | null) {
     ? [timed === rows.length && !unknown ? `All ${rows.length} tracks timed` : `${timed} of ${rows.length} timed`]
     : [`${rows.length - unknown} ${rows.length - unknown === 1 ? 'track' : 'tracks'} ID’d`];
   if (unknown) parts.push(`${unknown} unknown`);
-  if (order?.by) parts.push(`${order.by}’s list`);
   return parts.join(' · ');
 }
 

@@ -3,7 +3,7 @@
 // posts is read back exactly as the site would read it, so a test of the page is also a test that the page
 // and the reader agree.
 import React, { useEffect, useMemo } from 'react';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, vi } from 'vitest';
 import { LiveComments } from '../components/LiveComments';
@@ -161,6 +161,11 @@ export function tapePage({ sides = ONE_SIDE, archive = [], posted = [], phone = 
       const row = screen.queryByRole('listitem', { current: true });
       return row && reads(row);
     },
+    /** Marks the moment the tape is at with no name, as a visitor with a mouse does: "New track", then "Mark unknown" under its blanks. */
+    async mark() {
+      await this.user.click(screen.getByRole('button', { name: /^New track/ }));
+      await this.user.click(screen.getByRole('button', { name: /^Mark unknown/ }));
+    },
     /** The rows that show "Edit" to a finger: the times that could be moved to where the tape is, and the row playing. */
     editable: () => [...(list()?.querySelectorAll('ol > li:is([data-movable], [aria-current])') ?? [])].map(reads),
     /** The bar that posts the visitor's unposted times, or null. */
@@ -170,7 +175,8 @@ export function tapePage({ sides = ONE_SIDE, archive = [], posted = [], phone = 
     /** How many times the page has read the comments. */
     reads: () => fetched.mock.calls.filter(([url]) => String(url).startsWith('/api/track-ids/')).length,
     plus: (name: string) => screen.getByRole('button', { name: `${name} starts here` }),
-    pluses: () => screen.queryAllByRole('button', { name: /starts here$/ }).map((button) => button.getAttribute('aria-label')?.replace(' starts here', '')),
+    // (The rows' own: "New track", up at the player, says a track starts here too.)
+    pluses: () => (list() ? within(list() as HTMLElement).queryAllByRole('button', { name: /starts here$/ }) : []).map((button) => button.getAttribute('aria-label')?.replace(' starts here', '')),
     button: (name: string | RegExp) => screen.getByRole('button', { name }),
     has: (name: string | RegExp) => screen.queryByRole('button', { name }) !== null,
   };

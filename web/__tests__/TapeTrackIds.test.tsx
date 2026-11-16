@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { clock } from '@/lib/track-ids/compose';
 import { hold, KEPT, tapePage } from './tape';
 
-const NEW_UNKNOWN = /^New unknown/;
+const NEW_TRACK = /^New track/;
 const said = (time: number, artist = '', title = '') => ({ side: 0, time, artist, title });
 
 afterEach(() => {
@@ -30,7 +30,7 @@ describe('the reading of the comments', () => {
     page.server.comments.push({ id: 1, tape_id: 'tape-1', author_name: 'Tester', content: '[0:05] 808 State - Cubik', created_at: '2026-11-15T13:00:00.000Z' });
     page.shared().reread();
     await waitFor(() => expect(page.rows()).toEqual(['0:00:05808 State — Cubik']));
-    expect(page.line()).toBe('808 State — CubikNew IDNew unknown');
+    expect(page.line()).toBe('808 State — CubikNew track');
     expect(page.marks()).toBe('5');
     expect(page.reads()).toBe(2);
   });
@@ -77,7 +77,7 @@ describe('the visitor’s changes', () => {
     // The tape's own tracklist is there from the start; nothing of the visitor's is, and nothing can be said yet.
     expect(page.rows()).toEqual(['01Orbital — Chime', '02LFO — LFO']);
     expect(page.pluses()).toEqual([]);
-    expect(page.has(NEW_UNKNOWN)).toBe(false);
+    expect(page.has(NEW_TRACK)).toBe(false);
     expect(page.bar()).toBeNull();
 
     page.reading.go();
@@ -85,14 +85,14 @@ describe('the visitor’s changes', () => {
     await waitFor(() => expect(page.rows()).toEqual(['0:01:40Unknown trackUndo', '+Orbital — Chime', '+LFO — LFO']));
     expect(page.bar()).toHaveTextContent('1 ID pending');
     expect(page.pluses()).toEqual(['Orbital — Chime', 'LFO — LFO']);
-    expect(page.has(NEW_UNKNOWN)).toBe(true);
+    expect(page.has(NEW_TRACK)).toBe(true);
   });
 
   it('are kept on the device while they wait, and no longer once they are posted', async () => {
     const page = tapePage();
     await page.read();
     await page.at(100);
-    await page.user.click(page.button(NEW_UNKNOWN));
+    await page.mark();
     expect(JSON.parse(window.localStorage.getItem(KEPT) as string)).toEqual([said(100)]);
     await page.user.click(within(page.bar() as HTMLElement).getByRole('button', { name: 'Post' }));
     await waitFor(() => expect(window.localStorage.getItem(KEPT)).toBeNull());
@@ -136,7 +136,7 @@ describe('the visitor’s name', () => {
     const page = tapePage({ name: null });
     await page.read();
     await page.at(100);
-    await page.user.click(page.button(NEW_UNKNOWN));
+    await page.mark();
     expect(within(page.bar() as HTMLElement).getByRole('textbox', { name: 'Your name' })).toBeInTheDocument();
 
     // Past where the point marked is taken to end, with nothing playing.
@@ -156,7 +156,7 @@ describe('a post', () => {
     const page = tapePage();
     await page.read();
     await page.at(100);
-    await page.user.click(page.button(NEW_UNKNOWN));
+    await page.mark();
     const first = hold(page.server);
     await page.user.click(within(page.bar() as HTMLElement).getByRole('button', { name: 'Post' }));
     await waitFor(() => expect(page.posts()).toHaveLength(1));
@@ -164,7 +164,7 @@ describe('a post', () => {
 
     // A second post, while the reading for the first is still out.
     await page.at(200);
-    await page.user.click(page.button(NEW_UNKNOWN));
+    await page.mark();
     await page.user.click(within(page.bar() as HTMLElement).getByRole('button', { name: 'Post' }));
     await waitFor(() => expect(page.posts()).toHaveLength(2));
     await waitFor(() => expect(page.rows()).toEqual(['0:01:40Unknown trackID it', '0:03:20Unknown trackID it']));
@@ -223,7 +223,7 @@ describe('a post', () => {
     const page = tapePage();
     await page.read();
     await page.at(100);
-    await page.user.click(page.button(NEW_UNKNOWN));
+    await page.mark();
     await page.user.click(within(page.bar() as HTMLElement).getByRole('button', { name: 'Post' }));
     await waitFor(() => expect(page.posts()).toHaveLength(1));
     await waitFor(() => expect(page.reads()).toBe(2));

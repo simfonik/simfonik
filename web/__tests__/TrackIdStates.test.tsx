@@ -19,8 +19,6 @@ const LISTED = [{ position: 'A', tracks: OWN }];
 
 const artist = () => screen.getByRole('textbox', { name: 'Artist' });
 const title = () => screen.getByRole('textbox', { name: 'Title' });
-const NEW_UNKNOWN = /^New unknown/;
-const NEW_ID = /^New ID/;
 /** The tray's one way to say a track starts here: a phone has no room for two. */
 const NEW_TRACK = /^New track/;
 
@@ -40,17 +38,17 @@ describe('a moment with nothing marked', () => {
     expect(page.pluses()).toEqual([]);
 
     await page.at(100);
-    expect(page.line()).toBe('Know this track? ID itNew unknown');
+    expect(page.line()).toBe('Know this track? ID itNew track');
     expect(page.pluses()).toEqual(['The Prodigy — Hyperspeed', 'Butsch — The Count', 'Rhythm For Reasons — Grand National', 'Phenomania — Caramelle']);
     expect(page.lit()).toBeNull();
   });
 
-  it('New unknown: one press sets a point there, the visitor’s own, on every part of the page and nowhere else', async () => {
+  it('New track, then Mark unknown: sets a point there, the visitor’s own, on every part of the page and nowhere else', async () => {
     const page = tapePage();
     await page.read();
     expect(page.tracklist()).toBeNull();
     await page.at(100.7);
-    await page.user.click(page.button(NEW_UNKNOWN));
+    await page.mark();
 
     expect(page.line()).toBe('Unknown track. Know it? ID itPending');
     expect(page.marks()).toBe('100?');
@@ -110,7 +108,7 @@ describe('a moment with nothing marked', () => {
     // Three seconds before it: nothing is playing yet, and what is said here is said of the mark.
     await page.at(297);
     expect(page.line()).toBe('Know this track? ID it');
-    expect(page.has(NEW_UNKNOWN)).toBe(false);
+    expect(page.has(NEW_TRACK)).toBe(false);
     await page.user.click(page.button('Know this track? ID it'));
     expect(screen.getByRole('form', { name: 'ID the track at 0:05:00' })).toBeInTheDocument();
     expect(page.has('Remove this mark')).toBe(true);
@@ -125,10 +123,10 @@ describe('a side’s last moments, where no track has room to start', () => {
     await page.read();
     // Five seconds from the end a track can still start, and be the side's last.
     await page.at(895);
-    expect(page.has(NEW_UNKNOWN)).toBe(true);
+    expect(page.has(NEW_TRACK)).toBe(true);
     expect(page.pluses()).toHaveLength(4);
     await page.at(896);
-    expect(page.has(NEW_UNKNOWN)).toBe(false);
+    expect(page.has(NEW_TRACK)).toBe(false);
     expect(page.pluses()).toEqual([]);
     expect(page.button('Know this track? ID it')).toHaveAttribute('aria-disabled', 'true');
     await page.user.click(page.button('Know this track? ID it'));
@@ -161,14 +159,14 @@ describe('a point the visitor marked without a name, not yet posted', () => {
     const page = tapePage(setup);
     await page.read();
     await page.at(100);
-    await page.user.click(page.button(NEW_UNKNOWN));
+    await page.mark();
     return page;
   };
 
   it('Undo, on its row: takes it back everywhere, and nothing was ever posted', async () => {
     const page = await marked();
     await page.user.click(page.button('Take back the mark at 0:01:40'));
-    expect(page.line()).toBe('Know this track? ID itNew unknown');
+    expect(page.line()).toBe('Know this track? ID itNew track');
     expect(page.marks()).toBe('');
     expect(page.tracklist()).toBeNull();
     expect(page.bar()).toBeNull();
@@ -245,9 +243,9 @@ describe('a point the visitor marked without a name, not yet posted', () => {
   it('a second, later: is refused within a moment of the first, and then is a second row in order of time', async () => {
     const page = await marked();
     await page.at(104);
-    expect(page.has(NEW_UNKNOWN)).toBe(false);
+    expect(page.has(NEW_TRACK)).toBe(false);
     await page.at(40);
-    await page.user.click(page.button(NEW_UNKNOWN));
+    await page.mark();
     expect(page.rows()).toEqual(['0:00:40Unknown trackUndo', '0:01:40Unknown trackUndo']);
     expect(page.marks()).toBe('40? 100?');
     expect(page.bar()).toHaveTextContent('2 IDs pending');
@@ -256,7 +254,7 @@ describe('a point the visitor marked without a name, not yet posted', () => {
   it('Post: goes up with the rest as one comment, and stays on the page, as posted, while the comments are read again', async () => {
     const page = await marked();
     await page.at(40);
-    await page.user.click(page.button(NEW_UNKNOWN));
+    await page.mark();
     const reading = hold(page.server);
     await page.user.click(within(page.bar() as HTMLElement).getByRole('button', { name: 'Post' }));
 
@@ -294,7 +292,7 @@ describe('the blanks, open for a mark while the mark changes', () => {
     const page = tapePage();
     await page.read();
     await page.at(100);
-    await page.user.click(page.button(NEW_UNKNOWN));
+    await page.mark();
     await page.at(130);
     await page.user.click(page.button('Unknown track. Know it? ID it'));
     // With the blanks still open, the visitor posts what they have.
@@ -322,10 +320,10 @@ describe('a line of the list the visitor has given a time, not yet posted', () =
     expect(page.marks()).toBe('0 221');
     await page.at(200);
     expect(page.lit()).toBe('0:00:00The Prodigy — Hyperspeed');
-    expect(page.line()).toBe('The Prodigy — HyperspeedNew IDNew unknown');
+    expect(page.line()).toBe('The Prodigy — HyperspeedNew track');
     await page.at(230);
     expect(page.lit()).toBe('0:03:41Butsch — The CountUndo');
-    expect(page.line()).toBe('Butsch — The CountPendingNew IDNew unknown');
+    expect(page.line()).toBe('Butsch — The CountPendingNew track');
     expect(screen.getByRole('button', { name: 'Now playing: Butsch — The Count. Correct this ID' })).toHaveAttribute('title', 'Yours, not posted yet. Press to correct it.');
   });
 
@@ -384,7 +382,7 @@ describe('a track the comments have ID’d', () => {
     await page.at(3);
     expect(page.line()).toBe('Orbital — Chime');
     await page.at(100);
-    expect(page.line()).toBe('Orbital — ChimeNew IDNew unknown');
+    expect(page.line()).toBe('Orbital — ChimeNew track');
     expect(screen.getByRole('button', { name: 'Now playing: Orbital — Chime. Correct this ID' })).toHaveAttribute('title', 'ID by Josh. Press to correct it.');
     // Three seconds before the next track, what is said would be said of it.
     await page.at(297);
@@ -410,7 +408,7 @@ describe('a track the comments have ID’d', () => {
     await page.user.type(title(), 'Belfast{Enter}');
     await waitFor(() => expect(page.posts()).toEqual(['[0:00] Orbital - Belfast']));
     await waitFor(() => expect(page.rows()).toEqual(['0:00:00Orbital — Belfast', '0:05:00Joey Beltram — Energy Flash']));
-    expect(page.line()).toBe('Orbital — BelfastNew IDNew unknown');
+    expect(page.line()).toBe('Orbital — BelfastNew track');
     reading.go();
     await waitFor(() => expect(page.shared().sides[0].rows.every((row) => !row.mine)).toBe(true));
     expect(page.rows()).toEqual(['0:00:00Orbital — Belfast', '0:05:00Joey Beltram — Energy Flash']);
@@ -428,7 +426,7 @@ describe('a track the comments have ID’d', () => {
     const gone = () => {
       expect(page.rows()).toEqual(['0:00:00Orbital — Chime']);
       expect(page.marks()).toBe('0');
-      expect(page.line()).toBe('Orbital — ChimeNew IDNew unknown');
+      expect(page.line()).toBe('Orbital — ChimeNew track');
     };
     await waitFor(gone);
     reading.go();
@@ -455,7 +453,7 @@ describe('a track the comments have ID’d', () => {
     expect(artist()).toHaveFocus();
     expect(page.went).not.toHaveBeenCalled();
     // The line under the player is as it was.
-    expect(page.line()).toBe('Orbital — ChimeNew IDNew unknown');
+    expect(page.line()).toBe('Orbital — ChimeNew track');
     // Escape shuts them, and the keyboard is back on the row's "Edit".
     await page.user.keyboard('{Escape}');
     expect(screen.queryByRole('form')).not.toBeInTheDocument();
@@ -557,11 +555,11 @@ describe('a track the comments have ID’d', () => {
     expect(page.rows()).toEqual(['0:00:00Orbital — Chime', '0:05:41Joey Beltram — Energy Flash']);
   });
 
-  it('New ID inside it, named as the track playing or the one that starts next: it is not taken, and says why', async () => {
+  it('New track inside it, named as the track playing or the one that starts next: it is not taken, and says why', async () => {
     const page = tape();
     await page.read();
     await page.at(100);
-    await page.user.click(page.button(NEW_ID));
+    await page.user.click(page.button(/^New track/));
     await page.user.type(artist(), 'Orbital');
     await page.user.type(title(), 'Chime{Enter}');
     expect(screen.getByRole('alert')).toHaveTextContent('That track is already here, at 0:00:00. One track can’t play twice in a row.');
@@ -575,18 +573,40 @@ describe('a track the comments have ID’d', () => {
     const again = tapePage({ posted: [{ by: 'Josh', says: '[0:00] Orbital - Chime\n[5:00] Joey Beltram - Energy Flash' }] });
     await again.read();
     await again.at(500);
-    await again.user.click(again.button(NEW_ID));
+    await again.user.click(again.button(/^New track/));
     await again.user.type(artist(), 'Orbital');
     await again.user.type(title(), 'Chime{Enter}');
     await waitFor(() => expect(again.posts()).toEqual(['[8:20] Orbital - Chime']));
     await waitFor(() => expect(again.rows()).toEqual(['0:00:00Orbital — Chime', '0:05:00Joey Beltram — Energy Flash', '0:08:20Orbital — Chime']));
   });
 
-  it('New ID inside it: a new track from there, and this one ends where that starts', async () => {
+  it('New track inside it: the blanks open for this moment, to name the track or, under them, to mark it unknown at the time in its blank', async () => {
+    const page = tape();
+    await page.read();
+    await page.at(100);
+    await page.user.click(page.button(NEW_TRACK));
+    expect(screen.getByRole('form', { name: 'ID the track at 0:01:40' })).toBeInTheDocument();
+    expect(artist()).toHaveValue('');
+    expect(artist()).toHaveFocus();
+    const time = screen.getByRole('textbox', { name: 'Starts at' });
+    await page.user.clear(time);
+    await page.user.type(time, '1:30');
+    await page.user.click(page.button(/^Mark unknown/));
+    expect(page.rows()).toEqual(['0:00:00Orbital — Chime', '0:01:30Unknown trackUndo', '0:05:00Joey Beltram — Energy Flash']);
+    expect(page.bar()).toHaveTextContent('1 ID pending');
+    expect(page.posts()).toEqual([]);
+    // The blanks for a track that is already there have its removal under them, and no second way to mark it.
+    await page.at(400);
+    await page.user.click(page.button('Now playing: Joey Beltram — Energy Flash. Correct this ID'));
+    expect(page.has(/^Mark unknown/)).toBe(false);
+    expect(page.has('Remove this ID')).toBe(true);
+  });
+
+  it('New track inside it: a new track from there, and this one ends where that starts', async () => {
     const page = tape();
     await page.read();
     await page.at(120);
-    await page.user.click(page.button(NEW_ID));
+    await page.user.click(page.button(/^New track/));
     expect(artist()).toHaveValue('');
     await page.user.type(artist(), 'Altern 8');
     await page.user.type(title(), 'Infiltrate 202{Enter}');
@@ -607,7 +627,7 @@ describe('a spot the comments have marked without a name', () => {
     await page.read();
     await page.at(310);
     expect(page.rows()).toEqual(['0:05:00Unknown trackID it']);
-    expect(page.line()).toBe('Unknown track. Know it? ID itNew unknown');
+    expect(page.line()).toBe('Unknown track. Know it? ID itNew track');
     expect(page.marks()).toBe('300?');
     expect(screen.getByText('0 tracks ID’d · 1 unknown')).toBeInTheDocument();
   });
@@ -654,8 +674,8 @@ describe('a track that an old comment timed, to the nearest few seconds', () => 
     await page.read();
     expect(page.rows()).toEqual(['0:05:00Orbital — Chime']);
     await page.at(310);
-    expect(page.line()).toBe('Orbital — ChimeNew IDNew unknown');
-    await page.user.click(page.button(NEW_UNKNOWN));
+    expect(page.line()).toBe('Orbital — ChimeNew track');
+    await page.mark();
     expect(page.rows()).toEqual(['0:05:00Orbital — Chime', '0:05:10Unknown trackUndo']);
 
     await page.user.click(within(page.bar() as HTMLElement).getByRole('button', { name: 'Post' }));
@@ -755,6 +775,8 @@ describe('a line of the tape’s tracklist, edited from its row', () => {
     expect(page.went).not.toHaveBeenCalled();
     // Before the tape has been played there is no time of the tape's to use.
     expect(page.has(/^Use/)).toBe(false);
+    // It is a line of the list being given its time, not a moment being marked.
+    expect(page.has(/^Mark unknown/)).toBe(false);
     await page.user.keyboard('{Escape}');
     expect(page.button('Set the time for Phenomania — Caramelle')).toHaveFocus();
     await page.user.click(page.button('Set the time for Phenomania — Caramelle'));
@@ -826,9 +848,9 @@ describe('a tape with sides', () => {
     // Side A, loaded, knows nothing of it.
     await page.at(60, { side: 0 });
     expect(page.marks()).toBe('');
-    expect(page.line()).toBe('Know this track? ID itNew unknown');
+    expect(page.line()).toBe('Know this track? ID itNew track');
     expect(page.lit()).toBeNull();
-    await page.user.click(page.button(NEW_UNKNOWN));
+    await page.mark();
     await page.user.click(within(page.bar() as HTMLElement).getByRole('button', { name: 'Post' }));
     await waitFor(() => expect(page.posts()).toEqual(['[A 1:00] ? - ?\n[B 1:00] Rhythm For Reasons - Grand National']));
   });
@@ -860,7 +882,7 @@ describe('when the comments change underneath the visitor', () => {
     const page = tapePage();
     await page.read();
     await page.at(100);
-    await page.user.click(page.button(NEW_UNKNOWN));
+    await page.mark();
     page.server.refuse = 'Too many requests. Please try again later.';
     await page.user.click(within(page.bar() as HTMLElement).getByRole('button', { name: 'Post' }));
     expect(await within(page.bar() as HTMLElement).findByRole('alert')).toHaveTextContent('Too many requests. Please try again later.');
