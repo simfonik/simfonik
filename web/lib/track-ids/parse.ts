@@ -350,7 +350,19 @@ export const trusted = (sightings: Sighting[], sides: number) => sightings.filte
 
 /** Another thing someone said about the same moment: a rival ID, or a hint about an unnamed track. */
 export type Opinion = { artist: string; title: string; known: boolean; author: string; date: string };
-export type Proposal = Sighting & { end: number; voices: number; also: Opinion[]; /** The end is a guess: the last thing anyone timed on this side. */ open?: boolean };
+export type Proposal = Sighting & {
+  end: number;
+  voices: number;
+  also: Opinion[];
+  /** The end is a guess: the last thing anyone timed on this side. */
+  open?: boolean;
+  /**
+   * The same record said again further on, with nothing else between: one play, which this proposal is.
+   * The later sayings are kept, as the proposals they would otherwise have been, because they are plays of
+   * their own again as soon as something comes between them and this, or this is taken away.
+   */
+  again?: { start: number; end: number; artist: string; title: string; author: string; date: string }[];
+};
 
 type Named = { artist: string; title: string };
 const words = (s: Named) => new Set(`${s.artist} ${s.title}`.toLowerCase().replace(/\([^)]*\)/g, "").match(/[a-z0-9]{3,}/g) ?? []);
@@ -452,6 +464,7 @@ export function reconcile(read: Sighting[], lengths: number[]): Proposal[] {
       const prev = out[out.length - 1];
       if (prev && prev.side === side && best.known && sameTrack(prev, best)) {
         prev.voices = new Set([prev.author, ...g.map((s) => s.author)]).size + Math.max(0, prev.voices - 1);
+        if (end - best.start >= 5) prev.again = [...(prev.again ?? []), { start: shown(g), end, artist: best.artist, title: best.title, author: best.author, date: best.date }];
         prev.end = Math.max(prev.end, end);
         return;
       }

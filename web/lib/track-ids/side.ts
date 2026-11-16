@@ -109,11 +109,14 @@ const near = (a: number, b: number) => Math.abs(a - b) <= ONE_MOMENT;
  * · A change at a moment of its own is a new track from there.
  * · A mark taken away is gone, and what played before it plays on.
  * · A record named again, with nothing else between, is the same play said twice: the earlier start stands.
+ *   The reader has folded such sayings already and kept the later ones (`again`). They are laid out here
+ *   as IDs before anything else is done, and folded again at the end, so that a change which comes between
+ *   two of them, or takes the first away, parts them as the reader will.
  *
  * Each ID runs until the next one starts.
  */
 export function withChanges(posted: TrackId[], changes: Change[]): Timed[] {
-  const ids: Timed[] = posted.map((id) => ({ ...id }));
+  const ids: Timed[] = posted.flatMap(({ again = [], ...id }) => [id, ...again.map((later) => ({ ...later, known: true }))]);
   changes.forEach((change, nth) => {
     const at = ids.reduce((best, id, k) => (near(id.start, change.time) && (best < 0 || Math.abs(id.start - change.time) < Math.abs(ids[best].start - change.time)) ? k : best), -1);
     if (change.gone) {

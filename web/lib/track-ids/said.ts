@@ -50,7 +50,16 @@ export function readSaid(tape: Pick<Tape, 'id' | 'sides'>, said: Said[]): { side
       proposals
         .filter((p) => p.side === side)
         .sort((a, b) => a.start - b.start)
-        .map((p) => ({ start: p.start, end: p.end, artist: p.artist, title: p.title, known: p.known, by: p.author, date: p.date })),
+        .map((p) => ({
+          start: p.start,
+          end: p.end,
+          artist: p.artist,
+          title: p.title,
+          known: p.known,
+          by: p.author,
+          date: p.date,
+          ...(p.again ? { again: p.again.map(({ author, ...later }) => ({ ...later, by: author })) } : {}),
+        })),
     ),
   };
 }

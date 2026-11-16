@@ -2,9 +2,10 @@
 // made-up sides. Then the same rules held against every side in the archive, where what could go wrong is
 // whatever real lists and real comments happen to contain.
 import { describe, expect, it } from 'vitest';
+import lengths from '@/data/side-lengths.json';
 import comments from '@/data/tape-comments.json';
 import tapes from '@/data/tapes.json';
-import type { RunningOrder, TrackId } from '@/lib/track-ids/compose';
+import { composeId, composeRemoval, type RunningOrder, type TrackId } from '@/lib/track-ids/compose';
 import { readSaid } from '@/lib/track-ids/said';
 import { contributors, couldStartAt, playingAt, saidBy, sideRows, standing, startingAt, suggest, timeline, withChanges, type Change, type Row } from '@/lib/track-ids/side';
 import type { Tape } from '@/types/tape';
@@ -407,5 +408,52 @@ describe('every side in the archive', () => {
       }
     }
     expect(timed).toBeGreaterThan(300);
+  });
+
+  it('shows for a change, before it is posted, what the reader says of the side once it is a comment', () => {
+    const lines = (rows: Row[]) => rows.map((r) => `${r.n ?? '-'} ${r.start ?? '-'} ${r.known ? `${r.artist} / ${r.title}` : '??'}`);
+    const posted = { sent: { by: 'Dana', read: 1 } };
+    let tried = 0;
+    for (const tape of tapes as unknown as Tape[]) {
+      const before = (all[tape.id] ?? []).map((c) => ({ author: c.author, date: c.date, content: c.content }));
+      const read = readSaid(tape, before);
+      tape.sides.forEach((side, i) => {
+        const o = read.orders[i];
+        const ids = read.sides[i];
+        const rows = sideRows(o, withChanges(ids, []));
+        if (rows.length === 0) return;
+        const name = `${tape.id} [${side.position}]`;
+        const position = tape.sides.length > 1 ? side.position : null;
+        // The tape can't be anywhere past the side's end, and the reader holds nothing to be there.
+        const end = (lengths as Record<string, (number | null)[]>)[tape.id]?.[i] ?? Infinity;
+        const starts = rows.flatMap((row) => (row.start === null ? [] : [row.start]));
+        const free = [20, ...starts.map((start, k) => Math.floor((start + (starts[k + 1] ?? start + 600)) / 2)), ...starts.map((start) => start + 12)].filter((time) => time < end && startingAt(rows, time) < 0).slice(0, 3);
+
+        // What a visitor can say of the side, each as the page makes it.
+        const cases: Change[][] = [];
+        for (const time of free) {
+          cases.push([said(time)]);
+          cases.push([said(time, 'Zzyzx Road', `Quite Unlike Anything ${time}`)]);
+          for (const k of couldStartAt(rows, time).slice(0, 2)) cases.push([said(time, rows[k].known ? rows[k].artist : '', rows[k].known ? rows[k].title : '')]);
+        }
+        for (const row of rows.filter((r) => r.start !== null).slice(0, 2)) {
+          const start = row.start as number;
+          const gone = said(start, '', '', { gone: true, ...posted });
+          cases.push([gone]);
+          cases.push([said(start, 'Zzyzx Road', 'Quite Unlike Anything', posted)]);
+          if (start + 9 < end && startingAt(rows.filter((r) => r !== row), start + 9) < 0) cases.push([gone, said(start + 9, row.artist, row.title, posted)]);
+        }
+
+        for (const changes of cases) {
+          const page = lines(sideRows(o, withChanges(ids, changes.map((change) => ({ ...change, side: i })))));
+          const comment = changes.map((c) => (c.gone ? composeRemoval({ position, time: c.time }) : composeId({ position, time: c.time, artist: c.artist, title: c.title }))).join('\n');
+          const after = readSaid(tape, [...before, { author: 'Dana', date: '2026-11-15T12:00:00.000Z', content: comment }]);
+          const reader = lines(sideRows(after.orders[i], withChanges(after.sides[i], [])));
+          expect(page, `${name}: ${comment}`).toEqual(reader);
+          tried++;
+        }
+      });
+    }
+    expect(tried).toBeGreaterThan(1000);
   });
 });

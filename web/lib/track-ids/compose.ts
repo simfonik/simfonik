@@ -29,6 +29,12 @@ export type TrackId = {
   by: string;
   /** When, as the comments date it: of two, the later said sorts after the earlier. */
   date: string;
+  /**
+   * The same record said again later on the side with nothing else between, which the reader takes for the
+   * same play: each later saying, as the ID it would otherwise be. It is one again as soon as something
+   * comes between it and this, or this is taken away (see `withChanges` in side.ts).
+   */
+  again?: Omit<TrackId, 'known' | 'again'>[];
 };
 
 /** A line of a side's running order: a track written down in its place, with or without a time. */
