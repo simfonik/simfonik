@@ -261,7 +261,7 @@ describe('a point the visitor marked without a name, not yet posted', () => {
     await waitFor(() => expect(page.posts()).toEqual(['[0:40] ? - ?\n[1:40] ? - ?']));
     const posted = () => {
       // Each is now anyone's to ID, and no longer the visitor's to take back.
-      expect(page.rows()).toEqual(['0:00:40Unknown trackID it', '0:01:40Unknown trackID it']);
+      expect(page.rows()).toEqual(['0:00:40Unknown track+ ID', '0:01:40Unknown track+ ID']);
       expect(page.marks()).toBe('40? 100?');
       expect(page.line()).toBe('Unknown track. Know it? ID it');
       expect(page.bar()).toBeNull();
@@ -626,7 +626,7 @@ describe('a spot the comments have marked without a name', () => {
     const page = tape();
     await page.read();
     await page.at(310);
-    expect(page.rows()).toEqual(['0:05:00Unknown trackID it']);
+    expect(page.rows()).toEqual(['0:05:00Unknown track+ ID']);
     expect(page.line()).toBe('Unknown track. Know it? ID itNew track');
     expect(page.marks()).toBe('300?');
     expect(screen.getByText('0 tracks ID’d · 1 unknown')).toBeInTheDocument();
@@ -682,7 +682,7 @@ describe('a track that an old comment timed, to the nearest few seconds', () => 
     await waitFor(() => expect(page.posts()).toEqual(['[5:10] ? - ?']));
     await waitFor(() => expect(page.shared().sides[0].rows.every((row) => !row.mine)).toBe(true));
     // The comments, read again, say the same: the old track still has its name and its start.
-    expect(page.rows()).toEqual(['0:05:00Orbital — Chime', '0:05:10Unknown trackID it']);
+    expect(page.rows()).toEqual(['0:05:00Orbital — Chime', '0:05:10Unknown track+ ID']);
   });
 });
 
@@ -708,7 +708,7 @@ describe('the list’s order, and the one moment each track has', () => {
     await page.user.click(within(page.bar() as HTMLElement).getByRole('button', { name: 'Post' }));
     await waitFor(() => expect(page.posts()).toEqual(['[5:00] ? - ?']));
     await waitFor(() => expect(page.shared().sides[0].rows.every((row) => !row.mine)).toBe(true));
-    expect(page.rows()[1]).toBe('0:05:00Unknown trackID it');
+    expect(page.rows()[1]).toBe('0:05:00Unknown track+ ID');
   });
 });
 
@@ -874,7 +874,7 @@ describe('when the comments change underneath the visitor', () => {
   it('says so, quietly, where the newer comments couldn’t be read, and shows what the archive has', async () => {
     const page = tapePage({ archive: [old('anyone know the track @5:00?')], down: true });
     await page.read();
-    await waitFor(() => expect(page.rows()).toEqual(['0:05:00Unknown trackID it']));
+    await waitFor(() => expect(page.rows()).toEqual(['0:05:00Unknown track+ ID']));
     expect(screen.getByText('The latest IDs couldn’t be read just now, so some may be missing here.')).toBeInTheDocument();
   });
 

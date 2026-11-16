@@ -160,19 +160,19 @@ describe('a post', () => {
     const first = hold(page.server);
     await page.user.click(within(page.bar() as HTMLElement).getByRole('button', { name: 'Post' }));
     await waitFor(() => expect(page.posts()).toHaveLength(1));
-    await waitFor(() => expect(page.rows()).toEqual(['0:01:40Unknown trackID it']));
+    await waitFor(() => expect(page.rows()).toEqual(['0:01:40Unknown track+ ID']));
 
     // A second post, while the reading for the first is still out.
     await page.at(200);
     await page.mark();
     await page.user.click(within(page.bar() as HTMLElement).getByRole('button', { name: 'Post' }));
     await waitFor(() => expect(page.posts()).toHaveLength(2));
-    await waitFor(() => expect(page.rows()).toEqual(['0:01:40Unknown trackID it', '0:03:20Unknown trackID it']));
+    await waitFor(() => expect(page.rows()).toEqual(['0:01:40Unknown track+ ID', '0:03:20Unknown track+ ID']));
     expect(page.shared().sides[0].rows.filter((row) => row.mine?.sent)).toHaveLength(2);
 
     first.go();
     await waitFor(() => expect(page.shared().sides[0].rows.every((row) => !row.mine)).toBe(true));
-    expect(page.rows()).toEqual(['0:01:40Unknown trackID it', '0:03:20Unknown trackID it']);
+    expect(page.rows()).toEqual(['0:01:40Unknown track+ ID', '0:03:20Unknown track+ ID']);
   });
 
   describe('of more than one comment holds', () => {
@@ -227,6 +227,6 @@ describe('a post', () => {
     await page.user.click(within(page.bar() as HTMLElement).getByRole('button', { name: 'Post' }));
     await waitFor(() => expect(page.posts()).toHaveLength(1));
     await waitFor(() => expect(page.reads()).toBe(2));
-    expect(page.rows()).toEqual(['0:01:40Unknown trackID it']);
+    expect(page.rows()).toEqual(['0:01:40Unknown track+ ID']);
   });
 });

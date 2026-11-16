@@ -418,8 +418,8 @@ function SideList({ heading, summary, rows, position, silent, lit, markable, mov
                         Edit
                       </button>
                     ) : (
-                      <button type="button" onClick={() => onIdentify(row.start as number)} className="tracklist-cue" aria-label={`ID the unknown track at ${idPlace(position, row.start)}`}>
-                        ID it
+                      <button type="button" onClick={() => onIdentify(row.start as number)} className="tracklist-cue tracklist-add" aria-label={`ID the unknown track at ${idPlace(position, row.start)}`}>
+                        + ID
                       </button>
                     )}
                   </span>
