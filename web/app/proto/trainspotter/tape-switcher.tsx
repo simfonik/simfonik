@@ -71,7 +71,7 @@ export const TapeSwitcher = memo(function TapeSwitcher({ tapes, currentId }: { t
     <Combobox
       value={currentId}
       onValueChange={(v: unknown) => {
-        if (typeof v === "string" && v !== currentId) router.push(`/proto/trainspotter/${v}`);
+        if (typeof v === "string" && v !== currentId) router.push(`/spot/${v}`);
       }}
       items={tapeItems}
       // Bring the highlighted tape into view. With only the rows in view built, the combobox can't scroll to
@@ -126,7 +126,7 @@ export const TapeSwitcher = memo(function TapeSwitcher({ tapes, currentId }: { t
     >
       <nav aria-label="Tapes" className="ts-nav" ref={setTapeNav}>
         {prevTape && (
-          <Link href={`/proto/trainspotter/${prevTape.id}`} className="ts-link" aria-label={`Previous tape: ${prevTape.label}`}>
+          <Link href={`/spot/${prevTape.id}`} className="ts-link" aria-label={`Previous tape: ${prevTape.label}`}>
             ‹ Prev
           </Link>
         )}
@@ -202,7 +202,7 @@ export const TapeSwitcher = memo(function TapeSwitcher({ tapes, currentId }: { t
           <span aria-hidden>▾</span>
         </ComboboxTrigger>
         {nextTape && (
-          <Link href={`/proto/trainspotter/${nextTape.id}`} className="ts-link" aria-label={`Next tape: ${nextTape.label}`}>
+          <Link href={`/spot/${nextTape.id}`} className="ts-link" aria-label={`Next tape: ${nextTape.label}`}>
             Next ›
           </Link>
         )}

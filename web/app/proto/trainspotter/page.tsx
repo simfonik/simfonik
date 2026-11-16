@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-// PROTOTYPE (SIM-37). Starts on the tape the crowd has annotated most.
+// PROTOTYPE (SIM-37). The page moved to a shorter address; a link to the old one still arrives.
 export default function TrainspotterIndex() {
-  redirect("/proto/trainspotter/ernie-munson-ooga-booga");
+  redirect("/spot");
 }
