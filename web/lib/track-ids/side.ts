@@ -15,15 +15,15 @@
 // 1. One moment, one track. Something said within ONE_MOMENT of where a track starts is said of that track:
 //    a name puts it right, and nothing new starts. The page offers a new track only further off than that.
 // 2. Down a side, times only rise. A line of the list takes an ID's time only where that keeps the list's
-//    lines in the list's order; an ID that names a line but would break the order is shown by its time, as a
-//    track of its own.
+//    lines in the list's order; an ID that names a line but would break the order is shown by its time,
+//    out of the list's order, and is that line all the same: the line is not shown again without a time.
 // 3. The visitor's changes are IDs like any other. `withChanges` takes each as the reader takes a comment in
 //    the site's form, and the side's tracks are then made by the function the reader's are (`settle` in
 //    moments.ts). So what a change does on the page before it is posted is what it does once it is a
 //    comment. Where the comments turn out to say otherwise, the next read of them puts the page right.
 //
 // Pure functions, used in the browser.
-import { composeId, composeRemoval, splitComposed, type Composed, type RunningOrder } from './compose';
+import { composeId, composeRemoval, splitComposed, type Composed, type ListedTrack, type Named, type RunningOrder } from './compose';
 import { LONGEST, ROUGHLY, SHORTEST, momentOf, sameRecord, settle, type Moment, type TrackId } from './moments';
 
 /**
@@ -50,6 +50,8 @@ export type Change = {
   /** The names, either or both empty. Both empty says only that a track starts here. */
   artist: string;
   title: string;
+  /** The line of the side's list it is, by the list's own words, where its names are not the list's (compose.ts). */
+  line?: Named;
   gone?: boolean;
   sent?: { by: string; read: number };
 };
@@ -75,6 +77,13 @@ export type Row = {
   by: string | null;
   /** The visitor's change that gave the row its time or its name. */
   mine?: Change;
+  /** The list's own words for the row, where it is a line the list names: what an ID that renames it says it was. */
+  line?: Named;
+  /**
+   * The row is a line of the list whose ID puts it out of the list's order: it is shown by its time, among
+   * the rows as an ID of its own would be, and is not one of the lines the list's order goes by (rule 2).
+   */
+  astray?: boolean;
   /**
    * The row is a line with no name of its own, and its time is that of an ID nothing else claimed, standing
    * in for it (`sideRows`, rule 3). Which such line an ID stands in for can change as other lines are timed.
@@ -88,9 +97,14 @@ export type Row = {
 // The reader's test for two names being one record wants two words of some length in common, so that "Go" in
 // one comment and "Go" in another prove nothing. A list line and an ID that read the same letter for letter
 // are the same record however short: "Moby - Go" is on the tape once "Moby — Go" is.
-type Named = { artist: string; title: string };
 const spelt = (x: Named) => `${x.artist} ${x.title}`.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 const same = (a: Named, b: Named) => sameRecord(a, b) || spelt(a) === spelt(b);
+
+/** Whether a name is the list's own for a line, word for word: if not, an ID of the line has to say which line it is. */
+export const asListed = (name: Named, line: Named) => spelt(name) === spelt(line);
+
+/** Whether an ID is a line of the list: it names the same record, or says it is that line under another name. */
+const names = (id: Timed, line: ListedTrack) => line.known && id.known && (same(id, line) || (id.line !== undefined && same(id.line, line)));
 
 /**
  * The side's tracks as they will be once the visitor's changes are comments too, in order of time: what the
@@ -100,8 +114,8 @@ const same = (a: Named, b: Named) => sameRecord(a, b) || spelt(a) === spelt(b);
  *
  * · A change is read as its line of a comment will be: its time to the second, its names as written there.
  * · A change at a moment the side has marked is about that mark. A name replaces what was there, and a name
- *   always beats a mark without one. The visitor's own unposted change never replaces a name: it was made
- *   when there was none to replace, and one has turned up since.
+ *   always beats a mark without one. The visitor's own unposted change never replaces a name a track is
+ *   shown under: it was made when there was none to replace, and one has turned up since.
  * · A change further off is a new track from there.
  * · A mark taken away is gone, with everything said of it before. What is said of it in the same post
  *   stands, as the reader has it: so of changes said together, what they take away is taken away first, and
@@ -120,7 +134,7 @@ export function withChanges(said: Moment[], changes: Change[], length = Infinity
   for (const change of inOrder) {
     const where = { position: null, time: change.time };
     // A line the site writes always reads back (compose.test.ts holds it to that on every tape).
-    const line = splitComposed(change.gone ? composeRemoval(where) : composeId({ ...where, artist: change.artist, title: change.title })) as Composed;
+    const line = splitComposed(change.gone ? composeRemoval(where) : composeId({ ...where, artist: change.artist, title: change.title, line: change.line })) as Composed;
     // Nothing is said of a side past its end.
     if (line.time >= length) continue;
     const at = momentOf(moments.map((moment) => moment.start), line.time);
@@ -129,16 +143,20 @@ export function withChanges(said: Moment[], changes: Change[], length = Infinity
       continue;
     }
     const known = Boolean(line.artist || line.title);
-    const word = { artist: line.artist, title: line.title, known, by: change.sent?.by ?? '', date: saidWhen(change), mine: change };
+    const word = { artist: line.artist, title: line.title, known, by: change.sent?.by ?? '', date: saidWhen(change), mine: change, ...(line.line ? { line: line.line } : {}) };
     if (at < 0) {
       moments.push({ start: line.time, ...word });
       continue;
     }
-    const { guessed, ...was } = moments[at];
-    const wins = change.sent ? known || !was.known : known && !was.known;
+    // (Which line of the list a moment is goes with its name: a new name without one is no longer that line.)
+    const { guessed, line: wasLine, ...was } = moments[at];
+    // The visitor's own unposted name gives way to a name the moment already has, unless that name is one no
+    // track on the side shows: the same record said again a little on, which is taken as one play with the
+    // one before (`settle`). The page offered the moment as free, and posted, the name will be the moment's.
+    const wins = change.sent ? known || !was.known : known && (!was.known || !settle(moments, length).some((track) => track.start === was.start));
     // What is posted is said of the moment whether or not it is the moment's last word, and a moment starts
     // at the earliest time anyone gave for it. An unposted change that changes nothing isn't there at all.
-    if (wins || change.sent) moments[at] = { ...was, start: guessed ? line.time : Math.min(was.start, line.time), ...(wins ? word : {}) };
+    if (wins || change.sent) moments[at] = { ...was, start: guessed ? line.time : Math.min(was.start, line.time), ...(wins ? word : wasLine ? { line: wasLine } : {}) };
   }
   return settle(moments, length);
 }
@@ -156,7 +174,7 @@ export function withChanges(said: Moment[], changes: Change[], length = Infinity
  */
 function placed(lines: RunningOrder['tracks'], ids: Timed[]): Map<number, { id: Timed; byName: boolean }> {
   const points = lines.flatMap((line, i) => {
-    const named = line.known ? ids.filter((id) => id.known && same(id, line)) : [];
+    const named = ids.filter((id) => names(id, line));
     const said = line.at;
     // Of a line's own, the ID that names it comes before the one at its time, and the nearer to that time first.
     const timed = said === undefined ? [] : ids.filter((id) => !named.includes(id) && Math.abs(id.start - said) <= ROUGHLY).sort((a, b) => Math.abs(a.start - said) - Math.abs(b.start - said));
@@ -190,9 +208,11 @@ function placed(lines: RunningOrder['tracks'], ids: Timed[]): Map<number, { id: 
  * The rows of a side, in the order they play. Without a list the IDs are the rows. With one, its lines are,
  * and the IDs give them their times:
  *
- * 1. A line takes the ID that names the same record. On the tape's own tracklist the row keeps the line's
- *    words, which are the tape's. On a list from the comments it reads as the ID does: that is the comments'
- *    latest word for the track, and often the fuller one.
+ * 1. A line takes the ID that names the same record, or that says it is that line under another name. On the
+ *    tape's own tracklist the row keeps the line's words, which are the tape's, unless the ID says it is the
+ *    line renamed: then it reads as the ID does (and keeps the list's link to the record only if the new
+ *    name is still that record's). On a list from the comments it reads as the ID does: that is the
+ *    comments' latest word for the track, and often the fuller one.
  * 2. A line the list itself times takes the ID at that time, whatever it says. The reader has already weighed
  *    everything said of that moment, and a "??" in the list that someone has since named reads as the name.
  *    A time in a list that the reader made no ID of is not shown: it was past the end of the side, or was
@@ -203,8 +223,10 @@ function placed(lines: RunningOrder['tracks'], ids: Timed[]): Map<number, { id: 
  *    same two timed lines, is that track or one like it and stands in for it, the earliest such line first.
  *    Not an ID that names another line of the list: that is a track the list has, said at a time the list's
  *    order can't take.
- * 4. Any ID still unclaimed (a record the list doesn't have, or has under a name too different to tell, or
- *    out of its order) is not left out. It is a row of its own, after the last row to start before it.
+ * 4. Any ID still unclaimed is not left out. It is a row by its time, after the last row to start before
+ *    it. If it names a line that nothing else has claimed (it was said out of the list's order), it is that
+ *    line, shown there and not again in the line's own place: one track, one row. Otherwise (a record the
+ *    list doesn't have, or has under a name too different to tell) it is a row of its own.
  * 5. A track runs until the next one starts (`settle`). But where the list has lines with no time between
  *    it and the next, the list itself says other tracks played there, and nobody has said when: the track
  *    is then taken to play no longer than LONGEST, unless a comment says where it ends.
@@ -218,7 +240,7 @@ export function sideRows(order: RunningOrder | null, ids: Timed[]): Row[] {
   const lines = order.tracks;
   const firm = placed(lines, ids);
   const taken = new Set([...firm.values()].map((point) => point.id));
-  const listed = (id: Timed) => id.known && lines.some((line) => line.known && same(id, line));
+  const listed = (id: Timed) => lines.some((line) => names(id, line));
   // Between one timed line and the next, the IDs left over there stand in, in order of time, for the lines
   // with neither a name nor a time.
   const filled = new Map<number, Timed>();
@@ -240,10 +262,20 @@ export function sideRows(order: RunningOrder | null, ids: Timed[]): Row[] {
     } else if (!line.known) blanks.push(i);
   });
   fill(Infinity);
+  // An ID left over that names a line nothing has claimed is that line, out of the list's order.
+  const astray = new Map<Timed, number>();
+  for (const id of ids) {
+    if (taken.has(id)) continue;
+    const claimed = new Set(astray.values());
+    const i = lines.findIndex((line, k) => !firm.has(k) && !claimed.has(k) && names(id, line));
+    if (i >= 0) astray.set(id, i);
+  }
 
-  const rows = lines.map((line, i): Row => {
-    const id = firm.get(i)?.id ?? filled.get(i);
-    const said = id?.known && !(order.by === null && firm.get(i)?.byName) ? id : line;
+  // A line as a row, with the ID that gives it its time where one does. `byName`: the ID is the line's by
+  // naming the same record, not by the time the list gives the line.
+  const lineRow = (line: ListedTrack, id: Timed | undefined, byName: boolean): Row => {
+    const said = id?.known && (id.line !== undefined || !(order.by === null && byName)) ? id : line;
+    const record = !id?.line || same(id, line);
     return {
       n: line.n,
       artist: said.artist,
@@ -253,14 +285,21 @@ export function sideRows(order: RunningOrder | null, ids: Timed[]): Row[] {
       end: id?.end ?? null,
       by: id?.by || null,
       ...(id?.mine ? { mine: id.mine } : {}),
-      ...(filled.has(i) ? { filled: true } : {}),
-      ...(line.link ? { link: line.link } : {}),
-      ...(line.duration ? { duration: line.duration } : {}),
+      ...(line.known ? { line: { artist: line.artist, title: line.title } } : {}),
+      ...(line.link && record ? { link: line.link } : {}),
+      ...(line.duration && record ? { duration: line.duration } : {}),
     };
+  };
+  const elsewhere = new Set(astray.values());
+  const rows = lines.flatMap((line, i): Row[] => {
+    if (elsewhere.has(i)) return [];
+    const row = lineRow(line, firm.get(i)?.id ?? filled.get(i), Boolean(firm.get(i)?.byName));
+    return [filled.has(i) ? { ...row, filled: true } : row];
   });
   for (const id of ids) {
     if (taken.has(id)) continue;
-    rows.splice(rows.findLastIndex((row) => row.start !== null && row.start <= id.start) + 1, 0, loose(id));
+    const i = astray.get(id);
+    rows.splice(rows.findLastIndex((row) => row.start !== null && row.start <= id.start) + 1, 0, i === undefined ? loose(id) : { ...lineRow(lines[i], id, true), astray: true });
   }
   const stated = new Set(ids.filter((id) => id.until !== undefined).map((id) => id.start));
   rows.forEach((row, k) => {
@@ -340,7 +379,7 @@ export function couldStartAt(rows: Row[], time: number, length = Infinity): numb
 
   const out: number[] = [];
   if (free) {
-    const lines = rows.map((row, k) => ({ row, k })).filter(({ row }) => row.n !== null);
+    const lines = rows.map((row, k) => ({ row, k })).filter(({ row }) => row.n !== null && !row.astray);
     const bound = (row: Row) => row.start !== null && !row.filled;
     const from = lines.findLastIndex(({ row }) => bound(row) && (row.start as number) < time) + 1;
     const until = lines.findIndex(({ row }, i) => i >= from && bound(row));
@@ -375,7 +414,7 @@ export function suggest(rows: Row[], start: number, length: number | null, most 
   const marked = rows[startingAt(rows, start)];
   if (marked && marked.n !== null && !marked.known && !marked.filled) return [];
   const open = rows.flatMap((row): Row[] => (row !== marked ? [row] : row.n === null ? [] : [{ ...row, start: null, end: null, filled: false }]));
-  const lines = open.filter((row) => row.n !== null);
+  const lines = open.filter((row) => row.n !== null && !row.astray);
 
   const marks = lines.flatMap((row, i) => (row.start === null ? [] : [{ time: row.start, i }]));
   const before = [{ time: 0, i: 0 }, ...marks].findLast((m) => m.time <= start) as { time: number; i: number };

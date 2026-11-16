@@ -339,10 +339,10 @@ describe('a line of the list the visitor has given a time, not yet posted', () =
     expect(screen.getByRole('form', { name: 'ID the track at 0:03:41' })).toBeInTheDocument();
     expect(title()).toHaveValue('The Count');
     await page.user.type(title(), ' (Remix){Enter}');
-    await waitFor(() => expect(page.posts()).toEqual(['[3:41] Butsch - The Count (Remix)']));
+    // The ID says which line of the list it is, so the line is that line still, under the name typed.
+    await waitFor(() => expect(page.posts()).toEqual(['[3:41] Butsch - The Count (Remix) [was Butsch - The Count]']));
     await waitFor(() => expect(page.bar()).toBeNull());
-    // The tape's own tracklist keeps its own words for the line; the time is now the side's.
-    expect(page.rows()[1]).toBe('0:03:41Butsch — The Count');
+    expect(page.rows().slice(0, 2)).toEqual(['0:00:00The Prodigy — Hyperspeed', '0:03:41Butsch — The Count (Remix)']);
   });
 
   it('Post: the line keeps its time through the reading of the comments, and is then the side’s', async () => {
@@ -631,7 +631,8 @@ describe('the list’s order, and the one moment each track has', () => {
     // The fourth line of the list, said to start before the second.
     const page = tapePage({ sides: LISTED, posted: [{ by: 'Josh', says: '[0:00] The Prodigy - Hyperspeed\n[3:41] Butsch - The Count\n[1:00] Phenomania - Caramelle' }] });
     await page.read();
-    expect(page.rows()).toEqual(['0:00:00The Prodigy — Hyperspeed', '0:01:00Phenomania — Caramelle', '0:03:41Butsch — The Count', '03Rhythm For Reasons — Grand National', '04Phenomania — Caramelle']);
+    // And the line is on the page once, where its time puts it.
+    expect(page.rows()).toEqual(['0:00:00The Prodigy — Hyperspeed', '0:01:00Phenomania — Caramelle', '0:03:41Butsch — The Count', '03Rhythm For Reasons — Grand National']);
   });
 
   it('gives a mark with no name to the first line with no name that it could be, before and after it is posted', async () => {
@@ -648,6 +649,126 @@ describe('the list’s order, and the one moment each track has', () => {
     await waitFor(() => expect(page.posts()).toEqual(['[5:00] ? - ?']));
     await waitFor(() => expect(page.shared().sides[0].rows.every((row) => !row.mine)).toBe(true));
     expect(page.rows()[1]).toBe('0:05:00Unknown trackID it');
+  });
+});
+
+describe('a line of the tape’s tracklist, edited from its row', () => {
+  const startsAt = () => screen.getByRole('textbox', { name: 'Starts at' });
+  const listed = (setup: Parameters<typeof tapePage>[0] = {}) =>
+    tapePage({ sides: LISTED, posted: [{ by: 'Josh', says: '[0:00] The Prodigy - Hyperspeed\n[2:00] Butsch - The Count\n[3:00] Rhythm For Reasons - Grand National' }], ...setup });
+
+  it('its time changed to one past the next track’s: it moves there, and is on the page once', async () => {
+    const page = listed();
+    await page.read();
+    await page.user.click(page.button('Edit Butsch — The Count, at 0:02:00'));
+    const reading = hold(page.server);
+    await page.user.clear(startsAt());
+    await page.user.type(startsAt(), '5:00{Enter}');
+    await waitFor(() => expect(page.posts()).toEqual(['[2:00] no track starts here\n[5:00] Butsch - The Count']));
+    const moved = ['0:00:00The Prodigy — Hyperspeed', '0:03:00Rhythm For Reasons — Grand National', '0:05:00Butsch — The Count', '04Phenomania — Caramelle'];
+    await waitFor(() => expect(page.rows()).toEqual(moved));
+    expect(page.marks()).toBe('0 180 300');
+    // And so the comments read, once they are read again.
+    reading.go();
+    await waitFor(() => expect(page.shared().sides[0].rows.every((row) => !row.mine)).toBe(true));
+    expect(page.rows()).toEqual(moved);
+    expect(screen.getByText('3 of 4 timed')).toBeInTheDocument();
+  });
+
+  it('its name changed to another record’s: the row keeps its place and its time, and reads as typed', async () => {
+    const page = listed();
+    await page.read();
+    await page.user.click(page.button('Edit Butsch — The Count, at 0:02:00'));
+    const reading = hold(page.server);
+    await page.user.clear(artist());
+    await page.user.type(artist(), 'LFO');
+    await page.user.clear(title());
+    await page.user.type(title(), 'LFO{Enter}');
+    await waitFor(() => expect(page.posts()).toEqual(['[2:00] LFO - LFO [was Butsch - The Count]']));
+    const renamed = ['0:00:00The Prodigy — Hyperspeed', '0:02:00LFO — LFO', '0:03:00Rhythm For Reasons — Grand National', '04Phenomania — Caramelle'];
+    await waitFor(() => expect(page.rows()).toEqual(renamed));
+    reading.go();
+    await waitFor(() => expect(page.shared().sides[0].rows.every((row) => !row.mine)).toBe(true));
+    expect(page.rows()).toEqual(renamed);
+    // Put right again, by anyone: it is still the list's second line that is being named.
+    await page.user.click(page.button('Edit LFO — LFO, at 0:02:00'));
+    await page.user.type(title(), ' (Leeds Warehouse Mix){Enter}');
+    await waitFor(() => expect(page.posts()[1]).toBe('[2:00] LFO - LFO (Leeds Warehouse Mix) [was Butsch - The Count]'));
+    // The list's own words, typed back, are the list's again.
+    await waitFor(() => expect(page.button('Edit LFO — LFO (Leeds Warehouse Mix), at 0:02:00')).toBeInTheDocument());
+    await page.user.click(page.button('Edit LFO — LFO (Leeds Warehouse Mix), at 0:02:00'));
+    await page.user.clear(artist());
+    await page.user.type(artist(), 'Butsch');
+    await page.user.clear(title());
+    await page.user.type(title(), 'The Count{Enter}');
+    await waitFor(() => expect(page.posts()[2]).toBe('[2:00] Butsch - The Count'));
+  });
+
+  it('a line with no time yet: Edit, or its number, opens the blanks in its row with the time to fill in, and the tape is not started', async () => {
+    const page = listed();
+    await page.read();
+    await page.user.click(page.button('Edit Phenomania — Caramelle'));
+    expect(screen.getByRole('form', { name: 'The time track 4 starts' }).closest('li')).toBe(within(page.tracklist() as HTMLElement).getAllByRole('listitem')[3]);
+    expect(startsAt()).toHaveValue('');
+    expect(startsAt()).toHaveFocus();
+    expect(artist()).toHaveValue('Phenomania');
+    expect(page.went).not.toHaveBeenCalled();
+    // Before the tape has been played there is no time of the tape's to use.
+    expect(page.has(/^Use/)).toBe(false);
+    await page.user.keyboard('{Escape}');
+    expect(page.button('Set the time for Phenomania — Caramelle')).toHaveFocus();
+    await page.user.click(page.button('Set the time for Phenomania — Caramelle'));
+    expect(startsAt()).toHaveFocus();
+  });
+
+  it('a line with no time yet, given one by hand: it waits to be posted like a + on its row, and goes up with the rest', async () => {
+    const page = listed();
+    await page.read();
+    await page.user.click(page.button('Edit Phenomania — Caramelle'));
+    await page.user.type(startsAt(), 'soon{Enter}');
+    expect(screen.getByRole('alert')).toHaveTextContent('Enter the time like 0:05:00.');
+    await page.user.clear(startsAt());
+    await page.user.type(startsAt(), '2:03{Enter}');
+    expect(screen.getByRole('alert')).toHaveTextContent('Another track starts at 0:02:00.');
+    await page.user.clear(startsAt());
+    await page.user.type(startsAt(), '6:30{Enter}');
+    expect(screen.queryByRole('form', { name: 'The time track 4 starts' })).not.toBeInTheDocument();
+    expect(page.rows()[3]).toBe('0:06:30Phenomania — CaramelleUndo');
+    expect(page.bar()).toHaveTextContent('1 ID pending');
+    expect(page.posts()).toEqual([]);
+    // The keyboard is on the row's time, not on "Undo", which another Enter would set off.
+    expect(page.button('Play from 0:06:30, your time, not posted yet')).toHaveFocus();
+    await page.user.click(within(page.bar() as HTMLElement).getByRole('button', { name: 'Post' }));
+    await waitFor(() => expect(page.posts()).toEqual(['[6:30] Phenomania - Caramelle']));
+  });
+
+  it('a line with no time yet, given a time out of the list’s order and its name put right: one row, by its time, under the name typed', async () => {
+    const page = listed();
+    await page.read();
+    await page.user.click(page.button('Edit Phenomania — Caramelle'));
+    await page.user.type(startsAt(), '1:00');
+    await page.user.type(title(), ' (Partyunicorn Mix){Enter}');
+    expect(page.rows()).toEqual(['0:00:00The Prodigy — Hyperspeed', '0:01:00Phenomania — Caramelle (Partyunicorn Mix)Undo', '0:02:00Butsch — The Count', '0:03:00Rhythm For Reasons — Grand National']);
+    await page.user.click(within(page.bar() as HTMLElement).getByRole('button', { name: 'Post' }));
+    await waitFor(() => expect(page.posts()).toEqual(['[1:00] Phenomania - Caramelle (Partyunicorn Mix) [was Phenomania - Caramelle]']));
+    await waitFor(() => expect(page.shared().sides[0].rows.every((row) => !row.mine)).toBe(true));
+    expect(page.rows()).toEqual(['0:00:00The Prodigy — Hyperspeed', '0:01:00Phenomania — Caramelle (Partyunicorn Mix)', '0:02:00Butsch — The Count', '0:03:00Rhythm For Reasons — Grand National']);
+    expect(screen.getByText('All 4 tracks timed')).toBeInTheDocument();
+  });
+
+  it('on a phone: the line’s number opens the sheet, which adds the time and asks no name', async () => {
+    const page = listed({ phone: true, name: null });
+    await page.read();
+    // Hard by another track's start no line could be the one starting, and each has its number, not a +.
+    await page.at(121);
+    await page.user.click(page.button('Set the time for Phenomania — Caramelle'));
+    const sheet = within(screen.getByRole('dialog', { name: 'The time track 4 starts' }));
+    expect(sheet.queryByRole('textbox', { name: 'Your name' })).not.toBeInTheDocument();
+    await page.at(400);
+    await page.user.click(sheet.getByRole('button', { name: 'Use the tape’s time, 0:06:40' }));
+    await page.user.click(sheet.getByRole('button', { name: /^Add/ }));
+    await waitFor(() => expect(page.rows()[3]).toBe('0:06:40Phenomania — CaramelleUndo'));
+    expect(page.posts()).toEqual([]);
   });
 });
 

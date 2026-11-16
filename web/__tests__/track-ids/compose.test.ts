@@ -38,10 +38,25 @@ describe('IDs the site writes', () => {
           for (const [artist, title] of names) {
             const written = composeId({ position: positions.length > 1 ? side.position : null, time, artist, title });
             expect(readComposed(written, positions), `${tape.id} ${written}`).toEqual([{ side: index, start: time, artist, title, gone: false }]);
+            // And with the line of the list it is, whatever that line's own words.
+            for (const [was, called] of names) {
+              const renamed = composeId({ position: positions.length > 1 ? side.position : null, time, artist, title, line: { artist: was, title: called } });
+              expect(readComposed(renamed, positions), `${tape.id} ${renamed}`).toEqual([{ side: index, start: time, artist, title, gone: false, line: { artist: was, title: called } }]);
+            }
           }
         }
       });
     }
+  });
+
+  it('says which line of the list an ID is, where it names the track otherwise, and never of a mark with no name', () => {
+    const line = { artist: 'Moby', title: 'Go' };
+    expect(composeId({ position: 'B', time: 754, artist: 'Moby', title: 'Go (Woodtick Mix)', line })).toBe('[B 12:34] Moby - Go (Woodtick Mix) [was Moby - Go]');
+    expect(splitComposed('[B 12:34] Moby - Go (Woodtick Mix) [was Moby - Go]')).toEqual({ position: 'B', time: 754, artist: 'Moby', title: 'Go (Woodtick Mix)', gone: false, line });
+    expect(composeId({ position: null, time: 60, artist: '', title: '', line })).toBe('[1:00] ? - ?');
+    // A title that ends in brackets of its own is a title.
+    expect(splitComposed('[1:00] Moby - Go [Woodtick Mix]')).toEqual({ position: null, time: 60, artist: 'Moby', title: 'Go [Woodtick Mix]', gone: false });
+    expect(splitComposed('[1:00] Moby - Go [was Moby - Go [Woodtick Mix]]')?.line).toEqual({ artist: 'Moby', title: 'Go [Woodtick Mix]' });
   });
 
   it('takes its own form apart without knowing the tape, for showing in the comments', () => {

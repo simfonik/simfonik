@@ -28,7 +28,8 @@ describe('what the tracklist is made of', () => {
         <Tracklist />
       </TapeTrackIdsProvider>,
     );
-    expect(screen.getAllByRole('listitem').map((row) => row.textContent)).toEqual(['01The Prodigy — Hyperspeed (G-Force Part 2)', '02Butsch — The Count(4:10)', '03Rhythm For Reasons — Grand National']);
+    // (Each also has "Edit", which a mouse finds on the row under it.)
+    expect(screen.getAllByRole('listitem').map((row) => row.textContent)).toEqual(['01The Prodigy — Hyperspeed (G-Force Part 2)Edit', '02Butsch — The Count(4:10)Edit', '03Rhythm For Reasons — Grand NationalEdit']);
     expect(screen.getByRole('link', { name: /Hyperspeed/ })).toHaveAttribute('href', 'https://www.discogs.com/release/1');
     expect(screen.getByText('0 of 3 timed')).toBeInTheDocument();
     expect(screen.getByText(/press the \+ on its row/)).toBeInTheDocument();
@@ -216,6 +217,15 @@ describe('the tracklist’s history', () => {
     { by: 'Softboiled', says: 'The track at 12:34 is Moby - Go' },
     { by: 'Josh', says: '[6:43] no track starts here' },
   ];
+
+  it('says what the list had a track down as, where a post gave it another name', async () => {
+    const page = tapePage({ sides: [{ position: 'A', tracks: OWN }], posted: [{ by: 'Dana', says: '[3:41] Butsch - The Count (Remix) [was Butsch - The Count]' }] });
+    await page.read();
+    const history = await screen.findByRole('button', { name: 'History · 1 post' });
+    await page.user.click(history);
+    const log = document.getElementById(history.getAttribute('aria-controls') as string) as HTMLElement;
+    expect(within(log).getByRole('listitem')).toHaveTextContent('0:03:41 Butsch — The Count (Remix) (was Butsch — The Count)Dana');
+  });
 
   it('is every post of IDs in the site’s form, newest first, shut until asked for, and none of them is in the comments', async () => {
     const page = tapePage({ sides: [{ position: 'A', tracks: OWN }], posted });

@@ -17,8 +17,11 @@ type GoTo = (position: string | null, time: number) => void;
 /** Where the tape is: which of its sides is loaded, how far in, and whether it has been played at all on this visit. */
 export type Playhead = { side: number; time: number; started: boolean };
 
-/** A track someone wants to ID or put right from outside the player: the side's label and where it starts. */
-type Asked = { position: string | null; time: number };
+/**
+ * A row of the tracklist someone wants the blanks for: the side's label and where the track starts, or, for
+ * a line of the list still waiting for its time, null and the line's number in the list.
+ */
+type Asked = { position: string | null; time: number | null; n: number | null };
 
 /**
  * What the page needs of a side: its name, its own tracklist where the tape has one, its length in seconds
@@ -60,7 +63,7 @@ type TapeTrackIds = {
   /** The visitor's changes that wait to be posted, oldest first. */
   unposted: Change[];
   /** Says something of a moment and keeps it, unposted, on this device. It replaces what the visitor had unposted of that moment. */
-  say: (change: Pick<Change, 'side' | 'time' | 'artist' | 'title'>) => void;
+  say: (change: Pick<Change, 'side' | 'time' | 'artist' | 'title' | 'line'>) => void;
   /** Takes an unposted change back. */
   unsay: (change: Change) => void;
   /**
@@ -70,7 +73,7 @@ type TapeTrackIds = {
    */
   post: (changes: Change[], name: string) => Promise<string | null>;
   /** The tracklist asks for the blanks that ID a track to open for one of its rows; they answer once. */
-  ask: (position: string | null, time: number) => void;
+  ask: (row: Asked) => void;
   asked: Asked | null;
   answered: () => void;
   /**
@@ -122,7 +125,8 @@ const sameMoment = (a: Pick<Change, 'side' | 'time'>, b: Pick<Change, 'side' | '
 /** Something kept on the device that is one of the visitor's unposted changes. */
 const isKept = (x: unknown): x is Change => {
   const c = x as Change;
-  return Boolean(c) && [c.side, c.time].every(Number.isFinite) && typeof c.artist === 'string' && typeof c.title === 'string' && !c.gone && !c.sent;
+  const named = (x: unknown) => typeof (x as Change)?.artist === 'string' && typeof (x as Change)?.title === 'string';
+  return Boolean(c) && [c.side, c.time].every(Number.isFinite) && named(c) && (c.line === undefined || named(c.line)) && !c.gone && !c.sent;
 };
 
 /**
@@ -252,7 +256,7 @@ export function TapeTrackIdsProvider({ tapeId, sides: tape, children }: { tapeId
     };
   }, []);
 
-  const say = useCallback((change: Pick<Change, 'side' | 'time' | 'artist' | 'title'>) => setChanges((all) => [...all.filter((was) => was.sent || !sameMoment(was, change)), change]), []);
+  const say = useCallback((change: Pick<Change, 'side' | 'time' | 'artist' | 'title' | 'line'>) => setChanges((all) => [...all.filter((was) => was.sent || !sameMoment(was, change)), change]), []);
   const unsay = useCallback((change: Change) => setChanges((all) => all.filter((was) => was !== change)), []);
   const reread = useCallback(() => {
     latest.current += 1;
@@ -265,7 +269,7 @@ export function TapeTrackIdsProvider({ tapeId, sides: tape, children }: { tapeId
         .sort((a, b) => a.side - b.side || a.time - b.time)
         .map((change) => {
           const where = { position: several ? tape[change.side].position : null, time: change.time };
-          return { change, line: change.gone ? composeRemoval(where) : composeId({ ...where, artist: change.artist, title: change.title }) };
+          return { change, line: change.gone ? composeRemoval(where) : composeId({ ...where, artist: change.artist, title: change.title, line: change.line }) };
         });
       // A comment holds only so much. A sitting that has more to say than one holds goes up as two, or
       // three, one after another.
@@ -301,7 +305,7 @@ export function TapeTrackIdsProvider({ tapeId, sides: tape, children }: { tapeId
     },
     [tapeId, tape, several, reread],
   );
-  const ask = useCallback((position: string | null, time: number) => setAsked({ position, time }), []);
+  const ask = useCallback((row: Asked) => setAsked(row), []);
   const answered = useCallback(() => setAsked(null), []);
 
   const value = useMemo(

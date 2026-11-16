@@ -9,7 +9,7 @@ import { composeId, composeRemoval, readComposed, type RunningOrder } from '@/li
 import { settle, type Moment, type TrackId } from '@/lib/track-ids/moments';
 import { digest, reconcile, sideNames, trusted, type Sighting } from '@/lib/track-ids/parse';
 import { readSaid } from '@/lib/track-ids/said';
-import { canMoveTo, canStartAt, contributors, couldStartAt, playingAt, saidBy, sideRows, standing, startingAt, suggest, timeline, withChanges, type Change, type Row } from '@/lib/track-ids/side';
+import { asListed, canMoveTo, canStartAt, contributors, couldStartAt, playingAt, saidBy, sideRows, standing, startingAt, suggest, timeline, withChanges, type Change, type Row } from '@/lib/track-ids/side';
 import type { Tape } from '@/types/tape';
 
 /** What the comments say starts at a time: an ID, or with no names a spot someone marked. */
@@ -184,7 +184,33 @@ describe('a side’s rows', () => {
     // The last line's record, said to start the side: it can't be the unnamed line in the middle.
     const kept = list('Josh', 'Orbital - Chime', null, 'Joey Beltram - Energy Flash', 'Altern 8 - Infiltrate 202');
     const ids = [id(0, 'Altern 8', 'Infiltrate 202'), id(300, 'Orbital', 'Chime'), id(900, 'Joey Beltram', 'Energy Flash')];
-    expect(shown(rows(kept, ids))).toEqual(['- 0 Altern 8 / Infiltrate 202', '1 300 Orbital / Chime', '2 - ??', '3 900 Joey Beltram / Energy Flash', '4 - Altern 8 / Infiltrate 202']);
+    expect(shown(rows(kept, ids))).toEqual(['4 0 Altern 8 / Infiltrate 202', '1 300 Orbital / Chime', '2 - ??', '3 900 Joey Beltram / Energy Flash']);
+  });
+
+  it('have an ID that says it is a line under another name as that line: in its place, reading as the ID does', () => {
+    const own: RunningOrder = { by: null, tracks: [{ n: 1, artist: 'Orbital', title: 'Chime', known: true, link: 'https://www.discogs.com/release/1', duration: '4:10' }, { n: 2, artist: 'LFO', title: 'LFO', known: true }] };
+    const line = { artist: 'Orbital', title: 'Chime' };
+    // With its mix added it is still the list's record, and keeps the list's link to it.
+    const fuller = rows(own, [{ ...id(60, 'Orbital', 'Chime (JZJ Remix)'), line }]);
+    expect(shown(fuller)).toEqual(['1 60 Orbital / Chime (JZJ Remix)', '2 - LFO / LFO']);
+    expect(fuller[0]).toMatchObject({ line, link: 'https://www.discogs.com/release/1', duration: '4:10' });
+    // Named as another record altogether it is still the line, and the link to the old record goes.
+    const other = rows(own, [{ ...id(60, 'Joey Beltram', 'Energy Flash'), line }]);
+    expect(shown(other)).toEqual(['1 60 Joey Beltram / Energy Flash', '2 - LFO / LFO']);
+    expect(other[0].link).toBeUndefined();
+    expect(other[0].line).toEqual(line);
+    // Without saying so, an ID with another name is a track of its own, and the line waits.
+    expect(shown(rows(own, [id(60, 'Joey Beltram', 'Energy Flash')]))).toEqual(['- 60 Joey Beltram / Energy Flash', '1 - Orbital / Chime', '2 - LFO / LFO']);
+    // A name given the moment afterwards that doesn't say so is no longer that line, on the page as in the reader.
+    expect(shown(rows(own, [{ ...id(60, 'Joey Beltram', 'Energy Flash'), line }], [said(60, 'Altern 8', 'Infiltrate 202', sent)]))).toEqual(['- 60 Altern 8 / Infiltrate 202', '1 - Orbital / Chime', '2 - LFO / LFO']);
+    // The visitor's own change does the same before it is posted, and out of the list's order too.
+    expect(shown(rows(own, [id(60, 'LFO', 'LFO')], [said(30, 'Joey Beltram', 'Energy Flash', { line })]))).toEqual(['1 30 Joey Beltram / Energy Flash', '2 60 LFO / LFO']);
+    expect(shown(rows(own, [id(60, 'Orbital', 'Chime')], [said(30, 'LFO', 'LFO (Leeds Warehouse Mix)', { line: { artist: 'LFO', title: 'LFO' } })]))).toEqual(['2 30 LFO / LFO (Leeds Warehouse Mix)', '1 60 Orbital / Chime']);
+  });
+
+  it('tell a name that is the list’s own, word for word, from one that is not', () => {
+    const line = { artist: 'Orbital', title: 'Chime' };
+    expect([asListed({ artist: ' orbital ', title: 'CHIME' }, line), asListed({ artist: 'Orbital', title: 'Chime (JZJ Remix)' }, line), asListed({ artist: 'Orbital', title: '' }, line)]).toEqual([true, false, false]);
   });
 
   it('give a line the list itself times the ID at that time, and the name with it where the list had none', () => {
@@ -228,28 +254,39 @@ describe('a side’s rows', () => {
   describe('in the list’s order: down a side, times only rise', () => {
     const four = list(null, 'Orbital - Chime', 'Joey Beltram - Energy Flash', 'Altern 8 - Infiltrate 202', 'LFO - LFO');
 
-    it('show an ID that names a line it can’t belong to by its time, as a track of its own, and leave the line waiting', () => {
+    it('show an ID that names a line out of the list’s order by its time, as that line, and the line nowhere else', () => {
       // The fourth line, said to start before the second.
       const ids = [id(0, 'Orbital', 'Chime'), id(200, 'Joey Beltram', 'Energy Flash'), id(400, 'Altern 8', 'Infiltrate 202'), id(100, 'LFO', 'LFO')];
-      expect(shown(rows(four, ids))).toEqual(['1 0 Orbital / Chime', '- 100 LFO / LFO', '2 200 Joey Beltram / Energy Flash', '3 400 Altern 8 / Infiltrate 202', '4 - LFO / LFO']);
+      const all = rows(four, ids);
+      expect(shown(all)).toEqual(['1 0 Orbital / Chime', '4 100 LFO / LFO', '2 200 Joey Beltram / Energy Flash', '3 400 Altern 8 / Infiltrate 202']);
+      expect(all.map((r) => Boolean(r.astray))).toEqual([false, true, false, false]);
+      // The lines in the list's order go on as if it were an ID of its own: the + is offered as it was.
+      const waiting = rows(four, [ids[0], ids[2], ids[3]]);
+      expect(shown(waiting)).toEqual(['1 0 Orbital / Chime', '4 100 LFO / LFO', '2 - Joey Beltram / Energy Flash', '3 400 Altern 8 / Infiltrate 202']);
+      expect([couldStartAt(waiting, 50), couldStartAt(waiting, 200)]).toEqual([[2], [2]]);
+    });
+
+    it('have a record that is on the list once and said twice as its line once, and the other time as an ID of its own', () => {
+      const ids = [id(0, 'Orbital', 'Chime'), id(200, 'Joey Beltram', 'Energy Flash'), id(900, 'Orbital', 'Chime')];
+      expect(shown(rows(four, ids))).toEqual(['1 0 Orbital / Chime', '2 200 Joey Beltram / Energy Flash', '- 900 Orbital / Chime', '3 - Altern 8 / Infiltrate 202', '4 - LFO / LFO']);
     });
 
     it('don’t let one mistimed ID unseat the rest', () => {
       // The first line, said to start an hour in: every other line would have to come after it.
       const ids = [id(3600, 'Orbital', 'Chime'), id(200, 'Joey Beltram', 'Energy Flash'), id(400, 'Altern 8', 'Infiltrate 202'), id(600, 'LFO', 'LFO')];
-      expect(shown(rows(four, ids))).toEqual(['1 - Orbital / Chime', '2 200 Joey Beltram / Energy Flash', '3 400 Altern 8 / Infiltrate 202', '4 600 LFO / LFO', '- 3600 Orbital / Chime']);
+      expect(shown(rows(four, ids))).toEqual(['2 200 Joey Beltram / Energy Flash', '3 400 Altern 8 / Infiltrate 202', '4 600 LFO / LFO', '1 3600 Orbital / Chime']);
     });
 
     it('keep what was said earlier where two times can’t both stand: a new ID that can’t fit never unseats an older one', () => {
       // The keeper times their own seventh line; someone then says the second line starts after it.
       const kept: RunningOrder = { by: 'Josh', tracks: [...four.tracks.slice(0, 2), { n: 3, artist: '', title: '', known: false, at: 805 }] };
       const older = [id(805, '', '', 'Josh', '2013-01-01'), id(1075, 'Joey Beltram', 'Energy Flash', 'Rents', '2026-01-01')];
-      expect(shown(rows(kept, older))).toEqual(['1 - Orbital / Chime', '2 - Joey Beltram / Energy Flash', '3 805 ??', '- 1075 Joey Beltram / Energy Flash']);
+      expect(shown(rows(kept, older))).toEqual(['1 - Orbital / Chime', '3 805 ??', '2 1075 Joey Beltram / Energy Flash']);
       // Said the other way round, it is the keeper's time that can't fit.
       const newer = [id(805, '', '', 'Josh', '2026-01-01'), id(1075, 'Joey Beltram', 'Energy Flash', 'Rents', '2013-01-01')];
       expect(shown(rows(kept, newer))).toEqual(['- 805 ??', '1 - Orbital / Chime', '2 1075 Joey Beltram / Energy Flash', '3 - ??']);
       // The visitor's own change is the newest word of all.
-      expect(shown(rows(kept, [older[0]], [said(1075, 'Joey Beltram', 'Energy Flash')]))).toEqual(['1 - Orbital / Chime', '2 - Joey Beltram / Energy Flash', '3 805 ??', '- 1075 Joey Beltram / Energy Flash']);
+      expect(shown(rows(kept, [older[0]], [said(1075, 'Joey Beltram', 'Energy Flash')]))).toEqual(['1 - Orbital / Chime', '3 805 ??', '2 1075 Joey Beltram / Energy Flash']);
     });
 
     it('have the two plays of a record that is on the list twice in the list’s order', () => {
@@ -467,7 +504,7 @@ describe('every side in the archive', () => {
   });
 
   // What pressing + on each waiting line at a moment would do, worked out the long way: say it, work the side
-  // out again, and see whether that line has that moment and every other line the time it had. (A line with
+  // out again, and see whether that line has that moment in the list's order and every other line the time it had. (A line with
   // no name, whose time only stands in for it, is no such line: which unnamed track it has may change.)
   const pressed = (o: RunningOrder, ids: Moment[], changes: Change[], rows: Row[], time: number, end: number) =>
     rows.flatMap((row, k) => {
@@ -475,8 +512,9 @@ describe('every side in the archive', () => {
       const change = said(time, row.known ? row.artist : '', row.known ? row.title : '');
       const then = sideRows(o, withChanges(ids, [...changes, change], end));
       const line = (n: number | null) => then.find((r) => r.n === n) as Row;
-      const kept = rows.every((was) => was.n === null || was.start === null || was.filled || line(was.n).start === was.start);
-      return line(row.n).start === time && line(row.n).mine === change && kept ? [k] : [];
+      const kept = rows.every((was) => was.n === null || was.start === null || was.filled || (line(was.n).start === was.start && Boolean(line(was.n).astray) === Boolean(was.astray)));
+      // In the list's order: a line given a time out of it has the time too, but that is no + (rule 2).
+      return line(row.n).start === time && line(row.n).mine === change && !line(row.n).astray && kept ? [k] : [];
     });
   // Moments to try on a side: before anything, hard by each start on both sides of it, and at the quarters
   // of each stretch between two tracks and of the ten minutes after the last.
@@ -527,9 +565,9 @@ describe('every side in the archive', () => {
     return reader;
   };
   const written = (position: string | null, changes: Change[]) =>
-    [...changes].sort((a, b) => a.time - b.time).map((c) => (c.gone ? composeRemoval({ position, time: c.time }) : composeId({ position, time: c.time, artist: c.artist, title: c.title }))).join('\n');
+    [...changes].sort((a, b) => a.time - b.time).map((c) => (c.gone ? composeRemoval({ position, time: c.time }) : composeId({ position, time: c.time, artist: c.artist, title: c.title, line: c.line }))).join('\n');
   // A side's rows as the page shows them: each one's place in the list, its time and where it ends, and its words.
-  const page = (rows: Row[]) => rows.map((r) => `${r.n ?? '-'} ${r.start ?? '-'}-${r.end ?? '-'} ${r.known ? `${r.artist} / ${r.title}` : '??'}`);
+  const page = (rows: Row[]) => rows.map((r) => `${r.n ?? '-'} ${r.start ?? '-'}-${r.end ?? '-'} ${r.known ? `${r.artist} / ${r.title}` : '??'}${r.astray ? ' (out of the list’s order)' : ''}${r.link ? ' (linked)' : ''}`);
 
   it('goes on doing so, and keeps its rows in order of time, as a visitor times a side line by line; and posted together, the times read back as they stood', () => {
     let timed = 0;
@@ -577,6 +615,12 @@ describe('every side in the archive', () => {
         if (canStartAt(rows, time, end)) {
           // What the page offers there: a point marked, a track named, a line of the list given the time.
           cases.push({ what: 'marked', changes: [said(time)] });
+          // And by hand, from a row: any line still waiting, in the list's order or out of it, under the
+          // list's name for it or another.
+          for (const row of rows.filter((r) => r.n !== null && r.start === null && r.line).slice(0, 3)) {
+            cases.push({ what: 'a line timed by hand', changes: [said(time, row.artist, row.title)] });
+            cases.push({ what: 'a line timed by hand', changes: [said(time, 'Zzyzx Road', `Quite Unlike Anything ${time}`, { line: row.line })] });
+          }
           cases.push({ what: 'named', changes: [said(time, 'Zzyzx Road', `Quite Unlike Anything ${time}`, posted)] });
           for (const k of couldStartAt(rows, time, end).slice(0, 2)) cases.push({ what: 'a line timed', changes: [said(time, rows[k].known ? rows[k].artist : '', rows[k].known ? rows[k].title : '')] });
         } else {
@@ -591,6 +635,7 @@ describe('every side in the archive', () => {
         const gone = said(row.start, '', '', { gone: true, ...posted });
         cases.push({ what: 'removed', changes: [gone] });
         cases.push({ what: 'renamed', changes: [said(row.start, 'Zzyzx Road', 'Quite Unlike Anything', posted)] });
+        if (row.line) cases.push({ what: 'a line renamed', changes: [said(row.start, 'Zzyzx Road', 'Quite Unlike Anything', { line: row.line, ...posted })] });
         const rest = rows.filter((r) => r !== row);
         for (const off of [-30, -9, -5, -3, -1, 1, 3, 5, 9, 30]) {
           const to = row.start + off;
@@ -613,6 +658,7 @@ describe('every side in the archive', () => {
     }
     // The check is of something, of every kind.
     for (const what of ['marked', 'named', 'a line timed', 'by hand', 'moved']) expect(tried[what], what).toBeGreaterThan(2000);
-    for (const what of ['removed', 'renamed']) expect(tried[what], what).toBeGreaterThan(400);
+    for (const what of ['removed', 'renamed', 'a line timed by hand']) expect(tried[what], what).toBeGreaterThan(400);
+    expect(tried['a line renamed']).toBeGreaterThan(50);
   });
 });

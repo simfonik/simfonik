@@ -332,6 +332,14 @@ describe('IDs made with the site’s own form, which places them to the second',
     expect(tracks([at(100, 'Orbital', 'Chime', '1'), at(105, 'Joey Beltram', 'Energy Flash', '2')])).toEqual(['100 Joey Beltram — Energy Flash']);
   });
 
+  it('carry the line of the list an ID says it is for as long as that ID is the moment’s last word', () => {
+    const line = { artist: 'Orbital', title: 'Chime' };
+    const moments = (read: Sighting[]) => reconcile(read, [3600])[0].map((m) => `${m.start} ${m.title}${m.line ? ` (was ${m.line.title})` : ''}`);
+    expect(moments([at(100, 'Orbital', 'Chime', '1'), at(100, 'Orbital', 'Chime (JZJ Remix)', '2', { line })])).toEqual(['100 Chime (JZJ Remix) (was Chime)']);
+    // A later name that doesn't say so is not that line.
+    expect(moments([at(100, 'Orbital', 'Chime (JZJ Remix)', '2', { line }), at(100, 'LFO', 'LFO', '3')])).toEqual(['100 LFO']);
+  });
+
   it('are said of a track someone timed in a sentence only within five seconds of where it starts, like any other', () => {
     // Twelve seconds into a track from an old comment, an ID made with the form is the next track. Two
     // times typed into sentences that close would be one moment, and the later would replace the earlier.

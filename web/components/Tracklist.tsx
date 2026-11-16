@@ -54,7 +54,9 @@ const chevron = (
  * time carries its number in the list where the time will go. While its side plays, the rows that could be
  * the track starting now have a + there instead, and pressing it gives the row that moment. A row that has
  * its time has "Edit", which opens the blanks at the player for that track: its name put right, its time
- * moved, or the ID taken away. With a mouse the blanks open in the row itself (the row makes a place for
+ * moved, or the ID taken away. A row still waiting for its time has it too, and there the blanks take a time
+ * typed by hand (the line's number, where the time will go, opens them as well: on a phone it is the way
+ * to them). With a mouse the blanks open in the row itself (the row makes a place for
  * them, and components/TrackIds.tsx puts them there); on a phone they are the sheet.
  *
  * What the visitor has said and not posted (a + here, a point marked by ear up at the player) is on its row
@@ -112,14 +114,14 @@ export function Tracklist() {
   const identify = (side: number, start: number) => {
     // An unknown track is ID'd by ear: the tape goes there, and the blanks open for it.
     goTo(place(side), start);
-    ask(place(side), start);
+    ask({ position: place(side), time: start, n: null });
   };
-  const edit = (side: number, start: number) => {
-    // A track that has its name is edited with the tape left where it is, so that its time can be moved to
-    // there. On a side that isn't the one playing the tape goes to the track first: the blanks are the
-    // loaded side's.
-    if (side !== live) goTo(place(side), start);
-    ask(place(side), start);
+  const edit = (side: number, start: number | null, n: number | null) => {
+    // A row is edited with the tape left as it is: playing or not, and where it is, so that a track's time
+    // can be moved to there. On a side that isn't the one in the player the tape goes to the track first, or
+    // for a line with no time yet to the start of its side: the blanks are the loaded side's.
+    if (side !== playhead().side) goTo(place(side), start ?? 0);
+    ask({ position: place(side), time: start, n });
   };
   async function post(e: FormEvent) {
     e.preventDefault();
@@ -177,13 +179,13 @@ export function Tracklist() {
                 lit={live === i ? lit : -1}
                 markable={live === i ? markable : NONE}
                 movable={live === i ? movable : NONE}
-                editing={editing && editing.position === place(i) ? editing.time : null}
+                editing={editing && editing.position === place(i) ? editing : null}
                 slot={setSlot}
                 onPlay={(start) => goTo(place(i), start)}
                 onMark={(k) => mark(i, k)}
                 onUndo={unsay}
                 onIdentify={(start) => identify(i, start)}
-                onEdit={(start) => edit(i, start)}
+                onEdit={(start, n) => edit(i, start, n)}
               />
             ),
           )}
@@ -255,14 +257,18 @@ type SideListProps = {
   markable: Set<number>;
   /** The timed rows whose time could be moved to the moment the tape is at. */
   movable: Set<number>;
-  /** The start of the row whose blanks are open in it, or null, and how the row gives them their place. */
-  editing: number | null;
+  /**
+   * The row whose blanks are open in it, by where it starts or, for a line with no time yet, by its number
+   * in the list; or null. And how the row gives the blanks their place.
+   */
+  editing: { time: number | null; n: number | null } | null;
   slot: (place: HTMLElement | null) => void;
   onPlay: (start: number) => void;
   onMark: (row: number) => void;
   onUndo: (change: NonNullable<Row['mine']>) => void;
   onIdentify: (start: number) => void;
-  onEdit: (start: number) => void;
+  /** For a row that has its time, where it starts; for a line with none, null and its number in the list. */
+  onEdit: (start: number | null, n: number | null) => void;
 };
 
 function SideList({ heading, summary, rows, position, silent, lit, markable, movable, editing, slot, onPlay, onMark, onUndo, onIdentify, onEdit }: SideListProps) {
@@ -299,17 +305,21 @@ function SideList({ heading, summary, rows, position, silent, lit, markable, mov
     if (was.bottom <= 0) window.scrollTo({ top: was.scroll + grew, behavior: 'instant' });
   }, [expanded]);
 
-  // When the blanks in a row shut with the keyboard still in them, it goes to what opened them in that row;
-  // or, the track having been moved or taken away, to the row now nearest in time to where it was.
+  // When the blanks in a row shut with the keyboard still in them, it goes back to what opened them in that
+  // row. If the row is no longer as it was (its track moved or taken away, or the line given its time), it
+  // goes to the time of the row that is now nearest: never to a cue, which the next press of Enter would
+  // set off.
   const list = useRef<HTMLOListElement>(null);
-  const edited = useRef<number | null>(null);
+  const edited = useRef<SideListProps['editing']>(null);
   useEffect(() => {
     const was = edited.current;
     edited.current = editing;
-    if (was === null || editing !== null || document.activeElement !== document.body) return;
-    const far = (row: HTMLElement) => Math.abs(Number(row.dataset.start) - was);
-    const [nearest] = [...(list.current?.querySelectorAll<HTMLElement>('[data-start]') ?? [])].sort((a, b) => far(a) - far(b));
-    (nearest?.querySelector<HTMLElement>('.tracklist-cue') ?? nearest?.querySelector<HTMLElement>('.tracklist-time'))?.focus({ preventScroll: true });
+    if (was === null || editing !== null || document.activeElement !== document.body || !list.current) return;
+    const row = list.current.querySelector<HTMLElement>(was.time !== null ? `[data-start="${was.time}"]` : `[data-n="${was.n}"]`);
+    const opener = row?.querySelector<HTMLElement>(was.time !== null ? '.tracklist-edit' : 'button.tracklist-n');
+    const far = (other: HTMLElement) => Math.abs(Number(other.dataset.start) - (was.time ?? 0));
+    const [nearest] = was.time === null ? [] : [...list.current.querySelectorAll<HTMLElement>('[data-start]')].sort((x, y) => far(x) - far(y));
+    (opener ?? (row ?? nearest)?.querySelector<HTMLElement>('.tracklist-time'))?.focus({ preventScroll: true });
   }, [editing]);
 
   return (
@@ -330,74 +340,82 @@ function SideList({ heading, summary, rows, position, silent, lit, markable, mov
               aria-current={k === lit ? 'true' : undefined}
               data-movable={movable.has(k) ? '' : undefined}
               data-start={row.start ?? undefined}
+              data-n={row.n ?? undefined}
               className="tracklist-row"
             >
-              {row.start !== null && row.start === editing ? (
+              {editing && (editing.time !== null ? row.start === editing.time : row.start === null && row.n === editing.n) ? (
                 <div ref={slot} className="tracklist-blanks" />
               ) : (
                 <>
-              <span>
-                {row.start !== null && silent ? (
-                  <span className="tracklist-n">{formatTime(row.start)}</span>
-                ) : row.start !== null ? (
-                  <button
-                    type="button"
-                    onClick={() => onPlay(row.start as number)}
-                    className="tracklist-time"
-                    data-unposted={unposted ? '' : undefined}
-                    aria-label={`Play from ${idPlace(position, row.start)}${unposted ? ', your time, not posted yet' : ''}`}
-                  >
-                    {formatTime(row.start)}
-                  </button>
-                ) : markable.has(k) ? (
-                  // Several lines can be unknown: one is told from the next by its number in the list.
-                  <button type="button" onClick={() => onMark(k)} className="tracklist-mark" aria-label={`${row.known ? label : `Track ${row.n}`} starts here`}>
-                    +
-                  </button>
-                ) : (
-                  row.n !== null && (
-                    <span className="tracklist-n" aria-hidden>
-                      {String(row.n).padStart(2, '0')}
-                    </span>
-                  )
-                )}
-              </span>
-              <span className="min-w-0 [overflow-wrap:anywhere]">
-                {!row.known ? (
-                  <span className="text-[var(--muted)]">Unknown track</span>
-                ) : row.link ? (
-                  <a href={row.link} target="_blank" rel="noopener noreferrer" className="tracklist-link cursor-pointer">
-                    <TrackName row={row} />
-                    <svg className="ml-2 inline h-3.5 w-3.5 align-[-2px] text-[var(--muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} aria-hidden>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </a>
-                ) : (
-                  <TrackName row={row} />
-                )}
-                {unposted ? (
-                  <button
-                    type="button"
-                    onClick={() => onUndo(row.mine as NonNullable<Row['mine']>)}
-                    className="tracklist-cue"
-                    aria-label={row.known ? `Take back the time for ${label}` : `Take back the mark at ${idPlace(position, row.start as number)}`}
-                  >
-                    Undo
-                  </button>
-                ) : (
-                  row.start !== null &&
-                  !silent &&
-                  (row.known ? (
-                    <button type="button" onClick={() => onEdit(row.start as number)} className="tracklist-cue tracklist-edit" aria-label={`Edit ${label}, at ${idPlace(position, row.start)}`}>
-                      Edit
-                    </button>
-                  ) : (
-                    <button type="button" onClick={() => onIdentify(row.start as number)} className="tracklist-cue" aria-label={`ID the unknown track at ${idPlace(position, row.start)}`}>
-                      ID it
-                    </button>
-                  ))
-                )}
-              </span>
+                  <span>
+                    {row.start !== null && silent ? (
+                      <span className="tracklist-n">{formatTime(row.start)}</span>
+                    ) : row.start !== null ? (
+                      <button
+                        type="button"
+                        onClick={() => onPlay(row.start as number)}
+                        className="tracklist-time"
+                        data-unposted={unposted ? '' : undefined}
+                        aria-label={`Play from ${idPlace(position, row.start)}${unposted ? ', your time, not posted yet' : ''}`}
+                      >
+                        {formatTime(row.start)}
+                      </button>
+                    ) : markable.has(k) ? (
+                      // Several lines can be unknown: one is told from the next by its number in the list.
+                      <button type="button" onClick={() => onMark(k)} className="tracklist-mark" aria-label={`${row.known ? label : `Track ${row.n}`} starts here`}>
+                        +
+                      </button>
+                    ) : row.n !== null && silent ? (
+                      <span className="tracklist-n" aria-hidden>
+                        {String(row.n).padStart(2, '0')}
+                      </span>
+                    ) : (
+                      // The line's number stands where its time will go, and is pressed to give it one by hand.
+                      row.n !== null && (
+                        <button type="button" onClick={() => onEdit(null, row.n)} className="tracklist-n" aria-label={`Set the time for ${row.known ? label : `track ${row.n}`}`} title="Set its time">
+                          {String(row.n).padStart(2, '0')}
+                        </button>
+                      )
+                    )}
+                  </span>
+                  <span className="min-w-0 [overflow-wrap:anywhere]">
+                    {!row.known ? (
+                      <span className="text-[var(--muted)]">Unknown track</span>
+                    ) : row.link ? (
+                      <a href={row.link} target="_blank" rel="noopener noreferrer" className="tracklist-link cursor-pointer">
+                        <TrackName row={row} />
+                        <svg className="ml-2 inline h-3.5 w-3.5 align-[-2px] text-[var(--muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} aria-hidden>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                    ) : (
+                      <TrackName row={row} />
+                    )}
+                    {unposted ? (
+                      <button
+                        type="button"
+                        onClick={() => onUndo(row.mine as NonNullable<Row['mine']>)}
+                        className="tracklist-cue"
+                        aria-label={row.known ? `Take back the time for ${label}` : `Take back the mark at ${idPlace(position, row.start as number)}`}
+                      >
+                        Undo
+                      </button>
+                    ) : silent ? null : row.start === null ? (
+                      row.n !== null && (
+                        <button type="button" onClick={() => onEdit(null, row.n)} className="tracklist-cue tracklist-edit" aria-label={`Edit ${row.known ? label : `track ${row.n}`}`}>
+                          Edit
+                        </button>
+                      )
+                    ) : row.known ? (
+                      <button type="button" onClick={() => onEdit(row.start, null)} className="tracklist-cue tracklist-edit" aria-label={`Edit ${label}, at ${idPlace(position, row.start)}`}>
+                        Edit
+                      </button>
+                    ) : (
+                      <button type="button" onClick={() => onIdentify(row.start as number)} className="tracklist-cue" aria-label={`ID the unknown track at ${idPlace(position, row.start)}`}>
+                        ID it
+                      </button>
+                    )}
+                  </span>
                 </>
               )}
             </li>
@@ -483,6 +501,7 @@ function History() {
                       </button>
                     )}{' '}
                     {id.gone ? <span className="text-[var(--muted)]">Removed</span> : [id.artist, id.title].filter(Boolean).join(' — ') || 'Unknown track'}
+                    {id.line && <span className="text-[var(--muted)]"> (was {[id.line.artist, id.line.title].filter(Boolean).join(' — ')})</span>}
                   </p>
                 );
               })}

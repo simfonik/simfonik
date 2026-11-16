@@ -538,7 +538,7 @@ html:has(.id-sheet[open]) { overflow: hidden; }
    The player and the track line are tapped twice in a moment all the time (play, pause; open, shut), so
    two taps on them, or anywhere on the sheet, are two presses and never a zoom. */
 .player-play, .player-side, .track-ids-line, .track-ids-post, .track-ids-offer, .track-ids-shut, .tape-picture, .comment-time, .id-sheet,
-.tracklist-time, .tracklist-mark, .tracklist-cue, .tracklist-post { touch-action: manipulation; }
+.tracklist-time, .tracklist-mark, button.tracklist-n, .tracklist-cue, .tracklist-post { touch-action: manipulation; }
 /* A held finger doesn't select the words of what is pressed in the sheet. */
 .id-sheet button { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 /* The sheet's top row stays put when a small phone has to scroll the rest of the sheet. */
@@ -653,19 +653,22 @@ html:has(.id-sheet[open]) { overflow: hidden; }
   font-variant-numeric: tabular-nums;
   color: var(--muted);
 }
-.tracklist-time, .tracklist-mark { position: relative; cursor: pointer; }
-/* A place to press 44px tall about the words, whatever their height, and as wide as the column. */
-.tracklist-time::before, .tracklist-mark::before { content: ""; position: absolute; inset: calc((100% - 2.75rem) / 2) -0.5rem; }
+.tracklist-time, .tracklist-mark, button.tracklist-n { position: relative; cursor: pointer; }
+/* A place to press 44px tall about the words, whatever their height, and as wide as the column. (A line's
+   number is pressed to give the line its time by hand; it is as wide as a time is, so the place to press
+   is the column's too.) */
+.tracklist-time::before, .tracklist-mark::before, button.tracklist-n::before { content: ""; position: absolute; inset: calc((100% - 2.75rem) / 2) -0.5rem; }
+button.tracklist-n { min-width: 3rem; text-align: left; }
 .tracklist-mark { min-width: 3rem; font-size: 17px; line-height: 1; text-align: left; }
 /* The visitor's own time, not posted yet: in full colour, with the way to take it back beside it. */
 .tracklist-time[data-unposted] { color: var(--text); }
 @media (hover: hover) and (pointer: fine) {
-  .tracklist-time:hover, .tracklist-mark:hover { color: var(--text); }
+  .tracklist-time:hover, .tracklist-mark:hover, button.tracklist-n:hover { color: var(--text); }
   .tracklist-time:hover { text-decoration: underline; text-underline-offset: 4px; }
   .tracklist-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 }
-.tracklist-time:active, .tracklist-mark:active, .tracklist-cue:active { opacity: 0.6; }
-.tracklist-time:focus-visible, .tracklist-mark:focus-visible, .tracklist-cue:focus-visible, .tracklist-link:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.tracklist-time:active, .tracklist-mark:active, button.tracklist-n:active, .tracklist-cue:active { opacity: 0.6; }
+.tracklist-time:focus-visible, .tracklist-mark:focus-visible, button.tracklist-n:focus-visible, .tracklist-cue:focus-visible, .tracklist-link:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 /* What can be done about a row, after its name: the same small words as the cue on the player's line. */
 .tracklist-cue {
   position: relative;

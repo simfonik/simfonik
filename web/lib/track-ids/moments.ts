@@ -58,6 +58,11 @@ export type Moment = {
   by: string;
   /** When, as the comments date it: of two, the later said sorts after the earlier. */
   date: string;
+  /**
+   * The line of the tape's tracklist this is, by the list's own words, where the comment that named it says
+   * so: the track has another name here than the list gives it (compose.ts).
+   */
+  line?: { artist: string; title: string };
   /** Where the track ends, where a comment says. */
   until?: number;
   /** A record brought in over the one already playing, which plays on under it. */

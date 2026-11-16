@@ -18,6 +18,8 @@ export type Sighting = {
   sideless?: boolean;
   /** Placed by the site's own form (compose.ts), to the second. A time typed into a sentence is rougher. */
   exact?: boolean;
+  /** The line of the tape's tracklist it says it is, by the list's own words (compose.ts). */
+  line?: { artist: string; title: string };
   /** Not a sighting but the taking away of one: whatever was said of this moment before it no longer stands. */
   gone?: boolean;
   /** Worked out, not stated: the first track in a list of a side, taken to start the side. Anything someone
@@ -435,6 +437,7 @@ export function reconcile(read: Sighting[], lengths: number[]): Moment[][] {
         known: best.known,
         by: best.author,
         date: best.date,
+        ...(best.line ? { line: best.line } : {}),
         ...(ended.length ? { until: ended.reduce((a, b) => (b.date >= a.date ? b : a)).end } : {}),
         // A record written as brought in over another stays one when its name is put right with the form.
         ...(typed.length && typed.every((s) => s.layer) ? { layer: true } : {}),

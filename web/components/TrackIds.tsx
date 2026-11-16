@@ -4,7 +4,7 @@ import { FormEvent, RefObject, useEffect, useId, useLayoutEffect, useRef, useSta
 import { createPortal } from 'react-dom';
 import { idLabel, idPlace } from '../lib/track-ids/compose';
 import { rememberedName } from '../lib/track-ids/post';
-import { canStartAt, isUnposted, playingAt, saidBy, startingAt, suggest, type Change, type Row } from '../lib/track-ids/side';
+import { asListed, canStartAt, isUnposted, playingAt, saidBy, startingAt, suggest, type Change, type Row } from '../lib/track-ids/side';
 import { formatTime, parseTime } from '../lib/time-utils';
 import { usePlayhead, useSide, useTapeTrackIds } from './TapeTrackIds';
 
@@ -131,7 +131,11 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   const [at, setAt] = useState<number | null>(null);
   // The mark the blanks are for, where the side has one at that moment: as the side has it now, which may
   // not be as it was when the blanks opened (the visitor may have posted it since, or the comments changed).
-  const mark = at === null ? null : (rows[startingAt(rows, at)] ?? null);
+  // Or they are for a line of the list still waiting for its time, by its number there: no moment yet, and
+  // no mark. Given a time, the line waits to be posted with the visitor's other times, as after a + on its row.
+  const [lineNo, setLineNo] = useState<number | null>(null);
+  const waiting = lineNo === null ? null : (rows.find((row) => row.n === lineNo && row.start === null) ?? null);
+  const mark = at === null || lineNo !== null ? null : (rows[startingAt(rows, at)] ?? null);
   const [doing, setDoing] = useState<Act>('id');
   const [sheet, setSheet] = useState(false);
   // The visitor's name is asked for the first time only. The line has room for one thing at a time, so it
@@ -157,19 +161,23 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   const nameField = useRef<HTMLInputElement>(null);
   const messageId = useId();
 
-  const begin = (marked: Row | null, start: number, inRow = false) => {
+  // `start` is the moment the blanks are for; null with `marked` a line of the list that has no time yet.
+  const begin = (marked: Row | null, start: number | null, inRow = false) => {
     const onPhone = window.matchMedia(PHONE).matches;
     const remembered = rememberedName();
-    setAt(start);
-    setWhen(formatTime(start));
-    setEditing(inRow && !onPhone ? { position, time: start } : null);
+    const untimed = start === null ? (marked?.n ?? null) : null;
+    setAt(start ?? now);
+    setLineNo(untimed);
+    setWhen(start === null ? '' : formatTime(start));
+    setEditing(inRow && !onPhone ? { position, time: start, n: untimed } : null);
     setDoing('id');
     setArtist(marked?.known ? marked.artist : '');
     setTitle(marked?.known ? marked.title : '');
-    setOffers(marked?.known ? [] : suggest(rows, start, length));
+    setOffers(marked?.known || start === null ? [] : suggest(rows, start, length));
     setName(remembered);
     setSheet(onPhone);
-    setAskName(onPhone && !remembered);
+    // A time that waits to be posted needs no name yet: the bar that posts it asks.
+    setAskName(onPhone && !remembered && start !== null);
     setNameWanted(0);
     setStatus('idle');
     setMessage('');
@@ -194,21 +202,27 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   // The tracklist asks for one of its rows. On a tape with sides the blanks belong to the side loaded, so a
   // row on another side is answered once the player has loaded that side; and they open on the side's rows
   // and the tape's place as they are when the asking is heard.
-  const answer = useRef<(time: number) => void>(() => {});
+  const answer = useRef<(row: { time: number | null; n: number | null }) => void>(() => {});
   useEffect(() => {
-    answer.current = (start) => begin(rows.find((row) => row.start === start) ?? null, start, true);
+    answer.current = ({ time: start, n }) => {
+      if (start !== null) return begin(rows.find((row) => row.start === start) ?? null, start, true);
+      const line = rows.find((row) => row.n === n && row.start === null);
+      if (line) begin(line, null, true);
+    };
   });
   useEffect(() => {
     if (!asked || asked.position !== position) return;
     answered();
-    answer.current(asked.time);
+    answer.current(asked);
   }, [asked, position, answered]);
   const shut = () => {
     setAt(null);
+    setLineNo(null);
     setEditing(null);
   };
-  // Blanks open in a row go when the row does (the comments, read again, may no longer have the track).
-  const rowGone = editing !== null && at !== null && !rows.some((row) => row.start === editing.time);
+  // Blanks open in a row go when the row does (the comments, read again, may no longer have the track), and
+  // blanks for a line waiting for its time go when it has one.
+  const rowGone = at !== null && ((lineNo !== null && !waiting) || (editing !== null && editing.time !== null && !rows.some((row) => row.start === editing.time)));
   useEffect(() => {
     if (rowGone) shut();
   });
@@ -259,10 +273,11 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
     }
     // In a row the blanks are there once the row has made its place for them.
     if (editing && !slot) return;
-    if (!wasOpen.current) focus(artistField.current, sheet);
+    // A line waiting for its time is first of all given one.
+    if (!wasOpen.current) focus((lineNo !== null ? timeField : artistField).current, sheet);
     wasOpen.current = true;
     wasInRow.current = editing !== null;
-  }, [at, sheet, editing, slot]);
+  }, [at, sheet, editing, slot, lineNo]);
   useEffect(() => {
     if (nameWanted > 0) focus(nameField.current, sheet);
   }, [nameWanted, sheet]);
@@ -328,18 +343,30 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
     if (what === 'id') {
       const entered = parseTime(when);
       if (entered === null) return refuse('Enter the time like 0:05:00.', timeField.current);
+      const unchanged = lineNo === null && entered === at;
       const others = rows.filter((row) => row !== mark);
       const taken = others[startingAt(others, entered)];
-      if (entered !== at && taken) return refuse(`Another track starts at ${formatTime(taken.start as number)}.`, timeField.current);
-      if (entered !== at && !canStartAt(others, entered, end)) return refuse('That is past where a track could start on this side.', timeField.current);
+      if (!unchanged && taken) return refuse(`Another track starts at ${formatTime(taken.start as number)}.`, timeField.current);
+      if (!unchanged && !canStartAt(others, entered, end)) return refuse('That is past where a track could start on this side.', timeField.current);
       to = entered;
+    }
+    // The list's own words for the track, where the names in the blanks are not the list's: the ID says
+    // which line it is, and the line stays that line under its new name (compose.ts).
+    const listed = (waiting ?? mark)?.line;
+    const line = listed && (artist.trim() || title.trim()) && !asListed({ artist, title }, listed) ? { line: listed } : {};
+    // A line of the list given its time by hand is said as a + on its row says it, and waits to be posted.
+    if (lineNo !== null) {
+      if (waiting?.known && !artist.trim() && !title.trim()) return refuse('Enter the artist or the title.', artistField.current);
+      say({ side, time: to, artist, title, ...line });
+      setThanks(`Added at ${idPlace(position, to)}. Not posted yet.`);
+      return leave();
     }
     const moved = mark !== null && to !== at;
     const renamed = artist.trim() !== (mark?.known ? mark.artist : '') || title.trim() !== (mark?.known ? mark.title : '');
     // Moved and nothing more, the visitor's own is said again at the new moment, and waits to be posted as it did.
     if (own && moved && !renamed) {
       unsay(own);
-      say({ side, time: to, artist, title });
+      say({ side, time: to, artist, title, ...line });
       setThanks(`Moved to ${idPlace(position, to)}. Not posted yet.`);
       return leave();
     }
@@ -353,7 +380,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
     }
     // Taking a mark away is one line; moving it is that line and the ID at its new place, in one post.
     const gone: Change[] = mark && !own && (what === 'remove' || moved) ? [{ side, time: mark.start as number, artist: '', title: '', gone: true }] : [];
-    const id: Change[] = what === 'remove' ? [] : [{ side, time: to, artist, title }];
+    const id: Change[] = what === 'remove' ? [] : [{ side, time: to, artist, title, ...line }];
 
     setStatus('sending');
     setMessage('');
@@ -372,11 +399,13 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   };
 
   const where = idPlace(position, at ?? 0);
+  // What the blanks are, said to a screen reader: for a moment of the tape, or for a line still to be timed.
+  const purpose = lineNo !== null ? `The time track ${lineNo} starts` : `ID the track at ${where}`;
   const sending = status === 'sending';
   const from = order?.by ? `From ${order.by}’s list` : 'From the tape’s tracklist';
   const posting = (
     <span className="grid place-items-center">
-      <span className={`col-start-1 row-start-1 ${sending ? 'invisible' : ''}`}>{doing === 'remove' ? 'Remove' : 'Post'}</span>
+      <span className={`col-start-1 row-start-1 ${sending ? 'invisible' : ''}`}>{lineNo !== null ? 'Add' : doing === 'remove' ? 'Remove' : 'Post'}</span>
       <span className={`col-start-1 row-start-1 ${sending ? '' : 'invisible'}`}>…</span>
     </span>
   );
@@ -393,7 +422,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   // is pressed to write that time into the blank: a time found by ear needs no typing. Nothing is posted by
   // it. It is marked as unavailable, and keeps its place, while that is the time the blank already has or
   // one no track could start at with this one set aside.
-  const usable = at !== null && formatTime(now) !== when && (now === at || canStartAt(rows.filter((row) => row !== mark), now, end));
+  const usable = at !== null && formatTime(now) !== when && ((lineNo === null && now === at) || canStartAt(rows.filter((row) => row !== mark), now, end));
   const use = () => {
     if (!usable) return;
     setWhen(formatTime(now));
@@ -402,7 +431,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   const timeBlank = (
     <>
       {position !== null && <span className="track-ids-where">{position}</span>}
-      <input ref={timeField} value={when} onChange={typed(setWhen)} onKeyDown={nudge} aria-label="Starts at" aria-describedby={message ? messageId : undefined} inputMode="numeric" autoComplete="off" maxLength={9} enterKeyHint="send" className="track-ids-field track-ids-when" />
+      <input ref={timeField} value={when} onChange={typed(setWhen)} onKeyDown={nudge} placeholder="0:00:00" aria-label="Starts at" aria-describedby={message ? messageId : undefined} inputMode="numeric" autoComplete="off" maxLength={9} enterKeyHint="send" className="track-ids-field track-ids-when" />
       {played && !(askName && !sheet) && (
         <button type="button" onClick={use} aria-disabled={!usable} className="track-ids-post track-ids-use" aria-label={`Use the tape’s time, ${formatTime(now)}`} title="Where the tape is now">
           Use {formatTime(now)}
@@ -429,7 +458,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   // opened from.
   const inRow = editing !== null;
   const blanks = at !== null && !sheet && (
-    <form onSubmit={post} noValidate onKeyDown={(e) => e.key === 'Escape' && shut()} aria-label={`ID the track at ${where}`} className={inRow ? undefined : 'mt-2'}>
+    <form onSubmit={post} noValidate onKeyDown={(e) => e.key === 'Escape' && shut()} aria-label={purpose} className={inRow ? undefined : 'mt-2'}>
       {/* The line itself, with blanks where the names go: the same type in the same place, a rule under
           each blank, and no boxes. */}
       <div className="flex min-h-11 items-center gap-x-3">
@@ -505,7 +534,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
         <dialog
           ref={dialog}
           className="id-sheet"
-          aria-label={`ID the track at ${where}`}
+          aria-label={purpose}
           onClose={shut}
           onCancel={(e) => {
             e.preventDefault();
@@ -523,7 +552,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
                 {cross}
               </button>
               <p className="id-sheet-label min-w-0 flex-1 truncate">
-                ID this track
+                {lineNo !== null ? 'Time this track' : 'ID this track'}
               </p>
               <button type="submit" aria-disabled={sending} className="poster-btn id-sheet-post">
                 {posting}
@@ -556,7 +585,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
                 <input ref={nameField} value={name} onChange={typed(setName)} placeholder="Your name" aria-label="Your name" aria-describedby={message ? messageId : undefined} autoComplete="name" autoCapitalize="words" autoCorrect="off" spellCheck={false} maxLength={100} enterKeyHint="send" className="track-ids-field" />
               )}
             </div>
-            {!askName && (
+            {!askName && lineNo === null && (
               <p className="id-sheet-label mt-2 flex min-h-11 items-center">
                 Posting as <span className="id-sheet-where">{name}</span>
                 <button type="button" onClick={wantName} className="track-ids-post ml-auto">

@@ -8,8 +8,14 @@
 //
 //     [B 12:34] no track starts here
 //
-// Nothing is ever deleted by it. It is one more comment, and the reader lets it outweigh what was said of that
-// moment before it; delete the comment and what it took away is back.
+// An ID can say which line of the tape's tracklist it is, where it gives the track another name than the
+// list does (the name put right, or its mix added): the list's own words follow, so the line is still that
+// line and is not left waiting for a time beside its own correction:
+//
+//     [B 12:34] Moby - Go (Woodtick Mix) [was Moby - Go]
+//
+// Nothing is ever deleted by a line. It is one more comment, and the reader lets it outweigh what was said of that
+// moment before it; delete the comment and what it took away, or renamed, is back.
 //
 // The comments of 2009 onward say the same things in a hundred ways, and `parse.ts` reads those. This form is
 // for IDs made with the "ID this track" form on the tape page, where the side and the time are known exactly
@@ -56,12 +62,18 @@ const tidy = (s: string) => s.replace(/\s+/g, ' ').trim();
  */
 const tidyArtist = (s: string) => tidy(s).replace(/ - /g, '-');
 
+/** An artist and a title: a track as a list or an ID names it. */
+export type Named = { artist: string; title: string };
+
+const written = ({ artist, title }: Named) => `${tidyArtist(artist) || '?'} - ${tidy(title) || '?'}`;
+
 /**
  * The comment for an ID. `position` is the side's label ("A", "1B"), or null on a tape with one side. A name
- * the visitor didn't know is written "?", so the line keeps its shape.
+ * the visitor didn't know is written "?", so the line keeps its shape. `line` is the list's own words for the
+ * track, where the ID is a line of the tape's tracklist under another name.
  */
-export function composeId({ position, time, artist, title }: { position: string | null; time: number; artist: string; title: string }): string {
-  return `[${position ? `${position} ` : ''}${clock(time)}] ${tidyArtist(artist) || '?'} - ${tidy(title) || '?'}`;
+export function composeId({ position, time, artist, title, line }: Named & { position: string | null; time: number; line?: Named }): string {
+  return `[${position ? `${position} ` : ''}${clock(time)}] ${written({ artist, title })}${line && (artist.trim() || title.trim()) ? ` [was ${written(line)}]` : ''}`;
 }
 
 const GONE = 'no track starts here';
@@ -71,8 +83,13 @@ export const composeRemoval = ({ position, time }: { position: string | null; ti
 
 const COMPOSED = /^\[(?:(\S+) )?(\d{1,3}):(\d{2})(?::(\d{2}))?\] (?:(.+?) - (.+)|(no track starts here))$/i;
 
-/** `gone` is true for a line that takes the mark at its time away; it has no names. */
-export type Composed = { position: string | null; time: number; artist: string; title: string; gone: boolean };
+const WAS = /^(.+) \[was (.+?) - (.+)\]$/i;
+
+/**
+ * `gone` is true for a line that takes the mark at its time away; it has no names. `line` is the list's own
+ * words for the track, where the line says which line of the tracklist it is.
+ */
+export type Composed = Named & { position: string | null; time: number; gone: boolean; line?: Named };
 
 /**
  * One line in the form `composeId` or `composeRemoval` writes, taken apart: the side's label as written (null
@@ -84,7 +101,15 @@ export function splitComposed(line: string): Composed | null {
   const [, position, a, b, c, artist, title, gone] = m;
   const time = c === undefined ? Number(a) * 60 + Number(b) : Number(a) * 3600 + Number(b) * 60 + Number(c);
   const name = (s = '') => (s.trim() === '?' ? '' : s.trim());
-  return { position: position ?? null, time, artist: name(artist), title: name(title), gone: Boolean(gone) };
+  const was = title === undefined ? null : WAS.exec(title);
+  return {
+    position: position ?? null,
+    time,
+    artist: name(artist),
+    title: name(was ? was[1] : title),
+    gone: Boolean(gone),
+    ...(was ? { line: { artist: name(was[2]), title: name(was[3]) } } : {}),
+  };
 }
 
 /**
@@ -93,7 +118,7 @@ export function splitComposed(line: string): Composed | null {
  * included: that is somebody talking. Null too for a side label the tape doesn't have, and for a line with no
  * label on a tape with sides. Such a comment is read like any other.
  */
-export function readComposed(content: string, positions: string[]): { side: number; start: number; artist: string; title: string; gone: boolean }[] | null {
+export function readComposed(content: string, positions: string[]): (Named & { side: number; start: number; gone: boolean; line?: Named })[] | null {
   const ids = [];
   for (const line of content.split(/\r?\n/)) {
     if (!line.trim()) continue;
@@ -101,7 +126,7 @@ export function readComposed(content: string, positions: string[]): { side: numb
     if (!id) return null;
     const side = id.position ? positions.indexOf(id.position) : positions.length === 1 ? 0 : -1;
     if (side < 0) return null;
-    ids.push({ side, start: id.time, artist: id.artist, title: id.title, gone: id.gone });
+    ids.push({ side, start: id.time, artist: id.artist, title: id.title, gone: id.gone, ...(id.line ? { line: id.line } : {}) });
   }
   return ids.length ? ids : null;
 }
