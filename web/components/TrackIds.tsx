@@ -184,7 +184,7 @@ export function TrackIds({ tapeId, side, position, ids, time, isPlaying, onToggl
   // A track could start at this moment: the tape has been played, and nothing on the side starts within a
   // moment of here already.
   const canMark = time > 0 && !ids.some((id) => Math.abs(id.start - time) <= ONE_MOMENT);
-  const unmark = (start: number) => setMarks(marks.filter((m) => !(m.side === side && m.n === null && m.time === start)));
+  const unmark = (start: number) => setMarks(marks.filter((m) => !(m.side === side && m.time === start)));
   const markHere = () => {
     if (!canMark) return;
     const now = Math.floor(time);
@@ -371,7 +371,7 @@ export function TrackIds({ tapeId, side, position, ids, time, isPlaying, onToggl
                 onClick={() => open(false)}
                 className="track-ids-line text-[var(--text)]"
                 aria-label={`Now playing: ${idLabel(playing)}. Correct this ID`}
-                title={`ID by ${playing.by}. Press to correct it.`}
+                title={playing.pending ? 'Your time, not posted yet. Press to change it.' : `ID by ${playing.by}. Press to correct it.`}
               >
                 {idLabel(playing)}
               </button>

@@ -436,6 +436,29 @@ describe('the track line under the player', () => {
       expect(within(tray()).getByRole('button', { name: 'Fix ID' })).toHaveFocus();
     });
 
+    it('has a track the visitor timed with + in the tracklist as the track playing, at once, though it is not posted', async () => {
+      const user = userEvent.setup();
+      phone(true);
+      const { rerender } = render(tape(200));
+      await screen.findByRole('button', { name: 'Know this track? ID it' });
+      await played(200);
+      expect(tray()).toHaveTextContent('Nothing ID’d here yet');
+
+      await act(() => shared.setMarks([{ side: 0, n: 2, artist: 'Butsch', title: 'The Count', known: true, time: 200 }]));
+      rerender(tape(203));
+      expect(tray()).toHaveTextContent('ButschA 0:03:23The Count');
+
+      // Its ID can be put right from the tray, which posts it; it then no longer waits to be posted.
+      await user.click(within(tray()).getByRole('button', { name: 'Fix ID' }));
+      const sheet = screen.getByRole('dialog', { name: 'ID the track at A 0:03:20' });
+      await user.clear(within(sheet).getByRole('textbox', { name: 'Title' }));
+      await user.type(within(sheet).getByRole('textbox', { name: 'Title' }), 'The Count (Remix)');
+      await user.click(within(sheet).getByRole('button', { name: /post/i }));
+      const sent = fetchMock.mock.calls.filter(([url]) => String(url) === '/api/comments/submit');
+      expect(JSON.parse(sent[0][1].body).content).toBe('[A 3:20] Butsch - The Count (Remix)');
+      await waitFor(() => expect(shared.marks).toEqual([]));
+    });
+
     it('keeps New unknown in its place: marked unavailable in a track’s first moments, and setting a point otherwise', async () => {
       const user = userEvent.setup();
       phone(true);

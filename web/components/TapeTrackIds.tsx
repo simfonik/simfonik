@@ -177,18 +177,20 @@ export function TapeTrackIdsProvider({ tapeId, children }: { tapeId: string; chi
 export const useTapeTrackIds = () => useContext(Context);
 
 /**
- * A side's IDs as the player has them: those the comments give, and among them the points the visitor has
- * marked by ear and not yet posted, each an unknown track from where it was marked until the next thing
- * starts. A mark shows on the waveform and on the line under it the moment it is made.
+ * A side's IDs as the player has them: those the comments give, and among them the times the visitor has set
+ * and not yet posted. A line of the list given its time with + is that track from then on, and a point
+ * marked by ear is an unknown one, each until the next thing starts. Either shows on the waveform, on the
+ * line under it and in the tray the moment it is made.
  */
 export function useSideIds(side: number): TrackId[] {
   const { sides, marks } = useContext(Context);
   return useMemo(() => {
     const posted = sides[side] ?? [];
-    // A mark the comments now have at that moment is no longer only the visitor's.
-    const mine = marks.filter((m) => m.side === side && m.n === null && !posted.some((id) => Math.abs(id.start - m.time) <= ONE_MOMENT));
+    // A time the comments now have, at that moment or for that record, is no longer only the visitor's.
+    const said = (m: Mark) => posted.some((id) => Math.abs(id.start - m.time) <= ONE_MOMENT || (m.known && id.known && id.artist === m.artist && id.title === m.title));
+    const mine = marks.filter((m) => m.side === side && !said(m));
     if (mine.length === 0) return posted;
-    const all = [...posted, ...mine.map((m): TrackId => ({ start: m.time, end: m.time + UNENDED, artist: '', title: '', known: false, by: '', pending: true }))].sort((a, b) => a.start - b.start);
+    const all = [...posted, ...mine.map((m): TrackId => ({ start: m.time, end: m.time + UNENDED, artist: m.known ? m.artist : '', title: m.known ? m.title : '', known: m.known, by: '', pending: true }))].sort((a, b) => a.start - b.start);
     return all.map((id, k) => (all[k + 1] && all[k + 1].start < id.end ? { ...id, end: all[k + 1].start } : id));
   }, [sides, marks, side]);
 }
