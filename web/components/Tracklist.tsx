@@ -224,11 +224,14 @@ export function Tracklist({ tapeId, sides }: { tapeId: string; sides: Pick<Side,
             <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="flex max-w-3xl flex-wrap items-center gap-x-4">
             <p className={`${small} min-w-0 ${remembered ? 'flex-1' : 'w-full pt-2'}`}>
-              {pending.length === 1 ? '1 time' : `${pending.length} times`} not posted
+              {/* Two phrases that part cleanly where the bar is too narrow for both on a line. */}
+              <span className="inline-block">{pending.length === 1 ? '1 time' : `${pending.length} times`} not posted</span>
               {remembered && (
                 <>
                   {' '}
-                  · as <span className="text-[var(--text)]">{remembered}</span>
+                  <span className="inline-block">
+                    as <span className="text-[var(--text)]">{remembered}</span>
+                  </span>
                 </>
               )}
             </p>

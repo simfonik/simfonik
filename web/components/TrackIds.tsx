@@ -1,17 +1,34 @@
 'use client';
 
-import { FormEvent, RefObject, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { FormEvent, RefObject, useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { createPortal } from 'react-dom';
 import { composeId, composeRemoval, idAt, idLabel, idPlace, ONE_MOMENT, type ListedTrack, type RunningOrder, type TrackId } from '../lib/track-ids/compose';
 import { suggest } from '../lib/track-ids/names';
 import { postIds, rememberedName } from '../lib/track-ids/post';
 import { formatTime } from '../lib/time-utils';
-import { useTapeTrackIds } from './TapeTrackIds';
+import { usePlayhead, useTapeTrackIds } from './TapeTrackIds';
 
 /** What the blanks are about to do: post the ID in them, take the mark away, or move it to where the tape is. */
 type Act = 'id' | 'remove' | 'move';
 
-/** A screen as narrow as a phone's. There the blanks are a sheet over the page, with a row each. */
+/**
+ * A screen as narrow as a phone's. There the blanks are a sheet over the page, with a row each, and the line
+ * itself gives way to a tray at the foot of the screen (the stylesheet hides the line at the same width).
+ */
 const PHONE = '(max-width: 39.99rem)';
+
+/** Whether the screen is that narrow, kept up to date. Not before the page is in a browser. */
+function useOnPhone() {
+  return useSyncExternalStore(
+    (changed) => {
+      const media = window.matchMedia(PHONE);
+      media.addEventListener('change', changed);
+      return () => media.removeEventListener('change', changed);
+    },
+    () => window.matchMedia(PHONE).matches,
+    () => false,
+  );
+}
 
 /**
  * Puts the keyboard in a field. In the sheet it is done "in place": on an iPhone, a field taking focus makes
@@ -61,6 +78,9 @@ type Props = {
   ids: TrackId[];
   /** Where the tape is, in seconds. */
   time: number;
+  /** Whether the tape is playing, and the way to play or pause it, for the tray on a phone. */
+  isPlaying: boolean;
+  onToggle: () => void;
   /** The side's tracks in order, where a list gives them without times: likely names are offered from it. */
   order?: RunningOrder | null;
   /** The side's length in seconds, where it is known. */
@@ -89,10 +109,15 @@ type Props = {
  * visitor's own until they post what they have (the tracklist keeps the count and the Post), and until then
  * it is taken back, or ID'd, like any other mark on the line.
  *
+ * On a phone the line has no room for a track's name and the words beside it, and it is at the top of a long
+ * page. There, once the tape has been played, all of it is in a tray at the foot of the screen instead: the
+ * name on two lines, then play, the ID and the new unknown, each always in its place so none moves under a
+ * thumb. A new track the visitor can name is marked and then ID'd.
+ *
  * Where the side has a list of its tracks with no times, the two lines of it likeliest to be this track are
  * offered, and pressing one writes it into the blanks.
  */
-export function TrackIds({ tapeId, side, position, ids, time, order = null, length = null, onPosted }: Props) {
+export function TrackIds({ tapeId, side, position, ids, time, isPlaying, onToggle, order = null, length = null, onPosted }: Props) {
   const playing = idAt(ids, time);
   // The blanks are for one moment of the tape, fixed when they open, while the tape plays on underneath.
   const [at, setAt] = useState<number | null>(null);
@@ -115,6 +140,7 @@ export function TrackIds({ tapeId, side, position, ids, time, order = null, leng
   const [message, setMessage] = useState('');
   const [thanks, setThanks] = useState('');
   const line = useRef<HTMLButtonElement>(null);
+  const trayId = useRef<HTMLButtonElement>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const artistField = useRef<HTMLInputElement>(null);
   const titleField = useRef<HTMLInputElement>(null);
@@ -154,11 +180,13 @@ export function TrackIds({ tapeId, side, position, ids, time, order = null, leng
   // The tracklist asks for one of its lines. On a tape with sides the blanks belong to the side loaded, so a
   // line on another side is answered once the player has loaded that side.
   const { asked, answered, marks, setMarks } = useTapeTrackIds();
+  const played = usePlayhead((head) => head.started);
   // A track could start at this moment: the tape has been played, and nothing on the side starts within a
   // moment of here already.
   const canMark = time > 0 && !ids.some((id) => Math.abs(id.start - time) <= ONE_MOMENT);
   const unmark = (start: number) => setMarks(marks.filter((m) => !(m.side === side && m.n === null && m.time === start)));
   const markHere = () => {
+    if (!canMark) return;
     const now = Math.floor(time);
     setMarks([...marks, { side, n: null, artist: '', title: '', known: false, time: now }]);
     setThanks(`Marked ${idPlace(position, now)}. Not posted yet.`);
@@ -212,7 +240,7 @@ export function TrackIds({ tapeId, side, position, ids, time, order = null, leng
   const wasOpen = useRef(false);
   useEffect(() => {
     if (at === null) {
-      if (wasOpen.current) line.current?.focus();
+      if (wasOpen.current) (trayId.current ?? line.current)?.focus();
     } else if (!wasOpen.current) focus(artistField.current, sheet);
     wasOpen.current = at !== null;
   }, [at, sheet]);
@@ -327,12 +355,14 @@ export function TrackIds({ tapeId, side, position, ids, time, order = null, leng
     </p>
   );
 
+  const tray = useOnPhone() && played;
+
   return (
-    <div className="track-ids mt-2">
+    <div className="track-ids">
       {at === null || sheet ? (
         // As tall as the blanks that take its place, so nothing below moves when they do. Under the sheet it
         // stays as it was.
-        <div className="flex min-h-11 items-center gap-x-3">
+        <div className="track-ids-row mt-2 flex min-h-11 items-center gap-x-3">
           {playing?.known ? (
             <>
               <button
@@ -364,7 +394,7 @@ export function TrackIds({ tapeId, side, position, ids, time, order = null, leng
           )}
         </div>
       ) : (
-        <form onSubmit={post} noValidate onKeyDown={(e) => e.key === 'Escape' && shut()} aria-label={`ID the track at ${where}`}>
+        <form onSubmit={post} noValidate onKeyDown={(e) => e.key === 'Escape' && shut()} aria-label={`ID the track at ${where}`} className="mt-2">
           {/* The line itself, with blanks where the names go: the same type in the same place, a rule under
               each blank, and no boxes. */}
           <div className="flex min-h-11 items-center gap-x-3">
@@ -467,6 +497,37 @@ export function TrackIds({ tapeId, side, position, ids, time, order = null, leng
           </form>
         </dialog>
       )}
+      {tray &&
+        createPortal(
+          <div className="player-tray" role="group" aria-label="Now playing">
+            {/* Two lines, always: artist over title, as on a record's label, with where the tape is beside
+                them. Each keeps its height when it has nothing to say, so the buttons under them never move. */}
+            <p className="player-tray-line">
+              <span className="min-w-0 flex-1 truncate">{playing ? (playing.known ? playing.artist || playing.title : 'Unknown track') : 'Nothing ID’d here yet'}</span>
+              <span className="flex-none font-mono text-xs font-normal tabular-nums text-[var(--muted)]">{idPlace(position, time)}</span>
+            </p>
+            <p className="player-tray-line player-tray-sub">
+              <span className="min-w-0 flex-1 truncate">
+                {playing ? (playing.known ? (playing.artist ? playing.title : '') : playing.pending ? 'Marked by you, not posted yet' : 'Nobody has ID’d it yet') : 'Know this track? ID it.'}
+              </span>
+            </p>
+            <div className="player-tray-row">
+              <button type="button" onClick={onToggle} className="player-tray-btn player-tray-primary" aria-label={isPlaying ? 'Pause' : 'Play'}>
+                <svg className="h-3.5 w-3" viewBox="0 0 12 14" fill="currentColor" aria-hidden>
+                  <path d={isPlaying ? 'M0 0h4v14H0zM8 0h4v14H8z' : 'M0 0v14l11-7z'} />
+                </svg>
+              </button>
+              <button ref={trayId} type="button" onClick={() => open(false)} className="player-tray-btn">
+                {playing?.known ? 'Fix ID' : 'ID it'}
+              </button>
+              {/* Marked as unavailable, not taken away, in a track's first moments: it keeps its place. */}
+              <button type="button" onClick={markHere} aria-disabled={!canMark} className="player-tray-btn" aria-label="New unknown: a track starts here, and you don’t know what it is">
+                New unknown
+              </button>
+            </div>
+          </div>,
+          document.body,
+        )}
       {/* Always here, so a screen reader hears the thanks arrive. */}
       <p role="status" className="sr-only">
         {thanks}

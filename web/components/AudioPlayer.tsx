@@ -74,6 +74,8 @@ export function AudioPlayer({ src, title, tapeId, sidePosition, wave, length, si
           <TrackIds
             tapeId={tapeId}
             side={sideIndex}
+            isPlaying={state.isPlaying}
+            onToggle={state.isPlaying ? controls.pause : controls.play}
             position={sideCount > 1 ? sidePosition ?? null : null}
             ids={ids}
             time={state.currentTime}

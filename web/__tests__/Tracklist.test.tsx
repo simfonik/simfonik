@@ -210,7 +210,7 @@ describe('the tape page’s tracklist', () => {
       await playing(0, 221.9);
       await user.click(plus('Butsch — The Count'));
       expect(rows()).toEqual(['0:00:00The Prodigy — Hyperspeed (G-Force Part 2)', '0:03:41Butsch — The Count(4:10)Undo', '0:06:43Rhythm For Reasons — Grand NationalUndo']);
-      expect(bar()).toHaveTextContent('2 times not posted · as Dana');
+      expect(bar()).toHaveTextContent('2 times not posted as Dana');
       // What the + is for stays said while lines still lack a posted time.
       expect(screen.getByText(/press the \+ on its row/)).toBeInTheDocument();
       // Nothing is public yet, and the side is no further along.
@@ -246,7 +246,7 @@ describe('the tape page’s tracklist', () => {
 
       page();
       expect(await screen.findByRole('button', { name: 'Play from 0:03:41, your time, not posted yet' })).toBeInTheDocument();
-      expect(bar()).toHaveTextContent('1 time not posted · as Dana');
+      expect(bar()).toHaveTextContent('1 time not posted as Dana');
     });
 
     it('take the same place on the tape only once: a second track cannot start within a moment of the first', async () => {
@@ -289,7 +289,7 @@ describe('the tape page’s tracklist', () => {
       await act(() => deck.setMarks([{ side: 0, n: null, artist: '', title: '', known: false, time: 500 }, { side: 0, n: null, artist: '', title: '', known: false, time: 130 }]));
 
       expect(rows()).toEqual(['0:00:00The Prodigy — Hyperspeed (G-Force Part 2)', '0:02:10Unknown trackUndo', '0:08:20Unknown trackUndo', '02Butsch — The Count(4:10)', '03Rhythm For Reasons — Grand National']);
-      expect(bar()).toHaveTextContent('2 times not posted · as Dana');
+      expect(bar()).toHaveTextContent('2 times not posted as Dana');
       // They are not the side's yet.
       expect(screen.getByText('1 of 3 timed')).toBeInTheDocument();
 

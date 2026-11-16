@@ -9,7 +9,7 @@ type GoTo = (position: string | null, time: number) => void;
 /** A comment posted through the site, as /api/comments/[tapeId] gives it. */
 export type TapeComment = { id: number; tape_id: string; author_name: string; content: string; created_at: string };
 
-/** Where the tape is: which of its sides is loaded, how far in, and whether it has been played at all. */
+/** Where the tape is: which of its sides is loaded, how far in, and whether it has been played at all on this visit. */
 export type Playhead = { side: number; time: number; started: boolean };
 
 /**
@@ -152,7 +152,8 @@ export function TapeTrackIdsProvider({ tapeId, children }: { tapeId: string; chi
   }, []);
   const goTo = useCallback<GoTo>((position, time) => player.current?.(position, time), []);
   const report = useCallback((side: number, time: number, started: boolean) => {
-    head.current = { side, time, started };
+    // Once played, a tape stays played: paused back at its start, it is still one the visitor is listening to.
+    head.current = { side, time, started: started || head.current.started };
     watchers.current.forEach((tell) => tell());
   }, []);
   const playhead = useCallback(() => head.current, []);

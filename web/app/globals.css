@@ -645,6 +645,55 @@ html:has(.id-sheet[open]) { overflow: hidden; }
 @media (hover: hover) and (pointer: fine) {
   .tracklist-cue:hover { text-decoration: underline; text-underline-offset: 4px; }
 }
+/* On a phone the line under the bar gives way to the tray (below): a track's name and the words beside it
+   don't fit on one line there. */
+@media (max-width: 39.99rem) {
+  .track-ids-row { display: none; }
+}
+/* The tray: on a phone, once the tape has been played, what is playing and what can be done about it, at the
+   foot of the screen wherever the page has been scrolled to. Its height is fixed, so the page can end that
+   much lower and the bar of unposted times can sit on top of it as its first row. */
+:root { --tray-height: calc(7.1rem + 1.5px + env(safe-area-inset-bottom, 0px)); }
+.player-tray {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 30;
+  box-sizing: border-box;
+  height: var(--tray-height);
+  padding: 0.6rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1.5px solid var(--text);
+  background: var(--bg);
+  touch-action: manipulation;
+}
+/* Each line is one line and keeps its height when empty, so the buttons under it never move. */
+.player-tray-line { display: flex; min-height: 1.25rem; align-items: baseline; gap: 0.75rem; font-size: 14px; font-weight: 500; line-height: 1.25rem; color: var(--text); }
+.player-tray-sub { font-weight: 400; color: var(--muted); }
+/* Play sits at the thumb's corner; the two ID actions share the rest. */
+.player-tray-row { display: grid; grid-template-columns: 3rem 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem; }
+.player-tray-btn {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--text);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.player-tray-btn:not([aria-disabled="true"]):active { transform: scale(0.96); }
+.player-tray-btn[aria-disabled="true"] { border-color: var(--border); color: var(--muted); cursor: default; }
+.player-tray-primary { background: var(--text); color: var(--bg); }
+.player-tray-btn:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+body:has(.player-tray) { padding-bottom: var(--tray-height); }
 /* The visitor's times, waiting to be posted: a bar at the foot of the screen for as long as there are any,
    so it is in reach from the player's line and from whichever row was last pressed. The page ends that much
    lower while the bar is there, so its last lines can still be read. */
@@ -657,6 +706,11 @@ html:has(.id-sheet[open]) { overflow: hidden; }
   background: var(--bg);
 }
 body:has(.tracklist-post) { padding-bottom: 6rem; }
+/* With the tray there, the bar is the tray's first row: it sits on the tray, and the bright edge that parts
+   the two from the page is the bar's. */
+body:has(.player-tray) .tracklist-post { bottom: var(--tray-height); padding-bottom: 0.5rem; border-top-color: var(--text); }
+body:has(.tracklist-post) .player-tray { border-top-color: var(--border); }
+body:has(.player-tray):has(.tracklist-post) { padding-bottom: calc(var(--tray-height) + 6rem); }
 .tracklist-post-name { flex: 1 1 8rem; }
 /* The tracklist's history of ID posts: each post's lines in the ID's own type, with who posted it and when
    after them, more quietly, at the far end of the line where there is room and under it where there is not. Each entry

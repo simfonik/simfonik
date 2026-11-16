@@ -143,6 +143,8 @@ export function PlaylistPlayer({ tracks, tapeId, sideCount }: PlaylistPlayerProp
             key={currentTrack.position}
             tapeId={tapeId}
             side={currentTrack.index}
+            isPlaying={state.isPlaying}
+            onToggle={state.isPlaying ? controls.pause : controls.play}
             position={sideCount > 1 ? currentTrack.position : null}
             ids={ids}
             time={state.currentTime}
