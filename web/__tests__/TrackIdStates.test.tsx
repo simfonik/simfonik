@@ -134,13 +134,14 @@ describe('a point the visitor marked without a name, not yet posted', () => {
     expect(page.posts()).toEqual([]);
   });
 
-  it('Remove this mark, in the blanks: the same, with no post', async () => {
+  it('Undo, in the blanks: the same, with no post', async () => {
     const page = await marked();
     await page.at(130);
     await page.user.click(page.button('Unknown track. Know it? ID it'));
-    // It is the visitor's own: there is nowhere to move it, only taking it back.
+    // It is the visitor's own: there is nowhere to move it and nothing to remove with a post, only taking it back.
     expect(page.has(/instead$/)).toBe(false);
-    await page.user.click(page.button('Remove this mark'));
+    expect(page.has(/^Remove/)).toBe(false);
+    await page.user.click(within(screen.getByRole('form', { name: 'ID the track at 0:01:40' })).getByRole('button', { name: 'Undo' }));
     expect(page.rows()).toEqual([]);
     expect(page.marks()).toBe('');
     expect(page.bar()).toBeNull();

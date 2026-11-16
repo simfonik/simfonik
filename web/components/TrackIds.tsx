@@ -280,7 +280,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
     // The visitor's own unposted mark is theirs to take back: nothing was said, so nothing is posted.
     if (what === 'remove' && mark?.mine && !mark.mine.sent) {
       unsay(mark.mine);
-      setThanks('Removed.');
+      setThanks('Taken back.');
       return leave();
     }
     // Only an ID needs a name: a mark is taken away or moved as it is, named or not.
@@ -326,8 +326,10 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
           Starts at {formatTime(later)} instead
         </button>
       )}
+      {/* The visitor's own unposted mark is taken back, as on its row in the tracklist, and nothing is
+          posted. Any other is taken away with a post. */}
       <button type="button" onClick={() => act('remove')} aria-disabled={sending} className="track-ids-post">
-        {mark.known ? 'Remove this ID' : 'Remove this mark'}
+        {isUnposted(mark) ? 'Undo' : mark.known ? 'Remove this ID' : 'Remove this mark'}
       </button>
     </>
   );
