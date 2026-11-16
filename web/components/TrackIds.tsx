@@ -83,7 +83,8 @@ type Props = {
  * outweigh what was said of that moment before. The tracklist, down the page, can ask for the blanks to
  * open for one of its lines.
  *
- * Beside all that is Mark: one press says a track starts at this moment without saying what it is. A visitor
+ * Beside all that is "New unknown": one press says a track starts at this moment without saying what it is
+ * ("New ID", next to it, says one starts here and opens the blanks to say which). A visitor
  * can go through a tape setting the points and leave the names to whoever knows them. A mark is the
  * visitor's own until they post what they have (the tracklist keeps the count and the Post), and until then
  * it is taken back, or ID'd, like any other mark on the line.
@@ -346,8 +347,8 @@ export function TrackIds({ tapeId, side, position, ids, time, order = null, leng
               </button>
               {/* Not in the track's first moments: an ID there would be read as this same ID said again. */}
               {time - playing.start > ONE_MOMENT && (
-                <button type="button" onClick={() => open(true)} className="track-ids-post" aria-label="A new track starts here. ID it">
-                  New track
+                <button type="button" onClick={() => open(true)} className="track-ids-post" aria-label="New ID: a track starts here, and you know what it is" title="A track starts here, and you know what it is">
+                  New ID
                 </button>
               )}
             </>
@@ -357,8 +358,8 @@ export function TrackIds({ tapeId, side, position, ids, time, order = null, leng
             </button>
           )}
           {canMark && (
-            <button type="button" onClick={markHere} className="track-ids-post" aria-label="Mark a track start here, without an ID" title="A track starts here, and you don’t know what it is">
-              Mark
+            <button type="button" onClick={markHere} className="track-ids-post" aria-label="New unknown: a track starts here, and you don’t know what it is" title="A track starts here, and you don’t know what it is">
+              New unknown
             </button>
           )}
         </div>

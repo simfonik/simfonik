@@ -198,14 +198,14 @@ describe('the track line under the player', () => {
     window.localStorage.setItem('simfonik:id-name', 'Dana');
     // Moby — Go runs from 0:00. Four seconds in, an ID would be read as that same ID said again.
     const { rerender } = render(<TrackIds tapeId="tape-1" side={0} position="A" ids={ids} time={4} onPosted={posted} />);
-    expect(screen.queryByRole('button', { name: 'A new track starts here. ID it' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'New ID: a track starts here, and you know what it is' })).not.toBeInTheDocument();
     rerender(<TrackIds tapeId="tape-1" side={0} position="A" ids={ids} time={6} onPosted={posted} />);
-    expect(screen.getByRole('button', { name: 'A new track starts here. ID it' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'New ID: a track starts here, and you know what it is' })).toBeInTheDocument();
     rerender(<TrackIds tapeId="tape-1" side={0} position="A" ids={ids} time={4} onPosted={posted} />);
-    expect(screen.queryByRole('button', { name: 'A new track starts here. ID it' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'New ID: a track starts here, and you know what it is' })).not.toBeInTheDocument();
 
     rerender(<TrackIds tapeId="tape-1" side={0} position="A" ids={ids} time={95.4} onPosted={posted} />);
-    await user.click(screen.getByRole('button', { name: 'A new track starts here. ID it' }));
+    await user.click(screen.getByRole('button', { name: 'New ID: a track starts here, and you know what it is' }));
     expect(screen.getByRole('form', { name: 'ID the track at A 0:01:35' })).toBeInTheDocument();
     expect(artist()).toHaveValue('');
     await user.type(artist(), 'Orbital');
@@ -274,7 +274,7 @@ describe('the track line under the player', () => {
     });
   });
 
-  describe('Mark: a track starts here, and the visitor doesn’t know what it is', () => {
+  describe('New unknown: a track starts here, and the visitor doesn’t know what it is', () => {
     // The line as the player gives it: the side's IDs with the visitor's own unposted marks among them.
     function Line({ time }: { time: number }) {
       return <TrackIds tapeId="tape-1" side={0} position="A" ids={useSideIds(0)} time={time} onPosted={posted} />;
@@ -293,7 +293,7 @@ describe('the track line under the player', () => {
         <Line time={time} />
       </TapeTrackIdsProvider>
     );
-    const mark = () => screen.getByRole('button', { name: 'Mark a track start here, without an ID' });
+    const mark = () => screen.getByRole('button', { name: 'New unknown: a track starts here, and you don’t know what it is' });
     const submits = () => fetchMock.mock.calls.filter(([url]) => String(url) === '/api/comments/submit');
 
     beforeEach(() => {
@@ -306,11 +306,11 @@ describe('the track line under the player', () => {
     it('is there once the tape has been played, and not within a moment of a track’s start', async () => {
       const { rerender } = render(tape(0));
       await screen.findByRole('button', { name: 'Now playing: Moby — Go. Correct this ID' });
-      expect(screen.queryByRole('button', { name: /^Mark/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^New unknown/ })).not.toBeInTheDocument();
       rerender(tape(3));
-      expect(screen.queryByRole('button', { name: /^Mark/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^New unknown/ })).not.toBeInTheDocument();
       rerender(tape(297));
-      expect(screen.queryByRole('button', { name: /^Mark/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^New unknown/ })).not.toBeInTheDocument();
       rerender(tape(200));
       expect(mark()).toBeInTheDocument();
     });
@@ -326,7 +326,7 @@ describe('the track line under the player', () => {
       expect(screen.getByRole('button', { name: 'Unknown track. Know it? ID it' })).toBeInTheDocument();
       expect(submits()).toHaveLength(0);
       // The next can be marked once the tape has moved on a moment.
-      expect(screen.queryByRole('button', { name: /^Mark/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^New unknown/ })).not.toBeInTheDocument();
       rerender(tape(215));
       await user.click(mark());
       expect(shared.marks.map((m) => m.time)).toEqual([200, 215]);
