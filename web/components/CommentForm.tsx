@@ -9,7 +9,7 @@ type CommentFormProps = {
 
 export function CommentForm({ tapeId }: CommentFormProps) {
   // A posted comment may be a track ID, and either way belongs in the list above: both are read again.
-  const { refresh } = useTapeTrackIds();
+  const { reread } = useTapeTrackIds();
   const [authorName, setAuthorName] = useState('');
   const [authorEmail, setAuthorEmail] = useState('');
   const [content, setContent] = useState('');
@@ -42,7 +42,7 @@ export function CommentForm({ tapeId }: CommentFormProps) {
 
       if (response.ok) {
         setMessage({ type: 'success', text: data.message });
-        refresh();
+        reread();
         // Clear form
         setAuthorName('');
         setAuthorEmail('');

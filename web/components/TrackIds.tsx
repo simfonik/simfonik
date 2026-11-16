@@ -2,11 +2,11 @@
 
 import { FormEvent, RefObject, useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
-import { composeId, composeRemoval, idAt, idLabel, idPlace, ONE_MOMENT, type ListedTrack, type RunningOrder, type TrackId } from '../lib/track-ids/compose';
-import { suggest } from '../lib/track-ids/names';
-import { postIds, rememberedName } from '../lib/track-ids/post';
+import { idLabel, idPlace, tidy } from '../lib/track-ids/compose';
+import { rememberedName } from '../lib/track-ids/post';
+import { isUnposted, playingAt, saidBy, startingAt, suggest, type Change, type Row } from '../lib/track-ids/side';
 import { formatTime } from '../lib/time-utils';
-import { usePlayhead, useTapeTrackIds } from './TapeTrackIds';
+import { usePlayhead, useSide, useTapeTrackIds } from './TapeTrackIds';
 
 /** What the blanks are about to do: post the ID in them, take the mark away, or move it to where the tape is. */
 type Act = 'id' | 'remove' | 'move';
@@ -69,70 +69,66 @@ function dismiss(sheet: HTMLDialogElement) {
 }
 
 type Props = {
-  tapeId: string;
   /** Which of the tape's sides this is, counting from 0. */
   side: number;
   /** The side's label as the site shows it ("A", "1B"), or null on a tape that is one recording. */
   position: string | null;
-  /** The side's IDs in order of time: those the comments give, and the visitor's own unposted marks among them. */
-  ids: TrackId[];
   /** Where the tape is, in seconds. */
   time: number;
   /** Whether the tape is playing, and the way to play or pause it, for the tray on a phone. */
   isPlaying: boolean;
   onToggle: () => void;
-  /** The side's tracks in order, where a list gives them without times: likely names are offered from it. */
-  order?: RunningOrder | null;
   /** The side's length in seconds, where it is known. */
   length?: number | null;
-  /** An ID has been posted: the comments have changed and should be read again. */
-  onPosted: () => void;
 };
 
 /**
- * One line under the bar. It says the track playing now, as the comments have ID'd it; where they haven't, it
- * asks. Pressed, it takes an ID: with a mouse the line becomes two blanks in its own place; on a phone a sheet
- * rises over the page and stays on top of the keyboard. What is typed is posted as an ordinary comment that
- * carries the side and the time (see lib/track-ids/compose.ts), through the same route as any comment. A name
- * already there can be pressed to put it right, and beside it is the way to say that a new track has started:
- * an ID runs until the next one, so without that a side with one ID could never be given a second. Nothing is
- * kept anywhere else.
+ * One line under the bar. It says the track playing now, by the side's rows as the whole page has them
+ * (lib/track-ids/side.ts); where there is none, it asks. Pressed, it takes an ID: with a mouse the line
+ * becomes two blanks in its own place; on a phone a sheet rises over the page and stays on top of the
+ * keyboard. What is typed is posted as an ordinary comment that carries the side and the time
+ * (lib/track-ids/compose.ts), and is on the page as posted from that moment.
  *
- * A mark already on the tape can also be taken away, or moved to where the tape is now if it was made too
- * early. Both are posts like any other: a line that says no track starts there, which the reader lets
- * outweigh what was said of that moment before. The tracklist, down the page, can ask for the blanks to
- * open for one of its lines.
+ * The blanks are always about one mark: the track playing, or, with nothing playing, a new one at this
+ * moment. A name already there is pressed to put it right. A mark can also be taken away, or moved to where
+ * the tape is now if it was made too early; both are posts like any other.
  *
- * Beside all that is "New unknown": one press says a track starts at this moment without saying what it is
- * ("New ID", next to it, says one starts here and opens the blanks to say which). A visitor
- * can go through a tape setting the points and leave the names to whoever knows them. A mark is the
- * visitor's own until they post what they have (the tracklist keeps the count and the Post), and until then
- * it is taken back, or ID'd, like any other mark on the line.
+ * Beside the line are the two ways to say that a track starts here: "New ID" opens the blanks to say which,
+ * and "New unknown" says only that one does, in one press, so a visitor can go through a tape setting the
+ * points and leave the names to whoever knows them. Neither is there within a moment of a track's start:
+ * one moment, one track. A new unknown is the visitor's own until they post what they have (the tracklist
+ * keeps the count and the Post), and until then it is taken back, or ID'd, like any other mark.
  *
  * On a phone the line has no room for a track's name and the words beside it, and it is at the top of a long
  * page. There, once the tape has been played, all of it is in a tray at the foot of the screen instead: the
  * name on two lines, then play, the ID and the new unknown, each always in its place so none moves under a
  * thumb. A new track the visitor can name is marked and then ID'd.
  *
- * Where the side has a list of its tracks with no times, the two lines of it likeliest to be this track are
+ * Where the side has a list of its tracks, the two lines of it likeliest to be the track being ID'd are
  * offered, and pressing one writes it into the blanks.
  */
-export function TrackIds({ tapeId, side, position, ids, time, isPlaying, onToggle, order = null, length = null, onPosted }: Props) {
-  const playing = idAt(ids, time);
+export function TrackIds({ side, position, time, isPlaying, onToggle, length = null }: Props) {
+  const { rows, order } = useSide(side);
+  const { say, unsay, post: send, asked, answered } = useTapeTrackIds();
+  const played = usePlayhead((head) => head.started);
+  const now = Math.floor(time);
+  const playing = rows[playingAt(rows, time)] ?? null;
+  // A track could start at this moment: the tape has been played, and nothing starts within a moment of here.
+  const free = played && startingAt(rows, now) < 0;
   // The blanks are for one moment of the tape, fixed when they open, while the tape plays on underneath.
   const [at, setAt] = useState<number | null>(null);
   // The mark the blanks are for, where the tape already has one at that moment.
-  const [mark, setMark] = useState<TrackId | null>(null);
+  const [mark, setMark] = useState<Row | null>(null);
   // Where the tape was when the blanks opened, if the mark could be moved there: later than it, and in it.
   const [later, setLater] = useState<number | null>(null);
-  const [act, setAct] = useState<Act>('id');
+  const [doing, setDoing] = useState<Act>('id');
   const [sheet, setSheet] = useState(false);
   // The visitor's name is asked for the first time only. The line has room for one thing at a time, so it
   // asks as a second step; the sheet has a row for it from the start.
   const [askName, setAskName] = useState(false);
   // Counts each time the name is asked for after the blanks are open, so the keyboard can go to it.
   const [nameWanted, setNameWanted] = useState(0);
-  const [offers, setOffers] = useState<ListedTrack[]>([]);
+  const [offers, setOffers] = useState<Row[]>([]);
   const [artist, setArtist] = useState('');
   const [title, setTitle] = useState('');
   const [name, setName] = useState('');
@@ -147,19 +143,18 @@ export function TrackIds({ tapeId, side, position, ids, time, isPlaying, onToggl
   const nameField = useRef<HTMLInputElement>(null);
   const messageId = useId();
 
-  const begin = (marked: TrackId | null, start: number) => {
+  const begin = (marked: Row | null, start: number) => {
     const onPhone = window.matchMedia(PHONE).matches;
     const remembered = rememberedName();
-    const now = Math.floor(time);
     setAt(start);
     setMark(marked);
-    // A mark made too early can be moved to here: the tape is in that track, well past where it is marked,
-    // and nothing else starts at this moment. (The visitor's own unposted mark is taken back and made again.)
-    setLater(marked && !marked.pending && marked === playing && now - marked.start > ONE_MOMENT && !ids.some((id) => id !== marked && Math.abs(id.start - now) <= ONE_MOMENT) ? now : null);
-    setAct('id');
+    // A mark made too early can be moved to here: the tape is in that track, and a track could start at this
+    // moment. (The visitor's own unposted mark is taken back and made again.)
+    setLater(marked && !isUnposted(marked) && marked === playing && free ? now : null);
+    setDoing('id');
     setArtist(marked?.known ? marked.artist : '');
     setTitle(marked?.known ? marked.title : '');
-    setOffers(order && !marked?.known ? suggest(start, order.tracks, ids, length) : []);
+    setOffers(marked?.known ? [] : suggest(rows, start, length));
     setName(remembered);
     setSheet(onPhone);
     setAskName(onPhone && !remembered);
@@ -168,33 +163,27 @@ export function TrackIds({ tapeId, side, position, ids, time, isPlaying, onToggl
     setMessage('');
     setThanks('');
   };
-  // An ID is for the track playing. Where the comments have marked one, it goes to where that track starts:
-  // a correction then replaces the older word, and an ID for a track marked unknown fills the whole of it
-  // and doesn't split it at the moment the visitor happened to speak up. Putting a known ID right starts
-  // from what it says. Where nothing is marked, or the visitor says a new track has started, the ID goes to
-  // this moment.
-  const open = (fresh: boolean) => {
-    const marked = fresh ? null : playing;
-    begin(marked, marked ? marked.start : Math.floor(time));
+  // An ID is for the track playing. Where the side has one marked, it goes to where that track starts: a
+  // correction then replaces the older word, and an ID for a track marked unknown fills the whole of it and
+  // doesn't split it at the moment the visitor happened to speak up. With nothing playing it goes to this
+  // moment, or to the mark about to start within a moment of it: one moment, one track.
+  const open = () => {
+    const marked = playing ?? rows[startingAt(rows, now)] ?? null;
+    begin(marked, marked?.start ?? now);
   };
-  // The tracklist asks for one of its lines. On a tape with sides the blanks belong to the side loaded, so a
-  // line on another side is answered once the player has loaded that side.
-  const { asked, answered, marks, setMarks } = useTapeTrackIds();
-  const played = usePlayhead((head) => head.started);
-  // A track could start at this moment: the tape has been played, and nothing on the side starts within a
-  // moment of here already.
-  const canMark = time > 0 && !ids.some((id) => Math.abs(id.start - time) <= ONE_MOMENT);
-  const unmark = (start: number) => setMarks(marks.filter((m) => !(m.side === side && m.time === start)));
+  /** "New ID": a track starts here, whatever is playing, and the visitor will say which. */
+  const openNew = () => begin(null, now);
   const markHere = () => {
-    if (!canMark) return;
-    const now = Math.floor(time);
-    setMarks([...marks, { side, n: null, artist: '', title: '', known: false, time: now }]);
+    if (!free) return;
+    say({ side, time: now, artist: '', title: '' });
     setThanks(`Marked ${idPlace(position, now)}. Not posted yet.`);
   };
-  // The blanks open on the side's IDs and the tape's place as they are when the asking is heard.
+  // The tracklist asks for one of its rows. On a tape with sides the blanks belong to the side loaded, so a
+  // row on another side is answered once the player has loaded that side; and they open on the side's rows
+  // and the tape's place as they are when the asking is heard.
   const answer = useRef<(time: number) => void>(() => {});
   useEffect(() => {
-    answer.current = (start) => begin(ids.find((id) => id.start === start) ?? null, start);
+    answer.current = (start) => begin(rows.find((row) => row.start === start) ?? null, start);
   });
   useEffect(() => {
     if (!asked || asked.position !== position) return;
@@ -266,7 +255,7 @@ export function TrackIds({ tapeId, side, position, ids, time, isPlaying, onToggl
     set(e.target.value);
     settle();
   };
-  const take = (offer: ListedTrack) => {
+  const take = (offer: Row) => {
     setArtist(offer.artist);
     setTitle(offer.title);
     settle();
@@ -285,11 +274,11 @@ export function TrackIds({ tapeId, side, position, ids, time, isPlaying, onToggl
     focus(field, true);
   };
 
-  async function send(what: Act) {
+  async function act(what: Act) {
     if (status === 'sending' || at === null) return;
     // The visitor's own unposted mark is theirs to take back: nothing was said, so nothing is posted.
-    if (what === 'remove' && mark?.pending) {
-      unmark(mark.start);
+    if (what === 'remove' && mark?.mine && !mark.mine.sent) {
+      unsay(mark.mine);
       setThanks('Removed.');
       return leave();
     }
@@ -298,28 +287,25 @@ export function TrackIds({ tapeId, side, position, ids, time, isPlaying, onToggl
     if (!name.trim()) {
       if (askName) return refuse('Enter your name.', nameField.current);
       // The line asks for the name as a step of its own, and the step ends in what was being done.
-      setAct(what);
+      setDoing(what);
       return wantName();
     }
     // Taking a mark away is one line; moving it is that line and the ID at its new place, in one post.
-    const gone = mark && what !== 'id' ? [composeRemoval({ position, time: mark.start })] : [];
-    const id = what === 'remove' ? [] : [composeId({ position, time: what === 'move' && later !== null ? later : at, artist, title })];
+    const gone: Change[] = mark && what !== 'id' ? [{ side, time: mark.start as number, artist: '', title: '', gone: true }] : [];
+    const id: Change[] = what === 'remove' ? [] : [{ side, time: what === 'move' && later !== null ? later : at, artist: tidy(artist), title: tidy(title) }];
 
     setStatus('sending');
     setMessage('');
-    const failed = await postIds(tapeId, name, [...gone, ...id].join('\n'));
+    const failed = await send([...gone, ...id], name);
     // In the line the name, once asked for, is the only blank there is.
     if (failed) return refuse(failed, askName && !sheet ? nameField.current : artistField.current);
     setStatus('idle');
-    // An unposted mark that has now been ID'd is on the tape by that ID, and no longer waits to be posted.
-    if (mark?.pending) unmark(mark.start);
     setThanks(what === 'remove' ? 'Removed.' : what === 'move' ? 'Moved. Thanks.' : 'Posted. Thanks.');
-    onPosted();
     leave();
   }
   const post = (e: FormEvent) => {
     e.preventDefault();
-    send(act);
+    act(doing);
   };
 
   const where = idPlace(position, at ?? 0);
@@ -327,7 +313,7 @@ export function TrackIds({ tapeId, side, position, ids, time, isPlaying, onToggl
   const from = order?.by ? `From ${order.by}’s list` : 'From the tape’s tracklist';
   const posting = (
     <span className="grid place-items-center">
-      <span className={`col-start-1 row-start-1 ${sending ? 'invisible' : ''}`}>{act === 'remove' ? 'Remove' : act === 'move' ? 'Move' : 'Post'}</span>
+      <span className={`col-start-1 row-start-1 ${sending ? 'invisible' : ''}`}>{doing === 'remove' ? 'Remove' : doing === 'move' ? 'Move' : 'Post'}</span>
       <span className={`col-start-1 row-start-1 ${sending ? '' : 'invisible'}`}>…</span>
     </span>
   );
@@ -335,11 +321,11 @@ export function TrackIds({ tapeId, side, position, ids, time, isPlaying, onToggl
   const upkeep = mark && (
     <>
       {later !== null && (
-        <button type="button" onClick={() => send('move')} aria-disabled={sending} className="track-ids-post">
+        <button type="button" onClick={() => act('move')} aria-disabled={sending} className="track-ids-post">
           Starts at {formatTime(later)} instead
         </button>
       )}
-      <button type="button" onClick={() => send('remove')} aria-disabled={sending} className="track-ids-post">
+      <button type="button" onClick={() => act('remove')} aria-disabled={sending} className="track-ids-post">
         {mark.known ? 'Remove this ID' : 'Remove this mark'}
       </button>
     </>
@@ -356,6 +342,8 @@ export function TrackIds({ tapeId, side, position, ids, time, isPlaying, onToggl
   );
 
   const tray = useOnPhone() && played;
+  // Said beside a mark wherever it is the visitor's own and not posted, so no part of the page shows it as the tape's.
+  const unposted = playing !== null && isUnposted(playing);
 
   return (
     <div className="track-ids">
@@ -364,30 +352,22 @@ export function TrackIds({ tapeId, side, position, ids, time, isPlaying, onToggl
         // stays as it was.
         <div className="track-ids-row mt-2 flex min-h-11 items-center gap-x-3">
           {playing?.known ? (
-            <>
-              <button
-                ref={line}
-                type="button"
-                onClick={() => open(false)}
-                className="track-ids-line text-[var(--text)]"
-                aria-label={`Now playing: ${idLabel(playing)}. Correct this ID`}
-                title={playing.pending ? 'Your time, not posted yet. Press to change it.' : `ID by ${playing.by}. Press to correct it.`}
-              >
-                {idLabel(playing)}
-              </button>
-              {/* Not in the track's first moments: an ID there would be read as this same ID said again. */}
-              {time - playing.start > ONE_MOMENT && (
-                <button type="button" onClick={() => open(true)} className="track-ids-post" aria-label="New ID: a track starts here, and you know what it is" title="A track starts here, and you know what it is">
-                  New ID
-                </button>
-              )}
-            </>
+            <button ref={line} type="button" onClick={open} className="track-ids-line text-[var(--text)]" aria-label={`Now playing: ${idLabel(playing)}. Correct this ID`} title={`${saidBy(playing)}. Press to correct it.`}>
+              {idLabel(playing)}
+            </button>
           ) : (
-            <button ref={line} type="button" onClick={() => open(false)} className="track-ids-line text-[var(--muted)]">
+            <button ref={line} type="button" onClick={open} className="track-ids-line text-[var(--muted)]">
               {playing ? 'Unknown track. Know it?' : 'Know this track?'} <span className="track-ids-cue">ID it</span>
             </button>
           )}
-          {canMark && (
+          {unposted && <span className="track-ids-state">Not posted</span>}
+          {/* Not within a moment of a track's start: what is said there is said of that track. */}
+          {free && playing?.known && (
+            <button type="button" onClick={openNew} className="track-ids-post" aria-label="New ID: a track starts here, and you know what it is" title="A track starts here, and you know what it is">
+              New ID
+            </button>
+          )}
+          {free && (
             <button type="button" onClick={markHere} className="track-ids-post" aria-label="New unknown: a track starts here, and you don’t know what it is" title="A track starts here, and you don’t know what it is">
               New unknown
             </button>
@@ -507,9 +487,8 @@ export function TrackIds({ tapeId, side, position, ids, time, isPlaying, onToggl
               <span className="flex-none font-mono text-xs font-normal tabular-nums text-[var(--muted)]">{idPlace(position, time)}</span>
             </p>
             <p className="player-tray-line player-tray-sub">
-              <span className="min-w-0 flex-1 truncate">
-                {playing ? (playing.known ? (playing.artist ? playing.title : '') : playing.pending ? 'Marked by you, not posted yet' : 'Nobody has ID’d it yet') : 'Know this track? ID it.'}
-              </span>
+              <span className="min-w-0 flex-1 truncate">{playing ? (playing.known ? (playing.artist ? playing.title : '') : unposted ? 'Marked by you' : 'Nobody has ID’d it yet') : 'Know this track? ID it.'}</span>
+              {unposted && <span className="track-ids-state flex-none">Not posted</span>}
             </p>
             <div className="player-tray-row">
               <button type="button" onClick={onToggle} className="player-tray-btn player-tray-primary" aria-label={isPlaying ? 'Pause' : 'Play'}>
@@ -517,11 +496,11 @@ export function TrackIds({ tapeId, side, position, ids, time, isPlaying, onToggl
                   <path d={isPlaying ? 'M0 0h4v14H0zM8 0h4v14H8z' : 'M0 0v14l11-7z'} />
                 </svg>
               </button>
-              <button ref={trayId} type="button" onClick={() => open(false)} className="player-tray-btn">
+              <button ref={trayId} type="button" onClick={open} className="player-tray-btn">
                 {playing?.known ? 'Fix ID' : 'ID it'}
               </button>
               {/* Marked as unavailable, not taken away, in a track's first moments: it keeps its place. */}
-              <button type="button" onClick={markHere} aria-disabled={!canMark} className="player-tray-btn" aria-label="New unknown: a track starts here, and you don’t know what it is">
+              <button type="button" onClick={markHere} aria-disabled={!free} className="player-tray-btn" aria-label="New unknown: a track starts here, and you don’t know what it is">
                 New unknown
               </button>
             </div>

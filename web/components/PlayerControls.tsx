@@ -1,6 +1,7 @@
 import React, { ReactNode, useMemo, useRef } from 'react';
 import { formatTime } from '../lib/time-utils';
-import { idAt, idLabel, type TrackId } from '../lib/track-ids/compose';
+import { idAt, idLabel } from '../lib/track-ids/compose';
+import { saidBy, type Mark } from '../lib/track-ids/side';
 import { outline } from '../lib/waveform';
 
 export interface PlayerControlsProps {
@@ -15,8 +16,8 @@ export interface PlayerControlsProps {
   length?: number | null;
   /** The time played and the side's length, under the bar's two ends. Off where a list of sides says them. */
   showTimes?: boolean;
-  /** The track IDs the comments give for this side, in order of time. Each is marked on the bar. */
-  ids?: TrackId[];
+  /** The side's timed tracks, in order of time, as the whole page has them. Each is marked on the bar. */
+  ids?: Mark[];
   /** Whatever goes under the bar, in line with it. */
   children?: ReactNode;
   onPlay: () => void;
@@ -86,7 +87,7 @@ export function PlayerControls({
     const label = el.firstElementChild as HTMLElement;
     // An ID as the page writes one everywhere: the time, a space, the track.
     label.textContent = time === null ? '' : `${formatTime(time)}${id ? `\u2002${idLabel(id)}` : ''}`;
-    label.dataset.by = id ? `${id.known ? 'ID' : 'marked'} by ${id.by}` : '';
+    label.dataset.by = id ? saidBy(id) : '';
     // The label stays inside the bar's ends, however long the name makes it.
     const half = label.offsetWidth / 2;
     el.style.setProperty('--label', `${Math.max(half, Math.min(bar.width - half, at))}px`);

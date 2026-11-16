@@ -27,8 +27,8 @@ export type TrackId = {
   known: boolean;
   /** Who said so. */
   by: string;
-  /** The visitor's own mark, on this device and not posted yet (see TapeTrackIds). Never in what the reader gives. */
-  pending?: boolean;
+  /** When, as the comments date it: of two, the later said sorts after the earlier. */
+  date: string;
 };
 
 /** A line of a side's running order: a track written down in its place, with or without a time. */
@@ -67,7 +67,8 @@ export const clock = (seconds: number) => {
   return s >= 3600 ? `${Math.floor(s / 3600)}:${rest}` : rest;
 };
 
-const tidy = (s: string) => s.replace(/\s+/g, ' ').trim();
+/** A name as it is written into a comment: its ends trimmed, and one space wherever it had several. */
+export const tidy = (s: string) => s.replace(/\s+/g, ' ').trim();
 
 /**
  * The comment for an ID. `position` is the side's label ("A", "1B"), or null on a tape with one side. A name
@@ -128,8 +129,8 @@ export function readComposed(content: string, positions: string[]): { side: numb
 }
 
 /** The ID playing at a time on a side, if there is one. `ids` in order of start. */
-export function idAt(ids: TrackId[], time: number): TrackId | null {
-  let found: TrackId | null = null;
+export function idAt<Id extends Pick<TrackId, 'start' | 'end'>>(ids: Id[], time: number): Id | null {
+  let found: Id | null = null;
   for (const id of ids) {
     if (id.start > time) break;
     if (time < id.end) found = id;

@@ -1,18 +1,18 @@
 'use client';
 
 import { FormEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { composeId, idPlace, ONE_MOMENT, splitPost, type RunningOrder } from '../lib/track-ids/compose';
-import { postIds, rememberedName } from '../lib/track-ids/post';
-import { contributors, couldStartAt, placeByTime, tracklistRows, type TracklistRow } from '../lib/track-ids/tracklist';
+import { idPlace, splitPost, type RunningOrder } from '../lib/track-ids/compose';
+import { rememberedName } from '../lib/track-ids/post';
+import { contributors, couldStartAt, playingAt, type Row } from '../lib/track-ids/side';
 import { formatTime } from '../lib/time-utils';
-import type { Side } from '../types/tape';
-import { UNENDED, usePlayhead, useTapeTrackIds, type Mark } from './TapeTrackIds';
+import { usePlayhead, useTapeTrackIds } from './TapeTrackIds';
 
 /** A long side shows this many tracks before the rest are asked for. */
 const COLLAPSED_COUNT = 20;
 const NONE = new Set<number>();
 
-type Row = TracklistRow & { /** The visitor's own time, not posted yet. */ pending: boolean };
+/** The visitor's own, waiting to be posted. */
+const isUnposted = (row: Row) => Boolean(row.mine && !row.mine.sent);
 
 const names = (people: string[]) => {
   const [a, b, c, ...rest] = people;
@@ -20,11 +20,16 @@ const names = (people: string[]) => {
   return c ? `${a}, ${b}, and ${c}` : b ? `${a} and ${b}` : a;
 };
 
-/** How far along a side is, in a few words. Nothing where all there is of it is the visitor's own unposted marks. */
+const count = (n: number) => (n === 1 ? '1 time' : `${n} times`);
+
+/**
+ * How far along a side is, in a few words, by what the comments have: the visitor's unposted times are not
+ * the side's yet. Nothing where all there is of the side is theirs.
+ */
 function progress(all: Row[], order: RunningOrder | null) {
-  const rows = all.filter((row) => !(row.pending && row.n === null));
+  const rows = all.filter((row) => row.n !== null || !isUnposted(row));
   if (rows.length === 0) return '';
-  const timed = rows.filter((row) => row.start !== null && !row.pending).length;
+  const timed = rows.filter((row) => row.start !== null && !isUnposted(row)).length;
   const unknown = rows.filter((row) => !row.known).length;
   const parts = order
     ? [timed === rows.length && !unknown ? `All ${rows.length} tracks timed` : `${timed} of ${rows.length} timed`]
@@ -44,91 +49,34 @@ const chevron = (
 );
 
 /**
- * The tape's tracklist: one list of what is on each side, from everything the page knows. The names in order
- * come from the tape's own tracklist or a list someone kept in the comments, the times from the IDs in the
- * comments (see lib/track-ids/tracklist.ts), and a side with only IDs is those IDs in order of time. A tape
- * is done when every row has a name and a time, and the rows that lack one show what is left.
+ * The tape's tracklist: each side's rows, as the whole page has them (lib/track-ids/side.ts). The names in
+ * order come from the tape's own tracklist or a list someone kept in the comments, the times from the IDs,
+ * and a side with only IDs is those IDs in order of time. A tape is done when every row has a name and a
+ * time, and the rows that lack one show what is left.
  *
  * A time is pressed to hear the tape from there, and the row playing is lit as the tape moves. A row with no
- * time carries its number in the list where the time will go. While its side plays, a + is there instead:
- * pressed when the track starts, it gives the row that moment. The + is only on the rows the list's order
- * allows to start there: a line cannot be timed before one above it or after one below it. A point marked by
- * ear on the player's line,
- * with no name to it, is a row of its own at its time. Those times are the visitor's own until they post
- * them, together, as one comment in the site's form (lib/track-ids/compose.ts); the bar that says how many
- * wait, and posts them, stays at the foot of the screen wherever on the page they were made.
+ * time carries its number in the list where the time will go. While its side plays, the rows that could be
+ * the track starting now have a + there instead, and pressing it gives the row that moment.
+ *
+ * What the visitor has said and not posted (a + here, a point marked by ear up at the player) is on its row
+ * like any other time, in full colour, with the way to take it back. A bar at the foot of the screen says how
+ * many wait and posts them together, as one comment (lib/track-ids/compose.ts).
  *
  * Who the list is owed to is said once, above it. Every post that made it is kept under History, at its foot,
  * and out of the comments, where a run of them would bury the talk.
  */
-export function Tracklist({ tapeId, sides }: { tapeId: string; sides: Pick<Side, 'position' | 'title' | 'tracks'>[] }) {
-  const trackIds = useTapeTrackIds();
-  const several = sides.length > 1;
-  const labelled = several || Boolean(sides[0]?.title);
-  const { marks, setMarks: keep } = trackIds;
-  // Times just posted stay on their rows until the page has read the comments again and has them from there.
-  const [sent, setSent] = useState<Mark[]>([]);
-  useEffect(() => setSent((was) => (was.length ? [] : was)), [trackIds.sides]);
-
-  const lists = useMemo(
-    () =>
-      sides.map((side, i) => {
-        // The tape's own tracklist is in the page from the start, with what only it has: a record's page on
-        // Discogs and its length. A list from the comments arrives with the IDs.
-        const order: RunningOrder | null = side.tracks?.length
-          ? { by: null, tracks: side.tracks.map((t, k) => ({ n: k + 1, artist: t.artist, title: t.title, known: true, link: t.discogs_url, duration: t.duration })) }
-          : (trackIds.orders[i] ?? null);
-        return { order, rows: tracklistRows(order, trackIds.sides[i] ?? []) };
-      }),
-    [sides, trackIds.orders, trackIds.sides],
-  );
-  // Each side's rows with the visitor's unposted times on them, and which of those times found a row: a time
-  // kept from an earlier visit for a line the list no longer has, or has timed since, is left out.
-  const { shown, pending } = useMemo(() => {
-    const pending: Mark[] = [];
-    const shown = lists.map(({ rows }, i) => {
-      const here = (m: Mark) => m.side === i;
-      // The list's lines, in its order, each with the visitor's time where they have given it one.
-      const lines = rows
-        .filter((row) => row.n !== null)
-        .map((row): Row => {
-          const mine = (m: Mark) => here(m) && m.n === row.n && m.artist === row.artist && m.title === row.title;
-          const mark = row.start === null ? (marks.find(mine) ?? sent.find(mine)) : undefined;
-          if (mark && marks.includes(mark)) pending.push(mark);
-          return mark ? { ...row, start: mark.time, pending: marks.includes(mark) } : { ...row, pending: false };
-        });
-      // What is on the side by time alone: an ID the list has no line for, and a point the visitor marked by
-      // ear, unless the comments now have that moment themselves. They are placed among the lines last, so
-      // one keeps its place by time when a line beside it is given a time.
-      const others = rows.filter((row) => row.n === null).map((row): Row => ({ ...row, pending: false }));
-      for (const mark of [...marks, ...sent].filter((m) => here(m) && m.n === null)) {
-        if ([...lines, ...others].some((row) => row.start !== null && Math.abs(row.start - mark.time) <= ONE_MOMENT)) continue;
-        if (marks.includes(mark)) pending.push(mark);
-        others.push({ n: null, artist: '', title: '', known: false, start: mark.time, end: null, by: null, pending: marks.includes(mark) });
-      }
-      return placeByTime(lines, others);
-    });
-    return { shown, pending };
-  }, [lists, marks, sent]);
+export function Tracklist() {
+  const { tape, sides, read, unposted, goTo, playhead, say, unsay, post: send, ask } = useTapeTrackIds();
+  const several = tape.length > 1;
+  const labelled = several || Boolean(tape[0]?.title);
+  const place = (side: number) => (several ? tape[side].position : null);
 
   // What the list needs to know of where the tape is: the side playing, the row playing on it, and the rows
   // that could be given this moment as their start.
   const [liveSide, litRow, couldStart] = usePlayhead((head) => {
     if (!head.started) return '-1|-1|';
-    const rows = shown[head.side] ?? [];
-    let at = -1;
-    rows.forEach((row, k) => {
-      if (row.start !== null && row.start <= head.time && (at < 0 || row.start >= (rows[at].start as number))) at = k;
-    });
-    if (at >= 0) {
-      const from = rows[at].start as number;
-      const next = Math.min(...rows.flatMap((row) => (row.start !== null && row.start > from ? [row.start] : [])));
-      if (head.time >= Math.min(rows[at].end ?? from + UNENDED, next)) at = -1;
-    }
-    // A track could start at this moment if nothing on the side starts within a moment of it already; which
-    // lines it could be is for the list's order to say.
-    const taken = rows.some((row) => row.start !== null && Math.abs(row.start - head.time) <= ONE_MOMENT);
-    return `${head.side}|${at}|${taken ? '' : couldStartAt(rows, head.time).join(',')}`;
+    const rows = sides[head.side]?.rows ?? [];
+    return `${head.side}|${playingAt(rows, head.time)}|${couldStartAt(rows, head.time).join(',')}`;
   }).split('|');
   const live = Number(liveSide);
   const lit = Number(litRow);
@@ -142,26 +90,25 @@ export function Tracklist({ tapeId, sides }: { tapeId: string; sides: Pick<Side,
   const [thanks, setThanks] = useState('');
   const nameField = useRef<HTMLInputElement>(null);
   const messageId = useId();
-  const some = pending.length > 0;
+  const some = unposted.length > 0;
   useEffect(() => {
     if (some) setRemembered(rememberedName());
   }, [some]);
 
-  const place = (side: number) => (several ? sides[side].position : null);
-  const mark = (side: number, row: Row) => {
-    const head = trackIds.playhead();
+  const mark = (side: number, k: number) => {
+    const head = playhead();
     const time = Math.floor(head.time);
+    const rows = sides[side].rows;
     // The + was there when it was pressed; the tape may have reached another track's start since.
-    const rows = shown[side];
-    if (row.n === null || !head.started || head.side !== side || rows.some((r) => r.start !== null && Math.abs(r.start - time) <= ONE_MOMENT) || !couldStartAt(rows, time).includes(rows.indexOf(row))) return;
-    keep([...marks.filter((m) => !(m.side === side && m.n === row.n)), { side, n: row.n, artist: row.artist, title: row.title, known: row.known, time }]);
+    if (!head.started || head.side !== side || !couldStartAt(rows, time).includes(k)) return;
+    // A line the list has down as unknown is marked, not named: it is still nobody's ID.
+    say({ side, time, artist: rows[k].known ? rows[k].artist : '', title: rows[k].known ? rows[k].title : '' });
     setThanks('');
   };
-  const undo = (side: number, row: Row) => keep(marks.filter((m) => !(m.side === side && m.n === row.n && (row.n !== null || m.time === row.start))));
   const identify = (side: number, start: number) => {
     // An unknown track is ID'd by ear: the tape goes there, and the blanks open for it.
-    trackIds.goTo(place(side), start);
-    trackIds.ask(place(side), start);
+    goTo(place(side), start);
+    ask(place(side), start);
   };
   async function post(e: FormEvent) {
     e.preventDefault();
@@ -175,28 +122,22 @@ export function Tracklist({ tapeId, sides }: { tapeId: string; sides: Pick<Side,
     }
     setStatus('sending');
     setMessage('');
-    // A line the list has down as unknown is marked, not named: it is still nobody's ID.
-    const lines = [...pending]
-      .sort((a, b) => a.side - b.side || a.time - b.time)
-      .map((m) => composeId({ position: place(m.side), time: m.time, artist: m.known ? m.artist : '', title: m.known ? m.title : '' }));
-    const failed = await postIds(tapeId, poster, lines.join('\n'));
+    const posted = count(unposted.length);
+    const failed = await send(unposted, poster);
     if (failed) {
       setStatus('error');
       setMessage(failed);
       return;
     }
     setStatus('idle');
-    setThanks(`Posted ${pending.length === 1 ? '1 time' : `${pending.length} times`}. Thanks.`);
-    setSent(pending);
-    keep([]);
-    trackIds.refresh();
+    setThanks(`Posted ${posted}. Thanks.`);
   }
 
-  const credit = contributors(lists.map(({ rows, order }) => ({ rows, keeper: order?.by ?? null })));
+  const credit = contributors(sides.map(({ rows, order }) => ({ rows, keeper: order?.by ?? null })));
   // Said for as long as a line lacks a posted time: it stays put while the visitor gives theirs.
-  const waiting = lists.some(({ rows }) => rows.some((row) => row.start === null && row.n !== null));
+  const waiting = sides.some(({ rows }) => rows.some((row) => row.n !== null && (row.start === null || isUnposted(row))));
   const headingId = useId();
-  if (shown.every((rows) => rows.length === 0)) return null;
+  if (sides.every(({ rows }) => rows.length === 0)) return null;
 
   return (
     <section className="border-t-[1.5px] border-[var(--border)] pt-14 mt-16" aria-labelledby={headingId}>
@@ -210,20 +151,22 @@ export function Tracklist({ tapeId, sides }: { tapeId: string; sides: Pick<Side,
           </p>
         )}
         {waiting && <p className="mt-2 max-w-prose text-[0.8125rem] leading-normal text-pretty text-[var(--muted)]">Listening? When a track starts, press the + on its row to give it that time.</p>}
+        {/* The comments since the archive couldn't be read, or not all of them: what is here is true, and may not be all. */}
+        {read === 'short' && <p className="mt-2 max-w-prose text-[0.8125rem] leading-normal text-pretty text-[var(--muted)]">The latest IDs couldn’t be read just now, so some may be missing here.</p>}
         <div className="mt-8 space-y-10">
-          {shown.map((rows, i) =>
+          {sides.map(({ rows, order }, i) =>
             rows.length === 0 ? null : (
               <SideList
-                key={sides[i].position}
-                heading={labelled ? (sides[i].title ?? `Side ${sides[i].position}`) : null}
-                summary={progress(rows, lists[i].order)}
+                key={tape[i].position}
+                heading={labelled ? (tape[i].title ?? `Side ${tape[i].position}`) : null}
+                summary={progress(rows, order)}
                 rows={rows}
                 position={place(i)}
                 lit={live === i ? lit : -1}
                 markable={live === i ? markable : NONE}
-                onPlay={(start) => trackIds.goTo(place(i), start)}
-                onMark={(row) => mark(i, row)}
-                onUndo={(row) => undo(i, row)}
+                onPlay={(start) => goTo(place(i), start)}
+                onMark={(k) => mark(i, k)}
+                onUndo={unsay}
                 onIdentify={(start) => identify(i, start)}
               />
             ),
@@ -234,49 +177,49 @@ export function Tracklist({ tapeId, sides }: { tapeId: string; sides: Pick<Side,
             {/* The page's own column, so the bar's words start on the edge everything else does. With a name
                 to ask for, the count has the bar's first line and the name and Post its second. */}
             <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="flex max-w-3xl flex-wrap items-center gap-x-4">
-            <p className={`${small} min-w-0 ${remembered ? 'flex-1' : 'w-full pt-2'}`}>
-              {/* Two phrases that part cleanly where the bar is too narrow for both on a line. */}
-              <span className="inline-block">{pending.length === 1 ? '1 time' : `${pending.length} times`} not posted</span>
-              {remembered && (
-                <>
-                  {' '}
-                  <span className="inline-block">
-                    as <span className="text-[var(--text)]">{remembered}</span>
-                  </span>
-                </>
-              )}
-            </p>
-            {!remembered && (
-              <input
-                ref={nameField}
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  if (status === 'error') {
-                    setStatus('idle');
-                    setMessage('');
-                  }
-                }}
-                placeholder="Your name"
-                aria-label="Your name"
-                aria-describedby={message ? messageId : undefined}
-                autoComplete="name"
-                autoCapitalize="words"
-                autoCorrect="off"
-                spellCheck={false}
-                maxLength={100}
-                enterKeyHint="send"
-                className="track-ids-field tracklist-post-name"
-              />
-            )}
-            <button type="submit" aria-disabled={status === 'sending'} className="poster-btn id-sheet-post">
-              {status === 'sending' ? '…' : 'Post'}
-            </button>
-            <p id={messageId} role="alert" className="w-full font-mono text-[10px] uppercase leading-[1.6] tracking-[0.22em] text-pretty text-red-500 empty:hidden">
-              {message}
-            </p>
-            </div>
+              <div className="flex max-w-3xl flex-wrap items-center gap-x-4">
+                <p className={`${small} min-w-0 ${remembered ? 'flex-1' : 'w-full pt-2'}`}>
+                  {/* Two phrases that part cleanly where the bar is too narrow for both on a line. */}
+                  <span className="inline-block">{count(unposted.length)} not posted</span>
+                  {remembered && (
+                    <>
+                      {' '}
+                      <span className="inline-block">
+                        as <span className="text-[var(--text)]">{remembered}</span>
+                      </span>
+                    </>
+                  )}
+                </p>
+                {!remembered && (
+                  <input
+                    ref={nameField}
+                    value={name}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      if (status === 'error') {
+                        setStatus('idle');
+                        setMessage('');
+                      }
+                    }}
+                    placeholder="Your name"
+                    aria-label="Your name"
+                    aria-describedby={message ? messageId : undefined}
+                    autoComplete="name"
+                    autoCapitalize="words"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    maxLength={100}
+                    enterKeyHint="send"
+                    className="track-ids-field tracklist-post-name"
+                  />
+                )}
+                <button type="submit" aria-disabled={status === 'sending'} className="poster-btn id-sheet-post">
+                  {status === 'sending' ? '…' : 'Post'}
+                </button>
+                <p id={messageId} role="alert" className="w-full font-mono text-[10px] uppercase leading-[1.6] tracking-[0.22em] text-pretty text-red-500 empty:hidden">
+                  {message}
+                </p>
+              </div>
             </div>
           </form>
         )}
@@ -302,8 +245,8 @@ type SideListProps = {
   /** The rows that could be given the moment the tape is at as their start, by their place in `rows`. */
   markable: Set<number>;
   onPlay: (start: number) => void;
-  onMark: (row: Row) => void;
-  onUndo: (row: Row) => void;
+  onMark: (row: number) => void;
+  onUndo: (change: NonNullable<Row['mine']>) => void;
   onIdentify: (start: number) => void;
 };
 
@@ -328,6 +271,7 @@ function SideList({ heading, summary, rows, position, lit, markable, onPlay, onM
       <ol id={listId} className={`-mx-2${all ? '' : ' tracklist-fade'}`}>
         {rows.map((row, k) => {
           const label = row.known ? [row.artist, row.title].filter(Boolean).join(' — ') : 'Unknown track';
+          const unposted = isUnposted(row);
           return (
             <li
               key={row.n === null ? `at ${row.start}` : `no ${row.n}`}
@@ -343,14 +287,14 @@ function SideList({ heading, summary, rows, position, lit, markable, onPlay, onM
                     type="button"
                     onClick={() => onPlay(row.start as number)}
                     className="tracklist-time"
-                    data-pending={row.pending ? '' : undefined}
-                    aria-label={`Play from ${idPlace(position, row.start)}${row.pending ? ', your time, not posted yet' : ''}`}
+                    data-unposted={unposted ? '' : undefined}
+                    aria-label={`Play from ${idPlace(position, row.start)}${unposted ? ', your time, not posted yet' : ''}`}
                   >
                     {formatTime(row.start)}
                   </button>
                 ) : markable.has(k) ? (
                   // Several lines can be unknown: one is told from the next by its number in the list.
-                  <button type="button" onClick={() => onMark(row)} className="tracklist-mark" aria-label={`${row.known ? label : `Track ${row.n}`} starts here`}>
+                  <button type="button" onClick={() => onMark(k)} className="tracklist-mark" aria-label={`${row.known ? label : `Track ${row.n}`} starts here`}>
                     +
                   </button>
                 ) : (
@@ -374,8 +318,13 @@ function SideList({ heading, summary, rows, position, lit, markable, onPlay, onM
                 ) : (
                   <TrackName row={row} />
                 )}
-                {row.pending ? (
-                  <button type="button" onClick={() => onUndo(row)} className="tracklist-cue" aria-label={row.known ? `Take back the time for ${label}` : `Take back the mark at ${idPlace(position, row.start as number)}`}>
+                {unposted ? (
+                  <button
+                    type="button"
+                    onClick={() => onUndo(row.mine as NonNullable<Row['mine']>)}
+                    className="tracklist-cue"
+                    aria-label={row.known ? `Take back the time for ${label}` : `Take back the mark at ${idPlace(position, row.start as number)}`}
+                  >
                     Undo
                   </button>
                 ) : (

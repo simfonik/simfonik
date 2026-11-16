@@ -1,7 +1,10 @@
 'use client';
 
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { ONE_MOMENT, type RunningOrder, type TrackId } from '../lib/track-ids/compose';
+import { composeId, composeRemoval, ONE_MOMENT, type RunningOrder, type TrackId } from '../lib/track-ids/compose';
+import { postIds } from '../lib/track-ids/post';
+import { sideRows, standing, withChanges, type Change, type Row } from '../lib/track-ids/side';
+import type { Side } from '../types/tape';
 
 /** Takes the tape to a moment on a side. `position` is the side's label, or null on a tape with one side. */
 type GoTo = (position: string | null, time: number) => void;
@@ -12,39 +15,31 @@ export type TapeComment = { id: number; tape_id: string; author_name: string; co
 /** Where the tape is: which of its sides is loaded, how far in, and whether it has been played at all on this visit. */
 export type Playhead = { side: number; time: number; started: boolean };
 
-/**
- * A time a visitor has set and not posted yet. It is either the time of a line of the side's list (its `n`,
- * with the line as it read when its + was pressed), or a point marked by ear with no name to it (`n` is
- * null). They are kept on this device until the visitor posts what they have: a sitting's times go up as one
- * comment.
- */
-export type Mark = { side: number; n: number | null; artist: string; title: string; known: boolean; time: number };
-
-const isMark = (x: unknown): x is Mark => {
-  const m = x as Mark;
-  return Boolean(m) && [m.side, m.time].every(Number.isFinite) && (m.n === null || Number.isFinite(m.n)) && typeof m.artist === 'string' && typeof m.title === 'string' && typeof m.known === 'boolean';
-};
-
-/** How long a track with no known end is taken to play, as the reader takes it (parse.ts). */
-export const UNENDED = 240;
-
 /** A track someone wants to ID or put right from outside the player: the side's label and where it starts. */
 type Asked = { position: string | null; time: number };
 
+/** What the page needs of a side to name it and to show its own tracklist. */
+export type TapeSide = Pick<Side, 'position' | 'title' | 'tracks'>;
+
+/** A side as the whole page has it: its list, where it has one, and its rows (lib/track-ids/side.ts). */
+export type SideModel = { order: RunningOrder | null; rows: Row[] };
+
+/** How the reading of the comments stands: not back yet, back whole, or back short of the newer ones (or not at all). */
+type Read = 'reading' | 'read' | 'short';
+
 type TapeTrackIds = {
-  /** The IDs the comments give: one list per side, in the order the tape has its sides. Empty until they arrive. */
-  sides: TrackId[][];
-  /** Each side's tracks in order, where a list gives them without times (see lib/track-ids/read.ts). */
-  orders: (RunningOrder | null)[];
+  /** The tape's sides, in order. */
+  tape: TapeSide[];
+  /** Each side as every part of the page shows it, in the same order. */
+  sides: SideModel[];
+  read: Read;
   /**
    * The comments posted through the site, oldest first; null until they have been read. They are read once
    * here for both of the places that show them: the comment list, and the tracklist's history of ID posts.
    */
   comments: TapeComment[] | null;
-  /** Counts up each time the comments are known to have changed. Whatever shows comments reads them again. */
-  changed: number;
-  /** A comment has been posted: read everything again. */
-  refresh: () => void;
+  /** A comment has been posted some other way (the comment form): read everything again. */
+  reread: () => void;
   /** The player says how to take the tape to a moment; a time in the tracklist can then be pressed. */
   setPlayer: (goTo: GoTo | null) => void;
   goTo: GoTo;
@@ -53,10 +48,19 @@ type TapeTrackIds = {
   /** Where the tape is at this instant, for whatever is pressed. To follow it as it moves, `usePlayhead`. */
   playhead: () => Playhead;
   watch: (changed: () => void) => () => void;
-  /** The visitor's unposted times, and the way to change them. */
-  marks: Mark[];
-  setMarks: (next: Mark[]) => void;
-  /** The tracklist asks for the form that IDs a track to open for one of its lines; the form answers once. */
+  /** The visitor's changes that wait to be posted, oldest first. */
+  unposted: Change[];
+  /** Says something of a moment and keeps it, unposted, on this device. It replaces what the visitor had unposted of that moment. */
+  say: (change: Pick<Change, 'side' | 'time' | 'artist' | 'title'>) => void;
+  /** Takes an unposted change back. */
+  unsay: (change: Change) => void;
+  /**
+   * Posts changes as one comment under a name: the unposted ones the visitor has, or what the blanks have
+   * just been given. Once posted they show on the page as posted, at once. Gives back nothing when it
+   * posted, and otherwise what to tell the visitor.
+   */
+  post: (changes: Change[], name: string) => Promise<string | null>;
+  /** The tracklist asks for the blanks that ID a track to open for one of its rows; they answer once. */
   ask: (position: string | null, time: number) => void;
   asked: Asked | null;
   answered: () => void;
@@ -64,18 +68,20 @@ type TapeTrackIds = {
 
 const STILL: Playhead = { side: 0, time: 0, started: false };
 const nothing: TapeTrackIds = {
+  tape: [],
   sides: [],
-  orders: [],
+  read: 'reading',
   comments: null,
-  changed: 0,
-  refresh: () => {},
+  reread: () => {},
   setPlayer: () => {},
   goTo: () => {},
   report: () => {},
   playhead: () => STILL,
   watch: () => () => {},
-  marks: [],
-  setMarks: () => {},
+  unposted: [],
+  say: () => {},
+  unsay: () => {},
+  post: () => Promise.resolve(null),
   ask: () => {},
   asked: null,
   answered: () => {},
@@ -83,40 +89,52 @@ const nothing: TapeTrackIds = {
 const Context = createContext<TapeTrackIds>(nothing);
 
 /**
- * What a tape page's separate parts share about track IDs: the player, far up the page, and the tracklist
- * and the comments, far down it. The IDs are read from the comments (see lib/track-ids/read.ts), so when a
- * comment is posted from either place all are told; a time in the tracklist can send the player to it; and
- * the tracklist knows where the tape is, to light the track playing and to time one that starts now.
+ * A side's list: the tape's own tracklist, which is in the page from the start with what only it has (a
+ * record's page on Discogs, its length), or failing that the one the comments give, which arrives with the IDs.
  */
-export function TapeTrackIdsProvider({ tapeId, children }: { tapeId: string; children: ReactNode }) {
-  const [{ sides, orders }, setRead] = useState<Pick<TapeTrackIds, 'sides' | 'orders'>>({ sides: [], orders: [] });
+const listOf = (side: TapeSide, kept: RunningOrder | null | undefined): RunningOrder | null =>
+  side.tracks?.length ? { by: null, tracks: side.tracks.map((t, k) => ({ n: k + 1, artist: t.artist, title: t.title, known: true, link: t.discogs_url, duration: t.duration })) } : (kept ?? null);
+
+const sameMoment = (a: Pick<Change, 'side' | 'time'>, b: Pick<Change, 'side' | 'time'>) => a.side === b.side && Math.abs(a.time - b.time) <= ONE_MOMENT;
+
+const isUnposted = (x: unknown): x is Change => {
+  const c = x as Change;
+  return Boolean(c) && [c.side, c.time].every(Number.isFinite) && typeof c.artist === 'string' && typeof c.title === 'string' && !c.gone && !c.sent;
+};
+
+/**
+ * What a tape page's separate parts share about track IDs: the player, far up the page, and the tracklist
+ * and the comments, far down it.
+ *
+ * It holds the two things the page knows: what the comments say (read from /api/track-ids, and read again
+ * whenever something is posted) and what this visitor has said since (their changes). From those it works
+ * out each side once (lib/track-ids/side.ts), and every part of the page shows that. So the line under the
+ * player, the tray, the waveform and the tracklist can't differ, and a change shows on all of them at the
+ * moment it is made.
+ *
+ * A change is the visitor's own until they post it, kept on this device through a reload. It is posted
+ * here and nowhere else; from then until the comments have been read again it stays on the page, as
+ * posted, so nothing a visitor has done blinks away while the page catches up.
+ *
+ * It also carries the two things the parts ask of each other: the tracklist sends the player to a moment,
+ * and knows from the player where the tape is.
+ */
+export function TapeTrackIdsProvider({ tapeId, sides: tape, children }: { tapeId: string; sides: TapeSide[]; children: ReactNode }) {
+  const [said, setSaid] = useState<{ ids: TrackId[][]; orders: (RunningOrder | null)[] }>({ ids: [], orders: [] });
+  const [read, setRead] = useState<Read>('reading');
   const [comments, setComments] = useState<TapeComment[] | null>(null);
-  const [changed, setChanged] = useState(0);
+  const [changes, setChanges] = useState<Change[]>([]);
   const [asked, setAsked] = useState<Asked | null>(null);
-  // Kept through a reload: a visitor who has timed half a side and comes back still has it to post.
-  const marksKey = `simfonik:id-marks:${tapeId}`;
-  const [marks, keepMarks] = useState<Mark[]>([]);
-  useEffect(() => {
-    try {
-      const kept: unknown = JSON.parse(window.localStorage.getItem(marksKey) ?? '[]');
-      if (Array.isArray(kept)) keepMarks(kept.filter(isMark));
-    } catch {
-      // Storage is off in this browser, or what it holds isn't ours: the visitor starts with none.
-    }
-  }, [marksKey]);
-  const setMarks = useCallback(
-    (next: Mark[]) => {
-      keepMarks(next);
-      try {
-        if (next.length) window.localStorage.setItem(marksKey, JSON.stringify(next));
-        else window.localStorage.removeItem(marksKey);
-      } catch {
-        // Storage is off: the times last as long as the page does.
-      }
-    },
-    [marksKey],
-  );
+  // Each reading of the comments has a number. A change posted while reading n is under way is in reading
+  // n + 1 at the earliest, and stays on the page until that one is back.
+  const [reading, setReading] = useState(0);
+  const latest = useRef(0);
   const player = useRef<GoTo | null>(null);
+  // The tape's sides as they are now, for a reading that comes back later.
+  const sidesNow = useRef(tape);
+  useEffect(() => {
+    sidesNow.current = tape;
+  }, [tape]);
   // The tape's place changes several times a second. It is kept out of what the page renders from, and
   // whatever follows it says what it wants to know of it (`usePlayhead`), so a page of tracks isn't drawn
   // again for every tick of the clock.
@@ -127,10 +145,21 @@ export function TapeTrackIdsProvider({ tapeId, children }: { tapeId: string; chi
     let current = true;
     fetch(`/api/track-ids/${tapeId}`)
       .then((response) => (response.ok ? response.json() : Promise.reject(new Error(`status ${response.status}`))))
-      .then((data: Pick<TapeTrackIds, 'sides' | 'orders'>) => {
-        if (current) setRead({ sides: data.sides, orders: data.orders });
+      .then((data: { sides: TrackId[][]; orders: (RunningOrder | null)[]; complete: boolean }) => {
+        if (!current) return;
+        setSaid({ ids: data.sides, orders: data.orders });
+        setRead(data.complete ? 'read' : 'short');
+        // What was posted before this reading began is in it and no longer needs standing in for, and what
+        // the visitor has unposted is let go where the comments have overtaken it.
+        setChanges((all) => {
+          const still = all.filter((change) => !change.sent || change.sent.read > reading);
+          return sidesNow.current.flatMap((side, i) => standing(listOf(side, data.orders[i]), data.sides[i] ?? [], still.filter((change) => change.side === i)));
+        });
       })
-      .catch((error) => console.error('Failed to load track IDs:', error));
+      .catch((error) => {
+        console.error('Failed to load track IDs:', error);
+        if (current) setRead('short');
+      });
     fetch(`/api/comments/${tapeId}`)
       .then((response) => (response.ok ? response.json() : Promise.reject(new Error(`status ${response.status}`))))
       .then((data: TapeComment[]) => {
@@ -144,9 +173,45 @@ export function TapeTrackIdsProvider({ tapeId, children }: { tapeId: string; chi
     return () => {
       current = false;
     };
-  }, [tapeId, changed]);
+  }, [tapeId, reading]);
 
-  const refresh = useCallback(() => setChanged((n) => n + 1), []);
+  // The visitor's unposted changes are kept through a reload: someone who has timed half a side and comes
+  // back still has it to post.
+  const key = `simfonik:id-changes:${tapeId}`;
+  const [restored, setRestored] = useState(false);
+  useEffect(() => {
+    try {
+      const kept: unknown = JSON.parse(window.localStorage.getItem(key) ?? '[]');
+      // Once only, however often the page is put together: a moment the visitor already has is left alone.
+      if (Array.isArray(kept)) setChanges((all) => [...kept.filter(isUnposted).filter((was) => !all.some((change) => sameMoment(change, was))), ...all]);
+    } catch {
+      // Storage is off in this browser, or what it holds isn't ours: the visitor starts with none.
+    }
+    setRestored(true);
+  }, [key]);
+  const unposted = useMemo(() => changes.filter((change) => !change.sent), [changes]);
+  useEffect(() => {
+    if (!restored) return;
+    try {
+      if (unposted.length) window.localStorage.setItem(key, JSON.stringify(unposted));
+      else window.localStorage.removeItem(key);
+    } catch {
+      // Storage is off: the changes last as long as the page does.
+    }
+  }, [key, restored, unposted]);
+
+  // Each side, worked out once for the whole page. The visitor's changes join it when the comments are back:
+  // they were made on top of what the comments said, and mean nothing certain without it.
+  const sides = useMemo(
+    () =>
+      tape.map((side, i): SideModel => {
+        const order = listOf(side, said.orders[i]);
+        const mine = read === 'reading' ? [] : changes.filter((change) => change.side === i);
+        return { order, rows: sideRows(order, withChanges(said.ids[i] ?? [], mine)) };
+      }),
+    [tape, said, read, changes],
+  );
+
   const setPlayer = useCallback((goTo: GoTo | null) => {
     player.current = goTo;
   }, []);
@@ -163,12 +228,42 @@ export function TapeTrackIdsProvider({ tapeId, children }: { tapeId: string; chi
       watchers.current.delete(tell);
     };
   }, []);
+
+  const say = useCallback((change: Pick<Change, 'side' | 'time' | 'artist' | 'title'>) => setChanges((all) => [...all.filter((was) => was.sent || !sameMoment(was, change)), change]), []);
+  const unsay = useCallback((change: Change) => setChanges((all) => all.filter((was) => was !== change)), []);
+  const reread = useCallback(() => {
+    latest.current += 1;
+    setReading(latest.current);
+  }, []);
+  const several = tape.length > 1;
+  const post = useCallback(
+    async (posting: Change[], name: string) => {
+      const lines = [...posting]
+        .sort((a, b) => a.side - b.side || a.time - b.time)
+        .map((change) => {
+          const where = { position: several ? tape[change.side].position : null, time: change.time };
+          return change.gone ? composeRemoval(where) : composeId({ ...where, artist: change.artist, title: change.title });
+        });
+      const failed = await postIds(tapeId, name, lines.join('\n'));
+      if (failed) return failed;
+      const sent = { by: name.trim(), read: latest.current + 1 };
+      // Each is now posted, where it stood among the visitor's changes; one that is new to them (from the
+      // blanks) goes last, in place of anything the visitor had unposted of the same moment.
+      setChanges((all) => [
+        ...all.filter((was) => posting.includes(was) || was.sent || !posting.some((now) => sameMoment(was, now))).map((was) => (posting.includes(was) ? { ...was, sent } : was)),
+        ...posting.filter((change) => !all.includes(change)).map((change) => ({ ...change, sent })),
+      ]);
+      reread();
+      return null;
+    },
+    [tapeId, tape, several, reread],
+  );
   const ask = useCallback((position: string | null, time: number) => setAsked({ position, time }), []);
   const answered = useCallback(() => setAsked(null), []);
 
   const value = useMemo(
-    () => ({ sides, orders, comments, changed, refresh, setPlayer, goTo, report, playhead, watch, marks, setMarks, ask, asked, answered }),
-    [sides, orders, comments, changed, refresh, setPlayer, goTo, report, playhead, watch, marks, setMarks, ask, asked, answered],
+    () => ({ tape, sides, read, comments, reread, setPlayer, goTo, report, playhead, watch, unposted, say, unsay, post, ask, asked, answered }),
+    [tape, sides, read, comments, reread, setPlayer, goTo, report, playhead, watch, unposted, say, unsay, post, ask, asked, answered],
   );
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
@@ -176,24 +271,10 @@ export function TapeTrackIdsProvider({ tapeId, children }: { tapeId: string; chi
 /** The tape's track IDs and the ways to act on them. Outside a tape page there are none, and the ways do nothing. */
 export const useTapeTrackIds = () => useContext(Context);
 
-/**
- * A side's IDs as the player has them: those the comments give, and among them the times the visitor has set
- * and not yet posted. A line of the list given its time with + is that track from then on, and a point
- * marked by ear is an unknown one, each until the next thing starts. Either shows on the waveform, on the
- * line under it and in the tray the moment it is made.
- */
-export function useSideIds(side: number): TrackId[] {
-  const { sides, marks } = useContext(Context);
-  return useMemo(() => {
-    const posted = sides[side] ?? [];
-    // A time the comments now have, at that moment or for that record, is no longer only the visitor's.
-    const said = (m: Mark) => posted.some((id) => Math.abs(id.start - m.time) <= ONE_MOMENT || (m.known && id.known && id.artist === m.artist && id.title === m.title));
-    const mine = marks.filter((m) => m.side === side && !said(m));
-    if (mine.length === 0) return posted;
-    const all = [...posted, ...mine.map((m): TrackId => ({ start: m.time, end: m.time + UNENDED, artist: m.known ? m.artist : '', title: m.known ? m.title : '', known: m.known, by: '', pending: true }))].sort((a, b) => a.start - b.start);
-    return all.map((id, k) => (all[k + 1] && all[k + 1].start < id.end ? { ...id, end: all[k + 1].start } : id));
-  }, [sides, marks, side]);
-}
+const NO_SIDE: SideModel = { order: null, rows: [] };
+
+/** One side as the whole page has it. */
+export const useSide = (side: number): SideModel => useContext(Context).sides[side] ?? NO_SIDE;
 
 /**
  * One thing about where the tape is, kept up to date: `pick` says what, as a string, a number or a yes or

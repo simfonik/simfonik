@@ -1,553 +1,276 @@
-import React, { useEffect } from 'react';
-import { act, render, screen, waitFor, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { TapeTrackIdsProvider, useSideIds, useTapeTrackIds } from '../components/TapeTrackIds';
-import { TrackIds } from '../components/TrackIds';
-import type { TrackId } from '../lib/track-ids/compose';
+// The blanks an ID is typed into, the sheet they are on a phone, and the tray: how they open, what they ask
+// for, what they refuse and where the keyboard goes. What an ID does to the page once it is made is in
+// TrackIdStates.test.tsx.
+import { screen, waitFor, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { old, tapePage } from './tape';
 
-const ids: TrackId[] = [
-  { start: 0, end: 120, artist: 'Moby', title: 'Go', known: true, by: 'Rents' },
-  { start: 300, end: 420, artist: '', title: '', known: false, by: 'Josh' },
-];
+const artist = () => screen.getByRole('textbox', { name: 'Artist' });
+const title = () => screen.getByRole('textbox', { name: 'Title' });
+const yourName = () => screen.getByRole('textbox', { name: 'Your name' });
+const ASK = 'Know this track? ID it';
+const KNOWN = [{ by: 'Josh', says: '[0:00] Orbital - Chime' }];
+// Ten tracks on a side of 40 minutes.
+const TEN = ['Orbital - Chime', 'Moby - Go', 'Joey Beltram - Energy Flash', 'LFO - LFO', 'Altern 8 - Infiltrate 202', 'The Prodigy - Charly', 'SL2 - DJs Take Control', 'Bizarre Inc - Playing With Knives', 'Rhythm Section - Feel The Rhythm', 'Shut Up And Dance - Raving'];
+const LISTED = [{ position: 'A', tracks: TEN.map((name) => ({ artist: name.split(' - ')[0], title: name.split(' - ')[1] })) }];
 
-describe('the track line under the player', () => {
-  let fetchMock: ReturnType<typeof vi.fn>;
-  let posted: ReturnType<typeof vi.fn<() => void>>;
-  const toggled = vi.fn<() => void>();
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
-  beforeEach(() => {
-    document.body.innerHTML = '';
-    window.localStorage.clear();
-    posted = vi.fn<() => void>();
-    fetchMock = vi.fn(() => Promise.resolve(new Response(JSON.stringify({ success: true, message: 'Comment posted' }), { status: 200 })));
-    global.fetch = fetchMock as unknown as typeof fetch;
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  const body = (call = 0) => JSON.parse(fetchMock.mock.calls[call][1].body);
-  const artist = () => screen.getByRole('textbox', { name: 'Artist' });
-  const title = () => screen.getByRole('textbox', { name: 'Title' });
-  const yourName = () => screen.getByRole('textbox', { name: 'Your name' });
-
-  it('says the track playing now, and asks where nobody has ID’d it', () => {
-    const { rerender } = render(<TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position="A" ids={ids} time={60} onPosted={posted} />);
-    const line = screen.getByRole('button', { name: 'Now playing: Moby — Go. Correct this ID' });
-    expect(line).toHaveAttribute('title', 'ID by Rents. Press to correct it.');
-
-    rerender(<TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position="A" ids={ids} time={200} onPosted={posted} />);
-    expect(screen.getByRole('button', { name: 'Know this track? ID it' })).toBeInTheDocument();
-
-    rerender(<TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position="A" ids={ids} time={310} onPosted={posted} />);
-    expect(screen.getByRole('button', { name: 'Unknown track. Know it? ID it' })).toBeInTheDocument();
-  });
-
-  it('turns into two fields, asks a first-time visitor’s name as a second step, and posts a comment carrying the side and the moment it was opened', async () => {
-    const user = userEvent.setup();
-    const { rerender } = render(<TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position="B" ids={ids} time={754.6} onPosted={posted} />);
-
-    await user.click(screen.getByRole('button', { name: 'Know this track? ID it' }));
+describe('the blanks, in the line under the player', () => {
+  it('ask a first-time visitor’s name as a second step, post under it at the moment they were opened, and don’t ask again', async () => {
+    const page = tapePage({ sides: [{ position: 'A' }, { position: 'B' }], name: null });
+    await page.read();
+    await page.at(754.6, { side: 1 });
+    await page.user.click(page.button(ASK));
     expect(artist()).toHaveFocus();
-    // The tape plays on; the fields stay on the moment they were opened for.
-    rerender(<TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position="B" ids={ids} time={790} onPosted={posted} />);
-
-    await user.type(artist(), '808 State');
-    await user.type(title(), 'Cubik{Enter}');
+    // The tape plays on; the blanks stay on the moment they were opened for.
+    await page.at(790, { side: 1 });
+    await page.user.type(artist(), '808 State');
+    await page.user.type(title(), 'Cubik{Enter}');
 
     // Nothing is posted yet: the line now asks who is saying so.
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(page.posts()).toEqual([]);
     expect(yourName()).toHaveFocus();
-    await user.type(yourName(), 'Tester{Enter}');
+    expect(screen.queryByRole('textbox', { name: 'Artist' })).not.toBeInTheDocument();
+    await page.user.type(yourName(), 'Dana{Enter}');
+    await waitFor(() => expect(page.posts()).toEqual(['[B 12:34] 808 State - Cubik']));
+    await waitFor(() => expect(screen.queryByRole('form', { name: /^ID the track/ })).not.toBeInTheDocument());
+    expect(window.localStorage.getItem('simfonik:id-name')).toBe('Dana');
+    expect(screen.getAllByRole('status')[0]).toHaveTextContent('Posted. Thanks.');
 
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock.mock.calls[0][0]).toBe('/api/comments/submit');
-    expect(body()).toEqual({ tapeId: 'tape-1', authorName: 'Tester', authorEmail: '', content: '[B 12:34] 808 State - Cubik', website: '' });
-    expect(posted).toHaveBeenCalledTimes(1);
-
-    // The fields have gone, the line has the keyboard again, and the thanks is said.
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Know this track? ID it' })).toHaveFocus();
-    expect(screen.getByRole('status')).toHaveTextContent('Posted. Thanks.');
-
-    // Next time the name is remembered: two fields and one Enter.
-    await user.click(screen.getByRole('button', { name: 'Know this track? ID it' }));
-    await user.type(title(), 'Pacific State{Enter}');
-    expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(body(1)).toMatchObject({ authorName: 'Tester', content: '[B 13:10] ? - Pacific State' });
+    await page.at(900, { side: 1 });
+    await page.user.click(page.button(/^New ID/));
+    await page.user.type(artist(), 'LFO');
+    await page.user.type(title(), 'LFO{Enter}');
+    await waitFor(() => expect(page.posts()).toHaveLength(2));
   });
 
-  it('puts a known ID right from what it says, at the time that track starts, with no side on a tape that is one recording', async () => {
-    const user = userEvent.setup();
-    window.localStorage.setItem('simfonik:id-name', 'Tester');
-    render(<TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position={null} ids={ids} time={95} onPosted={posted} />);
+  it('start from what a known ID says, and from nothing for a new one or a spot with no name', async () => {
+    const page = tapePage({ posted: [...KNOWN, { by: 'Josh', says: '[5:00] ? - ?' }] });
+    await page.read();
+    await page.at(60);
+    await page.user.click(page.button('Now playing: Orbital — Chime. Correct this ID'));
+    expect(artist()).toHaveValue('Orbital');
+    expect(title()).toHaveValue('Chime');
+    await page.user.keyboard('{Escape}');
 
-    await user.click(screen.getByRole('button', { name: /Correct this ID/ }));
-    expect(artist()).toHaveValue('Moby');
-    expect(title()).toHaveValue('Go');
-    await user.type(title(), ' (Woodtick Mix){Enter}');
-
-    expect(body().content).toBe('[0:00] Moby - Go (Woodtick Mix)');
-  });
-
-  it('IDs a track marked unknown from where that track starts, not from the moment the visitor spoke up', async () => {
-    const user = userEvent.setup();
-    window.localStorage.setItem('simfonik:id-name', 'Dana');
-    // The unknown runs from 5:00 to 7:00, and the tape is 50 seconds into it.
-    render(<TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position="A" ids={ids} time={350} onPosted={posted} />);
-    await user.click(screen.getByRole('button', { name: 'Unknown track. Know it? ID it' }));
-    expect(screen.getByRole('form', { name: 'ID the track at A 0:05:00' })).toBeInTheDocument();
-    await user.type(artist(), 'Orbital');
-    await user.type(title(), 'Chime{Enter}');
-    expect(body().content).toBe('[A 5:00] Orbital - Chime');
-  });
-
-  describe('with a list of the side’s tracks that has no times', () => {
-    const order = {
-      by: 'Josh',
-      tracks: [
-        { n: 1, artist: 'Orbital', title: 'Chime', known: true },
-        { n: 2, artist: 'Joey Beltram', title: 'Energy Flash', known: true },
-        { n: 3, artist: 'Altern 8', title: 'Infiltrate 202', known: true },
-        { n: 4, artist: 'The Prodigy', title: 'Charly', known: true },
-      ],
-    };
-
-    it('offers the two likeliest names, and writes the one pressed into the blanks', async () => {
-      const user = userEvent.setup();
-      window.localStorage.setItem('simfonik:id-name', 'Dana');
-      // Nothing is marked at 3:20 on a side of 16 minutes: the first quarter is over, so the second track.
-      render(<TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position="A" ids={[]} time={200} order={order} length={960} onPosted={posted} />);
-      await user.click(screen.getByRole('button', { name: 'Know this track? ID it' }));
-      expect(screen.getByRole('group', { name: 'From Josh’s list' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: '1 Orbital — Chime' })).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /Altern 8/ })).not.toBeInTheDocument();
-
-      await user.click(screen.getByRole('button', { name: '2 Joey Beltram — Energy Flash' }));
-      expect(artist()).toHaveValue('Joey Beltram');
-      expect(title()).toHaveValue('Energy Flash');
-      await user.type(title(), '{Enter}');
-      expect(body().content).toBe('[A 3:20] Joey Beltram - Energy Flash');
-    });
-
-    it('offers none for an ID being put right', async () => {
-      const user = userEvent.setup();
-      render(<TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position="A" ids={ids} time={60} order={order} length={960} onPosted={posted} />);
-      await user.click(screen.getByRole('button', { name: /Correct this ID/ }));
-      expect(screen.queryByRole('group', { name: 'From Josh’s list' })).not.toBeInTheDocument();
-    });
-  });
-
-  describe('on a phone', () => {
-    beforeEach(() => {
-      vi.spyOn(window, 'matchMedia').mockImplementation((query) => ({ matches: query === '(max-width: 39.99rem)', media: query, addEventListener: () => {}, removeEventListener: () => {} }) as unknown as MediaQueryList);
-      // The test's DOM has no animations to wait for.
-      Element.prototype.getAnimations = () => [];
-    });
-
-    it('takes the ID in a sheet over the page, asks a first-time visitor’s name in the same sheet, and posts', async () => {
-      const user = userEvent.setup();
-      render(<TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position="A" ids={ids} time={200} onPosted={posted} />);
-      await user.click(screen.getByRole('button', { name: 'Know this track? ID it' }));
-
-      const sheet = screen.getByRole('dialog', { name: 'ID the track at A 0:03:20' });
-      expect((sheet as HTMLDialogElement).open).toBe(true);
-      // The line stays where it was, under the sheet.
-      expect(screen.getByText('Know this track?', { exact: false })).toBeInTheDocument();
-      expect(artist()).toHaveFocus();
-
-      await user.type(artist(), 'Orbital{Enter}');
-      // The keyboard's Next key goes on to the next blank and posts nothing.
-      expect(fetchMock).not.toHaveBeenCalled();
-      expect(title()).toHaveFocus();
-      await user.type(title(), 'Chime{Enter}');
-      expect(yourName()).toHaveFocus();
-      await user.type(yourName(), 'Dana{Enter}');
-
-      expect(body()).toMatchObject({ authorName: 'Dana', content: '[A 3:20] Orbital - Chime' });
-      await vi.waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-      expect(posted).toHaveBeenCalledTimes(1);
-    });
-
-    it('says who a returning visitor is posting as, and lets them change it', async () => {
-      const user = userEvent.setup();
-      window.localStorage.setItem('simfonik:id-name', 'Dana');
-      render(<TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position="A" ids={ids} time={200} onPosted={posted} />);
-      await user.click(screen.getByRole('button', { name: 'Know this track? ID it' }));
-      expect(screen.getByText('Dana')).toBeInTheDocument();
-      expect(screen.queryByRole('textbox', { name: 'Your name' })).not.toBeInTheDocument();
-
-      await user.click(screen.getByRole('button', { name: 'Change' }));
-      expect(yourName()).toHaveValue('Dana');
-      expect(yourName()).toHaveFocus();
-    });
-
-    it('goes away when it is cancelled, and the keyboard is back on the line', async () => {
-      const user = userEvent.setup();
-      render(<TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position="A" ids={ids} time={200} onPosted={posted} />);
-      await user.click(screen.getByRole('button', { name: 'Know this track? ID it' }));
-      await user.click(screen.getByRole('button', { name: 'Cancel' }));
-      await vi.waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-      expect(screen.getByRole('button', { name: 'Know this track? ID it' })).toHaveFocus();
-    });
-  });
-
-  it('takes a new track inside one that is ID’d, at this moment and with empty blanks, once that track’s first moments have passed', async () => {
-    const user = userEvent.setup();
-    window.localStorage.setItem('simfonik:id-name', 'Dana');
-    // Moby — Go runs from 0:00. Four seconds in, an ID would be read as that same ID said again.
-    const { rerender } = render(<TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position="A" ids={ids} time={4} onPosted={posted} />);
-    expect(screen.queryByRole('button', { name: 'New ID: a track starts here, and you know what it is' })).not.toBeInTheDocument();
-    rerender(<TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position="A" ids={ids} time={6} onPosted={posted} />);
-    expect(screen.getByRole('button', { name: 'New ID: a track starts here, and you know what it is' })).toBeInTheDocument();
-    rerender(<TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position="A" ids={ids} time={4} onPosted={posted} />);
-    expect(screen.queryByRole('button', { name: 'New ID: a track starts here, and you know what it is' })).not.toBeInTheDocument();
-
-    rerender(<TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position="A" ids={ids} time={95.4} onPosted={posted} />);
-    await user.click(screen.getByRole('button', { name: 'New ID: a track starts here, and you know what it is' }));
-    expect(screen.getByRole('form', { name: 'ID the track at A 0:01:35' })).toBeInTheDocument();
+    await page.user.click(page.button(/^New ID/));
     expect(artist()).toHaveValue('');
-    await user.type(artist(), 'Orbital');
-    await user.type(title(), 'Chime{Enter}');
-    expect(body().content).toBe('[A 1:35] Orbital - Chime');
+    await page.user.keyboard('{Escape}');
+
+    await page.at(320);
+    await page.user.click(page.button('Unknown track. Know it? ID it'));
+    expect(artist()).toHaveValue('');
   });
 
-  describe('a mark already on the tape', () => {
-    beforeEach(() => window.localStorage.setItem('simfonik:id-name', 'Dana'));
-
-    it('can be taken away: one line that says no track starts there, and nothing asked about the names', async () => {
-      const user = userEvent.setup();
-      render(<TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position="A" ids={ids} time={3} onPosted={posted} />);
-      await user.click(screen.getByRole('button', { name: 'Now playing: Moby — Go. Correct this ID' }));
-      await user.clear(artist());
-      await user.clear(title());
-      await user.click(screen.getByRole('button', { name: 'Remove this ID' }));
-
-      expect(body()).toMatchObject({ authorName: 'Dana', content: '[A 0:00] no track starts here' });
-      expect(posted).toHaveBeenCalledTimes(1);
-      expect(screen.getByRole('status')).toHaveTextContent('Removed.');
-      expect(screen.queryByRole('form')).not.toBeInTheDocument();
-    });
-
-    it('says "mark" of a spot nobody has named, and offers nothing of the kind where the tape has no mark', async () => {
-      const user = userEvent.setup();
-      const { rerender } = render(<TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position="A" ids={ids} time={310} onPosted={posted} />);
-      await user.click(screen.getByRole('button', { name: 'Unknown track. Know it? ID it' }));
-      await user.click(screen.getByRole('button', { name: 'Remove this mark' }));
-      expect(body().content).toBe('[A 5:00] no track starts here');
-
-      rerender(<TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position="A" ids={ids} time={200} onPosted={posted} />);
-      await user.click(screen.getByRole('button', { name: 'Know this track? ID it' }));
-      expect(screen.queryByRole('button', { name: /^Remove/ })).not.toBeInTheDocument();
-    });
-
-    it('can be moved to where the tape is, when that is later and in the same track: the old mark goes and the ID is made again, in one post', async () => {
-      const user = userEvent.setup();
-      const { rerender } = render(<TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position="A" ids={ids} time={3} onPosted={posted} />);
-      // In the track's first moments there is nowhere later to move it to.
-      await user.click(screen.getByRole('button', { name: 'Now playing: Moby — Go. Correct this ID' }));
-      expect(screen.queryByRole('button', { name: /instead$/ })).not.toBeInTheDocument();
-      await user.keyboard('{Escape}');
-
-      rerender(<TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position="A" ids={ids} time={41.8} onPosted={posted} />);
-      await user.click(screen.getByRole('button', { name: 'Now playing: Moby — Go. Correct this ID' }));
-      await user.click(screen.getByRole('button', { name: 'Starts at 0:00:41 instead' }));
-      expect(body().content).toBe('[A 0:00] no track starts here\n[A 0:41] Moby - Go');
-      expect(screen.getByRole('status')).toHaveTextContent('Moved. Thanks.');
-    });
-
-    it('asks a first-time visitor’s name before taking it away, and then takes it away', async () => {
-      const user = userEvent.setup();
-      window.localStorage.clear();
-      render(<TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position="A" ids={ids} time={3} onPosted={posted} />);
-      await user.click(screen.getByRole('button', { name: 'Now playing: Moby — Go. Correct this ID' }));
-      await user.click(screen.getByRole('button', { name: 'Remove this ID' }));
-      expect(fetchMock).not.toHaveBeenCalled();
-      expect(yourName()).toHaveFocus();
-      // The step ends in what was being done, and its one button says so.
-      expect(screen.getByRole('button', { name: /^Remove/ })).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /post/i })).not.toBeInTheDocument();
-
-      await user.type(yourName(), 'Dana{Enter}');
-      expect(body()).toMatchObject({ authorName: 'Dana', content: '[A 0:00] no track starts here' });
-    });
-  });
-
-  describe('New unknown: a track starts here, and the visitor doesn’t know what it is', () => {
-    // The line as the player gives it: the side's IDs with the visitor's own unposted marks among them.
-    function Line({ time }: { time: number }) {
-      return <TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position="A" ids={useSideIds(0)} time={time} onPosted={posted} />;
-    }
-    let shared: ReturnType<typeof useTapeTrackIds>;
-    function Shared() {
-      const all = useTapeTrackIds();
-      useEffect(() => {
-        shared = all;
-      });
-      return null;
-    }
-    const tape = (time: number) => (
-      <TapeTrackIdsProvider tapeId="tape-1">
-        <Shared />
-        <Line time={time} />
-      </TapeTrackIdsProvider>
-    );
-    const mark = () => screen.getByRole('button', { name: 'New unknown: a track starts here, and you don’t know what it is' });
-    const submits = () => fetchMock.mock.calls.filter(([url]) => String(url) === '/api/comments/submit');
-
-    beforeEach(() => {
-      window.localStorage.setItem('simfonik:id-name', 'Dana');
-      fetchMock.mockImplementation((url: RequestInfo | URL) =>
-        Promise.resolve(new Response(JSON.stringify(String(url).includes('/api/track-ids/') ? { sides: [ids], orders: [null], complete: true } : String(url) === '/api/comments/submit' ? { success: true } : []), { status: 200 })),
-      );
-    });
-
-    it('is there once the tape has been played, and not within a moment of a track’s start', async () => {
-      const { rerender } = render(tape(0));
-      await screen.findByRole('button', { name: 'Now playing: Moby — Go. Correct this ID' });
-      expect(screen.queryByRole('button', { name: /^New unknown/ })).not.toBeInTheDocument();
-      rerender(tape(3));
-      expect(screen.queryByRole('button', { name: /^New unknown/ })).not.toBeInTheDocument();
-      rerender(tape(297));
-      expect(screen.queryByRole('button', { name: /^New unknown/ })).not.toBeInTheDocument();
-      rerender(tape(200));
-      expect(mark()).toBeInTheDocument();
-    });
-
-    it('sets a point with one press and nothing posted: the line then has an unknown track there, the visitor’s own', async () => {
-      const user = userEvent.setup();
-      const { rerender } = render(tape(200.7));
-      await screen.findByRole('button', { name: 'Know this track? ID it' });
-      await user.click(mark());
-
-      expect(shared.marks).toEqual([{ side: 0, n: null, artist: '', title: '', known: false, time: 200 }]);
-      expect(screen.getByRole('status')).toHaveTextContent('Marked A 0:03:20. Not posted yet.');
-      expect(screen.getByRole('button', { name: 'Unknown track. Know it? ID it' })).toBeInTheDocument();
-      expect(submits()).toHaveLength(0);
-      // The next can be marked once the tape has moved on a moment.
-      expect(screen.queryByRole('button', { name: /^New unknown/ })).not.toBeInTheDocument();
-      rerender(tape(215));
-      await user.click(mark());
-      expect(shared.marks.map((m) => m.time)).toEqual([200, 215]);
-    });
-
-    it('is taken back from the blanks without a post, and when ID’d is posted at once from where it was marked', async () => {
-      const user = userEvent.setup();
-      const { rerender } = render(tape(200));
-      await screen.findByRole('button', { name: 'Know this track? ID it' });
-      await user.click(mark());
-      rerender(tape(230));
-      await user.click(screen.getByRole('button', { name: 'Unknown track. Know it? ID it' }));
-      // The mark is the visitor's own: there is nowhere later to move it to, only taking it back.
-      expect(screen.queryByRole('button', { name: /instead$/ })).not.toBeInTheDocument();
-      await user.click(screen.getByRole('button', { name: 'Remove this mark' }));
-      expect(shared.marks).toEqual([]);
-      expect(submits()).toHaveLength(0);
-
-      await user.click(mark());
-      rerender(tape(260));
-      await user.click(screen.getByRole('button', { name: 'Unknown track. Know it? ID it' }));
-      await user.type(artist(), 'Orbital');
-      await user.type(title(), 'Chime{Enter}');
-      expect(JSON.parse(submits()[0][1].body).content).toBe('[A 3:50] Orbital - Chime');
-      await waitFor(() => expect(shared.marks).toEqual([]));
-    });
-  });
-
-  describe('the tray, on a phone, once the tape has been played', () => {
-    let shared: ReturnType<typeof useTapeTrackIds>;
-    function Shared() {
-      const all = useTapeTrackIds();
-      useEffect(() => {
-        shared = all;
-      });
-      return null;
-    }
-    function Line({ time, isPlaying }: { time: number; isPlaying: boolean }) {
-      return <TrackIds tapeId="tape-1" side={0} position="A" ids={useSideIds(0)} time={time} isPlaying={isPlaying} onToggle={toggled} onPosted={posted} />;
-    }
-    const tape = (time: number, isPlaying = true) => (
-      <TapeTrackIdsProvider tapeId="tape-1">
-        <Shared />
-        <Line time={time} isPlaying={isPlaying} />
-      </TapeTrackIdsProvider>
-    );
-    const phone = (is: boolean) =>
-      vi.spyOn(window, 'matchMedia').mockImplementation((query) => ({ matches: is && query === '(max-width: 39.99rem)', media: query, addEventListener: () => {}, removeEventListener: () => {} }) as unknown as MediaQueryList);
-    const played = (time: number) => act(() => shared.report(0, time, true));
-    const tray = () => screen.getByRole('group', { name: 'Now playing' });
-
-    beforeEach(() => {
-      toggled.mockClear();
-      Element.prototype.getAnimations = () => [];
-      window.localStorage.setItem('simfonik:id-name', 'Dana');
-      fetchMock.mockImplementation((url: RequestInfo | URL) =>
-        Promise.resolve(new Response(JSON.stringify(String(url).includes('/api/track-ids/') ? { sides: [ids], orders: [null], complete: true } : String(url) === '/api/comments/submit' ? { success: true } : []), { status: 200 })),
-      );
-    });
-
-    it('is not there before the tape is played, nor on a wide screen', async () => {
-      phone(true);
-      const first = render(tape(0, false));
-      await screen.findByRole('button', { name: 'Now playing: Moby — Go. Correct this ID' });
-      expect(screen.queryByRole('group', { name: 'Now playing' })).not.toBeInTheDocument();
-      first.unmount();
-
-      phone(false);
-      render(tape(60));
-      await screen.findByRole('button', { name: 'Now playing: Moby — Go. Correct this ID' });
-      await played(60);
-      expect(screen.queryByRole('group', { name: 'Now playing' })).not.toBeInTheDocument();
-    });
-
-    it('says what is playing on two lines with where the tape is, and stays once the tape has been played', async () => {
-      phone(true);
-      const { rerender } = render(tape(60.4));
-      await screen.findByRole('button', { name: 'Now playing: Moby — Go. Correct this ID' });
-      await played(60.4);
-      expect(tray()).toHaveTextContent('MobyA 0:01:00Go');
-      expect(within(tray()).getByRole('button', { name: 'Fix ID' })).toBeInTheDocument();
-
-      // Paused and back at its start, the tape is still one the visitor is listening to.
-      rerender(tape(0, false));
-      await act(() => shared.report(0, 0, false));
-      expect(tray()).toBeInTheDocument();
-      rerender(tape(200, false));
-      expect(tray()).toHaveTextContent('Nothing ID’d here yetA 0:03:20Know this track? ID it.');
-      expect(within(tray()).getByRole('button', { name: 'ID it' })).toBeInTheDocument();
-    });
-
-    it('plays and pauses, and opens the sheet for the track playing, with the keyboard back on its button after', async () => {
-      const user = userEvent.setup();
-      phone(true);
-      render(tape(60));
-      await screen.findByRole('button', { name: 'Now playing: Moby — Go. Correct this ID' });
-      await played(60);
-      await user.click(within(tray()).getByRole('button', { name: 'Pause' }));
-      expect(toggled).toHaveBeenCalledTimes(1);
-
-      await user.click(within(tray()).getByRole('button', { name: 'Fix ID' }));
-      const sheet = screen.getByRole('dialog', { name: 'ID the track at A 0:00:00' });
-      expect(within(sheet).getByRole('textbox', { name: 'Artist' })).toHaveValue('Moby');
-      await user.click(within(sheet).getByRole('button', { name: 'Cancel' }));
-      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-      expect(within(tray()).getByRole('button', { name: 'Fix ID' })).toHaveFocus();
-    });
-
-    it('has a track the visitor timed with + in the tracklist as the track playing, at once, though it is not posted', async () => {
-      const user = userEvent.setup();
-      phone(true);
-      const { rerender } = render(tape(200));
-      await screen.findByRole('button', { name: 'Know this track? ID it' });
-      await played(200);
-      expect(tray()).toHaveTextContent('Nothing ID’d here yet');
-
-      await act(() => shared.setMarks([{ side: 0, n: 2, artist: 'Butsch', title: 'The Count', known: true, time: 200 }]));
-      rerender(tape(203));
-      expect(tray()).toHaveTextContent('ButschA 0:03:23The Count');
-
-      // Its ID can be put right from the tray, which posts it; it then no longer waits to be posted.
-      await user.click(within(tray()).getByRole('button', { name: 'Fix ID' }));
-      const sheet = screen.getByRole('dialog', { name: 'ID the track at A 0:03:20' });
-      await user.clear(within(sheet).getByRole('textbox', { name: 'Title' }));
-      await user.type(within(sheet).getByRole('textbox', { name: 'Title' }), 'The Count (Remix)');
-      await user.click(within(sheet).getByRole('button', { name: /post/i }));
-      const sent = fetchMock.mock.calls.filter(([url]) => String(url) === '/api/comments/submit');
-      expect(JSON.parse(sent[0][1].body).content).toBe('[A 3:20] Butsch - The Count (Remix)');
-      await waitFor(() => expect(shared.marks).toEqual([]));
-    });
-
-    it('keeps New unknown in its place: marked unavailable in a track’s first moments, and setting a point otherwise', async () => {
-      const user = userEvent.setup();
-      phone(true);
-      const { rerender } = render(tape(3));
-      await screen.findByRole('button', { name: 'Now playing: Moby — Go. Correct this ID' });
-      await played(3);
-      const unknown = () => within(tray()).getByRole('button', { name: /^New unknown/ });
-      expect(unknown()).toHaveAttribute('aria-disabled', 'true');
-      await user.click(unknown());
-      expect(shared.marks).toEqual([]);
-
-      rerender(tape(200));
-      expect(unknown()).toHaveAttribute('aria-disabled', 'false');
-      await user.click(unknown());
-      expect(shared.marks.map((m) => m.time)).toEqual([200]);
-      expect(tray()).toHaveTextContent('Unknown trackA 0:03:20Marked by you, not posted yet');
-      expect(within(tray()).getByRole('button', { name: 'ID it' })).toBeInTheDocument();
-      expect(unknown()).toHaveAttribute('aria-disabled', 'true');
-    });
-  });
-
-  it('opens for a line of the tracklist when the tracklist asks, on the side the line is on', async () => {
-    const user = userEvent.setup();
-    function Asker() {
-      const { ask } = useTapeTrackIds();
-      return (
-        <button type="button" onClick={() => ask('A', 300)}>
-          ask
-        </button>
-      );
-    }
-    function Line({ position }: { position: string }) {
-      return <TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position={position} ids={ids} time={12} onPosted={posted} />;
-    }
-    const { rerender } = render(
-      <TapeTrackIdsProvider tapeId="tape-1">
-        <Asker />
-        <Line position="B" />
-      </TapeTrackIdsProvider>,
-    );
-    // The blanks belong to the side loaded. Side B's are not the ones asked for.
-    await user.click(screen.getByRole('button', { name: 'ask' }));
-    expect(screen.queryByRole('form')).not.toBeInTheDocument();
-
-    // The player loads side A, and its blanks open for the unknown track at 5:00, wherever the tape is.
-    rerender(
-      <TapeTrackIdsProvider tapeId="tape-1">
-        <Asker />
-        <Line position="A" />
-      </TapeTrackIdsProvider>,
-    );
-    expect(await screen.findByRole('form', { name: 'ID the track at A 0:05:00' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Remove this mark' })).toBeInTheDocument();
-  });
-
-  it('asks for what is missing on its own line, drops the complaint once it is being put right, and shuts on Escape', async () => {
-    const user = userEvent.setup();
-    render(<TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position="A" ids={ids} time={200} onPosted={posted} />);
-
-    await user.click(screen.getByRole('button', { name: 'Know this track? ID it' }));
-    await user.click(screen.getByRole('button', { name: /post/i }));
+  it('ask for what is missing on a line of its own, drop the complaint once it is being put right, and shut on Escape with the keyboard back on the line', async () => {
+    const page = tapePage({ name: null });
+    await page.read();
+    await page.at(200);
+    await page.user.click(page.button(ASK));
+    await page.user.click(page.button(/post/i));
     expect(screen.getByRole('alert')).toHaveTextContent('Enter the artist or the title.');
     expect(artist()).toHaveFocus();
 
-    await user.type(artist(), 'Moby');
+    await page.user.type(artist(), 'Moby');
     expect(screen.getByRole('alert')).toBeEmptyDOMElement();
-    await user.keyboard('{Enter}');
-    await user.keyboard('{Enter}');
+    await page.user.keyboard('{Enter}');
+    await page.user.keyboard('{Enter}');
     expect(screen.getByRole('alert')).toHaveTextContent('Enter your name.');
     expect(yourName()).toHaveFocus();
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(page.posts()).toEqual([]);
 
-    await user.keyboard('{Escape}');
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Know this track? ID it' })).toHaveFocus();
+    await page.user.keyboard('{Escape}');
+    expect(screen.queryByRole('form', { name: /^ID the track/ })).not.toBeInTheDocument();
+    expect(page.button(ASK)).toHaveFocus();
   });
 
-  it('says what the server said when it refuses, and keeps what was typed', async () => {
-    const user = userEvent.setup();
-    window.localStorage.setItem('simfonik:id-name', 'Tester');
-    fetchMock.mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ error: 'Too many requests. Please try again later.' }), { status: 429 })));
-    render(<TrackIds tapeId="tape-1" side={0} isPlaying={false} onToggle={toggled} position="A" ids={ids} time={200} onPosted={posted} />);
-
-    await user.click(screen.getByRole('button', { name: 'Know this track? ID it' }));
-    await user.type(artist(), 'Moby{Enter}');
-
-    expect(screen.getByRole('alert')).toHaveTextContent('Too many requests. Please try again later.');
+  it('say what the server said when it refuses, and keep what was typed', async () => {
+    const page = tapePage();
+    await page.read();
+    await page.at(200);
+    page.server.refuse = 'Too many requests. Please try again later.';
+    await page.user.click(page.button(ASK));
+    await page.user.type(artist(), 'Moby');
+    await page.user.type(title(), 'Go{Enter}');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Too many requests. Please try again later.');
     expect(artist()).toHaveValue('Moby');
     expect(artist()).toHaveFocus();
-    expect(posted).not.toHaveBeenCalled();
+    expect(page.rows()).toEqual([]);
+  });
+
+  it('ask a first-time visitor’s name before taking a mark away, in a step whose one button says what it will do', async () => {
+    const page = tapePage({ posted: KNOWN, name: null });
+    await page.read();
+    await page.at(60);
+    await page.user.click(page.button('Now playing: Orbital — Chime. Correct this ID'));
+    await page.user.click(page.button('Remove this ID'));
+    expect(page.posts()).toEqual([]);
+    expect(yourName()).toHaveFocus();
+    const blanks = screen.getByRole('form', { name: 'ID the track at 0:00:00' });
+    expect(within(blanks).getByRole('button', { name: /^Remove/ })).toBeInTheDocument();
+    expect(within(blanks).queryByRole('button', { name: /post/i })).not.toBeInTheDocument();
+    await page.user.type(yourName(), 'Dana{Enter}');
+    await waitFor(() => expect(page.posts()).toEqual(['[0:00] no track starts here']));
+  });
+
+  it('offer no move in a track’s first moments, or to a moment another track starts within a moment of', async () => {
+    const page = tapePage({ posted: [...KNOWN, { by: 'Josh', says: '[5:00] LFO - LFO' }] });
+    await page.read();
+    await page.at(3);
+    await page.user.click(page.button('Now playing: Orbital — Chime. Correct this ID'));
+    expect(page.has(/instead$/)).toBe(false);
+    await page.user.keyboard('{Escape}');
+    await page.at(297);
+    await page.user.click(page.button('Now playing: Orbital — Chime. Correct this ID'));
+    expect(page.has(/instead$/)).toBe(false);
+    await page.user.keyboard('{Escape}');
+    await page.at(100);
+    await page.user.click(page.button('Now playing: Orbital — Chime. Correct this ID'));
+    expect(page.has('Starts at 0:01:40 instead')).toBe(true);
+  });
+
+  describe('on a side with a list of its tracks', () => {
+    it('offer the two lines likeliest to be the track, and write the one pressed into the blanks', async () => {
+      const page = tapePage({ sides: LISTED, length: 2400 });
+      await page.read();
+      // Half way through the side is where the sixth track would start.
+      await page.at(1200);
+      await page.user.click(page.button(ASK));
+      const offers = screen.getByRole('group', { name: 'From the tape’s tracklist' });
+      expect(within(offers).getAllByRole('button').map((b) => b.textContent)).toEqual(['5Altern 8 — Infiltrate 202', '6The Prodigy — Charly']);
+      await page.user.click(within(offers).getByRole('button', { name: /Charly/ }));
+      expect(artist()).toHaveValue('The Prodigy');
+      expect(title()).toHaveValue('Charly');
+      await page.user.click(within(screen.getByRole('form', { name: 'ID the track at 0:20:00' })).getByRole('button', { name: /post/i }));
+      await waitFor(() => expect(page.posts()).toEqual(['[20:00] The Prodigy - Charly']));
+      await waitFor(() => expect(page.rows()[5]).toBe('0:20:00The Prodigy — Charly'));
+    });
+
+    it('offer none for an ID being put right, and say whose list it is where a visitor kept it', async () => {
+      const page = tapePage({ archive: [old('Side 1\n1. Orbital - Chime\n2. Moby - Go\n3. LFO - LFO', 'Josh')], posted: KNOWN });
+      await page.read();
+      await page.at(60);
+      await page.user.click(page.button('Now playing: Orbital — Chime. Correct this ID'));
+      expect(screen.queryByRole('group', { name: /^From/ })).not.toBeInTheDocument();
+      await page.user.keyboard('{Escape}');
+      await page.at(300);
+      await page.user.click(page.button(ASK));
+      expect(within(screen.getByRole('group', { name: 'From Josh’s list' })).getAllByRole('button')).toHaveLength(2);
+    });
+  });
+
+  it('open for a row of the tracklist when the tracklist asks, once the player has loaded the side the row is on', async () => {
+    const page = tapePage({ sides: [{ position: 'A' }, { position: 'B' }], posted: [{ by: 'Josh', says: '[B 5:00] ? - ?' }] });
+    await page.read();
+    await page.at(12);
+    await page.user.click(page.button('ID the unknown track at B 0:05:00'));
+    expect(page.went).toHaveBeenCalledWith('B', 300);
+    // The blanks belong to the side loaded. Side A's are not the ones asked for.
+    expect(screen.queryByRole('form', { name: /^ID the track/ })).not.toBeInTheDocument();
+    await page.at(300, { side: 1 });
+    expect(await screen.findByRole('form', { name: 'ID the track at B 0:05:00' })).toBeInTheDocument();
+    expect(page.has('Remove this mark')).toBe(true);
+  });
+});
+
+describe('the sheet, on a phone', () => {
+  it('takes the ID over the page, asks a first-time visitor’s name in the same sheet, and posts', async () => {
+    const page = tapePage({ phone: true, name: null });
+    await page.read();
+    await page.at(200);
+    await page.user.click(within(page.tray() as HTMLElement).getByRole('button', { name: 'ID it' }));
+    const sheet = screen.getByRole('dialog', { name: 'ID the track at 0:03:20' });
+    expect(within(sheet).getByRole('textbox', { name: 'Artist' })).toHaveFocus();
+    expect(within(sheet).getByRole('textbox', { name: 'Your name' })).toBeInTheDocument();
+
+    // The keyboard's Next key goes on to the next blank, and doesn't post half an ID.
+    await page.user.type(within(sheet).getByRole('textbox', { name: 'Artist' }), 'Moby{Enter}');
+    expect(within(sheet).getByRole('textbox', { name: 'Title' })).toHaveFocus();
+    await page.user.type(within(sheet).getByRole('textbox', { name: 'Title' }), 'Go{Enter}');
+    expect(within(sheet).getByRole('textbox', { name: 'Your name' })).toHaveFocus();
+    expect(page.posts()).toEqual([]);
+    await page.user.type(within(sheet).getByRole('textbox', { name: 'Your name' }), 'Dana{Enter}');
+    await waitFor(() => expect(page.posts()).toEqual(['[3:20] Moby - Go']));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('says who a returning visitor is posting as, and lets them change it', async () => {
+    const page = tapePage({ phone: true });
+    await page.read();
+    await page.at(200);
+    await page.user.click(within(page.tray() as HTMLElement).getByRole('button', { name: 'ID it' }));
+    const sheet = screen.getByRole('dialog');
+    expect(sheet).toHaveTextContent('Posting as Dana');
+    expect(within(sheet).queryByRole('textbox', { name: 'Your name' })).not.toBeInTheDocument();
+    await page.user.click(within(sheet).getByRole('button', { name: 'Change' }));
+    expect(within(sheet).getByRole('textbox', { name: 'Your name' })).toHaveFocus();
+  });
+
+  it('offers the list’s likeliest lines first, and has what can be done with a mark below the blanks', async () => {
+    const page = tapePage({ sides: LISTED, length: 2400, phone: true, posted: [{ by: 'Josh', says: '[0:00] Orbital - Chime' }] });
+    await page.read();
+    await page.at(1200);
+    await page.user.click(within(page.tray() as HTMLElement).getByRole('button', { name: 'ID it' }));
+    expect(within(within(screen.getByRole('dialog')).getByRole('group', { name: 'From the tape’s tracklist' })).getAllByRole('button')).toHaveLength(2);
+    await page.user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+    await page.at(100);
+    await page.user.click(within(page.tray() as HTMLElement).getByRole('button', { name: 'Fix ID' }));
+    const sheet = screen.getByRole('dialog', { name: 'ID the track at 0:00:00' });
+    expect(within(sheet).getByRole('button', { name: 'Remove this ID' })).toBeInTheDocument();
+    expect(within(sheet).getByRole('button', { name: 'Starts at 0:01:40 instead' })).toBeInTheDocument();
+  });
+});
+
+describe('the tray, on a phone', () => {
+  it('is not there before the tape is played, nor on a wide screen, and stays once the tape has been played', async () => {
+    const wide = tapePage({ posted: KNOWN });
+    await wide.read();
+    await wide.at(60);
+    expect(wide.tray()).toBeNull();
+    wide.unmount();
+
+    const page = tapePage({ posted: KNOWN, phone: true });
+    await page.read();
+    expect(page.tray()).toBeNull();
+    await page.at(60.4);
+    expect(page.tray()).toHaveTextContent('Orbital0:01:00Chime');
+    // Paused and back at its start, the tape is still one the visitor is listening to.
+    await page.at(0, { played: false });
+    expect(page.tray()).not.toBeNull();
+  });
+
+  it('plays and pauses, and opens the sheet for the track playing, with the keyboard back on its button after', async () => {
+    const page = tapePage({ posted: KNOWN, phone: true });
+    await page.read();
+    await page.at(60);
+    const tray = () => page.tray() as HTMLElement;
+    await page.user.click(within(tray()).getByRole('button', { name: 'Pause' }));
+    expect(page.toggled).toHaveBeenCalledTimes(1);
+    await page.at(60, { played: false });
+    expect(within(tray()).getByRole('button', { name: 'Play' })).toBeInTheDocument();
+
+    await page.user.click(within(tray()).getByRole('button', { name: 'Fix ID' }));
+    const sheet = screen.getByRole('dialog', { name: 'ID the track at 0:00:00' });
+    expect(within(sheet).getByRole('textbox', { name: 'Artist' })).toHaveValue('Orbital');
+    await page.user.click(within(sheet).getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(within(tray()).getByRole('button', { name: 'Fix ID' })).toHaveFocus();
+  });
+
+  it('keeps New unknown in its place, marked unavailable within a moment of a track’s start', async () => {
+    const page = tapePage({ posted: KNOWN, phone: true });
+    await page.read();
+    await page.at(3);
+    const unknown = () => within(page.tray() as HTMLElement).getByRole('button', { name: /^New unknown/ });
+    expect(unknown()).toHaveAttribute('aria-disabled', 'true');
+    await page.user.click(unknown());
+    expect(page.shared().unposted).toEqual([]);
+    await page.at(200);
+    expect(unknown()).toHaveAttribute('aria-disabled', 'false');
   });
 });

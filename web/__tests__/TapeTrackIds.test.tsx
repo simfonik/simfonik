@@ -1,96 +1,125 @@
-import React, { useEffect } from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { LiveComments } from '../components/LiveComments';
-import { TapeTrackIdsProvider, useTapeTrackIds } from '../components/TapeTrackIds';
-import { Tracklist } from '../components/Tracklist';
+// What the parts of a tape page share (components/TapeTrackIds.tsx): the reading of the comments, the
+// visitor's changes and what becomes of them, and the posting.
+import { screen, waitFor, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { hold, KEPT, tapePage } from './tape';
 
-// Stands in for the player: says how to take the tape somewhere, and can announce a posted comment.
-function Player({ went }: { went: (position: string | null, time: number) => void }) {
-  const { sides, setPlayer, refresh } = useTapeTrackIds();
-  useEffect(() => {
-    setPlayer(went);
-    return () => setPlayer(null);
-  }, [setPlayer, went]);
-  return (
-    <button type="button" onClick={refresh}>
-      posted, {sides.flat().length} IDs
-    </button>
-  );
-}
+const NEW_UNKNOWN = /^New unknown/;
+const said = (time: number, artist = '', title = '') => ({ side: 0, time, artist, title });
 
-const AB = [{ position: 'A' }, { position: 'B' }];
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
-describe('what a tape page’s parts share about track IDs', () => {
-  let comments: { id: number; tape_id: string; author_name: string; content: string; created_at: string }[];
-  let ids: unknown[][];
-  let fetchMock: ReturnType<typeof vi.fn>;
-
-  beforeEach(() => {
-    document.body.innerHTML = '';
-    comments = [
-      { id: 1, tape_id: 'tape-1', author_name: 'Rents', content: 'what a tape', created_at: '2026-11-01T10:00:00Z' },
-      { id: 2, tape_id: 'tape-1', author_name: 'Josh', content: '[B 12:34] Moby - Go', created_at: '2026-11-02T10:00:00Z' },
-    ];
-    ids = [[], [{ start: 754, end: 994, artist: 'Moby', title: 'Go', known: true, by: 'Josh' }]];
-    fetchMock = vi.fn((url: RequestInfo | URL) =>
-      Promise.resolve(new Response(JSON.stringify(String(url).includes('/api/track-ids/') ? { sides: ids, orders: [null, null], complete: true } : comments), { status: 200 })),
-    );
-    global.fetch = fetchMock as unknown as typeof fetch;
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  it('reads the comments once, for the comment list and for the tracklist’s history', async () => {
-    const user = userEvent.setup();
-    render(
-      <TapeTrackIdsProvider tapeId="tape-1">
-        <Player went={() => {}} />
-        <Tracklist tapeId="tape-1" sides={AB} />
-        <LiveComments />
-      </TapeTrackIdsProvider>,
-    );
-
+describe('the reading of the comments', () => {
+  it('is done once, for the comment list, the tracklist’s history and the IDs', async () => {
+    const page = tapePage({ posted: [{ by: 'Rents', says: 'what a tape' }, { by: 'Josh', says: '[12:34] Moby - Go' }] });
+    await page.read();
     expect(await screen.findByText('what a tape')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'History · 1 post' }));
-    expect(screen.getByText('Moby — Go')).toBeInTheDocument();
-    expect(fetchMock.mock.calls.filter(([url]) => String(url) === '/api/comments/tape-1')).toHaveLength(1);
+    expect(page.rows()).toEqual(['0:12:34Moby — Go']);
+    expect(page.has('History · 1 post')).toBe(true);
+    expect(page.reads()).toBe(1);
   });
 
-  it('sends the player to the moment a track in the tracklist starts', async () => {
-    const user = userEvent.setup();
-    const went = vi.fn<(position: string | null, time: number) => void>();
-    render(
-      <TapeTrackIdsProvider tapeId="tape-1">
-        <Player went={went} />
-        <Tracklist tapeId="tape-1" sides={AB} />
-      </TapeTrackIdsProvider>,
-    );
+  it('is done again when a comment is posted some other way, and what it finds shows on every part of the page', async () => {
+    const page = tapePage();
+    await page.read();
+    await page.at(60);
+    // The comment form, down the page, posts an ordinary comment and says so.
+    page.server.comments.push({ id: 1, tape_id: 'tape-1', author_name: 'Tester', content: '[0:05] 808 State - Cubik', created_at: '2026-11-15T13:00:00.000Z' });
+    page.shared().reread();
+    await waitFor(() => expect(page.rows()).toEqual(['0:00:05808 State — Cubik']));
+    expect(page.line()).toBe('808 State — CubikNew IDNew unknown');
+    expect(page.marks()).toBe('5');
+    expect(page.reads()).toBe(2);
+  });
+});
 
-    await user.click(await screen.findByRole('button', { name: 'Play from B 0:12:34' }));
-    expect(went).toHaveBeenCalledWith('B', 754);
+describe('the visitor’s changes', () => {
+  it('wait for the comments to be read before they join the page: they were made on top of what the comments said', async () => {
+    const page = tapePage({ kept: JSON.stringify([said(100)]), posted: [{ by: 'Josh', says: '[0:00] Orbital - Chime' }] });
+    const reading = hold(page.server);
+    // The reading that began with the page is already on its way; the next is the one held.
+    await page.read();
+    expect(page.rows()).toEqual(['0:00:00Orbital — Chime', '0:01:40Unknown trackUndo']);
+    reading.go();
   });
 
-  it('reads the IDs and the comments again when a comment is posted', async () => {
-    const user = userEvent.setup();
-    render(
-      <TapeTrackIdsProvider tapeId="tape-1">
-        <Player went={() => {}} />
-        <Tracklist tapeId="tape-1" sides={AB} />
-        <LiveComments />
-      </TapeTrackIdsProvider>,
-    );
-    expect(await screen.findByRole('button', { name: 'posted, 1 IDs' })).toBeInTheDocument();
+  it('are kept on the device while they wait, and no longer once they are posted', async () => {
+    const page = tapePage();
+    await page.read();
+    await page.at(100);
+    await page.user.click(page.button(NEW_UNKNOWN));
+    expect(JSON.parse(window.localStorage.getItem(KEPT) as string)).toEqual([said(100)]);
+    await page.user.click(within(page.bar() as HTMLElement).getByRole('button', { name: 'Post' }));
+    await waitFor(() => expect(window.localStorage.getItem(KEPT)).toBeNull());
+  });
 
-    comments.push({ id: 3, tape_id: 'tape-1', author_name: 'Tester', content: '[A 0:05] 808 State - Cubik', created_at: '2026-11-15T10:00:00Z' });
-    ids[0] = [{ start: 5, end: 245, artist: '808 State', title: 'Cubik', known: true, by: 'Tester' }];
-    await user.click(screen.getByRole('button', { name: 'posted, 1 IDs' }));
+  it('come back once, however often the page is put together', async () => {
+    const page = tapePage({ kept: JSON.stringify([said(100), said(200)]), strict: true });
+    await page.read();
+    await waitFor(() => expect(page.rows()).toEqual(['0:01:40Unknown trackUndo', '0:03:20Unknown trackUndo']));
+    expect(page.shared().unposted).toHaveLength(2);
+    expect(page.bar()).toHaveTextContent('2 times not posted');
+  });
 
-    expect(await screen.findByRole('button', { name: 'posted, 2 IDs' })).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Play from A 0:00:05' })).toBeInTheDocument());
-    expect(screen.getByRole('button', { name: 'History · 2 posts' })).toBeInTheDocument();
+  it('leave out anything kept on the device that isn’t one of them', async () => {
+    const page = tapePage({ kept: JSON.stringify([said(100), { side: 0, time: 'soon' }, null, { ...said(300), gone: true }, { ...said(400), sent: { by: 'Dana', read: 1 } }]) });
+    await page.read();
+    await waitFor(() => expect(page.rows()).toEqual(['0:01:40Unknown trackUndo']));
+  });
+
+  it('are let go, unposted, where the comments turn out to have that moment already', async () => {
+    // Kept from an earlier visit: a point at 5:00, which someone has since ID'd, and one at 8:20, still nobody's.
+    const page = tapePage({ kept: JSON.stringify([said(300), said(500)]), posted: [{ by: 'Josh', says: '[5:02] Orbital - Chime' }] });
+    await page.read();
+    await waitFor(() => expect(page.rows()).toEqual(['0:05:02Orbital — Chime', '0:08:20Unknown trackUndo']));
+    await waitFor(() => expect(page.shared().unposted).toEqual([said(500)]));
+    expect(JSON.parse(window.localStorage.getItem(KEPT) as string)).toEqual([said(500)]);
+  });
+
+  it('replace what the visitor had unposted of the same moment', async () => {
+    const page = tapePage();
+    await page.read();
+    page.shared().say(said(100));
+    page.shared().say(said(103, 'Orbital', 'Chime'));
+    await waitFor(() => expect(page.rows()).toEqual(['0:01:43Orbital — ChimeUndo']));
+    expect(page.shared().unposted).toEqual([said(103, 'Orbital', 'Chime')]);
+  });
+});
+
+describe('a post', () => {
+  it('stays on the page, as posted, until the reading of the comments that has it is back, however readings overlap', async () => {
+    const page = tapePage();
+    await page.read();
+    await page.at(100);
+    await page.user.click(page.button(NEW_UNKNOWN));
+    const first = hold(page.server);
+    await page.user.click(within(page.bar() as HTMLElement).getByRole('button', { name: 'Post' }));
+    await waitFor(() => expect(page.posts()).toHaveLength(1));
+    await waitFor(() => expect(page.rows()).toEqual(['0:01:40Unknown trackID it']));
+
+    // A second post, while the reading for the first is still out.
+    await page.at(200);
+    await page.user.click(page.button(NEW_UNKNOWN));
+    await page.user.click(within(page.bar() as HTMLElement).getByRole('button', { name: 'Post' }));
+    await waitFor(() => expect(page.posts()).toHaveLength(2));
+    await waitFor(() => expect(page.rows()).toEqual(['0:01:40Unknown trackID it', '0:03:20Unknown trackID it']));
+    expect(page.shared().sides[0].rows.filter((row) => row.mine?.sent)).toHaveLength(2);
+
+    first.go();
+    await waitFor(() => expect(page.shared().sides[0].rows.every((row) => !row.mine)).toBe(true));
+    expect(page.rows()).toEqual(['0:01:40Unknown trackID it', '0:03:20Unknown trackID it']);
+  });
+
+  it('still shows as posted where the comments can’t be read again just then', async () => {
+    const page = tapePage();
+    await page.read();
+    await page.at(100);
+    await page.user.click(page.button(NEW_UNKNOWN));
+    await page.user.click(within(page.bar() as HTMLElement).getByRole('button', { name: 'Post' }));
+    await waitFor(() => expect(page.posts()).toHaveLength(1));
+    await waitFor(() => expect(page.reads()).toBe(2));
+    expect(page.rows()).toEqual(['0:01:40Unknown trackID it']);
   });
 });

@@ -383,6 +383,15 @@ body::before {
 @media (hover: hover) and (pointer: fine) {
   .track-ids-line:hover { text-decoration: underline; }
 }
+/* Said beside a mark that is the visitor's own and not posted yet, wherever the mark is shown. */
+.track-ids-state {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  white-space: nowrap;
+  color: var(--muted);
+}
 .track-ids-line:active { opacity: 0.6; }
 .track-ids-line:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 /* The line with its blanks open. Everything is the line's own type, so ID'ing a track reads as writing on the
@@ -622,7 +631,7 @@ html:has(.id-sheet[open]) { overflow: hidden; }
 .tracklist-time::before, .tracklist-mark::before { content: ""; position: absolute; inset: calc((100% - 2.75rem) / 2) -0.5rem; }
 .tracklist-mark { min-width: 3rem; font-size: 17px; line-height: 1; text-align: left; }
 /* The visitor's own time, not posted yet: in full colour, with the way to take it back beside it. */
-.tracklist-time[data-pending] { color: var(--text); }
+.tracklist-time[data-unposted] { color: var(--text); }
 @media (hover: hover) and (pointer: fine) {
   .tracklist-time:hover, .tracklist-mark:hover { color: var(--text); }
   .tracklist-time:hover { text-decoration: underline; text-underline-offset: 4px; }

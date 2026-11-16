@@ -70,9 +70,9 @@ describe('IDs the site writes', () => {
 
 describe('the ID at a moment of the tape', () => {
   const ids: TrackId[] = [
-    { start: 0, end: 120, artist: 'Moby', title: 'Go', known: true, by: 'a' },
-    { start: 120, end: 300, artist: '', title: '', known: false, by: 'b' },
-    { start: 400, end: 500, artist: '', title: 'Cubik', known: true, by: 'c' },
+    { start: 0, end: 120, artist: 'Moby', title: 'Go', known: true, by: 'a', date: '2020-01-01' },
+    { start: 120, end: 300, artist: '', title: '', known: false, by: 'b', date: '2020-01-01' },
+    { start: 400, end: 500, artist: '', title: 'Cubik', known: true, by: 'c', date: '2020-01-01' },
   ];
 
   it('is the track whose stretch holds that moment, and nothing in a gap', () => {

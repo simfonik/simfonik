@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
 import { PlayerControls } from './PlayerControls';
-import { useTapeTrackIds, useSideIds } from './TapeTrackIds';
+import { timeline } from '../lib/track-ids/side';
+import { useSide, useTapeTrackIds } from './TapeTrackIds';
 import { TrackIds } from './TrackIds';
 
 interface AudioPlayerProps {
@@ -20,7 +21,8 @@ interface AudioPlayerProps {
 
 export function AudioPlayer({ src, title, tapeId, sidePosition, wave, length, sideIndex = 0, sideCount = 1 }: AudioPlayerProps) {
   const trackIds = useTapeTrackIds();
-  const ids = useSideIds(sideIndex);
+  const { rows } = useSide(sideIndex);
+  const ids = useMemo(() => timeline(rows), [rows]);
   const { ref, state, controls } = useAudioPlayer({ 
     src, 
     tapeId, 
@@ -72,16 +74,12 @@ export function AudioPlayer({ src, title, tapeId, sidePosition, wave, length, si
       >
         {tapeId && (
           <TrackIds
-            tapeId={tapeId}
             side={sideIndex}
+            position={sideCount > 1 ? sidePosition ?? null : null}
+            time={state.currentTime}
             isPlaying={state.isPlaying}
             onToggle={state.isPlaying ? controls.pause : controls.play}
-            position={sideCount > 1 ? sidePosition ?? null : null}
-            ids={ids}
-            time={state.currentTime}
-            order={trackIds.orders[sideIndex]}
             length={state.duration > 0 ? state.duration : length}
-            onPosted={trackIds.refresh}
           />
         )}
       </PlayerControls>

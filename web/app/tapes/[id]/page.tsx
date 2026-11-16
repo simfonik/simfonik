@@ -179,7 +179,7 @@ export default async function Page({ params }: Props) {
       <JsonLd data={generateTapeSchema(tape)} />
       
       <AudioCoordinator />
-      <TapeTrackIdsProvider tapeId={tape.id}>
+      <TapeTrackIdsProvider tapeId={tape.id} sides={tape.sides.map(({ position, title, tracks }) => ({ position, title, tracks }))}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       
       {/* Mobile-only Header */}
@@ -422,7 +422,7 @@ export default async function Page({ params }: Props) {
       </div>
 
       {/* The tracklist: the tape's own, a list kept in the comments, and the IDs, as one list. */}
-      <Tracklist tapeId={tape.id} sides={tape.sides.map(({ position, title, tracks }) => ({ position, title, tracks }))} />
+      <Tracklist />
 
       {/* Comments */}
       <section className="border-t-[1.5px] border-[var(--border)] pt-14 mt-16">
