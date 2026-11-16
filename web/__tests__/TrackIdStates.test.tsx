@@ -21,6 +21,8 @@ const artist = () => screen.getByRole('textbox', { name: 'Artist' });
 const title = () => screen.getByRole('textbox', { name: 'Title' });
 const NEW_UNKNOWN = /^New unknown/;
 const NEW_ID = /^New ID/;
+/** The tray's one way to say a track starts here: a phone has no room for two. */
+const NEW_TRACK = /^New track/;
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -148,7 +150,7 @@ describe('a side’s last moments, where no track has room to start', () => {
     await page.at(897);
     const tray = within(page.tray() as HTMLElement);
     expect(tray.getByRole('button', { name: 'ID it' })).toHaveAttribute('aria-disabled', 'true');
-    expect(tray.getByRole('button', { name: NEW_UNKNOWN })).toHaveAttribute('aria-disabled', 'true');
+    expect(tray.getByRole('button', { name: NEW_TRACK })).toHaveAttribute('aria-disabled', 'true');
     await page.user.click(tray.getByRole('button', { name: 'ID it' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
@@ -382,10 +384,11 @@ describe('a track the comments have ID’d', () => {
     const reading = hold(page.server);
     await page.user.click(page.button('Remove this ID'));
     await waitFor(() => expect(page.posts()).toEqual(['[5:00] no track starts here']));
+    // What played before it plays on: the tape is still within the ten minutes that one is taken to play.
     const gone = () => {
       expect(page.rows()).toEqual(['0:00:00Orbital — Chime']);
       expect(page.marks()).toBe('0');
-      expect(page.line()).toBe('Know this track? ID itNew unknown');
+      expect(page.line()).toBe('Orbital — ChimeNew IDNew unknown');
     };
     await waitFor(gone);
     reading.go();
@@ -583,18 +586,19 @@ describe('on a phone, where the tray says what the line does', () => {
     expect(page.tray()).toBeNull();
 
     await page.at(60);
-    expect(page.tray()).toHaveTextContent('The Prodigy0:01:00HyperspeedFix IDNew unknown');
-    await page.at(300);
-    expect(page.tray()).toHaveTextContent('Nothing ID’d here yet0:05:00Know this track? ID it.ID itNew unknown');
+    expect(page.tray()).toHaveTextContent('The Prodigy0:01:00HyperspeedEdit IDNew track');
+    // Past the ten minutes a track is taken to play.
+    await page.at(700);
+    expect(page.tray()).toHaveTextContent('Nothing ID’d here yet0:11:40Know this track? ID it.ID itNew track');
 
     await page.user.click(page.plus('Butsch — The Count'));
-    await page.at(310);
-    expect(page.tray()).toHaveTextContent('Butsch0:05:10The CountNot postedFix IDNew unknown');
+    await page.at(710);
+    expect(page.tray()).toHaveTextContent('Butsch0:11:50The CountNot postedEdit IDNew track');
 
-    await page.at(500);
-    await page.user.click(within(page.tray() as HTMLElement).getByRole('button', { name: NEW_UNKNOWN }));
-    expect(page.tray()).toHaveTextContent('Unknown track0:08:20Marked by youNot postedID itNew unknown');
-    expect(within(page.tray() as HTMLElement).getByRole('button', { name: NEW_UNKNOWN })).toHaveAttribute('aria-disabled', 'true');
+    await page.at(900);
+    await page.user.click(within(page.tray() as HTMLElement).getByRole('button', { name: NEW_TRACK }));
+    expect(page.tray()).toHaveTextContent('Unknown track0:15:00Marked by youNot postedID itNew track');
+    expect(within(page.tray() as HTMLElement).getByRole('button', { name: NEW_TRACK })).toHaveAttribute('aria-disabled', 'true');
     expect(page.bar()).toHaveTextContent('2 times not posted');
   });
 });

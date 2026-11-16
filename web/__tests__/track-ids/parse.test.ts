@@ -367,11 +367,11 @@ describe('IDs made with the site’s own form, which places them to the second',
 
   it('put a name right without moving where the track ends, or lifting a record off the one it was brought in over', () => {
     // "0:58–3:40" in an old comment, and the name put right with the form since.
-    expect(spans([typed(58, 'Orbital', 'Chime', '1', { end: 220 }), typed(900, 'LFO', 'LFO', '1'), at(58, 'Orbital', 'Belfast', '2')])).toEqual(['58-220 Belfast', '900-1140 LFO']);
+    expect(spans([typed(58, 'Orbital', 'Chime', '1', { end: 220 }), typed(900, 'LFO', 'LFO', '1'), at(58, 'Orbital', 'Belfast', '2')])).toEqual(['58-220 Belfast', '900-1500 LFO']);
     // "+ [5:00]": a record brought in over the one playing, which plays on under it to the next that isn't one.
     const layered = [typed(0, 'Orbital', 'Chime', '1'), typed(300, 'Tangerine Dream', 'Love On A Real Train', '1', { layer: true }), typed(400, 'LFO', 'LFO', '1')];
-    expect(spans(layered)).toEqual(['0-400 Chime', '300-400 Love On A Real Train', '400-640 LFO']);
-    expect(spans([...layered, at(300, 'Tangerine Dream', 'Love On A Real Train (Edit)', '2')])).toEqual(['0-400 Chime', '300-400 Love On A Real Train (Edit)', '400-640 LFO']);
+    expect(spans(layered)).toEqual(['0-400 Chime', '300-400 Love On A Real Train', '400-1000 LFO']);
+    expect(spans([...layered, at(300, 'Tangerine Dream', 'Love On A Real Train (Edit)', '2')])).toEqual(['0-400 Chime', '300-400 Love On A Real Train (Edit)', '400-1000 LFO']);
   });
 
   it('give a track its start where nobody had: one that heads a list is only taken to open the side', () => {

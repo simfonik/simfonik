@@ -31,18 +31,19 @@ describe('a side’s tracks with the visitor’s changes among them', () => {
 
   it('are the tracks the comments’ moments make where the visitor has said nothing', () => {
     expect(withChanges(posted, [])).toEqual(settle(posted));
-    expect(times(withChanges(posted, []))).toEqual(['0-240 Orbital / Chime', '240-480 ??', '600-840 Joey Beltram / Energy Flash']);
+    expect(times(withChanges(posted, []))).toEqual(['0-240 Orbital / Chime', '240-480 ??', '600-1200 Joey Beltram / Energy Flash']);
   });
 
   it('have a change at a moment of its own as a new track from there, until the next one starts', () => {
     const change = said(500);
     const ids = withChanges(posted, [change]);
-    expect(times(ids)).toEqual(['0-240 Orbital / Chime', '240-480 ??', '500-600 ??', '600-840 Joey Beltram / Energy Flash']);
+    expect(times(ids)).toEqual(['0-240 Orbital / Chime', '240-480 ??', '500-600 ??', '600-1200 Joey Beltram / Energy Flash']);
     expect(ids[2].mine).toBe(change);
     // What was playing there is cut off where the new track starts.
     expect(times(withChanges(posted, [said(100)]))[0]).toBe('0-100 Orbital / Chime');
-    // And the last track anyone had timed now runs to it, however far on it is.
-    expect(times(withChanges(posted, [said(1500)]))[2]).toBe('600-1500 Joey Beltram / Energy Flash');
+    // And the last track anyone had timed now runs to it, where that is within the ten minutes a track is ever taken to play.
+    expect(times(withChanges(posted, [said(900)]))[2]).toBe('600-900 Joey Beltram / Energy Flash');
+    expect(times(withChanges(posted, [said(1500)]))[2]).toBe('600-1200 Joey Beltram / Energy Flash');
   });
 
   it('read a change as its line of a comment will read back: its time to the second, its names as written there', () => {
@@ -69,7 +70,7 @@ describe('a side’s tracks with the visitor’s changes among them', () => {
   });
 
   it('never let a mark without a name replace a name', () => {
-    expect(times(withChanges(posted, [said(600, '', '', sent)]))[2]).toBe('600-840 Joey Beltram / Energy Flash');
+    expect(times(withChanges(posted, [said(600, '', '', sent)]))[2]).toBe('600-1200 Joey Beltram / Energy Flash');
   });
 
   it('start a moment at the earliest time anyone gave for it', () => {
@@ -80,32 +81,31 @@ describe('a side’s tracks with the visitor’s changes among them', () => {
     expect([moved.start, moved.artist, moved.mine]).toEqual([597, 'Joey Beltram', undefined]);
     // A start nobody gave as a time (the track heads a list, and is taken to open the side) gives way to one somebody did.
     const opener = [{ ...id(0, 'Orbital', 'Chime'), guessed: true }];
-    expect(times(withChanges(opener, [said(4, 'Orbital', 'Chime (Edit)', sent)]))).toEqual(['4-244 Orbital / Chime (Edit)']);
+    expect(times(withChanges(opener, [said(4, 'Orbital', 'Chime (Edit)', sent)]))).toEqual(['4-604 Orbital / Chime (Edit)']);
   });
 
   it('drop a mark taken away, and let what played before it play on', () => {
-    expect(times(withChanges(posted, [gone(240)]))).toEqual(['0-600 Orbital / Chime', '600-840 Joey Beltram / Energy Flash']);
-    // With nothing after it, as long as the last track on a side is taken to play.
-    expect(times(withChanges(posted.slice(0, 2), [gone(240)]))).toEqual(['0-240 Orbital / Chime']);
+    expect(times(withChanges(posted, [gone(240)]))).toEqual(['0-600 Orbital / Chime', '600-1200 Joey Beltram / Energy Flash']);
+    expect(times(withChanges([posted[0], posted[1], id(400, 'Joey Beltram', 'Energy Flash')], [gone(240)]))[0]).toBe('0-400 Orbital / Chime');
     // Taking away what isn't there changes nothing.
     expect(withChanges(posted, [gone(400)])).toEqual(settle(posted));
   });
 
   it('take a record named again, with nothing else between, as the same play: the earlier start stands', () => {
     const one = [id(300, 'Altern 8', 'Infiltrate 202')];
-    expect(times(withChanges(one, [said(400, 'Altern 8', 'Infiltrate 202', sent)]))).toEqual(['300-640 Altern 8 / Infiltrate 202']);
-    expect(times(withChanges(one, [said(200, 'Altern 8', 'Infiltrate 202', sent)]))).toEqual(['200-540 Altern 8 / Infiltrate 202']);
+    expect(times(withChanges(one, [said(400, 'Altern 8', 'Infiltrate 202', sent)]))).toEqual(['300-1000 Altern 8 / Infiltrate 202']);
+    expect(times(withChanges(one, [said(200, 'Altern 8', 'Infiltrate 202', sent)]))).toEqual(['200-900 Altern 8 / Infiltrate 202']);
     // With another track between them, they are two plays: marked there, or there once the comments' own second saying is parted from the first.
     expect(withChanges([...one, id(350, '', '')], [said(400, 'Altern 8', 'Infiltrate 202', sent)])).toHaveLength(3);
     const twice = [...one, id(700, 'Altern 8', 'Infiltrate 202', 'Josh')];
-    expect(times(withChanges(twice, []))).toEqual(['300-940 Altern 8 / Infiltrate 202']);
-    expect(times(withChanges(twice, [said(500)]))).toEqual(['300-500 Altern 8 / Infiltrate 202', '500-700 ??', '700-940 Altern 8 / Infiltrate 202']);
-    expect(times(withChanges(twice, [gone(300)]))).toEqual(['700-940 Altern 8 / Infiltrate 202']);
+    expect(times(withChanges(twice, []))).toEqual(['300-1300 Altern 8 / Infiltrate 202']);
+    expect(times(withChanges(twice, [said(500)]))).toEqual(['300-500 Altern 8 / Infiltrate 202', '500-700 ??', '700-1300 Altern 8 / Infiltrate 202']);
+    expect(times(withChanges(twice, [gone(300)]))).toEqual(['700-1300 Altern 8 / Infiltrate 202']);
   });
 
   it('take a change at the nearer of two marks it is within a moment of', () => {
     const close = [id(100, '', ''), id(108, '', '')];
-    expect(times(withChanges(close, [said(105, 'LFO', 'LFO')]))).toEqual(['100-105 ??', '105-345 LFO / LFO']);
+    expect(times(withChanges(close, [said(105, 'LFO', 'LFO')]))).toEqual(['100-105 ??', '105-705 LFO / LFO']);
   });
 
   it('have nothing start in a side’s last moments: there is no room left for a track', () => {

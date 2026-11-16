@@ -40,7 +40,7 @@ export function LiveComments() {
   return (
     <div className="space-y-6">
       {talk.map((comment) => (
-        <div key={comment.id} className="border-l-4 border-[var(--accent)] pl-4 py-1">
+        <div key={comment.id} className="comment">
           <div className="mb-2">
             <div className="font-display text-xl leading-tight text-[var(--text)]">
               {comment.author_name}

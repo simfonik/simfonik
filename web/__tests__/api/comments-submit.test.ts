@@ -87,6 +87,46 @@ describe('POST /api/comments/submit', () => {
     expect(revalidateTagMock).not.toHaveBeenCalled();
   });
 
+  describe('a post of track IDs, in the site’s own form for a side the tape has', () => {
+    const ids = { ...validBody, tapeId: 'dj-greg-j-1992-rave-jams', content: '[1:31:02] Wax Doctor - A New Direction' };
+    const future = () => new Date(Date.now() + 60_000).toISOString();
+    /** The address's key in the rate limiter, as the route looked it up. */
+    const key = () => sqlMock.mock.calls[0][1] as string;
+
+    it('is counted apart from talk, and allowed more of in an hour', async () => {
+      // Five in the hour refuses talk; a visitor naming tracks one at a time has only begun.
+      sqlMock.mockResolvedValueOnce({ rows: [{ count: 5, reset_at: future() }] });
+      expect((await POST(makeRequest(ids))).status).toBe(200);
+      const idsKey = key();
+
+      sqlMock.mockClear();
+      await POST(makeRequest(validBody));
+      expect(key()).not.toBe(idsKey);
+
+      sqlMock.mockResolvedValueOnce({ rows: [{ count: 60, reset_at: future() }] });
+      expect((await POST(makeRequest(ids))).status).toBe(429);
+    });
+
+    it('sends no notification: a sitting is many of them', async () => {
+      expect((await POST(makeRequest(ids))).status).toBe(200);
+      expect(sendCommentNotificationMock).not.toHaveBeenCalled();
+      expect(revalidateTagMock).toHaveBeenCalledWith('comments');
+    });
+
+    it('is talk like any other when it isn’t all IDs, or is for a side the tape hasn’t got', async () => {
+      for (const content of ['[1:31:02] Wax Doctor - A New Direction\nwhat a tune', '[C 1:31:02] Wax Doctor - A New Direction']) {
+        sendCommentNotificationMock.mockClear();
+        sqlMock.mockReset();
+        sqlMock.mockResolvedValue({ rows: [] });
+        sqlMock.mockResolvedValueOnce({ rows: [{ count: 5, reset_at: future() }] });
+        expect((await POST(makeRequest({ ...ids, content }))).status, content).toBe(429);
+        expect(sendCommentNotificationMock).not.toHaveBeenCalled();
+      }
+      expect((await POST(makeRequest({ ...ids, content: '[1:31:02] Wax Doctor - A New Direction\nwhat a tune' }))).status).toBe(200);
+      expect(sendCommentNotificationMock).toHaveBeenCalledOnce();
+    });
+  });
+
   it('still succeeds (200) if the notification email throws', async () => {
     sendCommentNotificationMock.mockRejectedValueOnce(new Error('Resend down'));
     const res = await POST(makeRequest(validBody));

@@ -1,18 +1,29 @@
 import { sql } from '@/lib/db';
 import { COMMENTS_CACHE_TAG } from '@/lib/comments';
+import { getTapeById } from '@/lib/data';
 import { revalidateTag } from 'next/cache';
 import { sendCommentNotification } from '@/lib/email';
+import { readComposed } from '@/lib/track-ids/compose';
 import { createHash } from 'crypto';
+
+// How many comments one address may post in an hour. Track IDs made on the tape page are comments too
+// (lib/track-ids/compose.ts), and someone naming a tape's tracks one at a time posts one for each, so those
+// are counted apart from talk and allowed more of.
+const HOURLY_LIMIT = { talk: 5, trackIds: 60 };
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { tapeId, authorName, authorEmail, content, website } = body;
 
+    // A post of track IDs: nothing but lines in the site's own form, for sides the tape has.
+    const tape = typeof tapeId === 'string' ? getTapeById(tapeId) : undefined;
+    const trackIds = Boolean(tape && typeof content === 'string' && readComposed(content, tape.sides.map((side) => side.position)));
+
     // Get IP address for rate limiting
     const forwarded = request.headers.get('x-forwarded-for');
     const ip = forwarded ? forwarded.split(',')[0].trim() : 'unknown';
-    const ipHash = createHash('sha256').update(ip).digest('hex');
+    const ipHash = createHash('sha256').update(trackIds ? `${ip}:track-ids` : ip).digest('hex');
 
     // 1. Rate limiting check
     const { rows: rateLimitRows } = await sql`
@@ -20,7 +31,7 @@ export async function POST(request: Request) {
       WHERE ip_hash = ${ipHash} AND reset_at > NOW()
     `;
 
-    if (rateLimitRows.length > 0 && rateLimitRows[0].count >= 5) {
+    if (rateLimitRows.length > 0 && rateLimitRows[0].count >= (trackIds ? HOURLY_LIMIT.trackIds : HOURLY_LIMIT.talk)) {
       return Response.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
     }
 
@@ -83,15 +94,19 @@ export async function POST(request: Request) {
     // implementation in lib/email.ts already swallows its own errors,
     // but defense-in-depth: wrap here too so any sync throw before its
     // try/catch can't leak out and 500 a comment that already inserted.
-    try {
-      await sendCommentNotification({
-        tapeId,
-        authorName: name,
-        authorEmail: authorEmail || null,
-        content: text,
-      });
-    } catch (err) {
-      console.error('Comment notification failed (comment is still posted):', err);
+    // Track IDs send none: a sitting is many posts, and each is on the
+    // tape's page, in its tracklist's history.
+    if (!trackIds) {
+      try {
+        await sendCommentNotification({
+          tapeId,
+          authorName: name,
+          authorEmail: authorEmail || null,
+          content: text,
+        });
+      } catch (err) {
+        console.error('Comment notification failed (comment is still posted):', err);
+      }
     }
 
     return Response.json({

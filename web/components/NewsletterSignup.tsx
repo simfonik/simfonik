@@ -104,7 +104,7 @@ function NewsletterForm({
           autoCorrect="off"
           spellCheck={false}
           enterKeyHint="send"
-          className="text-field font-mono h-11 w-full min-w-0 sm:flex-1 border-[1.5px] border-[var(--text)] bg-[var(--bg)] px-4 text-sm text-[var(--text)] placeholder:text-[var(--muted)]"
+          className="text-field font-mono h-11 w-full min-w-0 sm:flex-1 bg-[var(--bg)] px-4 text-sm text-[var(--text)] placeholder:text-[var(--muted)]"
         />
         {/* While sending, the button is marked disabled and not made so: a disabled button lets go of the
             keyboard, and whoever pressed it would lose their place. */}

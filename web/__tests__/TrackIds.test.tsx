@@ -156,7 +156,8 @@ describe('the blanks, in the line under the player', () => {
       await page.user.click(page.button('Now playing: Orbital — Chime. Correct this ID'));
       expect(screen.queryByRole('group', { name: /^From/ })).not.toBeInTheDocument();
       await page.user.keyboard('{Escape}');
-      await page.at(300);
+      // Past the ten minutes the track before is taken to play.
+      await page.at(700);
       await page.user.click(page.button(ASK));
       expect(within(screen.getByRole('group', { name: 'From Josh’s list' })).getAllByRole('button')).toHaveLength(2);
     });
@@ -219,7 +220,7 @@ describe('the sheet, on a phone', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
     await page.at(100);
-    await page.user.click(within(page.tray() as HTMLElement).getByRole('button', { name: 'Fix ID' }));
+    await page.user.click(within(page.tray() as HTMLElement).getByRole('button', { name: 'Edit ID' }));
     const sheet = screen.getByRole('dialog', { name: 'ID the track at 0:00:00' });
     expect(within(sheet).getByRole('button', { name: 'Remove this ID' })).toBeInTheDocument();
     expect(within(sheet).getByRole('button', { name: 'Starts at 0:01:40 instead' })).toBeInTheDocument();
@@ -254,19 +255,19 @@ describe('the tray, on a phone', () => {
     await page.at(60, { played: false });
     expect(within(tray()).getByRole('button', { name: 'Play' })).toBeInTheDocument();
 
-    await page.user.click(within(tray()).getByRole('button', { name: 'Fix ID' }));
+    await page.user.click(within(tray()).getByRole('button', { name: 'Edit ID' }));
     const sheet = screen.getByRole('dialog', { name: 'ID the track at 0:00:00' });
     expect(within(sheet).getByRole('textbox', { name: 'Artist' })).toHaveValue('Orbital');
     await page.user.click(within(sheet).getByRole('button', { name: 'Cancel' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(within(tray()).getByRole('button', { name: 'Fix ID' })).toHaveFocus();
+    expect(within(tray()).getByRole('button', { name: 'Edit ID' })).toHaveFocus();
   });
 
-  it('keeps New unknown in its place, marked unavailable within a moment of a track’s start', async () => {
+  it('keeps New track in its place, marked unavailable within a moment of a track’s start', async () => {
     const page = tapePage({ posted: KNOWN, phone: true });
     await page.read();
     await page.at(3);
-    const unknown = () => within(page.tray() as HTMLElement).getByRole('button', { name: /^New unknown/ });
+    const unknown = () => within(page.tray() as HTMLElement).getByRole('button', { name: /^New track/ });
     expect(unknown()).toHaveAttribute('aria-disabled', 'true');
     await page.user.click(unknown());
     expect(page.shared().unposted).toEqual([]);

@@ -60,7 +60,7 @@ export function CommentForm({ tapeId }: CommentFormProps) {
   const labelClasses =
     'block font-mono text-[10px] uppercase tracking-[0.25em] text-[var(--muted)] mb-2';
   const inputClasses =
-    'font-mono w-full border-[1.5px] border-[var(--text)] bg-[var(--bg)] px-3 py-2 text-sm text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none focus:bg-[var(--surface)]';
+    'text-field font-mono w-full bg-[var(--bg)] px-3 py-2 text-sm text-[var(--text)] placeholder:text-[var(--muted)] focus:bg-[var(--surface)]';
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5 mb-10">

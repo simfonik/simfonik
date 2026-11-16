@@ -467,7 +467,7 @@ export default async function Page({ params }: Props) {
                 return (
                   <div className="space-y-6">
                     {archivedComments.map((comment, idx) => (
-                      <div key={idx} className="border-l-4 border-[var(--accent)] pl-4 py-1">
+                      <div key={idx} className="comment">
                         <div className="mb-2">
                           <div className="font-display text-xl leading-tight text-[var(--text)]">
                             {comment.author}
@@ -502,7 +502,7 @@ export default async function Page({ params }: Props) {
                       </h3>
                       <div className="space-y-6">
                         {comments.map((comment, idx) => (
-                          <div key={idx} className="border-l-4 border-[var(--accent)] pl-4 py-1">
+                          <div key={idx} className="comment">
                             <div className="mb-2">
                               <div className="font-display text-xl leading-tight text-[var(--text)]">
                                 {comment.author}

@@ -100,7 +100,9 @@ type Props = {
  * and "New unknown" says only that one does, in one press, so a visitor can go through a tape setting the
  * points and leave the names to whoever knows them. Neither is there within a moment of a track's start:
  * one moment, one track. A new unknown is the visitor's own until they post what they have (the tracklist
- * keeps the count and the Post), and until then it is taken back, or ID'd, like any other mark.
+ * keeps the count and the Post), and until then it is taken back, or ID'd, like any other mark. (The tray,
+ * on a phone, has room for the one of them, and there it has no "New ID" beside it to be read against: it
+ * says "New track".)
  *
  * On a phone the line has no room for a track's name and the words beside it, and it is at the top of a long
  * page. There, once the tape has been played, all of it is in a tray at the foot of the screen instead: the
@@ -506,11 +508,11 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
                 </svg>
               </button>
               <button ref={trayId} type="button" onClick={open} aria-disabled={nothing} className="player-tray-btn">
-                {playing?.known ? 'Fix ID' : 'ID it'}
+                {playing?.known ? 'Edit ID' : 'ID it'}
               </button>
               {/* Marked as unavailable, not taken away, in a track's first moments: it keeps its place. */}
-              <button type="button" onClick={markHere} aria-disabled={!free} className="player-tray-btn" aria-label="New unknown: a track starts here, and you don’t know what it is">
-                New unknown
+              <button type="button" onClick={markHere} aria-disabled={!free} className="player-tray-btn" aria-label="New track: a track starts here">
+                New track
               </button>
             </div>
           </div>,

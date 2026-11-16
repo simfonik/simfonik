@@ -16,8 +16,12 @@ export const ONE_MOMENT = 5;
 /** Two times typed into sentences are rougher: this many seconds apart or closer, they are said of one moment. */
 export const ROUGHLY = 20;
 
-/** How long the last track anyone timed on a side is taken to play, in seconds: nobody has said what follows it. */
-export const UNENDED = 240;
+/**
+ * The longest a track is taken to play, in seconds, where no comment says when it ended. It is very rare for
+ * a record in a mix to play ten minutes: that long after it started, with nothing marked since, something
+ * else is on, and nobody has said what.
+ */
+export const LONGEST = 600;
 
 /** The shortest stretch of a side that is a track, in seconds. Nothing starts closer than this to a side's end. */
 export const SHORTEST = 5;
@@ -89,11 +93,12 @@ export function sameRecord(a: Named, b: Named) {
  * The tracks a side's moments make, in order of time. `length` is the side's, in seconds, where it has been
  * measured.
  *
- * · A track runs to where a comment says it ends, and otherwise until the next one starts. The last on a
- *   side, with nothing after it to say, is taken to play UNENDED seconds, or to the side's end.
+ * · A track runs to where a comment says it ends. Otherwise it runs until the next one starts or the side
+ *   ends, and never longer than LONGEST: past that it is not known what is playing.
  * · A layered record runs to whatever starts next; the record under it plays on to the next that isn't a layer.
- * · A record named again, with nothing else between, is the same play said twice: the earlier start stands.
- *   ("Reach Up To Mars at 30:24", a minute into a track already named that, is no new track.)
+ * · A record named again while it is still taken to be playing, with nothing else between, is the same play
+ *   said twice: the earlier start stands. ("Reach Up To Mars at 30:24", a minute into a track already named
+ *   that, is no new track.)
  * · Nothing shorter than SHORTEST is a track.
  */
 export function settle<M extends Moment>(moments: M[], length = Infinity): (M & { end: number })[] {
@@ -102,9 +107,10 @@ export function settle<M extends Moment>(moments: M[], length = Infinity): (M & 
   inOrder.forEach((moment, i) => {
     let next = i + 1;
     if (!moment.layer) while (inOrder[next]?.layer) next++;
-    const end = moment.until !== undefined && moment.until > moment.start ? Math.min(moment.until, length) : (inOrder[next]?.start ?? Math.min(length, moment.start + UNENDED));
+    const said = moment.until !== undefined && moment.until > moment.start;
+    const end = Math.min(said ? (moment.until as number) : Math.min(inOrder[next]?.start ?? Infinity, moment.start + LONGEST), length);
     const before = tracks[tracks.length - 1];
-    if (before && moment.known && sameRecord(before, moment)) before.end = Math.max(before.end, end);
+    if (before && moment.known && moment.start <= before.end && sameRecord(before, moment)) before.end = Math.max(before.end, end);
     else if (end - moment.start >= SHORTEST) tracks.push({ ...moment, end });
   });
   return tracks;

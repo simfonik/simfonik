@@ -140,12 +140,12 @@ describe('the visitor’s name', () => {
     expect(within(page.bar() as HTMLElement).getByRole('textbox', { name: 'Your name' })).toBeInTheDocument();
 
     // Past where the point marked is taken to end, with nothing playing.
-    await page.at(400);
+    await page.at(800);
     await page.user.click(page.button('Know this track? ID it'));
     await page.user.type(screen.getByRole('textbox', { name: 'Artist' }), 'Orbital');
     await page.user.type(screen.getByRole('textbox', { name: 'Title' }), 'Chime{Enter}');
-    await page.user.type(within(screen.getByRole('form', { name: 'ID the track at 0:06:40' })).getByRole('textbox', { name: 'Your name' }), 'Dana{Enter}');
-    await waitFor(() => expect(page.posts()).toEqual(['[6:40] Orbital - Chime']));
+    await page.user.type(within(screen.getByRole('form', { name: 'ID the track at 0:13:20' })).getByRole('textbox', { name: 'Your name' }), 'Dana{Enter}');
+    await waitFor(() => expect(page.posts()).toEqual(['[13:20] Orbital - Chime']));
     await waitFor(() => expect(page.bar()).toHaveTextContent('1 time not posted as Dana'));
     expect(within(page.bar() as HTMLElement).queryByRole('textbox', { name: 'Your name' })).not.toBeInTheDocument();
   });
