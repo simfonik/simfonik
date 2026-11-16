@@ -2,7 +2,7 @@
 
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { composeId, composeRemoval, ONE_MOMENT, type RunningOrder, type TrackId } from '../lib/track-ids/compose';
-import { postIds } from '../lib/track-ids/post';
+import { postIds, rememberedName } from '../lib/track-ids/post';
 import { sideRows, standing, withChanges, type Change, type Row } from '../lib/track-ids/side';
 import type { Side } from '../types/tape';
 
@@ -48,6 +48,8 @@ type TapeTrackIds = {
   /** Where the tape is at this instant, for whatever is pressed. To follow it as it moves, `usePlayhead`. */
   playhead: () => Playhead;
   watch: (changed: () => void) => () => void;
+  /** The name the visitor last posted under on this device, or none: it is asked for once. */
+  name: string;
   /** The visitor's changes that wait to be posted, oldest first. */
   unposted: Change[];
   /** Says something of a moment and keeps it, unposted, on this device. It replaces what the visitor had unposted of that moment. */
@@ -78,6 +80,7 @@ const nothing: TapeTrackIds = {
   report: () => {},
   playhead: () => STILL,
   watch: () => () => {},
+  name: '',
   unposted: [],
   say: () => {},
   unsay: () => {},
@@ -125,6 +128,8 @@ export function TapeTrackIdsProvider({ tapeId, sides: tape, children }: { tapeId
   const [comments, setComments] = useState<TapeComment[] | null>(null);
   const [changes, setChanges] = useState<Change[]>([]);
   const [asked, setAsked] = useState<Asked | null>(null);
+  const [name, setName] = useState('');
+  useEffect(() => setName(rememberedName()), []);
   // Each reading of the comments has a number. A change posted while reading n is under way is in reading
   // n + 1 at the earliest, and stays on the page until that one is back.
   const [reading, setReading] = useState(0);
@@ -237,16 +242,17 @@ export function TapeTrackIdsProvider({ tapeId, sides: tape, children }: { tapeId
   }, []);
   const several = tape.length > 1;
   const post = useCallback(
-    async (posting: Change[], name: string) => {
+    async (posting: Change[], by: string) => {
       const lines = [...posting]
         .sort((a, b) => a.side - b.side || a.time - b.time)
         .map((change) => {
           const where = { position: several ? tape[change.side].position : null, time: change.time };
           return change.gone ? composeRemoval(where) : composeId({ ...where, artist: change.artist, title: change.title });
         });
-      const failed = await postIds(tapeId, name, lines.join('\n'));
+      const failed = await postIds(tapeId, by, lines.join('\n'));
       if (failed) return failed;
-      const sent = { by: name.trim(), read: latest.current + 1 };
+      setName(by.trim());
+      const sent = { by: by.trim(), read: latest.current + 1 };
       // Each is now posted, where it stood among the visitor's changes; one that is new to them (from the
       // blanks) goes last, in place of anything the visitor had unposted of the same moment.
       setChanges((all) => [
@@ -262,8 +268,8 @@ export function TapeTrackIdsProvider({ tapeId, sides: tape, children }: { tapeId
   const answered = useCallback(() => setAsked(null), []);
 
   const value = useMemo(
-    () => ({ tape, sides, read, comments, reread, setPlayer, goTo, report, playhead, watch, unposted, say, unsay, post, ask, asked, answered }),
-    [tape, sides, read, comments, reread, setPlayer, goTo, report, playhead, watch, unposted, say, unsay, post, ask, asked, answered],
+    () => ({ tape, sides, read, comments, reread, setPlayer, goTo, report, playhead, watch, name, unposted, say, unsay, post, ask, asked, answered }),
+    [tape, sides, read, comments, reread, setPlayer, goTo, report, playhead, watch, name, unposted, say, unsay, post, ask, asked, answered],
   );
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }

@@ -36,13 +36,21 @@ describe('the reading of the comments', () => {
 });
 
 describe('the visitor’s changes', () => {
-  it('wait for the comments to be read before they join the page: they were made on top of what the comments said', async () => {
-    const page = tapePage({ kept: JSON.stringify([said(100)]), posted: [{ by: 'Josh', says: '[0:00] Orbital - Chime' }] });
-    const reading = hold(page.server);
-    // The reading that began with the page is already on its way; the next is the one held.
+  it('wait for the comments to be read before they join the page, and before more can be made: they are said on top of what the comments say', async () => {
+    const page = tapePage({ sides: [{ position: 'A', tracks: [{ artist: 'Orbital', title: 'Chime' }, { artist: 'LFO', title: 'LFO' }] }], kept: JSON.stringify([said(100)]), slow: true });
+    await page.at(300);
+    // The tape's own tracklist is there from the start; nothing of the visitor's is, and nothing can be said yet.
+    expect(page.rows()).toEqual(['01Orbital — Chime', '02LFO — LFO']);
+    expect(page.pluses()).toEqual([]);
+    expect(page.has(NEW_UNKNOWN)).toBe(false);
+    expect(page.bar()).toBeNull();
+
+    page.reading.go();
     await page.read();
-    expect(page.rows()).toEqual(['0:00:00Orbital — Chime', '0:01:40Unknown trackUndo']);
-    reading.go();
+    await waitFor(() => expect(page.rows()).toEqual(['0:01:40Unknown trackUndo', '+Orbital — Chime', '+LFO — LFO']));
+    expect(page.bar()).toHaveTextContent('1 time not posted');
+    expect(page.pluses()).toEqual(['Orbital — Chime', 'LFO — LFO']);
+    expect(page.has(NEW_UNKNOWN)).toBe(true);
   });
 
   it('are kept on the device while they wait, and no longer once they are posted', async () => {
@@ -85,6 +93,26 @@ describe('the visitor’s changes', () => {
     page.shared().say(said(103, 'Orbital', 'Chime'));
     await waitFor(() => expect(page.rows()).toEqual(['0:01:43Orbital — ChimeUndo']));
     expect(page.shared().unposted).toEqual([said(103, 'Orbital', 'Chime')]);
+  });
+});
+
+describe('the visitor’s name', () => {
+  it('is asked for once on the page: posted under in the blanks, it is not asked for again by the bar', async () => {
+    const page = tapePage({ name: null });
+    await page.read();
+    await page.at(100);
+    await page.user.click(page.button(NEW_UNKNOWN));
+    expect(within(page.bar() as HTMLElement).getByRole('textbox', { name: 'Your name' })).toBeInTheDocument();
+
+    // Past where the point marked is taken to end, with nothing playing.
+    await page.at(400);
+    await page.user.click(page.button('Know this track? ID it'));
+    await page.user.type(screen.getByRole('textbox', { name: 'Artist' }), 'Orbital');
+    await page.user.type(screen.getByRole('textbox', { name: 'Title' }), 'Chime{Enter}');
+    await page.user.type(within(screen.getByRole('form', { name: 'ID the track at 0:06:40' })).getByRole('textbox', { name: 'Your name' }), 'Dana{Enter}');
+    await waitFor(() => expect(page.posts()).toEqual(['[6:40] Orbital - Chime']));
+    await waitFor(() => expect(page.bar()).toHaveTextContent('1 time not posted as Dana'));
+    expect(within(page.bar() as HTMLElement).queryByRole('textbox', { name: 'Your name' })).not.toBeInTheDocument();
   });
 });
 

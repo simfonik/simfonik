@@ -109,16 +109,18 @@ type Props = {
  */
 export function TrackIds({ side, position, time, isPlaying, onToggle, length = null }: Props) {
   const { rows, order } = useSide(side);
-  const { say, unsay, post: send, asked, answered } = useTapeTrackIds();
+  const { read, say, unsay, post: send, asked, answered } = useTapeTrackIds();
   const played = usePlayhead((head) => head.started);
   const now = Math.floor(time);
   const playing = rows[playingAt(rows, time)] ?? null;
-  // A track could start at this moment: the tape has been played, and nothing starts within a moment of here.
-  const free = played && startingAt(rows, now) < 0;
+  // A track could start at this moment: the tape has been played, the comments are back (what is said is
+  // said on top of them), and nothing starts within a moment of here.
+  const free = played && read !== 'reading' && startingAt(rows, now) < 0;
   // The blanks are for one moment of the tape, fixed when they open, while the tape plays on underneath.
   const [at, setAt] = useState<number | null>(null);
-  // The mark the blanks are for, where the tape already has one at that moment.
-  const [mark, setMark] = useState<Row | null>(null);
+  // The mark the blanks are for, where the side has one at that moment: as the side has it now, which may
+  // not be as it was when the blanks opened (the visitor may have posted it since, or the comments changed).
+  const mark = at === null ? null : (rows[startingAt(rows, at)] ?? null);
   // Where the tape was when the blanks opened, if the mark could be moved there: later than it, and in it.
   const [later, setLater] = useState<number | null>(null);
   const [doing, setDoing] = useState<Act>('id');
@@ -147,7 +149,6 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
     const onPhone = window.matchMedia(PHONE).matches;
     const remembered = rememberedName();
     setAt(start);
-    setMark(marked);
     // A mark made too early can be moved to here: the tape is in that track, and a track could start at this
     // moment. (The visitor's own unposted mark is taken back and made again.)
     setLater(marked && !isUnposted(marked) && marked === playing && free ? now : null);

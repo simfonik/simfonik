@@ -33,6 +33,8 @@ type Setup = {
   down?: boolean;
   /** Put together as React does in development, where everything that sets a page up is run twice. */
   strict?: boolean;
+  /** The first reading of the comments is held back until `hold` is let go: `page.reading.go()`. */
+  slow?: boolean;
 };
 
 const ONE_SIDE: TapeSide[] = [{ position: 'A' }];
@@ -47,7 +49,7 @@ function Marks({ side }: { side: number }) {
   return <p data-testid="marks">{marks.map((mark) => `${mark.start}${mark.known ? '' : '?'}`).join(' ')}</p>;
 }
 
-export function tapePage({ sides = ONE_SIDE, archive = [], posted = [], phone = false, name = 'Dana', length = null, kept, down = false, strict = false }: Setup = {}) {
+export function tapePage({ sides = ONE_SIDE, archive = [], posted = [], phone = false, name = 'Dana', length = null, kept, down = false, strict = false, slow = false }: Setup = {}) {
   document.body.innerHTML = '';
   window.localStorage.clear();
   if (name) window.localStorage.setItem('simfonik:id-name', name);
@@ -68,6 +70,7 @@ export function tapePage({ sides = ONE_SIDE, archive = [], posted = [], phone = 
     /** Holds every reading of the comments back until let go, so a test can look at the page while it waits. */
     hold: null as Promise<void> | null,
   };
+  const reading = slow ? hold(server) : { go: () => {} };
   const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
   const fetched = vi.fn(async (url: RequestInfo | URL, init?: RequestInit) => {
     const to = String(url);
@@ -122,6 +125,7 @@ export function tapePage({ sides = ONE_SIDE, archive = [], posted = [], phone = 
   return {
     user: userEvent.setup(),
     server,
+    reading,
     went,
     toggled,
     unmount: view.unmount,

@@ -207,6 +207,25 @@ describe('a point the visitor marked without a name, not yet posted', () => {
   });
 });
 
+describe('the blanks, open for a mark while the mark changes', () => {
+  it('act on the mark as it is now: one the visitor posts from the bar is then taken away with a post, not just forgotten', async () => {
+    const page = tapePage();
+    await page.read();
+    await page.at(100);
+    await page.user.click(page.button(NEW_UNKNOWN));
+    await page.at(130);
+    await page.user.click(page.button('Unknown track. Know it? ID it'));
+    // With the blanks still open, the visitor posts what they have.
+    await page.user.click(within(page.bar() as HTMLElement).getByRole('button', { name: 'Post' }));
+    await waitFor(() => expect(page.posts()).toEqual(['[1:40] ? - ?']));
+    await waitFor(() => expect(page.bar()).toBeNull());
+
+    await page.user.click(page.button('Remove this mark'));
+    await waitFor(() => expect(page.posts()).toEqual(['[1:40] ? - ?', '[1:40] no track starts here']));
+    await waitFor(() => expect(page.rows()).toEqual([]));
+  });
+});
+
 describe('a line of the list the visitor has given a time, not yet posted', () => {
   const timed = async () => {
     const page = tapePage({ sides: LISTED, posted: [{ by: 'Josh', says: '[0:00] The Prodigy - Hyperspeed' }] });

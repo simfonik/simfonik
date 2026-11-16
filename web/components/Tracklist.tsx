@@ -2,7 +2,6 @@
 
 import { FormEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { idPlace, splitPost, type RunningOrder } from '../lib/track-ids/compose';
-import { rememberedName } from '../lib/track-ids/post';
 import { contributors, couldStartAt, playingAt, type Row } from '../lib/track-ids/side';
 import { formatTime } from '../lib/time-utils';
 import { usePlayhead, useTapeTrackIds } from './TapeTrackIds';
@@ -66,41 +65,39 @@ const chevron = (
  * and out of the comments, where a run of them would bury the talk.
  */
 export function Tracklist() {
-  const { tape, sides, read, unposted, goTo, playhead, say, unsay, post: send, ask } = useTapeTrackIds();
+  const { tape, sides, read, name: remembered, unposted, goTo, playhead, say, unsay, post: send, ask } = useTapeTrackIds();
   const several = tape.length > 1;
   const labelled = several || Boolean(tape[0]?.title);
   const place = (side: number) => (several ? tape[side].position : null);
 
   // What the list needs to know of where the tape is: the side playing, the row playing on it, and the rows
-  // that could be given this moment as their start.
+  // that could be given this moment as their start (none until the comments are back: a time is given on
+  // top of what they say). A time given is a whole second, so it is the whole second that is asked about.
   const [liveSide, litRow, couldStart] = usePlayhead((head) => {
     if (!head.started) return '-1|-1|';
     const rows = sides[head.side]?.rows ?? [];
-    return `${head.side}|${playingAt(rows, head.time)}|${couldStartAt(rows, head.time).join(',')}`;
+    return `${head.side}|${playingAt(rows, head.time)}|${read === 'reading' ? '' : couldStartAt(rows, Math.floor(head.time)).join(',')}`;
   }).split('|');
   const live = Number(liveSide);
   const lit = Number(litRow);
   const markable = useMemo(() => new Set(couldStart ? couldStart.split(',').map(Number) : []), [couldStart]);
 
   // Posting the visitor's times.
-  const [remembered, setRemembered] = useState('');
   const [name, setName] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [thanks, setThanks] = useState('');
   const nameField = useRef<HTMLInputElement>(null);
   const messageId = useId();
-  const some = unposted.length > 0;
-  useEffect(() => {
-    if (some) setRemembered(rememberedName());
-  }, [some]);
+  // Not before the comments are back: until then the visitor's changes aren't on the page to be seen.
+  const some = read !== 'reading' && unposted.length > 0;
 
   const mark = (side: number, k: number) => {
     const head = playhead();
     const time = Math.floor(head.time);
     const rows = sides[side].rows;
     // The + was there when it was pressed; the tape may have reached another track's start since.
-    if (!head.started || head.side !== side || !couldStartAt(rows, time).includes(k)) return;
+    if (head.side !== side || !couldStartAt(rows, time).includes(k)) return;
     // A line the list has down as unknown is marked, not named: it is still nobody's ID.
     say({ side, time, artist: rows[k].known ? rows[k].artist : '', title: rows[k].known ? rows[k].title : '' });
     setThanks('');
