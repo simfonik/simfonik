@@ -192,7 +192,7 @@ describe('the bar that posts a visitor’s times', () => {
     await page.at(221);
     await page.user.click(page.plus('Butsch — The Count'));
     const bar = () => page.bar() as HTMLElement;
-    expect(bar()).toHaveTextContent('1 time not posted');
+    expect(bar()).toHaveTextContent('1 ID pending');
     expect(bar()).not.toHaveTextContent(' as ');
 
     await page.user.click(within(bar()).getByRole('button', { name: 'Post' }));
@@ -203,7 +203,7 @@ describe('the bar that posts a visitor’s times', () => {
     await page.user.type(within(bar()).getByRole('textbox', { name: 'Your name' }), 'Dana{Enter}');
     await waitFor(() => expect(page.posts()).toEqual(['[3:41] Butsch - The Count']));
     await waitFor(() => expect(page.bar()).toBeNull());
-    expect(screen.getAllByRole('status').some((status) => status.textContent === 'Posted 1 time. Thanks.')).toBe(true);
+    expect(screen.getAllByRole('status').some((status) => status.textContent === 'Posted 1 ID. Thanks.')).toBe(true);
     expect(window.localStorage.getItem('simfonik:id-name')).toBe('Dana');
   });
 });

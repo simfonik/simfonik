@@ -16,7 +16,7 @@ const names = (people: string[]) => {
   return c ? `${a}, ${b}, and ${c}` : b ? `${a} and ${b}` : a;
 };
 
-const count = (n: number) => (n === 1 ? '1 time' : `${n} times`);
+const count = (n: number) => (n === 1 ? '1 ID' : `${n} IDs`);
 
 /**
  * How far along a side is, in a few words, by what the comments have: the visitor's unposted times are not
@@ -189,22 +189,13 @@ export function Tracklist() {
           )}
         </div>
         {some && (
-          <form onSubmit={post} noValidate className="tracklist-post" aria-label="Post your times">
+          <form onSubmit={post} noValidate className="tracklist-post" aria-label="Post your IDs">
             {/* The page's own column, so the bar's words start on the edge everything else does. With a name
                 to ask for, the count has the bar's first line and the name and Post its second. */}
             <div className="mx-auto max-w-7xl px-4 sm:px-6">
               <div className="flex max-w-3xl flex-wrap items-center gap-x-4">
                 <p className={`${small} min-w-0 ${remembered ? 'flex-1' : 'w-full pt-2'}`}>
-                  {/* Two phrases that part cleanly where the bar is too narrow for both on a line. */}
-                  <span className="inline-block">{count(unposted.length)} not posted</span>
-                  {remembered && (
-                    <>
-                          {' '}
-                          <span className="inline-block">
-                            as <span className="text-[var(--text)]">{remembered}</span>
-                          </span>
-                    </>
-                  )}
+                  {count(unposted.length)} pending
                 </p>
                 {!remembered && (
                   <input

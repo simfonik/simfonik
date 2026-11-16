@@ -52,11 +52,11 @@ describe('a moment with nothing marked', () => {
     await page.at(100.7);
     await page.user.click(page.button(NEW_UNKNOWN));
 
-    expect(page.line()).toBe('Unknown track. Know it? ID itNot posted');
+    expect(page.line()).toBe('Unknown track. Know it? ID itPending');
     expect(page.marks()).toBe('100?');
     expect(page.rows()).toEqual(['0:01:40Unknown trackUndo']);
     expect(page.lit()).toBe('0:01:40Unknown trackUndo');
-    expect(page.bar()).toHaveTextContent('1 time not posted as Dana');
+    expect(page.bar()).toHaveTextContent('1 ID pending');
     expect(screen.getByRole('button', { name: 'Play from 0:01:40, your time, not posted yet' })).toBeInTheDocument();
     expect(page.posts()).toEqual([]);
   });
@@ -94,10 +94,10 @@ describe('a moment with nothing marked', () => {
     await page.user.click(page.plus('Butsch — The Count'));
 
     expect(page.rows()).toEqual(['01The Prodigy — Hyperspeed', '0:03:41Butsch — The CountUndo', '03Rhythm For Reasons — Grand National', '04Phenomania — Caramelle']);
-    expect(page.line()).toBe('Butsch — The CountNot posted');
+    expect(page.line()).toBe('Butsch — The CountPending');
     expect(page.marks()).toBe('221');
     expect(page.lit()).toBe('0:03:41Butsch — The CountUndo');
-    expect(page.bar()).toHaveTextContent('1 time not posted as Dana');
+    expect(page.bar()).toHaveTextContent('1 ID pending');
     // It is not the side's yet: nothing is counted as timed, and nobody is credited.
     expect(screen.getByText('0 of 4 timed')).toBeInTheDocument();
     expect(screen.queryByText(/^IDs by/)).not.toBeInTheDocument();
@@ -175,14 +175,17 @@ describe('a point the visitor marked without a name, not yet posted', () => {
     expect(page.posts()).toEqual([]);
   });
 
-  it('Starts at … instead: it is moved to where the tape is, still the visitor’s own, and nothing is posted', async () => {
+  it('Use, then Post: it is moved to where the tape is, still the visitor’s own, and nothing is posted', async () => {
     const page = await marked();
     await page.at(130);
     await page.user.click(page.button('Unknown track. Know it? ID it'));
-    await page.user.click(page.button('Starts at 0:02:10 instead'));
+    await page.user.click(page.button('Use the tape’s time, 0:02:10'));
+    // Nothing has moved until it is posted.
+    expect(page.marks()).toBe('100?');
+    await page.user.type(screen.getByRole('textbox', { name: 'Starts at' }), '{Enter}');
     expect(page.rows()).toEqual(['0:02:10Unknown trackUndo']);
     expect(page.marks()).toBe('130?');
-    expect(page.bar()).toHaveTextContent('1 time not posted');
+    expect(page.bar()).toHaveTextContent('1 ID pending');
     expect(page.posts()).toEqual([]);
   });
 
@@ -194,7 +197,7 @@ describe('a point the visitor marked without a name, not yet posted', () => {
     await page.user.clear(time);
     await page.user.type(time, '1:35{Enter}');
     expect(page.rows()).toEqual(['0:01:35Unknown trackUndo']);
-    expect(page.bar()).toHaveTextContent('1 time not posted');
+    expect(page.bar()).toHaveTextContent('1 ID pending');
     expect(page.posts()).toEqual([]);
   });
 
@@ -232,7 +235,7 @@ describe('a point the visitor marked without a name, not yet posted', () => {
     await page.user.click(page.button(NEW_UNKNOWN));
     expect(page.rows()).toEqual(['0:00:40Unknown trackUndo', '0:01:40Unknown trackUndo']);
     expect(page.marks()).toBe('40? 100?');
-    expect(page.bar()).toHaveTextContent('2 times not posted');
+    expect(page.bar()).toHaveTextContent('2 IDs pending');
   });
 
   it('Post: goes up with the rest as one comment, and stays on the page, as posted, while the comments are read again', async () => {
@@ -267,7 +270,7 @@ describe('a point the visitor marked without a name, not yet posted', () => {
     await back.read();
     await waitFor(() => expect(back.rows()).toEqual(['0:01:40Unknown trackUndo']));
     expect(back.marks()).toBe('100?');
-    expect(back.bar()).toHaveTextContent('1 time not posted');
+    expect(back.bar()).toHaveTextContent('1 ID pending');
   });
 });
 
@@ -307,7 +310,7 @@ describe('a line of the list the visitor has given a time, not yet posted', () =
     expect(page.line()).toBe('The Prodigy — HyperspeedNew IDNew unknown');
     await page.at(230);
     expect(page.lit()).toBe('0:03:41Butsch — The CountUndo');
-    expect(page.line()).toBe('Butsch — The CountNot postedNew IDNew unknown');
+    expect(page.line()).toBe('Butsch — The CountPendingNew IDNew unknown');
     expect(screen.getByRole('button', { name: 'Now playing: Butsch — The Count. Correct this ID' })).toHaveAttribute('title', 'Yours, not posted yet. Press to correct it.');
   });
 
@@ -504,7 +507,7 @@ describe('a track the comments have ID’d', () => {
     expect(startsAt()).toHaveValue('0:04:52');
   });
 
-  it('Edit, on its row, with the tape before it: moves it earlier, to where the tape is, in one post', async () => {
+  it('Edit, on its row, with the tape before it; Use, then Post: moves it earlier, to where the tape is, in one post', async () => {
     const page = tape();
     await page.read();
     await page.at(280.2);
@@ -514,31 +517,23 @@ describe('a track the comments have ID’d', () => {
     expect(screen.getByRole('form', { name: 'ID the track at 0:05:00' })).toBeInTheDocument();
     // The tape is left where it is: that is where the track is to be moved to.
     expect(page.went).not.toHaveBeenCalled();
-    await page.user.click(page.button('Starts at 0:04:40 instead'));
+    await page.user.click(page.button('Use the tape’s time, 0:04:40'));
+    expect(startsAt()).toHaveValue('0:04:40');
+    expect(page.posts()).toEqual([]);
+    await page.user.type(startsAt(), '{Enter}');
     await waitFor(() => expect(page.posts()).toEqual(['[4:40] Joey Beltram - Energy Flash\n[5:00] no track starts here']));
     await waitFor(() => expect(page.rows()).toEqual(['0:00:00Orbital — Chime', '0:04:40Joey Beltram — Energy Flash']));
     expect(page.marks()).toBe('0 280');
   });
 
-  it('Edit, on its row, with another track between it and the tape: its name and its removal, and no move', async () => {
-    const page = tape({ posted: [{ by: 'Josh', says: '[0:00] Orbital - Chime\n[5:00] Joey Beltram - Energy Flash\n[10:00] LFO - LFO' }] });
-    await page.read();
-    await page.at(100);
-    expect(page.editable()).toEqual(['0:00:00Orbital — Chime', '0:05:00Joey Beltram — Energy Flash']);
-    await page.user.click(page.button('Edit LFO — LFO, at 0:10:00'));
-    const blanks = within(screen.getByRole('form', { name: 'ID the track at 0:10:00' }));
-    expect(artist()).toHaveValue('LFO');
-    expect(blanks.getByRole('button', { name: 'Remove this ID' })).toBeInTheDocument();
-    expect(page.has(/instead$/)).toBe(false);
-  });
-
-  it('Starts at … instead: moves it to where the tape is, in one post, and it is there everywhere at once', async () => {
+  it('Use, then Post, from the line: moves the track playing to where the tape is, and it is there everywhere at once', async () => {
     const page = tape();
     await page.read();
     await page.at(341.5);
     await page.user.click(page.button('Now playing: Joey Beltram — Energy Flash. Correct this ID'));
     const reading = hold(page.server);
-    await page.user.click(page.button('Starts at 0:05:41 instead'));
+    await page.user.click(page.button('Use the tape’s time, 0:05:41'));
+    await page.user.type(startsAt(), '{Enter}');
     await waitFor(() => expect(page.posts()).toEqual(['[5:00] no track starts here\n[5:41] Joey Beltram - Energy Flash']));
     await waitFor(() => expect(page.rows()).toEqual(['0:00:00Orbital — Chime', '0:05:41Joey Beltram — Energy Flash']));
     expect(page.marks()).toBe('0 341');
@@ -684,7 +679,7 @@ describe('when the comments change underneath the visitor', () => {
     await page.read();
     await page.at(221);
     await page.user.click(page.plus('Butsch — The Count'));
-    expect(page.bar()).toHaveTextContent('1 time not posted');
+    expect(page.bar()).toHaveTextContent('1 ID pending');
     // Someone else posts that line's time, two seconds off, and the page reads the comments again.
     page.server.comments.push({ id: 99, tape_id: 'tape-1', author_name: 'Softboiled', content: '[3:43] Butsch - The Count', created_at: '2026-11-15T13:00:00.000Z' });
     await waitFor(() => page.shared().reread());
@@ -728,12 +723,12 @@ describe('on a phone, where the tray says what the line does', () => {
 
     await page.user.click(page.plus('Butsch — The Count'));
     await page.at(710);
-    expect(page.tray()).toHaveTextContent('Butsch0:11:50The CountNot postedEdit IDNew track');
+    expect(page.tray()).toHaveTextContent('Butsch0:11:50The CountPendingEdit IDNew track');
 
     await page.at(900);
     await page.user.click(within(page.tray() as HTMLElement).getByRole('button', { name: NEW_TRACK }));
-    expect(page.tray()).toHaveTextContent('Unknown track0:15:00Marked by youNot postedID itNew track');
+    expect(page.tray()).toHaveTextContent('Unknown track0:15:00Marked by youPendingID itNew track');
     expect(within(page.tray() as HTMLElement).getByRole('button', { name: NEW_TRACK })).toHaveAttribute('aria-disabled', 'true');
-    expect(page.bar()).toHaveTextContent('2 times not posted');
+    expect(page.bar()).toHaveTextContent('2 IDs pending');
   });
 });

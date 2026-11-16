@@ -164,7 +164,7 @@ export function tapePage({ sides = ONE_SIDE, archive = [], posted = [], phone = 
     /** The rows that show "Edit" to a finger: the times that could be moved to where the tape is, and the row playing. */
     editable: () => [...(list()?.querySelectorAll('ol > li:is([data-movable], [aria-current])') ?? [])].map(reads),
     /** The bar that posts the visitor's unposted times, or null. */
-    bar: () => screen.queryByRole('form', { name: 'Post your times' }),
+    bar: () => screen.queryByRole('form', { name: 'Post your IDs' }),
     /** What has been posted through the page, as the text of each comment. */
     posts: () => fetched.mock.calls.filter(([url]) => String(url) === '/api/comments/submit').map(([, init]) => JSON.parse(String(init?.body)).content as string),
     /** How many times the page has read the comments. */

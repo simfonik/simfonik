@@ -116,25 +116,29 @@ describe('the blanks, in the line under the player', () => {
     await waitFor(() => expect(page.posts()).toEqual(['[0:00] no track starts here']));
   });
 
-  it('offer no move to the moment the track already has, or to a moment another track starts within a moment of', async () => {
+  it('have the tape’s time beside the track’s, following the tape: pressed, it is written into the blank, and nothing is posted', async () => {
     const page = tapePage({ posted: [...KNOWN, { by: 'Josh', says: '[5:00] LFO - LFO' }] });
     await page.read();
     await page.at(0.6);
     await page.user.click(page.button('Now playing: Orbital — Chime. Correct this ID'));
-    expect(page.has(/instead$/)).toBe(false);
-    await page.user.keyboard('{Escape}');
-    // A few seconds on is another moment to move it to: a time is put right by as little as a second.
+    const time = screen.getByRole('textbox', { name: 'Starts at' });
+    // It is the time the blank already has: nothing to use.
+    expect(page.button('Use the tape’s time, 0:00:00')).toHaveAttribute('aria-disabled', 'true');
+    // The tape plays on under the blanks, and it follows. A time is put right by as little as a second.
     await page.at(3);
-    await page.user.click(page.button('Now playing: Orbital — Chime. Correct this ID'));
-    expect(page.has('Starts at 0:00:03 instead')).toBe(true);
-    await page.user.keyboard('{Escape}');
+    expect(page.button('Use the tape’s time, 0:00:03')).toHaveAttribute('aria-disabled', 'false');
+    expect(page.button('Use the tape’s time, 0:00:03')).toHaveTextContent('Use 0:00:03');
+    // Not where another track starts within a moment: pressed, it does nothing.
     await page.at(297);
-    await page.user.click(page.button('Now playing: Orbital — Chime. Correct this ID'));
-    expect(page.has(/instead$/)).toBe(false);
-    await page.user.keyboard('{Escape}');
+    expect(page.button('Use the tape’s time, 0:04:57')).toHaveAttribute('aria-disabled', 'true');
+    await page.user.click(page.button('Use the tape’s time, 0:04:57'));
+    expect(time).toHaveValue('0:00:00');
     await page.at(100);
-    await page.user.click(page.button('Now playing: Orbital — Chime. Correct this ID'));
-    expect(page.has('Starts at 0:01:40 instead')).toBe(true);
+    await page.user.click(page.button('Use the tape’s time, 0:01:40'));
+    expect(time).toHaveValue('0:01:40');
+    expect(page.button('Use the tape’s time, 0:01:40')).toHaveAttribute('aria-disabled', 'true');
+    expect(page.posts()).toEqual([]);
+    expect(page.has(/instead$/)).toBe(false);
   });
 
   describe('on a side with a list of its tracks', () => {
@@ -228,7 +232,7 @@ describe('the sheet, on a phone', () => {
     await page.user.click(within(page.tray() as HTMLElement).getByRole('button', { name: 'Edit ID' }));
     const sheet = screen.getByRole('dialog', { name: 'ID the track at 0:00:00' });
     expect(within(sheet).getByRole('button', { name: 'Remove this ID' })).toBeInTheDocument();
-    expect(within(sheet).getByRole('button', { name: 'Starts at 0:01:40 instead' })).toBeInTheDocument();
+    expect(within(sheet).getByRole('button', { name: 'Use the tape’s time, 0:01:40' })).toBeInTheDocument();
     // And the time, which can be typed over.
     expect(within(sheet).getByRole('textbox', { name: 'Starts at' })).toHaveValue('0:00:00');
   });

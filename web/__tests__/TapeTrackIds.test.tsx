@@ -83,7 +83,7 @@ describe('the visitor’s changes', () => {
     page.reading.go();
     await page.read();
     await waitFor(() => expect(page.rows()).toEqual(['0:01:40Unknown trackUndo', '+Orbital — Chime', '+LFO — LFO']));
-    expect(page.bar()).toHaveTextContent('1 time not posted');
+    expect(page.bar()).toHaveTextContent('1 ID pending');
     expect(page.pluses()).toEqual(['Orbital — Chime', 'LFO — LFO']);
     expect(page.has(NEW_UNKNOWN)).toBe(true);
   });
@@ -103,7 +103,7 @@ describe('the visitor’s changes', () => {
     await page.read();
     await waitFor(() => expect(page.rows()).toEqual(['0:01:40Unknown trackUndo', '0:03:20Unknown trackUndo']));
     expect(page.shared().unposted).toHaveLength(2);
-    expect(page.bar()).toHaveTextContent('2 times not posted');
+    expect(page.bar()).toHaveTextContent('2 IDs pending');
   });
 
   it('leave out anything kept on the device that isn’t one of them', async () => {
@@ -146,7 +146,7 @@ describe('the visitor’s name', () => {
     await page.user.type(screen.getByRole('textbox', { name: 'Title' }), 'Chime{Enter}');
     await page.user.type(within(screen.getByRole('form', { name: 'ID the track at 0:13:20' })).getByRole('textbox', { name: 'Your name' }), 'Dana{Enter}');
     await waitFor(() => expect(page.posts()).toEqual(['[13:20] Orbital - Chime']));
-    await waitFor(() => expect(page.bar()).toHaveTextContent('1 time not posted as Dana'));
+    await waitFor(() => expect(page.bar()).toHaveTextContent('1 ID pending'));
     expect(within(page.bar() as HTMLElement).queryByRole('textbox', { name: 'Your name' })).not.toBeInTheDocument();
   });
 });
@@ -186,7 +186,7 @@ describe('a post', () => {
       const page = tapePage();
       await page.read();
       for (const change of sitting) page.shared().say(change);
-      await waitFor(() => expect(page.bar()).toHaveTextContent('40 times not posted'));
+      await waitFor(() => expect(page.bar()).toHaveTextContent('40 IDs pending'));
       await page.user.click(within(page.bar() as HTMLElement).getByRole('button', { name: 'Post' }));
       await waitFor(() => expect(page.bar()).toBeNull());
       expect(page.posts().length).toBeGreaterThan(1);
@@ -200,7 +200,7 @@ describe('a post', () => {
       const page = tapePage();
       await page.read();
       for (const change of sitting) page.shared().say(change);
-      await waitFor(() => expect(page.bar()).toHaveTextContent('40 times not posted'));
+      await waitFor(() => expect(page.bar()).toHaveTextContent('40 IDs pending'));
       // The site takes the first comment and refuses the second.
       const fetched = global.fetch as unknown as Mock;
       const answer = fetched.getMockImplementation() as typeof fetch;
@@ -214,7 +214,7 @@ describe('a post', () => {
       expect(page.server.comments).toHaveLength(1);
       const went = page.server.comments[0].content.split('\n').length;
       expect(went).toBeGreaterThan(5);
-      await waitFor(() => expect(page.bar()).toHaveTextContent(`${40 - went} times not posted`));
+      await waitFor(() => expect(page.bar()).toHaveTextContent(`${40 - went} IDs pending`));
       expect(page.shared().sides[0].rows).toHaveLength(40);
     });
   });

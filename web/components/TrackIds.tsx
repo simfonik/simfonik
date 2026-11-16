@@ -4,15 +4,15 @@ import { FormEvent, RefObject, useEffect, useId, useLayoutEffect, useRef, useSta
 import { createPortal } from 'react-dom';
 import { idLabel, idPlace } from '../lib/track-ids/compose';
 import { rememberedName } from '../lib/track-ids/post';
-import { canMoveTo, canStartAt, isUnposted, playingAt, saidBy, startingAt, suggest, type Change, type Row } from '../lib/track-ids/side';
+import { canStartAt, isUnposted, playingAt, saidBy, startingAt, suggest, type Change, type Row } from '../lib/track-ids/side';
 import { formatTime, parseTime } from '../lib/time-utils';
 import { usePlayhead, useSide, useTapeTrackIds } from './TapeTrackIds';
 
 /** The most an artist or a title may run to, in characters: far past any real one, and a comment line stays a line. */
 const NAME_LENGTH = 150;
 
-/** What the blanks are about to do: post what is in them, take the mark away, or move it to where the tape is. */
-type Act = 'id' | 'remove' | 'move';
+/** What the blanks are about to do: post what is in them, or take the mark away. */
+type Act = 'id' | 'remove';
 
 /**
  * A screen as narrow as a phone's. There the blanks are a sheet over the page, with a row each, and the line
@@ -93,10 +93,9 @@ type Props = {
  * (lib/track-ids/compose.ts), and is on the page as posted from that moment.
  *
  * The blanks are always about one mark: the track playing, or, with nothing playing, a new one at this
- * moment. A name already there is pressed to put it right. A mark can also be taken away, or moved to where
- * the tape is now, earlier or later, as long as no other track starts between the two; both are posts like
- * any other. The time in the blanks is a blank too: typed over, the track is moved to the time typed, wherever
- * a track could start.
+ * moment. A name already there is pressed to put it right, and a mark can be taken away; both are posts like
+ * any other. The time in the blanks is a blank too: typed over, or given the tape's time with "Use", the
+ * track is moved there with the same Post, wherever a track could start.
  *
  * A track that isn't the one playing is reached from its row in the tracklist, and with a mouse its blanks
  * open in that row, where the visitor is looking, and the tape is left where it is.
@@ -133,8 +132,6 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   // The mark the blanks are for, where the side has one at that moment: as the side has it now, which may
   // not be as it was when the blanks opened (the visitor may have posted it since, or the comments changed).
   const mark = at === null ? null : (rows[startingAt(rows, at)] ?? null);
-  // Where the tape was when the blanks opened, if the mark could be moved there.
-  const [there, setThere] = useState<number | null>(null);
   const [doing, setDoing] = useState<Act>('id');
   const [sheet, setSheet] = useState(false);
   // The visitor's name is asked for the first time only. The line has room for one thing at a time, so it
@@ -166,7 +163,6 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
     setAt(start);
     setWhen(formatTime(start));
     setEditing(inRow && !onPhone ? { position, time: start } : null);
-    setThere(marked && played && read !== 'reading' && canMoveTo(rows, marked, now, end) ? now : null);
     setDoing('id');
     setArtist(marked?.known ? marked.artist : '');
     setTitle(marked?.known ? marked.title : '');
@@ -326,11 +322,10 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
       setThanks('Taken back.');
       return leave();
     }
-    // Where the track is to start: where the tape was, for "Starts at … instead", or else the time in its
-    // blank. A time other than the one it has must be one a track could start at with this one set aside.
+    // Where the track is to start is the time in its blank. A time other than the one it has must be one a
+    // track could start at with this one set aside.
     let to = at;
-    if (what === 'move' && there !== null) to = there;
-    else if (what === 'id') {
+    if (what === 'id') {
       const entered = parseTime(when);
       if (entered === null) return refuse('Enter the time like 0:05:00.', timeField.current);
       const others = rows.filter((row) => row !== mark);
@@ -342,7 +337,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
     const moved = mark !== null && to !== at;
     const renamed = artist.trim() !== (mark?.known ? mark.artist : '') || title.trim() !== (mark?.known ? mark.title : '');
     // Moved and nothing more, the visitor's own is said again at the new moment, and waits to be posted as it did.
-    if (own && moved && !(what === 'id' && renamed)) {
+    if (own && moved && !renamed) {
       unsay(own);
       say({ side, time: to, artist, title });
       setThanks(`Moved to ${idPlace(position, to)}. Not posted yet.`);
@@ -381,30 +376,38 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   const from = order?.by ? `From ${order.by}’s list` : 'From the tape’s tracklist';
   const posting = (
     <span className="grid place-items-center">
-      <span className={`col-start-1 row-start-1 ${sending ? 'invisible' : ''}`}>{doing === 'remove' ? 'Remove' : doing === 'move' ? 'Move' : 'Post'}</span>
+      <span className={`col-start-1 row-start-1 ${sending ? 'invisible' : ''}`}>{doing === 'remove' ? 'Remove' : 'Post'}</span>
       <span className={`col-start-1 row-start-1 ${sending ? '' : 'invisible'}`}>…</span>
     </span>
   );
   // What can be done with a mark already on the tape besides putting its name right.
+  // The visitor's own unposted mark is taken back, as on its row in the tracklist, and nothing is posted. Any
+  // other is taken away with a post.
   const upkeep = mark && (
-    <>
-      {there !== null && (
-        <button type="button" onClick={() => act('move')} aria-disabled={sending} className="track-ids-post">
-          Starts at {formatTime(there)} instead
-        </button>
-      )}
-      {/* The visitor's own unposted mark is taken back, as on its row in the tracklist, and nothing is
-          posted. Any other is taken away with a post. */}
-      <button type="button" onClick={() => act('remove')} aria-disabled={sending} className="track-ids-post">
-        {isUnposted(mark) ? 'Undo' : mark.known ? 'Remove this ID' : 'Remove this mark'}
-      </button>
-    </>
+    <button type="button" onClick={() => act('remove')} aria-disabled={sending} className="track-ids-post">
+      {isUnposted(mark) ? 'Undo' : mark.known ? 'Remove this ID' : 'Remove this mark'}
+    </button>
   );
-  // The time, in the same quiet type as before, and a blank: with the side's label before it where the tape has sides.
+  // The time, in the same quiet type as before, and a blank: with the side's label before it where the tape
+  // has sides. Beside it, once the tape has been played, is where the tape is now, which follows the tape and
+  // is pressed to write that time into the blank: a time found by ear needs no typing. Nothing is posted by
+  // it. It is marked as unavailable, and keeps its place, while that is the time the blank already has or
+  // one no track could start at with this one set aside.
+  const usable = at !== null && formatTime(now) !== when && (now === at || canStartAt(rows.filter((row) => row !== mark), now, end));
+  const use = () => {
+    if (!usable) return;
+    setWhen(formatTime(now));
+    settle();
+  };
   const timeBlank = (
     <>
       {position !== null && <span className="track-ids-where">{position}</span>}
       <input ref={timeField} value={when} onChange={typed(setWhen)} onKeyDown={nudge} aria-label="Starts at" aria-describedby={message ? messageId : undefined} inputMode="numeric" autoComplete="off" maxLength={9} enterKeyHint="send" className="track-ids-field track-ids-when" />
+      {played && !(askName && !sheet) && (
+        <button type="button" onClick={use} aria-disabled={!usable} className="track-ids-post track-ids-use" aria-label={`Use the tape’s time, ${formatTime(now)}`} title="Where the tape is now">
+          Use {formatTime(now)}
+        </button>
+      )}
     </>
   );
   const cross = (
@@ -461,7 +464,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
           ))}
         </div>
       )}
-      {upkeep && !askName && <div className="flex flex-wrap gap-x-6">{upkeep}</div>}
+      {upkeep && !askName && <div className="flex">{upkeep}</div>}
       {complaint}
     </form>
   );
@@ -481,7 +484,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
               {playing ? 'Unknown track. Know it?' : 'Know this track?'} <span className="track-ids-cue">ID it</span>
             </button>
           )}
-          {unposted && <span className="track-ids-state">Not posted</span>}
+          {unposted && <span className="track-ids-state">Pending</span>}
           {/* Not within a moment of a track's start: what is said there is said of that track. */}
           {free && playing?.known && (
             <button type="button" onClick={openNew} className="track-ids-post" aria-label="New ID: a track starts here, and you know what it is" title="A track starts here, and you know what it is">
@@ -543,10 +546,10 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
             {/* A phone's keyboard would put "Altern 8" right and offer words for "Orbital": neither helps. The
                 blanks stand a little apart, so each reads as a line of its own. */}
             <div className="grid gap-2">
-              <label className="id-sheet-label flex items-center gap-3">
-                Starts at
+              <div className="id-sheet-label flex items-center gap-3">
+                <span aria-hidden>Starts at</span>
                 {timeBlank}
-              </label>
+              </div>
               <input ref={artistField} value={artist} onChange={typed(setArtist)} onKeyDown={onward(titleField)} placeholder="Artist" aria-label="Artist" maxLength={NAME_LENGTH} aria-describedby={message ? messageId : undefined} autoComplete="off" autoCapitalize="words" autoCorrect="off" spellCheck={false} enterKeyHint="next" className="track-ids-field" />
               <input ref={titleField} value={title} onChange={typed(setTitle)} onKeyDown={askName && !name.trim() ? onward(nameField) : undefined} placeholder="Title" aria-label="Title" maxLength={NAME_LENGTH} autoComplete="off" autoCapitalize="words" autoCorrect="off" spellCheck={false} enterKeyHint={askName && !name.trim() ? 'next' : 'send'} className="track-ids-field" />
               {askName && (
@@ -561,7 +564,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
                 </button>
               </p>
             )}
-            {upkeep && <div className="flex flex-wrap justify-between gap-x-6">{upkeep}</div>}
+            {upkeep && <div className="flex justify-end">{upkeep}</div>}
             {complaint}
           </form>
         </dialog>
@@ -577,7 +580,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
             </p>
             <p className="player-tray-line player-tray-sub">
               <span className="min-w-0 flex-1 truncate">{playing ? (playing.known ? (playing.artist ? playing.title : '') : unposted ? 'Marked by you' : 'Nobody has ID’d it yet') : 'Know this track? ID it.'}</span>
-              {unposted && <span className="track-ids-state flex-none">Not posted</span>}
+              {unposted && <span className="track-ids-state flex-none">Pending</span>}
             </p>
             <div className="player-tray-row">
               <button type="button" onClick={onToggle} className="player-tray-btn player-tray-primary" aria-label={isPlaying ? 'Pause' : 'Play'}>

@@ -437,6 +437,13 @@ body::before {
    the time it stands in for until it is the blank being typed in. */
 .track-ids-when { flex: none; width: 8ch; font-variant-numeric: tabular-nums; letter-spacing: normal; color: var(--muted); }
 .track-ids-when:focus-visible { color: var(--text); }
+/* "Use 0:01:20", beside it: the tape's time, in columns so it doesn't shift as the seconds go by, and faint
+   while there is nothing it could do. */
+.track-ids-use { font-variant-numeric: tabular-nums; color: var(--muted); }
+.track-ids-use[aria-disabled="true"] { opacity: 0.4; cursor: default; }
+@media (hover: hover) and (pointer: fine) {
+  .track-ids-use:not([aria-disabled="true"]):hover { color: var(--text); }
+}
 /* In the sheet it has a row and a label of its own, and reads as the other blanks do. */
 .id-sheet .track-ids-when { color: var(--text); }
 /* The blanks open in a row of the tracklist: across the whole row, which gives up its own padding to the
