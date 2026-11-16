@@ -662,6 +662,17 @@ html:has(.id-sheet[open]) { overflow: hidden; }
 @media (hover: hover) and (pointer: fine) {
   .tracklist-cue:hover { text-decoration: underline; text-underline-offset: 4px; }
 }
+/* "Edit" is on every row that has its time, so it is the quieter of the cues, and it is not shown on them
+   all at once. It shows on the row playing and on a row whose time could be moved to where the tape is:
+   the rows there is most to do with. A mouse also finds it on the row under it, and the keyboard on the
+   row it is in; a finger reaches any other track by playing it. */
+.tracklist-edit { color: var(--muted); }
+.tracklist-row:not([aria-current], [data-movable]) .tracklist-edit { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .tracklist-row:not([aria-current], [data-movable]) .tracklist-edit { display: inline; opacity: 0; }
+  .tracklist-row:is(:hover, :focus-within) .tracklist-edit { opacity: 1; }
+  .tracklist-edit:hover { color: var(--text); }
+}
 /* On a phone the line under the bar gives way to the tray (below): a track's name and the words beside it
    don't fit on one line there. */
 @media (max-width: 39.99rem) {

@@ -4,7 +4,7 @@ import { FormEvent, RefObject, useEffect, useId, useLayoutEffect, useRef, useSta
 import { createPortal } from 'react-dom';
 import { idLabel, idPlace } from '../lib/track-ids/compose';
 import { rememberedName } from '../lib/track-ids/post';
-import { canStartAt, isUnposted, playingAt, saidBy, startingAt, suggest, type Change, type Row } from '../lib/track-ids/side';
+import { canMoveTo, canStartAt, isUnposted, playingAt, saidBy, startingAt, suggest, type Change, type Row } from '../lib/track-ids/side';
 import { formatTime } from '../lib/time-utils';
 import { usePlayhead, useSide, useTapeTrackIds } from './TapeTrackIds';
 
@@ -94,7 +94,8 @@ type Props = {
  *
  * The blanks are always about one mark: the track playing, or, with nothing playing, a new one at this
  * moment. A name already there is pressed to put it right. A mark can also be taken away, or moved to where
- * the tape is now if it was made too early; both are posts like any other.
+ * the tape is now, earlier or later, as long as no other track starts between the two; both are posts like
+ * any other. (A track that isn't the one playing is reached from its row in the tracklist.)
  *
  * Beside the line are the two ways to say that a track starts here: "New ID" opens the blanks to say which,
  * and "New unknown" says only that one does, in one press, so a visitor can go through a tape setting the
@@ -128,8 +129,8 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   // The mark the blanks are for, where the side has one at that moment: as the side has it now, which may
   // not be as it was when the blanks opened (the visitor may have posted it since, or the comments changed).
   const mark = at === null ? null : (rows[startingAt(rows, at)] ?? null);
-  // Where the tape was when the blanks opened, if the mark could be moved there: later than it, and in it.
-  const [later, setLater] = useState<number | null>(null);
+  // Where the tape was when the blanks opened, if the mark could be moved there.
+  const [there, setThere] = useState<number | null>(null);
   const [doing, setDoing] = useState<Act>('id');
   const [sheet, setSheet] = useState(false);
   // The visitor's name is asked for the first time only. The line has room for one thing at a time, so it
@@ -156,9 +157,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
     const onPhone = window.matchMedia(PHONE).matches;
     const remembered = rememberedName();
     setAt(start);
-    // A mark made too early can be moved to here: the tape is in that track, and a track could start at this
-    // moment. (The visitor's own unposted mark is taken back and made again.)
-    setLater(marked && !isUnposted(marked) && marked === playing && free ? now : null);
+    setThere(marked && played && read !== 'reading' && canMoveTo(rows, marked, now, end) ? now : null);
     setDoing('id');
     setArtist(marked?.known ? marked.artist : '');
     setTitle(marked?.known ? marked.title : '');
@@ -291,6 +290,13 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
       setThanks('Taken back.');
       return leave();
     }
+    // And theirs to move: it is said again at the new moment, and waits to be posted as it did.
+    if (what === 'move' && there !== null && mark?.mine && !mark.mine.sent) {
+      unsay(mark.mine);
+      say({ side, time: there, artist, title });
+      setThanks(`Moved to ${idPlace(position, there)}. Not posted yet.`);
+      return leave();
+    }
     // Only an ID needs a name: a mark is taken away or moved as it is, named or not.
     if (what === 'id' && !artist.trim() && !title.trim()) return refuse('Enter the artist or the title.', artistField.current);
     if (!name.trim()) {
@@ -301,7 +307,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
     }
     // Taking a mark away is one line; moving it is that line and the ID at its new place, in one post.
     const gone: Change[] = mark && what !== 'id' ? [{ side, time: mark.start as number, artist: '', title: '', gone: true }] : [];
-    const id: Change[] = what === 'remove' ? [] : [{ side, time: what === 'move' && later !== null ? later : at, artist, title }];
+    const id: Change[] = what === 'remove' ? [] : [{ side, time: what === 'move' && there !== null ? there : at, artist, title }];
 
     setStatus('sending');
     setMessage('');
@@ -329,9 +335,9 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   // What can be done with a mark already on the tape besides putting its name right.
   const upkeep = mark && (
     <>
-      {later !== null && (
+      {there !== null && (
         <button type="button" onClick={() => act('move')} aria-disabled={sending} className="track-ids-post">
-          Starts at {formatTime(later)} instead
+          Starts at {formatTime(there)} instead
         </button>
       )}
       {/* The visitor's own unposted mark is taken back, as on its row in the tracklist, and nothing is

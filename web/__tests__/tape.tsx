@@ -49,6 +49,14 @@ function Marks({ side }: { side: number }) {
   return <p data-testid="marks">{marks.map((mark) => `${mark.start}${mark.known ? '' : '?'}`).join(' ')}</p>;
 }
 
+// A row as it reads, less "Edit": every row with a name and a time has it, so it tells one row from another
+// no more than the row's padding does.
+const reads = (row: Element) => {
+  const read = row.cloneNode(true) as Element;
+  read.querySelector('.tracklist-edit')?.remove();
+  return read.textContent;
+};
+
 export function tapePage({ sides = ONE_SIDE, archive = [], posted = [], phone = false, name = 'Dana', length = null, kept, down = false, strict = false, slow = false }: Setup = {}) {
   document.body.innerHTML = '';
   window.localStorage.clear();
@@ -145,10 +153,16 @@ export function tapePage({ sides = ONE_SIDE, archive = [], posted = [], phone = 
     /** The marks the waveform is given: each track's start, with a ? where it has no name. */
     marks: () => screen.getByTestId('marks').textContent,
     /** The tracklist's rows that are showing, as text. */
-    rows: () => [...(list()?.querySelectorAll('ol > li:not([hidden])') ?? [])].map((row) => row.textContent),
+    // Each row as it reads, less "Edit": every row with a name and a time has it, so it tells one from another no more than the row's padding does.
+    rows: () => [...(list()?.querySelectorAll('ol > li:not([hidden])') ?? [])].map(reads),
     tracklist: list,
     /** The row that is lit, as text, or null. */
-    lit: () => screen.queryByRole('listitem', { current: true })?.textContent ?? null,
+    lit: () => {
+      const row = screen.queryByRole('listitem', { current: true });
+      return row && reads(row);
+    },
+    /** The rows that show "Edit" to a finger: the times that could be moved to where the tape is, and the row playing. */
+    editable: () => [...(list()?.querySelectorAll('ol > li:is([data-movable], [aria-current])') ?? [])].map(reads),
     /** The bar that posts the visitor's unposted times, or null. */
     bar: () => screen.queryByRole('form', { name: 'Post your times' }),
     /** What has been posted through the page, as the text of each comment. */

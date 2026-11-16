@@ -88,6 +88,22 @@ describe('what the tracklist is made of', () => {
     expect(within(page.tracklist() as HTMLElement).getAllByRole('listitem')[20]).toHaveFocus();
   });
 
+  it('opens a long side by itself when the track playing is past its first twenty, and leaves the keyboard where it was', async () => {
+    const long = Array.from({ length: 23 }, (_, k) => `[${k}:00] Artist${String(k).padStart(2, '0')} - ${String(k).padStart(2, '0').repeat(2)}`).join('\n');
+    const page = tapePage({ posted: [{ by: 'Josh', says: long }] });
+    await page.read();
+    await page.at(19 * 60 + 30);
+    expect(page.rows()).toHaveLength(20);
+    await page.at(21 * 60 + 30);
+    expect(page.rows()).toHaveLength(23);
+    expect(page.lit()).toBe('0:21:00Artist21 — 2121');
+    expect(page.has('Show all 23 tracks')).toBe(false);
+    expect(within(page.tracklist() as HTMLElement).getAllByRole('listitem')[20]).not.toHaveFocus();
+    // It stays open when the tape goes back.
+    await page.at(30);
+    expect(page.rows()).toHaveLength(23);
+  });
+
   it('shows the whole of a side that was short when it first showed, and leaves the keyboard where it was when a twenty-first track is added', async () => {
     // Twenty records, each its own: 00 and "0000", 01 and "0101".
     const twenty = Array.from({ length: 20 }, (_, k) => `[${k}:00] Artist${String(k).padStart(2, '0')} - ${String(k).padStart(2, '0').repeat(2)}`).join('\n');
@@ -145,6 +161,16 @@ describe('as the tape plays', () => {
     // Four minutes on with nothing known to follow.
     await page.at(600);
     expect(page.lit()).toBeNull();
+    // Its time could still be moved to here, so to a finger its row still shows "Edit".
+    expect(page.editable()).toEqual(['0:00:00Orbital — Chime']);
+  });
+
+  it('Edit, on a row of a side that isn’t playing: the tape goes to that track, and the blanks open for it there', async () => {
+    const page = tapePage({ sides: [{ position: 'A', tracks: OWN }, { position: 'B', tracks: OWN }], posted: [{ by: 'Josh', says: '[B 2:00] Butsch - The Count' }] });
+    await page.read();
+    await page.at(100);
+    await page.user.click(page.button('Edit Butsch — The Count, at B 0:02:00'));
+    expect(page.went).toHaveBeenCalledWith('B', 120);
   });
 
   it('has the + on a side only while that side is the one playing', async () => {

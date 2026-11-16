@@ -175,12 +175,22 @@ describe('a point the visitor marked without a name, not yet posted', () => {
     expect(page.posts()).toEqual([]);
   });
 
+  it('Starts at … instead: it is moved to where the tape is, still the visitor’s own, and nothing is posted', async () => {
+    const page = await marked();
+    await page.at(130);
+    await page.user.click(page.button('Unknown track. Know it? ID it'));
+    await page.user.click(page.button('Starts at 0:02:10 instead'));
+    expect(page.rows()).toEqual(['0:02:10Unknown trackUndo']);
+    expect(page.marks()).toBe('130?');
+    expect(page.bar()).toHaveTextContent('1 time not posted');
+    expect(page.posts()).toEqual([]);
+  });
+
   it('Undo, in the blanks: the same, with no post', async () => {
     const page = await marked();
     await page.at(130);
     await page.user.click(page.button('Unknown track. Know it? ID it'));
-    // It is the visitor's own: there is nowhere to move it and nothing to remove with a post, only taking it back.
-    expect(page.has(/instead$/)).toBe(false);
+    // It is the visitor's own: there is nothing to remove with a post, only taking it back.
     expect(page.has(/^Remove/)).toBe(false);
     await page.user.click(within(screen.getByRole('form', { name: 'ID the track at 0:01:40' })).getByRole('button', { name: 'Undo' }));
     expect(page.rows()).toEqual([]);
@@ -395,6 +405,34 @@ describe('a track the comments have ID’d', () => {
     await waitFor(() => expect(page.reads()).toBe(2));
     await waitFor(() => expect(page.shared().unposted).toEqual([]));
     gone();
+  });
+
+  it('Edit, on its row, with the tape before it: moves it earlier, to where the tape is, in one post', async () => {
+    const page = tape();
+    await page.read();
+    await page.at(280.2);
+    // To a finger, "Edit" shows on the row playing and on the one whose time could be moved to here.
+    expect(page.editable()).toEqual(['0:00:00Orbital — Chime', '0:05:00Joey Beltram — Energy Flash']);
+    await page.user.click(page.button('Edit Joey Beltram — Energy Flash, at 0:05:00'));
+    expect(screen.getByRole('form', { name: 'ID the track at 0:05:00' })).toBeInTheDocument();
+    // The tape is left where it is: that is where the track is to be moved to.
+    expect(page.went).not.toHaveBeenCalled();
+    await page.user.click(page.button('Starts at 0:04:40 instead'));
+    await waitFor(() => expect(page.posts()).toEqual(['[4:40] Joey Beltram - Energy Flash\n[5:00] no track starts here']));
+    await waitFor(() => expect(page.rows()).toEqual(['0:00:00Orbital — Chime', '0:04:40Joey Beltram — Energy Flash']));
+    expect(page.marks()).toBe('0 280');
+  });
+
+  it('Edit, on its row, with another track between it and the tape: its name and its removal, and no move', async () => {
+    const page = tape({ posted: [{ by: 'Josh', says: '[0:00] Orbital - Chime\n[5:00] Joey Beltram - Energy Flash\n[10:00] LFO - LFO' }] });
+    await page.read();
+    await page.at(100);
+    expect(page.editable()).toEqual(['0:00:00Orbital — Chime', '0:05:00Joey Beltram — Energy Flash']);
+    await page.user.click(page.button('Edit LFO — LFO, at 0:10:00'));
+    const blanks = within(screen.getByRole('form', { name: 'ID the track at 0:10:00' }));
+    expect(artist()).toHaveValue('LFO');
+    expect(blanks.getByRole('button', { name: 'Remove this ID' })).toBeInTheDocument();
+    expect(page.has(/instead$/)).toBe(false);
   });
 
   it('Starts at … instead: moves it to where the tape is, in one post, and it is there everywhere at once', async () => {

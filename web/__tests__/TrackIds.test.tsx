@@ -116,12 +116,17 @@ describe('the blanks, in the line under the player', () => {
     await waitFor(() => expect(page.posts()).toEqual(['[0:00] no track starts here']));
   });
 
-  it('offer no move in a track’s first moments, or to a moment another track starts within a moment of', async () => {
+  it('offer no move to the moment the track already has, or to a moment another track starts within a moment of', async () => {
     const page = tapePage({ posted: [...KNOWN, { by: 'Josh', says: '[5:00] LFO - LFO' }] });
     await page.read();
-    await page.at(3);
+    await page.at(0.6);
     await page.user.click(page.button('Now playing: Orbital — Chime. Correct this ID'));
     expect(page.has(/instead$/)).toBe(false);
+    await page.user.keyboard('{Escape}');
+    // A few seconds on is another moment to move it to: a time is put right by as little as a second.
+    await page.at(3);
+    await page.user.click(page.button('Now playing: Orbital — Chime. Correct this ID'));
+    expect(page.has('Starts at 0:00:03 instead')).toBe(true);
     await page.user.keyboard('{Escape}');
     await page.at(297);
     await page.user.click(page.button('Now playing: Orbital — Chime. Correct this ID'));

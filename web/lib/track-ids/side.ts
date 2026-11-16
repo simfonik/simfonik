@@ -289,6 +289,17 @@ export const startingAt = (rows: Row[], time: number) => momentOf(rows.map((row)
  */
 export const canStartAt = (rows: Row[], time: number, length = Infinity) => startingAt(rows, time) < 0 && time <= length - SHORTEST;
 
+/**
+ * Whether a row's time could be moved to another moment of its side: a track could start there with this
+ * one set aside, and nothing else starts between the two, so the track keeps its place among the rest.
+ */
+export function canMoveTo(rows: Row[], row: Row, time: number, length = Infinity): boolean {
+  if (row.start === null || row.start === time) return false;
+  const [from, to] = time < row.start ? [time, row.start] : [row.start, time];
+  const others = rows.filter((other) => other !== row);
+  return canStartAt(others, time, length) && !others.some((other) => other.start !== null && other.start > from && other.start < to);
+}
+
 // The answer changes only when the moment passes a row's start or comes within a moment of one, and it is
 // asked for every time the tape moves on, so it is kept for as long as the rows are the same rows.
 const could = new WeakMap<Row[], Map<string, number[]>>();

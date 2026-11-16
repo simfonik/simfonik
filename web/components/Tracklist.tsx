@@ -1,8 +1,8 @@
 'use client';
 
-import { FormEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { FormEvent, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { idPlace, readComposed, type RunningOrder } from '../lib/track-ids/compose';
-import { contributors, couldStartAt, isUnposted, playingAt, type Row } from '../lib/track-ids/side';
+import { canMoveTo, contributors, couldStartAt, isUnposted, playingAt, type Row } from '../lib/track-ids/side';
 import { formatTime } from '../lib/time-utils';
 import { usePlayhead, useTapeTrackIds } from './TapeTrackIds';
 
@@ -52,7 +52,9 @@ const chevron = (
  *
  * A time is pressed to hear the tape from there, and the row playing is lit as the tape moves. A row with no
  * time carries its number in the list where the time will go. While its side plays, the rows that could be
- * the track starting now have a + there instead, and pressing it gives the row that moment.
+ * the track starting now have a + there instead, and pressing it gives the row that moment. A row that has
+ * its time has "Edit", which opens the blanks at the player for that track: its name put right, its time
+ * moved to where the tape is, or the ID taken away.
  *
  * What the visitor has said and not posted (a + here, a point marked by ear up at the player) is on its row
  * like any other time, in full colour, with the way to take it back. A bar at the foot of the screen says how
@@ -67,17 +69,24 @@ export function Tracklist() {
   const labelled = several || Boolean(tape[0]?.title);
   const place = (side: number) => (several ? tape[side].position : null);
 
-  // What the list needs to know of where the tape is: the side playing, the row playing on it, and the rows
-  // that could be given this moment as their start (none until the comments are back: a time is given on
-  // top of what they say). A time given is a whole second, so it is the whole second that is asked about.
-  const [liveSide, litRow, couldStart] = usePlayhead((head) => {
-    if (!head.started) return '-1|-1|';
+  // What the list needs to know of where the tape is: the side playing, the row playing on it, the rows
+  // that could be given this moment as their start, and the timed rows whose time could be moved to it:
+  // of the last to start and the next to, those `canMoveTo` allows. (None of either until the comments are
+  // back: a time is given on top of what they say.) A time given is a whole second, so it is the whole
+  // second that is asked about.
+  const [liveSide, litRow, couldStart, couldMove] = usePlayhead((head) => {
+    if (!head.started) return '-1|-1||';
     const { rows = [], length } = sides[head.side] ?? {};
-    return `${head.side}|${playingAt(rows, head.time)}|${read === 'reading' ? '' : couldStartAt(rows, Math.floor(head.time), length).join(',')}`;
+    const lit = playingAt(rows, head.time);
+    if (read === 'reading') return `${head.side}|${lit}||`;
+    const now = Math.floor(head.time);
+    const nearest = [rows.findLastIndex((row) => row.start !== null && row.start <= now), rows.findIndex((row) => row.start !== null && row.start > now)];
+    return `${head.side}|${lit}|${couldStartAt(rows, now, length).join(',')}|${nearest.filter((k) => k >= 0 && canMoveTo(rows, rows[k], now, length)).join(',')}`;
   }).split('|');
   const live = Number(liveSide);
   const lit = Number(litRow);
   const markable = useMemo(() => new Set(couldStart ? couldStart.split(',').map(Number) : []), [couldStart]);
+  const movable = useMemo(() => new Set(couldMove ? couldMove.split(',').map(Number) : []), [couldMove]);
 
   // Posting the visitor's times.
   const [name, setName] = useState('');
@@ -102,6 +111,13 @@ export function Tracklist() {
   const identify = (side: number, start: number) => {
     // An unknown track is ID'd by ear: the tape goes there, and the blanks open for it.
     goTo(place(side), start);
+    ask(place(side), start);
+  };
+  const edit = (side: number, start: number) => {
+    // A track that has its name is edited with the tape left where it is, so that its time can be moved to
+    // there. On a side that isn't the one playing the tape goes to the track first: the blanks are the
+    // loaded side's.
+    if (side !== live) goTo(place(side), start);
     ask(place(side), start);
   };
   async function post(e: FormEvent) {
@@ -159,10 +175,12 @@ export function Tracklist() {
                 silent={Boolean(tape[i].silent)}
                 lit={live === i ? lit : -1}
                 markable={live === i ? markable : NONE}
+                movable={live === i ? movable : NONE}
                 onPlay={(start) => goTo(place(i), start)}
                 onMark={(k) => mark(i, k)}
                 onUndo={unsay}
                 onIdentify={(start) => identify(i, start)}
+                onEdit={(start) => edit(i, start)}
               />
             ),
           )}
@@ -241,13 +259,16 @@ type SideListProps = {
   lit: number;
   /** The rows that could be given the moment the tape is at as their start, by their place in `rows`. */
   markable: Set<number>;
+  /** The timed rows whose time could be moved to the moment the tape is at. */
+  movable: Set<number>;
   onPlay: (start: number) => void;
   onMark: (row: number) => void;
   onUndo: (change: NonNullable<Row['mine']>) => void;
   onIdentify: (start: number) => void;
+  onEdit: (start: number) => void;
 };
 
-function SideList({ heading, summary, rows, position, silent, lit, markable, onPlay, onMark, onUndo, onIdentify }: SideListProps) {
+function SideList({ heading, summary, rows, position, silent, lit, markable, movable, onPlay, onMark, onUndo, onIdentify, onEdit }: SideListProps) {
   const collapsible = rows.length > COLLAPSED_COUNT;
   // A side that is short when it first shows is never folded later, when a row is added to it.
   const [expanded, setExpanded] = useState(!collapsible);
@@ -262,8 +283,27 @@ function SideList({ heading, summary, rows, position, silent, lit, markable, onP
     if (shownAll) firstRevealed.current?.focus();
   }, [shownAll]);
 
+  // A folded side opens by itself when the track playing is in the part folded away: the row the page is
+  // pointing at is never the one it hides. Whoever is reading further down the page then keeps their place:
+  // the page is scrolled by as much as the side grew, measured from the top of the page so that it comes
+  // out the same whether or not the browser has already held the place itself.
+  const whole = useRef<HTMLDivElement>(null);
+  const folded = useRef<{ bottom: number; scroll: number } | null>(null);
+  useLayoutEffect(() => {
+    if (expanded || lit < COLLAPSED_COUNT || !whole.current) return;
+    folded.current = { bottom: whole.current.getBoundingClientRect().bottom, scroll: window.scrollY };
+    setExpanded(true);
+  }, [expanded, lit]);
+  useLayoutEffect(() => {
+    const was = folded.current;
+    if (!expanded || !was || !whole.current) return;
+    folded.current = null;
+    const grew = whole.current.getBoundingClientRect().bottom + window.scrollY - (was.bottom + was.scroll);
+    if (was.bottom <= 0) window.scrollTo({ top: was.scroll + grew, behavior: 'instant' });
+  }, [expanded]);
+
   return (
-    <div>
+    <div ref={whole}>
       {heading && <h3 className="font-display text-xl leading-tight text-[var(--text)] mb-1">{heading}</h3>}
       {summary && <p className={`${small} mb-3`}>{summary}</p>}
       {/* Pulled out by a row's own padding, so what is in the rows starts on the edge the heading does. */}
@@ -278,6 +318,7 @@ function SideList({ heading, summary, rows, position, silent, lit, markable, onP
               tabIndex={k === COLLAPSED_COUNT ? -1 : undefined}
               hidden={!all && k >= COLLAPSED_COUNT}
               aria-current={k === lit ? 'true' : undefined}
+              data-movable={movable.has(k) ? '' : undefined}
               className="tracklist-row"
             >
               <span>
@@ -329,13 +370,17 @@ function SideList({ heading, summary, rows, position, silent, lit, markable, onP
                     Undo
                   </button>
                 ) : (
-                  !row.known &&
                   row.start !== null &&
-                  !silent && (
+                  !silent &&
+                  (row.known ? (
+                    <button type="button" onClick={() => onEdit(row.start as number)} className="tracklist-cue tracklist-edit" aria-label={`Edit ${label}, at ${idPlace(position, row.start)}`}>
+                      Edit
+                    </button>
+                  ) : (
                     <button type="button" onClick={() => onIdentify(row.start as number)} className="tracklist-cue" aria-label={`ID the unknown track at ${idPlace(position, row.start)}`}>
                       ID it
                     </button>
-                  )
+                  ))
                 )}
               </span>
             </li>

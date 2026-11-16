@@ -9,7 +9,7 @@ import { composeId, composeRemoval, readComposed, type RunningOrder } from '@/li
 import { settle, type Moment, type TrackId } from '@/lib/track-ids/moments';
 import { digest, reconcile, sideNames, trusted, type Sighting } from '@/lib/track-ids/parse';
 import { readSaid } from '@/lib/track-ids/said';
-import { canStartAt, contributors, couldStartAt, playingAt, saidBy, sideRows, standing, startingAt, suggest, timeline, withChanges, type Change, type Row } from '@/lib/track-ids/side';
+import { canMoveTo, canStartAt, contributors, couldStartAt, playingAt, saidBy, sideRows, standing, startingAt, suggest, timeline, withChanges, type Change, type Row } from '@/lib/track-ids/side';
 import type { Tape } from '@/types/tape';
 
 /** What the comments say starts at a time: an ID, or with no names a spot someone marked. */
@@ -292,6 +292,22 @@ describe('what is asked of a side’s rows', () => {
     // Within a moment of two starts, the nearer; as near to both, the earlier.
     const close = sideRows(null, withChanges([id(100, '', ''), id(108, '', '')], []));
     expect([103, 104, 105].map((time) => close[startingAt(close, time)].start)).toEqual([100, 100, 108]);
+  });
+
+  it('where a row’s time could be moved: to a moment a track could start at without it, with no other start between', () => {
+    const plain = sideRows(null, withChanges([id(0, 'Orbital', 'Chime'), id(300, 'LFO', 'LFO'), id(600, 'Altern 8', 'Infiltrate 202')], []));
+    const [first, second, third] = plain;
+    const to = (row: Row, times: number[]) => times.map((time) => canMoveTo(plain, row, time, 900));
+    // Later or earlier, as far as the tracks either side of it, and no nearer to one of them than a moment.
+    expect(to(second, [6, 100, 299, 301, 303, 594])).toEqual([true, true, true, true, true, true]);
+    expect(to(second, [300, 5, 595, 650])).toEqual([false, false, false, false]);
+    expect(to(first, [3, 294])).toEqual([true, true]);
+    expect(to(first, [295, 400])).toEqual([false, false]);
+    // Not into the side's last moments, where no track has room to start.
+    expect(to(third, [700, 895, 896])).toEqual([true, true, false]);
+    // A line still waiting for its time has none to move.
+    const listed = sideRows(order, withChanges([id(0, 'The Prodigy', 'Hyperspeed (G-Force Part 2)')], []));
+    expect(canMoveTo(listed, listed[1], 100)).toBe(false);
   });
 
   it('the timed rows as marks for the waveform', () => {

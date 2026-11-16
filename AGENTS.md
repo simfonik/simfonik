@@ -36,7 +36,7 @@ Otherwise, file issues directly under the team.
 - Keep pages static. Never call `headers()`, `cookies()`, or other request APIs in `app/layout.tsx` or in a page that should prerender: the root layout wraps every route, so one such call makes the whole site render per request and burns Vercel's Fluid Active CPU allowance. Read the path on the client with `usePathname()` instead. After a change to layouts or data loading, confirm `next build` still lists `/`, `/tapes/[id]`, and `/djs/[slug]` as static (○ or ●), not ƒ.
 
 ## UI conventions
-- All interactive elements (`<button>`, clickable icons, links styled as buttons) must use `cursor-pointer`.
+- All interactive elements (`<button>`, clickable icons, links styled as buttons) must use `cursor-pointer`. The one exception is a picture that opens larger when pressed: it shows `zoom-in`, and `zoom-out` while it is open, because those say what the press does.
 
 ## Image optimization
 - All images are pre-generated as static AVIF files at build time. Do NOT use Vercel's on-demand image optimization (`/_next/image`).
