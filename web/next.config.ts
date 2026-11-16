@@ -1,6 +1,22 @@
 import type { NextConfig } from "next";
 import redirectsData from './data/redirects.json';
 
+// PROTOTYPE (SIM-37). A preview of this branch (lab.simfonik.com is one) is for the Trainspotter pages and
+// nothing else: it is a whole copy of the site otherwise, with the live site's database behind it. So on a
+// preview every other address goes to the live site, where that page really is, and nothing on the preview
+// is for a search engine. What Trainspotter itself is made of (the app's own files, the icons) stays.
+const preview = process.env.VERCEL_ENV === 'preview';
+const LIVE = 'https://simfonik.com';
+const elsewhere = '(?!spot(?:/|$)|proto/trainspotter(?:/|$)|_next/|favicon\\.ico|icon\\.svg|apple-icon\\.png)';
+const toLive = preview
+  ? [
+      { source: '/', destination: `${LIVE}/`, permanent: false },
+      // The other experiments on this branch have no page on the live site to go to: its front page, then.
+      { source: '/proto/:rest((?!trainspotter(?:/|$)).*)', destination: `${LIVE}/`, permanent: false },
+      { source: `/:first(${elsewhere}[^/]+)/:rest*`, destination: `${LIVE}/:first/:rest*`, permanent: false },
+    ]
+  : [];
+
 const nextConfig: NextConfig = {
   images: {
     loader: 'custom',
@@ -10,6 +26,7 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      ...(preview ? [{ source: '/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] }] : []),
       {
         source: '/:path*',
         headers: [
@@ -62,7 +79,7 @@ const nextConfig: NextConfig = {
   },
 
   async redirects() {
-    return redirectsData;
+    return [...toLive, ...redirectsData];
   },
 };
 

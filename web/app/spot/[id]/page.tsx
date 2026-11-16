@@ -8,7 +8,7 @@ import { Trainspotter } from "../../proto/trainspotter/trainspotter";
 import "../../proto/trainspotter/trainspotter.css";
 
 // What a link to the page shows where it is pasted: the tape, what the page is for, and the tape's own
-// picture. (The address in it is this deployment's, where there is one: the page is not on the live site.)
+// picture. (The address in it is the one the prototype is given out at: the page is not on the live site.)
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const tape = getTapeById((await params).id);
   const robots = { index: false, follow: false };
@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const title = `Trainspotter: ${djs} — ${tape.title}`;
   const description = "Play the tape, see the tracks other people have named, and ID the ones you know.";
   const image = `https://simfonik.com${getCoverImageWithFallback(tape)}`;
-  const host = process.env.VERCEL_BRANCH_URL ?? process.env.VERCEL_URL;
+  const host = process.env.VERCEL_ENV === "preview" ? "lab.simfonik.com" : undefined;
   return {
     title,
     description,
