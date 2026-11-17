@@ -19,6 +19,19 @@ afterEach(() => {
 });
 
 describe('the blanks, in the line under the player', () => {
+  it('select the time the blank has as the keyboard comes to it, so a time typed whole takes its place', async () => {
+    const page = tapePage({ posted: KNOWN });
+    await page.read();
+    await page.at(0.6);
+    await page.user.click(page.button('Now playing: Orbital — Chime. Correct this ID'));
+    const time = screen.getByRole<HTMLInputElement>('textbox', { name: 'Starts at' });
+    expect(time).toHaveValue('0:00:00');
+    await page.user.click(time);
+    await waitFor(() => expect([time.selectionStart, time.selectionEnd]).toEqual([0, 7]));
+    await page.user.keyboard('500');
+    expect(time).toHaveValue('500');
+  });
+
   it('ask a first-time visitor’s name as a second step, post under it at the moment they were opened, and don’t ask again', async () => {
     const page = tapePage({ sides: [{ position: 'A' }, { position: 'B' }], name: null });
     await page.read();

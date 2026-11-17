@@ -315,6 +315,16 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
     set(e.target.value);
     settle();
   };
+  // A time is typed whole ("500" for 5:00), so the time the blank already has is selected as the keyboard
+  // comes to it, and the first digit takes its place. A tap puts the cursor where it landed just after the
+  // blank takes focus, which would undo the selection, so it is made a frame later. A second tap places the
+  // cursor as usual, for putting one digit right.
+  const selectTime = (e: React.FocusEvent<HTMLInputElement>) => {
+    const field = e.currentTarget;
+    requestAnimationFrame(() => {
+      if (document.activeElement === field) field.setSelectionRange(0, field.value.length);
+    });
+  };
   // In the time's blank the up and down arrows move it a second at a time, ten with Shift held.
   const nudge = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const by = e.key === 'ArrowUp' ? 1 : e.key === 'ArrowDown' ? -1 : 0;
@@ -466,7 +476,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   const timeBlank = (
     <>
       {position !== null && <span className="track-ids-where">{position}</span>}
-      <input ref={timeField} value={when} onChange={typed(setWhen)} onKeyDown={nudge} placeholder="0:00:00" aria-label="Starts at" aria-describedby={message ? messageId : undefined} inputMode="decimal" autoComplete="off" maxLength={9} enterKeyHint="send" className="track-ids-field track-ids-when" />
+      <input ref={timeField} value={when} onChange={typed(setWhen)} onFocus={selectTime} onKeyDown={nudge} placeholder="0:00:00" aria-label="Starts at" aria-describedby={message ? messageId : undefined} inputMode="decimal" autoComplete="off" maxLength={9} enterKeyHint="send" className="track-ids-field track-ids-when" />
       {played && !(askName && !sheet) && (
         <button type="button" onClick={use} aria-disabled={!usable} className="track-ids-post track-ids-use" aria-label={`Use ${formatTime(now)}, the tape’s time`} title="Where the tape is now">
           Use {formatTime(now)}
