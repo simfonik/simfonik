@@ -29,6 +29,22 @@ export function parseTime(text: string): number | null {
   return secs < 60 && (parts.length === 2 || mins < 60) ? hours * 3600 + mins * 60 + secs : null;
 }
 
+/**
+ * The time's blank as it is typed in: the figures come in from the right and the colons stay where they are,
+ * so 5, 0, 0 reads 0:00:05, then 0:00:50, then 0:05:00, and a figure deleted goes back out the same way.
+ * `text` is what the blank holds after the key, and only its figures count, so a time pasted whole (5:00)
+ * reads as itself. Deleted down to nothing but zeros the blank is empty; a sixth figure has nowhere to go and
+ * leaves the blank as it `was`.
+ */
+export function typeTime(text: string, was: string, deleting: boolean): string {
+  const figures = text.replace(/\D/g, '');
+  const counted = figures.replace(/^0+/, '');
+  if (!figures || (deleting && !counted)) return '';
+  if (counted.length > 5) return was;
+  const shown = counted.padStart(5, '0');
+  return `${shown[0]}:${shown.slice(1, 3)}:${shown.slice(3)}`;
+}
+
 /** A time on a tape side, always h:mm:ss with its zeros (0:01:55): how the player and every track ID say one. */
 export function formatTime(seconds: number): string {
   if (!isFinite(seconds)) return '0:00:00';

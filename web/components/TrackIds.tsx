@@ -6,7 +6,7 @@ import { hasLink, idLabel, idPlace } from '../lib/track-ids/compose';
 import { sameRecord } from '../lib/track-ids/moments';
 import { rememberedName } from '../lib/track-ids/post';
 import { asListed, canStartAt, isUnposted, playingAt, saidBy, startingAt, suggest, type Change, type Row } from '../lib/track-ids/side';
-import { formatTime, parseTime } from '../lib/time-utils';
+import { formatTime, parseTime, typeTime } from '../lib/time-utils';
 import { usePlayhead, useSide, useTapeTrackIds } from './TapeTrackIds';
 
 /** The most an artist or a title may run to, in characters: far past any real one, and a comment line stays a line. */
@@ -315,10 +315,15 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
     set(e.target.value);
     settle();
   };
-  // A time is typed whole ("500" for 5:00), so the time the blank already has is selected as the keyboard
-  // comes to it, and the first digit takes its place. A tap puts the cursor where it landed just after the
-  // blank takes focus, which would undo the selection, so it is made a frame later. A second tap places the
-  // cursor as usual, for putting one digit right.
+  // A time is typed as its figures alone, which come in from the right (5, 0, 0 for 0:05:00: typeTime), so a
+  // phone's number keys are all it needs. The time the blank already has is selected as the keyboard comes
+  // to it, and the first figure takes its place. A tap puts the cursor where it landed just after the blank
+  // takes focus, which would undo the selection, so it is made a frame later.
+  const typedTime = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const deleting = (e.nativeEvent as InputEvent).inputType?.startsWith('delete') ?? false;
+    setWhen(typeTime(e.target.value, when, deleting));
+    settle();
+  };
   const selectTime = (e: React.FocusEvent<HTMLInputElement>) => {
     const field = e.currentTarget;
     requestAnimationFrame(() => {
@@ -367,7 +372,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
     let to = at;
     if (what !== 'remove') {
       const entered = parseTime(when);
-      if (entered === null) return refuse('Enter the time, like 5:00 or 500.', timeField.current);
+      if (entered === null) return refuse(when ? 'Minutes and seconds only go up to 59.' : 'Enter the time, like 500 for 0:05:00.', timeField.current);
       const unchanged = lineNo === null && entered === at;
       const others = rows.filter((row) => row !== mark);
       const taken = others[startingAt(others, entered)];
@@ -476,7 +481,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   const timeBlank = (
     <>
       {position !== null && <span className="track-ids-where">{position}</span>}
-      <input ref={timeField} value={when} onChange={typed(setWhen)} onFocus={selectTime} onKeyDown={nudge} placeholder="0:00:00" aria-label="Starts at" aria-describedby={message ? messageId : undefined} inputMode="decimal" autoComplete="off" maxLength={9} enterKeyHint="send" className="track-ids-field track-ids-when" />
+      <input ref={timeField} value={when} onChange={typedTime} onFocus={selectTime} onKeyDown={nudge} placeholder="0:00:00" aria-label="Starts at" aria-describedby={message ? messageId : undefined} inputMode="numeric" autoComplete="off" maxLength={9} enterKeyHint="send" className="track-ids-field track-ids-when" />
       {played && !(askName && !sheet) && (
         <button type="button" onClick={use} aria-disabled={!usable} className="track-ids-post track-ids-use" aria-label={`Use ${formatTime(now)}, the tape’s time`} title="Where the tape is now">
           Use {formatTime(now)}

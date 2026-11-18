@@ -514,8 +514,11 @@ describe('a track the comments have ID’d', () => {
     await page.at(100);
     await page.user.click(page.button('Edit Joey Beltram — Energy Flash, at 0:05:00'));
     await retime(page, 'soon');
-    expect(screen.getByRole('alert')).toHaveTextContent('Enter the time, like 5:00 or 500.');
+    expect(screen.getByRole('alert')).toHaveTextContent('Enter the time, like 500 for 0:05:00.');
     expect(startsAt()).toHaveFocus();
+    await retime(page, '275');
+    expect(startsAt()).toHaveValue('0:02:75');
+    expect(screen.getByRole('alert')).toHaveTextContent('Minutes and seconds only go up to 59.');
     await retime(page, '0:03');
     expect(screen.getByRole('alert')).toHaveTextContent('Another track starts at 0:00:00.');
     await retime(page, '14:58');
@@ -821,7 +824,7 @@ describe('a line of the tape’s tracklist, edited from its row', () => {
     await page.read();
     await page.user.click(page.button('Edit Phenomania — Caramelle'));
     await page.user.type(startsAt(), 'soon{Enter}');
-    expect(screen.getByRole('alert')).toHaveTextContent('Enter the time, like 5:00 or 500.');
+    expect(screen.getByRole('alert')).toHaveTextContent('Enter the time, like 500 for 0:05:00.');
     await page.user.clear(startsAt());
     await page.user.type(startsAt(), '2:03{Enter}');
     expect(screen.getByRole('alert')).toHaveTextContent('Another track starts at 0:02:00.');

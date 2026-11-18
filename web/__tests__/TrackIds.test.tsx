@@ -19,7 +19,7 @@ afterEach(() => {
 });
 
 describe('the blanks, in the line under the player', () => {
-  it('select the time the blank has as the keyboard comes to it, so a time typed whole takes its place', async () => {
+  it('select the time the blank has as the keyboard comes to it, and take a time as its figures, which come in from the right and go back out the same way', async () => {
     const page = tapePage({ posted: KNOWN });
     await page.read();
     await page.at(0.6);
@@ -28,8 +28,23 @@ describe('the blanks, in the line under the player', () => {
     expect(time).toHaveValue('0:00:00');
     await page.user.click(time);
     await waitFor(() => expect([time.selectionStart, time.selectionEnd]).toEqual([0, 7]));
-    await page.user.keyboard('500');
-    expect(time).toHaveValue('500');
+    await page.user.keyboard('5');
+    expect(time).toHaveValue('0:00:05');
+    await page.user.keyboard('0');
+    expect(time).toHaveValue('0:00:50');
+    await page.user.keyboard('0');
+    expect(time).toHaveValue('0:05:00');
+    // The cursor stays at the end, so the next figure follows on.
+    expect([time.selectionStart, time.selectionEnd]).toEqual([7, 7]);
+    await page.user.keyboard('{Backspace}');
+    expect(time).toHaveValue('0:00:50');
+    // A sixth figure has nowhere to go; deleted down to nothing, the blank is empty.
+    await page.user.keyboard('1234');
+    expect(time).toHaveValue('5:01:23');
+    await page.user.keyboard('{Backspace>5/}');
+    expect(time).toHaveValue('');
+    await page.user.keyboard('0');
+    expect(time).toHaveValue('0:00:00');
   });
 
   it('ask a first-time visitor’s name as a second step, post under it at the moment they were opened, and don’t ask again', async () => {

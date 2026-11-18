@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatTime, parseTime } from '@/lib/time-utils';
+import { formatTime, parseTime, typeTime } from '@/lib/time-utils';
 
 describe('a time as a visitor types one', () => {
   it('is read with its hours, without them, and with a full stop, a comma or a space where a phone’s keys have no colon', () => {
@@ -18,5 +18,23 @@ describe('a time as a visitor types one', () => {
 
   it('reads back every time the page writes', () => {
     for (const seconds of [0, 59, 60, 3599, 3600, 7325]) expect(parseTime(formatTime(seconds))).toBe(seconds);
+  });
+});
+
+describe('the time’s blank as it is typed in', () => {
+  it('takes the figures in from the right, with the colons where they are', () => {
+    expect([['5', '0:00:00'], ['0:00:050', '0:00:05'], ['0:00:500', '0:00:50'], ['0:05:001', '0:05:00'], ['0', '']].map(([text, was]) => typeTime(text, was, false))).toEqual(['0:00:05', '0:00:50', '0:05:00', '0:50:01', '0:00:00']);
+  });
+
+  it('reads a time pasted whole as itself, and nothing in what has no figures', () => {
+    expect(['5:00', '1:02:03', '000500', 'soon', ':'].map((text) => typeTime(text, '', false))).toEqual(['0:05:00', '1:02:03', '0:05:00', '', '']);
+  });
+
+  it('lets a figure back out the way it came, and is empty when only zeros are left', () => {
+    expect(['0:05:0', '0:00:5', '0:00:0', ''].map((text) => typeTime(text, '0:05:00', true))).toEqual(['0:00:50', '0:00:05', '', '']);
+  });
+
+  it('leaves the blank as it was at a sixth figure', () => {
+    expect(typeTime('1:02:034', '1:02:03', false)).toBe('1:02:03');
   });
 });
