@@ -785,7 +785,13 @@ button.tracklist-n { min-width: 3rem; text-align: left; }
 /* The player kept in reach on a wider screen (PlayerControls.tsx): at the foot of the window once the tape
    has been played, for as long as the player itself is out of sight. One row in the page's own column: the
    button, what is playing, and the bar the tape is moved along. It comes up from the edge it sits on. */
-:root { --dock-height: calc(4.25rem + 1.5px + env(safe-area-inset-bottom, 0px)); }
+/* Its top edge is quieter than the tray's: a line the width of a wide window, there for as long as the page
+   is read, has only to part the bar from the page. It is the grey the page's quieter words and its text
+   fields' edges are in, which shows in both themes; the page's ordinary rule all but goes in the dark one. */
+:root {
+  --dock-height: calc(4.25rem + 1.5px + env(safe-area-inset-bottom, 0px));
+  --dock-edge: var(--muted);
+}
 .player-dock {
   position: fixed;
   inset: auto 0 0 0;
@@ -793,7 +799,7 @@ button.tracklist-n { min-width: 3rem; text-align: left; }
   box-sizing: border-box;
   height: var(--dock-height);
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  border-top: 1.5px solid var(--text);
+  border-top: 1.5px solid var(--dock-edge);
   background: var(--bg);
   animation: player-dock-up 0.18s cubic-bezier(0.23, 1, 0.32, 1);
 }
@@ -851,8 +857,8 @@ button.tracklist-n { min-width: 3rem; text-align: left; }
 :root:has(.player-dock):has(.tracklist-post) { scroll-padding-bottom: calc(var(--dock-height) + 6rem); }
 /* Whichever of the two is at the foot of the screen, the page ends that much lower, so its last lines can
    still be read. */
-body:has(.player-tray) { --foot: var(--tray-height); }
-body:has(.player-dock) { --foot: var(--dock-height); }
+body:has(.player-tray) { --foot: var(--tray-height); --foot-edge: var(--text); }
+body:has(.player-dock) { --foot: var(--dock-height); --foot-edge: var(--dock-edge); }
 body:has(.player-tray, .player-dock) { padding-bottom: var(--foot); }
 /* The visitor's times, waiting to be posted: a bar at the foot of the screen for as long as there are any,
    so it is in reach from the player's line and from whichever row was last pressed. The page ends that much
@@ -866,9 +872,9 @@ body:has(.player-tray, .player-dock) { padding-bottom: var(--foot); }
   background: var(--bg);
 }
 body:has(.tracklist-post) { padding-bottom: 6rem; }
-/* With the tray there, or the player's own bar, this bar is its first row: it sits on it, and the bright edge
-   that parts the two from the page is this bar's. */
-body:has(.player-tray, .player-dock) .tracklist-post { bottom: var(--foot); padding-bottom: 0.5rem; border-top-color: var(--text); }
+/* With the tray there, or the player's own bar, this bar is its first row: it sits on it, and the edge that
+   parts the two from the page (the tray's bright one, the bar's quieter one) is this bar's. */
+body:has(.player-tray, .player-dock) .tracklist-post { bottom: var(--foot); padding-bottom: 0.5rem; border-top-color: var(--foot-edge); }
 body:has(.tracklist-post) :is(.player-tray, .player-dock) { border-top-color: var(--border); }
 body:has(.player-tray, .player-dock):has(.tracklist-post) { padding-bottom: calc(var(--foot) + 6rem); }
 .tracklist-post-name { flex: 1 1 8rem; }
