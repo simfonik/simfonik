@@ -329,9 +329,8 @@
 .ts-cue-text b { -webkit-line-clamp: 2; font-weight: 600; }
 .ts-cue-text i { -webkit-line-clamp: 3; opacity: 0.7; }
 .ts-cue-text i:empty { display: none; }
-/* Sharing the row with a track that overlaps it: half the height, so a line less of each. */
-.ts-cue[data-stacked] .ts-cue-text b { -webkit-line-clamp: 1; }
-.ts-cue[data-stacked] .ts-cue-text i { -webkit-line-clamp: 2; }
+/* Sharing the row with a track that overlaps it: half the height, which holds one line of each. */
+.ts-cue[data-stacked] .ts-cue-text :is(b, i) { -webkit-line-clamp: 1; }
 /* A thin track gets one short line each and is allowed to cut off. The full name is one glance away: big
    in Now playing while it plays, and beside the time under the pointer. */
 @container (max-width: 84px) {
