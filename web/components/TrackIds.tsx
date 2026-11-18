@@ -1,7 +1,8 @@
 'use client';
 
-import { FormEvent, RefObject, useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { FormEvent, RefObject, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { PHONE, useOnPhone } from '../hooks/useOnPhone';
 import { hasLink, idLabel, idPlace } from '../lib/track-ids/compose';
 import { sameRecord } from '../lib/track-ids/moments';
 import { rememberedName } from '../lib/track-ids/post';
@@ -14,29 +15,6 @@ const NAME_LENGTH = 150;
 
 /** What the blanks are about to do: post what is in them, take the mark away, or mark the moment with no name. */
 type Act = 'id' | 'remove' | 'mark';
-
-/**
- * A screen as narrow as a phone's. There the blanks are a sheet over the page, with a row each, and the line
- * itself gives way to a tray at the foot of the screen (the stylesheet hides the line at the same width).
- */
-const PHONE = '(max-width: 39.99rem)';
-
-// (Outside the component: a new function each time would have the listener taken off and put back on with
-// every tick of the tape.)
-const watchPhone = (changed: () => void) => {
-  const media = window.matchMedia(PHONE);
-  media.addEventListener('change', changed);
-  return () => media.removeEventListener('change', changed);
-};
-
-/** Whether the screen is that narrow, kept up to date. Not before the page is in a browser. */
-function useOnPhone() {
-  return useSyncExternalStore(
-    watchPhone,
-    () => window.matchMedia(PHONE).matches,
-    () => false,
-  );
-}
 
 /**
  * Puts the keyboard in a field. In the sheet it is done "in place": on an iPhone, a field taking focus makes

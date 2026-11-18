@@ -1,4 +1,6 @@
-import React, { ReactNode, useMemo, useRef } from 'react';
+import React, { ReactNode, RefObject, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useOnPhone } from '../hooks/useOnPhone';
 import { formatTime } from '../lib/time-utils';
 import { idLabel } from '../lib/track-ids/compose';
 import { playingAt, saidBy, type Mark } from '../lib/track-ids/side';
@@ -20,26 +22,50 @@ export interface PlayerControlsProps {
   ids?: Mark[];
   /** Whatever goes under the bar, in line with it. */
   children?: ReactNode;
+  /** Set by the player itself on the copy of it kept at the foot of the window (see below). */
+  docked?: boolean;
   onPlay: () => void;
   onPause: () => void;
   onSeek: (time: number) => void;
 }
 
-export function PlayerControls({
-  isPlaying,
-  currentTime,
-  duration,
-  isLoading,
-  title,
-  wave,
-  length,
-  showTimes = true,
-  ids,
-  children,
-  onPlay,
-  onPause,
-  onSeek
-}: PlayerControlsProps) {
+/** Whether something on the page has been scrolled right out of the window, above it or below. */
+function useOutOfSight(el: RefObject<HTMLElement | null>, watching: boolean) {
+  const [away, setAway] = useState(false);
+  useEffect(() => {
+    if (!watching || !el.current || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(([entry]) => setAway(!entry.isIntersecting));
+    observer.observe(el.current);
+    return () => observer.disconnect();
+  }, [el, watching]);
+  return watching && away;
+}
+
+/**
+ * The player: play and pause, and the bar the tape is moved along.
+ *
+ * On a wide screen the tracklist and the comments are a long way down the page from it, and the tape is
+ * played while they are read and while tracks are timed. So once the tape has been played, and for as long as
+ * the player is out of sight, a second one sits at the foot of the window: the same button and the same bar,
+ * on one row, with what is playing between them. A phone has its tray there (TrackIds.tsx).
+ */
+export function PlayerControls(props: PlayerControlsProps) {
+  const {
+    isPlaying,
+    currentTime,
+    duration,
+    isLoading,
+    title,
+    wave,
+    length,
+    showTimes = true,
+    ids,
+    children,
+    docked = false,
+    onPlay,
+    onPause,
+    onSeek,
+  } = props;
 
   const shape = useMemo(() => (wave ? outline(wave) : null), [wave]);
   // The side's length: what the audio says once it has loaded, and before that what was read ahead of time.
@@ -48,6 +74,11 @@ export function PlayerControls({
   const playing = ids?.[playingAt(ids, currentTime)] ?? null;
   /** Nothing has been asked of the audio yet, so the first press on the bar is also what starts the tape. */
   const unstarted = !duration && !isPlaying && !isLoading;
+
+  const self = useRef<HTMLDivElement>(null);
+  const onPhone = useOnPhone();
+  const outOfSight = useOutOfSight(self, !docked);
+  const inReach = !docked && !onPhone && outOfSight && (isPlaying || currentTime > 0);
 
   /** The time at a place across the bar, or null while the side's length isn't known. */
   const timeAt = (x: number, bar: DOMRect) =>
@@ -114,118 +145,154 @@ export function PlayerControls({
     unpoint('data-drag');
   };
 
-  return (
-    <div className="flex items-start gap-3">
-      {/* Play/Pause. The glyph starts at the content's left edge, where the title and the DJ start. Its place
-          to press is 44px wide around a glyph of 24px, and the spare 10px on the left sits in the page's
-          margin, so that only 10px of it, and not 20px, stands between the glyph and the bar. */}
-      <button
-        onClick={isPlaying ? onPause : onPlay}
-        disabled={isLoading}
-        aria-label={isPlaying ? 'Pause' : 'Play'}
-        className="player-play -ml-2.5 flex-shrink-0 w-11 h-11 flex items-center justify-center text-[var(--text)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-      >
-        {isLoading ? (
-          <svg className="w-6 h-6 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-        ) : isPlaying ? (
-          // Both glyphs are drawn from the left edge of the same box, so the edge doesn't move between them.
-          <svg className="h-7 w-6" viewBox="0 0 12 14" fill="currentColor" aria-hidden>
-            <path d="M0 0h4v14H0zM8 0h4v14H8z" />
-          </svg>
-        ) : (
-          <svg className="h-7 w-6" viewBox="0 0 12 14" fill="currentColor" aria-hidden>
-            <path d="M0 0v14l11-7z" />
-          </svg>
-        )}
-      </button>
+  // Play/Pause. The glyph starts at the content's left edge, where the title and the DJ start. Its place
+  // to press is 44px wide around a glyph of 24px, and the spare 10px on the left sits in the page's
+  // margin, so that only 10px of it, and not 20px, stands between the glyph and the bar.
+  const button = (
+    <button
+      onClick={isPlaying ? onPause : onPlay}
+      disabled={isLoading}
+      aria-label={isPlaying ? 'Pause' : 'Play'}
+      className="player-play -ml-2.5 flex-shrink-0 w-11 h-11 flex items-center justify-center text-[var(--text)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+    >
+      {isLoading ? (
+        <svg className="w-6 h-6 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      ) : isPlaying ? (
+        // Both glyphs are drawn from the left edge of the same box, so the edge doesn't move between them.
+        <svg className="h-7 w-6" viewBox="0 0 12 14" fill="currentColor" aria-hidden>
+          <path d="M0 0h4v14H0zM8 0h4v14H8z" />
+        </svg>
+      ) : (
+        <svg className="h-7 w-6" viewBox="0 0 12 14" fill="currentColor" aria-hidden>
+          <path d="M0 0v14l11-7z" />
+        </svg>
+      )}
+    </button>
+  );
 
-      {/* The bar. With the side's sound measured it is drawn as that sound; without, as a plain line. Either
-          way the part played is bright and the rest dim, and over it lies an ordinary slider, unseen, so the
-          mouse, a finger, the keyboard and a screen reader all work it. */}
-      <div className="flex-1 min-w-0 font-mono text-[12px] tabular-nums text-[var(--muted)]">
-        <div
-          className="player-wave"
-          style={{ '--played': `${played}%` } as React.CSSProperties}
-          onPointerMove={preview}
-          onPointerLeave={() => unpoint('data-on')}
-        >
-          {shape ? (
-            <div className="player-wave-shape" style={{ maskImage: shape, WebkitMaskImage: shape }} />
-          ) : (
-            <div className="player-wave-shape" data-flat="" />
-          )}
-          {/* Where each ID'd track starts: a cut through the bar. One at the very start would cut nothing. */}
-          {whole > 0 &&
-            ids?.map((id) =>
-              id.start > 0 && id.start < whole ? (
-                <span key={id.start} className="player-wave-mark" style={{ left: `${(id.start / whole) * 100}%` }} />
-              ) : null,
-            )}
-          <div ref={ghost} className="player-wave-ghost" aria-hidden>
-            <span />
-          </div>
-          <input
-            type="range"
-            min="0"
-            max={whole || 1}
-            step="1"
-            value={whole ? currentTime : 0}
-            onChange={(e) => {
-              if (whole && !fingerJustHere()) onSeek(parseFloat(e.target.value));
-            }}
-            onTouchStart={(e) => {
-              press.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, dragging: false };
-            }}
-            onTouchMove={(e) => {
-              const from = press.current;
-              const to = e.touches[0];
-              if (!from || !to) return;
-              if (!from.dragging) {
-                // A finger that has set off along the bar is dragging it. One going up or down is scrolling
-                // the page past it.
-                const across = Math.abs(to.clientX - from.x);
-                if (across <= 6 || across <= Math.abs(to.clientY - from.y)) return;
-                from.dragging = true;
-              }
-              const bar = e.currentTarget.getBoundingClientRect();
-              const time = timeAt(to.clientX, bar);
-              if (time === null) return;
-              onSeek(time);
-              point(to.clientX, bar);
-              ghost.current?.setAttribute('data-drag', '');
-            }}
-            onTouchCancel={endTouch}
-            onTouchEnd={(e) => {
-              const from = press.current;
-              const to = e.changedTouches[0];
-              endTouch();
-              // The end of a drag has nothing left to do, and a finger that wandered wasn't pressing the bar.
-              if (!from || !to || from.dragging) return;
-              if (Math.hypot(to.clientX - from.x, to.clientY - from.y) > 10) return;
-              pressAt(to.clientX, e.currentTarget.getBoundingClientRect());
-            }}
-            // With a mouse the slider has already gone to the place; what is left is starting the tape.
-            onClick={(e) => {
-              if (unstarted && !fingerJustHere()) pressAt(e.clientX, e.currentTarget.getBoundingClientRect());
-            }}
-            onKeyUp={(e) => {
-              if (unstarted && currentTime > 0 && /^(Arrow|Page|Home|End)/.test(e.key)) onPlay();
-            }}
-            aria-label={`Seek audio${title ? `: ${title}` : ''}`}
-            aria-valuetext={whole ? `${formatTime(currentTime)} of ${formatTime(whole)}${playing ? `, ${idLabel(playing)}` : ''}` : 'Not loaded yet'}
-          />
-        </div>
-        {showTimes && (
-          <div className="mt-1 flex justify-between">
-            <span>{formatTime(currentTime)}</span>
-            <span>{whole > 0 ? formatTime(whole) : '--:--:--'}</span>
-          </div>
+  // The bar. With the side's sound measured it is drawn as that sound; without, as a plain line. Either
+  // way the part played is bright and the rest dim, and over it lies an ordinary slider, unseen, so the
+  // mouse, a finger, the keyboard and a screen reader all work it.
+  const bar = (
+    <div
+      className="player-wave"
+      style={{ '--played': `${played}%` } as React.CSSProperties}
+      onPointerMove={preview}
+      onPointerLeave={() => unpoint('data-on')}
+    >
+      {shape ? (
+        <div className="player-wave-shape" style={{ maskImage: shape, WebkitMaskImage: shape }} />
+      ) : (
+        <div className="player-wave-shape" data-flat="" />
+      )}
+      {/* Where each ID'd track starts: a cut through the bar. One at the very start would cut nothing. */}
+      {whole > 0 &&
+        ids?.map((id) =>
+          id.start > 0 && id.start < whole ? (
+            <span key={id.start} className="player-wave-mark" style={{ left: `${(id.start / whole) * 100}%` }} />
+          ) : null,
         )}
-        {children}
+      <div ref={ghost} className="player-wave-ghost" aria-hidden>
+        <span />
       </div>
+      <input
+        type="range"
+        min="0"
+        max={whole || 1}
+        step="1"
+        value={whole ? currentTime : 0}
+        onChange={(e) => {
+          if (whole && !fingerJustHere()) onSeek(parseFloat(e.target.value));
+        }}
+        onTouchStart={(e) => {
+          press.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, dragging: false };
+        }}
+        onTouchMove={(e) => {
+          const from = press.current;
+          const to = e.touches[0];
+          if (!from || !to) return;
+          if (!from.dragging) {
+            // A finger that has set off along the bar is dragging it. One going up or down is scrolling
+            // the page past it.
+            const across = Math.abs(to.clientX - from.x);
+            if (across <= 6 || across <= Math.abs(to.clientY - from.y)) return;
+            from.dragging = true;
+          }
+          const bar = e.currentTarget.getBoundingClientRect();
+          const time = timeAt(to.clientX, bar);
+          if (time === null) return;
+          onSeek(time);
+          point(to.clientX, bar);
+          ghost.current?.setAttribute('data-drag', '');
+        }}
+        onTouchCancel={endTouch}
+        onTouchEnd={(e) => {
+          const from = press.current;
+          const to = e.changedTouches[0];
+          endTouch();
+          // The end of a drag has nothing left to do, and a finger that wandered wasn't pressing the bar.
+          if (!from || !to || from.dragging) return;
+          if (Math.hypot(to.clientX - from.x, to.clientY - from.y) > 10) return;
+          pressAt(to.clientX, e.currentTarget.getBoundingClientRect());
+        }}
+        // With a mouse the slider has already gone to the place; what is left is starting the tape.
+        onClick={(e) => {
+          if (unstarted && !fingerJustHere()) pressAt(e.clientX, e.currentTarget.getBoundingClientRect());
+        }}
+        onKeyUp={(e) => {
+          if (unstarted && currentTime > 0 && /^(Arrow|Page|Home|End)/.test(e.key)) onPlay();
+        }}
+        aria-label={`Seek audio${title ? `: ${title}` : ''}`}
+        aria-valuetext={whole ? `${formatTime(currentTime)} of ${formatTime(whole)}${playing ? `, ${idLabel(playing)}` : ''}` : 'Not loaded yet'}
+      />
     </div>
+  );
+
+  // At the foot of the window, in the page's own column: the button, what is playing, and the bar.
+  if (docked) {
+    return (
+      <div className="mx-auto flex h-full max-w-7xl items-center gap-4 px-4 sm:px-6">
+        {button}
+        <p className="player-dock-what">
+          <span className="player-dock-name">{playing ? idLabel(playing) : 'Nothing ID’d here yet'}</span>
+          <span className="player-dock-time">
+            {title ? `${title} · ` : ''}
+            {formatTime(currentTime)}
+            {whole > 0 ? ` / ${formatTime(whole)}` : ''}
+          </span>
+        </p>
+        <div className="min-w-0 flex-1">{bar}</div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div ref={self} className="flex items-start gap-3">
+        {button}
+        <div className="flex-1 min-w-0 font-mono text-[12px] tabular-nums text-[var(--muted)]">
+          {bar}
+          {showTimes && (
+            <div className="mt-1 flex justify-between">
+              <span>{formatTime(currentTime)}</span>
+              <span>{whole > 0 ? formatTime(whole) : '--:--:--'}</span>
+            </div>
+          )}
+          {children}
+        </div>
+      </div>
+      {inReach &&
+        createPortal(
+          <div className="player-dock" role="group" aria-label="Player">
+            <PlayerControls {...props} docked>
+              {null}
+            </PlayerControls>
+          </div>,
+          document.body,
+        )}
+    </>
   );
 }
