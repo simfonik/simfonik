@@ -596,7 +596,9 @@ describe('every side in the archive', () => {
     expect(timed).toBeGreaterThan(300);
   });
 
-  it('shows for a change what the reader says of the side once it is a comment: the same rows, times, ends and names', () => {
+  // Every side of every tape, each put through the reader again: seconds of work here, and three times that on
+  // the machine that runs the tests for GitHub, where the usual five seconds ran out.
+  it('shows for a change what the reader says of the side once it is a comment: the same rows, times, ends and names', { timeout: 60_000 }, () => {
     const posted = { sent: { by: 'Dana', read: 1 } };
     const credit = (rows: Row[]) => rows.map((r) => `${r.start ?? '-'} ${r.by ?? '-'}`);
     const tried: Record<string, number> = {};
