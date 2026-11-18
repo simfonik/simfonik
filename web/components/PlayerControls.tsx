@@ -29,6 +29,8 @@ export interface PlayerControlsProps {
    * and null when it goes. Whatever else belongs at the foot of the window is put there, in the one bar.
    */
   onBarLead?: (place: HTMLElement | null) => void;
+  /** Where in the page that copy is put, which is where the Tab key comes to it. The end of the page if nowhere is given. */
+  barHome?: HTMLElement | null;
   onPlay: () => void;
   onPause: () => void;
   onSeek: (time: number) => void;
@@ -71,6 +73,7 @@ export function PlayerControls(props: PlayerControlsProps) {
     children,
     docked = false,
     onBarLead,
+    barHome,
     onPlay,
     onPause,
     onSeek,
@@ -86,8 +89,8 @@ export function PlayerControls(props: PlayerControlsProps) {
 
   const self = useRef<HTMLDivElement>(null);
   const onPhone = useOnPhone();
-  const outOfSight = useOutOfSight(self, !docked);
-  const inReach = !docked && !onPhone && outOfSight && (isPlaying || currentTime > 0);
+  const outOfSight = useOutOfSight(self, !docked && !onPhone);
+  const inReach = outOfSight && (isPlaying || currentTime > 0);
   const oneRow = useMedia(ONE_ROW);
 
   /** The time at a place across the bar, or null while the side's length isn't known. */
@@ -271,10 +274,11 @@ export function PlayerControls(props: PlayerControlsProps) {
         {button}
         <p className="player-dock-what">
           <span className="player-dock-name">{playing ? idLabel(playing) : 'Nothing ID’d here yet'}</span>
+          {/* The time first: it is what changes, and a side with a long name is cut short at its end, not here. */}
           <span className="player-dock-time">
-            {title ? `${title} · ` : ''}
             {formatTime(currentTime)}
             {whole > 0 ? ` / ${formatTime(whole)}` : ''}
+            {title ? ` · ${title}` : ''}
           </span>
         </p>
         <div className="min-w-0 flex-1">{bar}</div>
@@ -300,11 +304,9 @@ export function PlayerControls(props: PlayerControlsProps) {
       {inReach &&
         createPortal(
           <div className="player-dock" role="group" aria-label="Player">
-            <PlayerControls {...props} docked>
-              {null}
-            </PlayerControls>
+            <PlayerControls {...props} docked />
           </div>,
-          document.body,
+          barHome ?? document.body,
         )}
     </>
   );

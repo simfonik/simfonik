@@ -785,13 +785,14 @@ button.tracklist-n { min-width: 3rem; text-align: left; }
 /* The player kept in reach on a wider screen (PlayerControls.tsx): at the foot of the window once the tape
    has been played, for as long as the player itself is out of sight. One row in the page's own column: the
    button, what is playing, and the bar the tape is moved along. It comes up from the edge it sits on. */
-:root { --dock-height: calc(4.25rem + 1.5px); }
+:root { --dock-height: calc(4.25rem + 1.5px + env(safe-area-inset-bottom, 0px)); }
 .player-dock {
   position: fixed;
   inset: auto 0 0 0;
   z-index: 30;
   box-sizing: border-box;
   height: var(--dock-height);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   border-top: 1.5px solid var(--text);
   background: var(--bg);
   animation: player-dock-up 0.18s cubic-bezier(0.23, 1, 0.32, 1);
@@ -799,13 +800,14 @@ button.tracklist-n { min-width: 3rem; text-align: left; }
 @keyframes player-dock-up {
   from { transform: translateY(100%); }
 }
-@media (prefers-reduced-motion: reduce) {
-  .player-dock { animation: none; }
-}
+/* Lower than the player's own bar, to keep this one slim; under a finger it is as tall as a finger needs. */
 .player-dock .player-wave { height: 2rem; }
-/* What is playing, over where the tape is: as wide as its words, and never more than a third of the window,
-   so the bar the tape is moved along has the rest. */
-.player-dock-what { display: flex; flex: 0 1 auto; min-width: 0; max-width: min(24rem, 34%); flex-direction: column; gap: 0.125rem; }
+@media (pointer: coarse) {
+  .player-dock .player-wave { height: 2.75rem; }
+}
+/* What is playing, over where the tape is. The same width whatever the track, so the bar the tape is moved
+   along starts in the same place from one track to the next and a place on it stays where it was. */
+.player-dock-what { display: flex; flex: 0 0 min(20rem, 30%); min-width: 0; flex-direction: column; gap: 0.125rem; }
 .player-dock-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 500; line-height: 1.25rem; color: var(--text); }
 .player-dock-time { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-geist-mono), ui-monospace, monospace; font-size: 12px; font-variant-numeric: tabular-nums; line-height: 1rem; color: var(--muted); }
 /* The start of the row, on a window wide enough for one (PlayerControls.tsx): the visitor's pending IDs and
@@ -828,15 +830,25 @@ button.tracklist-n { min-width: 3rem; text-align: left; }
 @keyframes player-dock-pending-in {
   from { opacity: 0; transform: translateX(-0.75rem); }
 }
+/* Room for a count of two figures, so the player beside it stays put as the count goes up. */
+.player-dock-count { min-width: 11.5em; }
 .player-dock-pending .tracklist-post-name { flex: none; width: 10rem; }
-.player-dock-alert { position: absolute; left: 0; bottom: calc(100% + 1rem); padding: 0.375rem 0.75rem; border: 1.5px solid currentColor; background: var(--bg); white-space: nowrap; }
+.player-dock-alert { position: absolute; left: 0; bottom: calc(100% + 1rem); width: max-content; max-width: min(32rem, calc(100vw - 3rem)); padding: 0.375rem 0.75rem; border: 1.5px solid currentColor; background: var(--bg); }
 .tracklist-post-count { animation: tracklist-post-count-noted 1.4s ease-out; }
 @keyframes tracklist-post-count-noted {
   from, 40% { color: var(--text); }
 }
-@media (prefers-reduced-motion: reduce) {
-  .player-dock-pending { animation: none; }
+/* For a visitor who has asked for less motion neither slides in: each fades in where it stands, so that it
+   is still seen to arrive. */
+@keyframes player-dock-fade {
+  from { opacity: 0; }
 }
+@media (prefers-reduced-motion: reduce) {
+  .player-dock, .player-dock-pending { animation: player-dock-fade 0.15s ease-out; }
+}
+/* A row or a link the Tab key comes to is brought clear of the bar, not left underneath it. */
+:root:has(.player-dock) { scroll-padding-bottom: var(--dock-height); }
+:root:has(.player-dock):has(.tracklist-post) { scroll-padding-bottom: calc(var(--dock-height) + 6rem); }
 /* Whichever of the two is at the foot of the screen, the page ends that much lower, so its last lines can
    still be read. */
 body:has(.player-tray) { --foot: var(--tray-height); }

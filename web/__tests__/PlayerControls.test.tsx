@@ -50,10 +50,10 @@ describe('the player kept in reach', () => {
     expect(the.bar()).toBeNull();
     the.scrolledAway();
     expect(the.bar()).toHaveTextContent('Orbital — Chime');
-    expect(the.bar()).toHaveTextContent('Side A · 0:01:05 / 0:10:00');
+    expect(the.bar()).toHaveTextContent('0:01:05 / 0:10:00 · Side A');
     the.now({ currentTime: 301 });
     expect(the.bar()).toHaveTextContent('Unknown track');
-    expect(the.bar()).toHaveTextContent('Side A · 0:05:01 / 0:10:00');
+    expect(the.bar()).toHaveTextContent('0:05:01 / 0:10:00 · Side A');
     the.scrolledBack();
     expect(the.bar()).toBeNull();
   });
@@ -112,6 +112,17 @@ describe('the player kept in reach', () => {
     the.scrolledAway();
     expect(the.bar()).not.toBeNull();
     expect(onBarLead).not.toHaveBeenCalled();
+  });
+
+  it('is put where in the page it is told to be, and at the end of the page where it is told nothing', () => {
+    const home = document.createElement('div');
+    const the = page({ barHome: home });
+    document.body.prepend(home);
+    the.scrolledAway();
+    expect(home).toContainElement(the.bar());
+    the.now({ barHome: null });
+    expect(home).toBeEmptyDOMElement();
+    expect(document.body.lastElementChild).toBe(the.bar());
   });
 
   it('has no second bar of its own, and leaves what is under the player where it is', () => {

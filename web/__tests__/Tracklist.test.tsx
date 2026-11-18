@@ -209,6 +209,17 @@ describe('the bar that posts a visitor’s times', () => {
     expect(window.localStorage.getItem('simfonik:id-name')).toBe('Dana');
   });
 
+  it('marks the place for the player’s bar after the tracklist’s rows, where the Tab key will come to it', async () => {
+    // An ID has been posted, so the tracklist has its History under the rows.
+    const page = tapePage({ sides: [{ position: 'A', tracks: OWN }], posted: [{ by: 'Josh', says: '[0:00] The Prodigy - Hyperspeed (G-Force Part 2)' }] });
+    await page.read();
+    const home = page.shared().barHome as HTMLElement;
+    const after = (a: Node, b: Node) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    const rows = within(page.tracklist() as HTMLElement).getAllByRole('listitem');
+    expect(after(rows[rows.length - 1], home)).toBe(true);
+    expect(after(home, screen.getByRole('button', { name: /^History/ }))).toBe(true);
+  });
+
   it('is the start of the player’s bar while that is at the foot of a wide window, and a strip of its own again when it goes; it posts from there all the same', async () => {
     const page = tapePage({ sides: [{ position: 'A', tracks: OWN }], name: null });
     await page.read();
@@ -225,14 +236,16 @@ describe('the bar that posts a visitor’s times', () => {
     expect(bar()).not.toHaveClass('tracklist-post');
     expect(bar()).toHaveTextContent('1 ID pending');
 
-    // What was typed in one is in the other: the name is the tracklist's, not the bar's.
+    // What was typed in one is in the other, and the keyboard with it: the name is the tracklist's, not the bar's.
     await page.user.type(within(bar()).getByRole('textbox', { name: 'Your name' }), 'Dan');
     act(() => page.shared().setBarLead(null));
     expect(lead).toBeEmptyDOMElement();
     expect(bar()).toHaveClass('tracklist-post');
     expect(within(bar()).getByRole('textbox', { name: 'Your name' })).toHaveValue('Dan');
+    expect(within(bar()).getByRole('textbox', { name: 'Your name' })).toHaveFocus();
 
     act(() => page.shared().setBarLead(lead));
+    expect(within(bar()).getByRole('textbox', { name: 'Your name' })).toHaveFocus();
     await page.user.type(within(bar()).getByRole('textbox', { name: 'Your name' }), 'a{Enter}');
     await waitFor(() => expect(page.posts()).toEqual(['[3:41] Butsch - The Count']));
     await waitFor(() => expect(page.bar()).toBeNull());

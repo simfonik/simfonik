@@ -138,6 +138,7 @@ export function PlaylistPlayer({ tracks, tapeId, sideCount }: PlaylistPlayerProp
         onPlay={controls.play}
         onPause={controls.pause}
         onSeek={controls.seek}
+        barHome={trackIds.barHome}
         onBarLead={trackIds.setBarLead}
       >
         {tapeId && (

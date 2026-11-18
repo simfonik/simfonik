@@ -90,6 +90,13 @@ type TapeTrackIds = {
    */
   barLead: HTMLElement | null;
   setBarLead: (place: HTMLElement | null) => void;
+  /**
+   * Where in the page that bar is put: after the tracklist's rows, which the tracklist marks. It is fixed to
+   * the foot of the window wherever it is in the page; its place there is the order the Tab key takes, so
+   * that Post comes after the rows whose + made something to post, not after everything else on the page.
+   */
+  barHome: HTMLElement | null;
+  setBarHome: (place: HTMLElement | null) => void;
 };
 
 const STILL: Playhead = { side: 0, time: 0, started: false };
@@ -117,6 +124,8 @@ const nothing: TapeTrackIds = {
   setSlot: () => {},
   barLead: null,
   setBarLead: () => {},
+  barHome: null,
+  setBarHome: () => {},
   answered: () => {},
 };
 const Context = createContext<TapeTrackIds>(nothing);
@@ -163,6 +172,7 @@ export function TapeTrackIdsProvider({ tapeId, sides: tape, children }: { tapeId
   const [editing, setEditing] = useState<Asked | null>(null);
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   const [barLead, setBarLead] = useState<HTMLElement | null>(null);
+  const [barHome, setBarHome] = useState<HTMLElement | null>(null);
   const [name, setName] = useState('');
   useEffect(() => setName(rememberedName()), []);
   // Each reading of the comments has a number. A change posted while reading n is under way is in reading
@@ -318,8 +328,8 @@ export function TapeTrackIdsProvider({ tapeId, sides: tape, children }: { tapeId
   const answered = useCallback(() => setAsked(null), []);
 
   const value = useMemo(
-    () => ({ tape, sides, read, comments, reread, setPlayer, goTo, report, playhead, watch, name, unposted, say, unsay, post, ask, asked, answered, editing, setEditing, slot, setSlot, barLead, setBarLead }),
-    [tape, sides, read, comments, reread, setPlayer, goTo, report, playhead, watch, name, unposted, say, unsay, post, ask, asked, answered, editing, slot, barLead],
+    () => ({ tape, sides, read, comments, reread, setPlayer, goTo, report, playhead, watch, name, unposted, say, unsay, post, ask, asked, answered, editing, setEditing, slot, setSlot, barLead, setBarLead, barHome, setBarHome }),
+    [tape, sides, read, comments, reread, setPlayer, goTo, report, playhead, watch, name, unposted, say, unsay, post, ask, asked, answered, editing, slot, barLead, barHome],
   );
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }

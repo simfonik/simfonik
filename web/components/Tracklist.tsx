@@ -67,7 +67,7 @@ const chevron = (
  * and out of the comments, where a run of them would bury the talk.
  */
 export function Tracklist() {
-  const { tape, sides, read, name: remembered, unposted, goTo, playhead, say, unsay, post: send, ask, editing, setSlot, barLead } = useTapeTrackIds();
+  const { tape, sides, read, name: remembered, unposted, goTo, playhead, say, unsay, post: send, ask, editing, setSlot, barLead, setBarHome } = useTapeTrackIds();
   const several = tape.length > 1;
   const labelled = several || Boolean(tape[0]?.title);
   const place = (side: number) => (several ? tape[side].position : null);
@@ -97,9 +97,22 @@ export function Tracklist() {
   const [message, setMessage] = useState('');
   const [thanks, setThanks] = useState('');
   const nameField = useRef<HTMLInputElement>(null);
+  const postButton = useRef<HTMLButtonElement>(null);
   const messageId = useId();
   // Not before the comments are back: until then the visitor's changes aren't on the page to be seen.
   const some = read !== 'reading' && unposted.length > 0;
+  // The form that posts them is a strip of its own, or the start of the player's bar where that is there
+  // (below). Going from one to the other it is taken off the page and put back, and a keyboard that was in
+  // it goes with it: to the same blank, or to Post.
+  const atBarLead = barLead !== null;
+  const held = useRef<'name' | 'post' | null>(null);
+  useLayoutEffect(() => {
+    if (!held.current || document.activeElement !== document.body) return;
+    (held.current === 'name' ? nameField.current : postButton.current)?.focus({ preventScroll: true });
+  }, [atBarLead]);
+  useEffect(() => {
+    if (!some) held.current = null;
+  }, [some]);
 
   const mark = (side: number, k: number) => {
     const head = playhead();
@@ -171,10 +184,17 @@ export function Tracklist() {
   // first line and the name and Post its second. Where the player's bar is there and has room on its row
   // (a wide window, the player out of sight), it is the start of that bar instead: one bar, not two, and
   // still under the tracklist. The count shows for a moment in full colour each time it changes.
-  const atBarLead = barLead !== null;
+  const holds = {
+    onFocus: (e: React.FocusEvent<HTMLFormElement>) => {
+      held.current = (e.target as Element) === nameField.current ? 'name' : 'post';
+    },
+    onBlur: () => {
+      held.current = null;
+    },
+  };
   const pending = (
     <>
-      <p aria-live="polite" className={`${small} min-w-0 ${atBarLead ? 'flex-none' : remembered ? 'flex-1' : 'w-full pt-2'}`}>
+      <p aria-live="polite" className={`${small} min-w-0 ${atBarLead ? 'player-dock-count flex-none' : remembered ? 'flex-1' : 'w-full pt-2'}`}>
         <span key={unposted.length} className="tracklist-post-count">
           {count(unposted.length)} pending
         </span>
@@ -202,7 +222,7 @@ export function Tracklist() {
           className="track-ids-field tracklist-post-name"
         />
       )}
-      <button type="submit" aria-disabled={status === 'sending'} className="poster-btn id-sheet-post">
+      <button ref={postButton} type="submit" aria-disabled={status === 'sending'} className="poster-btn id-sheet-post">
         {status === 'sending' ? '…' : 'Post'}
       </button>
       <p id={messageId} role="alert" className={`font-mono text-[10px] uppercase leading-[1.6] tracking-[0.22em] text-pretty text-red-500 empty:hidden ${atBarLead ? 'player-dock-alert' : 'w-full'}`}>
@@ -211,11 +231,11 @@ export function Tracklist() {
     </>
   );
   const pendingBar = atBarLead ? (
-    <form onSubmit={post} noValidate className="player-dock-pending" aria-label="Post your IDs">
+    <form onSubmit={post} noValidate {...holds} className="player-dock-pending" aria-label="Post your IDs">
       {pending}
     </form>
   ) : (
-    <form onSubmit={post} noValidate className="tracklist-post" aria-label="Post your IDs">
+    <form onSubmit={post} noValidate {...holds} className="tracklist-post" aria-label="Post your IDs">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="flex max-w-3xl flex-wrap items-center gap-x-4">{pending}</div>
       </div>
@@ -260,6 +280,9 @@ export function Tracklist() {
             ),
           )}
         </div>
+        {/* After the rows, in the order the Tab key takes: the player's bar while it is at the foot of the window
+            (it is put here, wherever on the screen it is drawn), and the pending IDs, in it or on their own. */}
+        <div ref={setBarHome} />
         {some && (barLead ? createPortal(pendingBar, barLead) : pendingBar)}
         <History />
         {/* Always here, so a screen reader hears the thanks arrive. */}
