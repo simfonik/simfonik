@@ -108,7 +108,11 @@ export function Tracklist() {
     if (head.side !== side || !couldStartAt(rows, time, length).includes(k)) return;
     // A line the list has down as unknown is marked, not named: it is still nobody's ID.
     say({ side, time, artist: rows[k].known ? rows[k].artist : '', title: rows[k].known ? rows[k].title : '' });
-    setThanks('');
+    setThanks(`Marked ${idPlace(place(side), time)}. Not posted yet.`);
+  };
+  const undo = (change: Parameters<typeof unsay>[0]) => {
+    unsay(change);
+    setThanks(`Taken back: ${idPlace(place(change.side), change.time)}.`);
   };
   const identify = (side: number, start: number) => {
     // An unknown track is ID'd by ear: the tape goes there, and the blanks open for it.
@@ -192,7 +196,7 @@ export function Tracklist() {
                 slot={setSlot}
                 onPlay={(start) => goTo(place(i), start)}
                 onMark={(k) => mark(i, k)}
-                onUndo={unsay}
+                onUndo={undo}
                 onIdentify={(start) => identify(i, start)}
                 onEdit={(start, n) => edit(i, start, n)}
               />
@@ -280,6 +284,10 @@ type SideListProps = {
   onEdit: (start: number | null, n: number | null) => void;
 };
 
+/** The row whose track starts nearest a time, of those that have one. */
+const nearestRow = (list: HTMLElement, time: number): HTMLElement | undefined =>
+  [...list.querySelectorAll<HTMLElement>('[data-start]')].sort((x, y) => Math.abs(Number(x.dataset.start) - time) - Math.abs(Number(y.dataset.start) - time))[0];
+
 function SideList({ heading, summary, rows, position, silent, lit, markable, movable, editing, slot, onPlay, onMark, onUndo, onIdentify, onEdit }: SideListProps) {
   const collapsible = rows.length > COLLAPSED_COUNT;
   // A side that is short when it first shows is never folded later, when a row is added to it.
@@ -328,10 +336,21 @@ function SideList({ heading, summary, rows, position, silent, lit, markable, mov
     if (was === null || editing !== null || document.activeElement !== document.body || !list.current) return;
     const row = list.current.querySelector<HTMLElement>(was.time !== null ? `[data-start="${was.time}"]` : `[data-n="${was.n}"]`);
     const opener = row?.querySelector<HTMLElement>(was.time !== null ? '.tracklist-edit' : 'button.tracklist-n');
-    const far = (other: HTMLElement) => Math.abs(Number(other.dataset.start) - (was.time ?? 0));
-    const [nearest] = was.time === null ? [] : [...list.current.querySelectorAll<HTMLElement>('[data-start]')].sort((x, y) => far(x) - far(y));
+    const nearest = was.time === null ? undefined : nearestRow(list.current, was.time);
     (opener ?? (row ?? nearest)?.querySelector<HTMLElement>('.tracklist-time'))?.focus({ preventScroll: true });
   }, [editing]);
+
+  // Undo goes with the time it takes back. A keyboard that was on it goes to Edit, which stood beside it,
+  // or, the row gone with its mark, to the time of the row now nearest. Only a keyboard: under a finger
+  // or a mouse there is nothing to keep hold of.
+  const undone = useRef<{ start: number; n: number | null } | null>(null);
+  useEffect(() => {
+    const was = undone.current;
+    undone.current = null;
+    if (!was || document.activeElement !== document.body || !list.current) return;
+    const row = was.n === null ? null : list.current.querySelector<HTMLElement>(`[data-n="${was.n}"]`);
+    (row?.querySelector<HTMLElement>('.tracklist-edit') ?? nearestRow(list.current, was.start)?.querySelector<HTMLElement>('.tracklist-time'))?.focus({ preventScroll: true });
+  });
 
   return (
     <div ref={whole}>
@@ -406,7 +425,11 @@ function SideList({ heading, summary, rows, position, silent, lit, markable, mov
                       <>
                         <button
                           type="button"
-                          onClick={() => onUndo(row.mine as NonNullable<Row['mine']>)}
+                          onClick={(e) => {
+                            // A press of Enter or Space is a click the pointer had no part in.
+                            if (e.detail === 0) undone.current = { start: row.start as number, n: row.n };
+                            onUndo(row.mine as NonNullable<Row['mine']>);
+                          }}
                           className="tracklist-cue"
                           aria-label={row.known ? `Take back the time for ${label}` : `Take back the mark at ${idPlace(position, row.start as number)}`}
                         >

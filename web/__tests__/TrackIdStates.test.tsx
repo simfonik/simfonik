@@ -336,6 +336,22 @@ describe('a line of the list the visitor has given a time, not yet posted', () =
     expect(page.bar()).toBeNull();
   });
 
+  it('says a time given with + and one taken back, and after Undo from the keyboard the keyboard is on Edit, beside where Undo was', async () => {
+    const page = await timed();
+    const said = (text: string) => screen.getAllByRole('status').some((status) => status.textContent === text);
+    expect(said('Marked 0:03:41. Not posted yet.')).toBe(true);
+    page.button('Take back the time for Butsch — The Count').focus();
+    await page.user.keyboard('{Enter}');
+    expect(said('Taken back: 0:03:41.')).toBe(true);
+    expect(page.button('Edit Butsch — The Count')).toHaveFocus();
+  });
+
+  it('Undo with a mouse leaves the keyboard where it was', async () => {
+    const page = await timed();
+    await page.user.click(page.button('Take back the time for Butsch — The Count'));
+    expect(document.body).toHaveFocus();
+  });
+
   it('keeps the list’s order: the + is then only on the lines that could start where the tape is', async () => {
     const page = await timed();
     // Before it, no other line can start: the first has its time, and the rest come after the second.
@@ -519,6 +535,11 @@ describe('a track the comments have ID’d', () => {
     await retime(page, '275');
     expect(startsAt()).toHaveValue('0:02:75');
     expect(screen.getByRole('alert')).toHaveTextContent('Minutes and seconds only go up to 59.');
+    // The blank it is about is the one marked as wrong and read with the words; the others are not.
+    expect(startsAt()).toHaveAccessibleDescription('Minutes and seconds only go up to 59.');
+    expect(startsAt()).toBeInvalid();
+    expect(screen.getByRole('textbox', { name: 'Artist' })).toBeValid();
+    expect(screen.getByRole('textbox', { name: 'Artist' })).not.toHaveAccessibleDescription();
     await retime(page, '0:03');
     expect(screen.getByRole('alert')).toHaveTextContent('Another track starts at 0:00:00.');
     await retime(page, '14:58');
@@ -867,6 +888,9 @@ describe('a line of the tape’s tracklist, edited from its row', () => {
     await page.user.click(sheet.getByRole('button', { name: /^Add/ }));
     await waitFor(() => expect(page.rows()[3]).toBe('0:06:40Phenomania — CaramelleUndo'));
     expect(page.posts()).toEqual([]);
+    // Said once the sheet has closed, when a screen reader can hear the page again.
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('status').some((status) => status.textContent === 'Added at 0:06:40. Not posted yet.')).toBe(true);
   });
 });
 

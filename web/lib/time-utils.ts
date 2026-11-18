@@ -15,10 +15,10 @@ export function formatTimeAgo(dateString: string): string {
 }
 
 /**
- * A time as a visitor types one: 0:05:00, 5:00 or 1:02:03, with a colon between the parts, or a full stop, a
- * comma or a space. A phone's number keys have no colon, and some have nothing but the figures, so figures
- * alone are read from the right, two for the seconds and two for the minutes: 500 is 5:00, and 10203 is
- * 1:02:03. In seconds, or null if it is no time.
+ * A time as it is written: 0:05:00, 5:00 or 1:02:03, with a colon between the parts, or a full stop, a comma
+ * or a space, as a time pasted in may have. Figures alone are read from the right, two for the seconds and
+ * two for the minutes: 500 is 5:00, and 10203 is 1:02:03. (The time's blank on the tape page is typed in
+ * figures and always holds the first form: typeTime, below.) In seconds, or null if it is no time.
  */
 export function parseTime(text: string): number | null {
   const typed = text.trim();

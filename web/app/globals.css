@@ -496,6 +496,11 @@ body::before {
 }
 .track-ids-offer:active { opacity: 0.6; }
 .track-ids-offer:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+/* Under a finger, on a screen wide enough to have the blanks in the line, a name offered is as tall as a
+   finger needs. */
+@media (pointer: coarse) {
+  .track-ids-offer { padding-block: 13px; }
+}
 
 /* ID'ing a track on a phone: a sheet that rises from the foot of the screen, with a row to itself for each
    blank. It stays at the foot of the screen when the keyboard comes up, and its contents are padded up clear
@@ -542,6 +547,8 @@ html:has(.id-sheet[open]) { overflow: hidden; }
    two taps on them, or anywhere on the sheet, are two presses and never a zoom. */
 .player-play, .player-side, .track-ids-line, .track-ids-post, .track-ids-offer, .track-ids-shut, .tape-picture, .comment-time, .id-sheet,
 .tracklist-time, .tracklist-mark, button.tracklist-n, .tracklist-cue, .tracklist-post { touch-action: manipulation; }
+/* What is pressed in the tracklist dims as it is pressed, and needs no grey flash on top of that. */
+.tracklist-time, .tracklist-mark, button.tracklist-n, .tracklist-cue { -webkit-tap-highlight-color: transparent; }
 /* A held finger doesn't select the words of what is pressed in the sheet. */
 .id-sheet button { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 /* The sheet's top row stays put when a small phone has to scroll the rest of the sheet. */
@@ -640,6 +647,8 @@ html:has(.id-sheet[open]) { overflow: hidden; }
   outline: none;
 }
 .tracklist-row[hidden] { display: none; }
+/* "Show all" sends the keyboard on to the first row it showed: where it went is seen. */
+.tracklist-row:focus-visible { outline: 2px solid var(--text); outline-offset: -2px; }
 /* On a touch screen each row is as tall as a finger needs, so one place to press never lies over the next. */
 @media (pointer: coarse) {
   .tracklist-row { padding-block: 0.78125rem; }
