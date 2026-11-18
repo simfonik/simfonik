@@ -13,9 +13,9 @@ const IDS = [
 ] as Mark[];
 
 /** The page, with the player in the window or scrolled out of it at the test's word. */
-function page({ phone = false, ...props }: Partial<PlayerControlsProps> & { phone?: boolean } = {}) {
+function page({ phone = false, wide = false, ...props }: Partial<PlayerControlsProps> & { phone?: boolean; wide?: boolean } = {}) {
   document.body.innerHTML = '';
-  vi.spyOn(window, 'matchMedia').mockImplementation((query) => ({ matches: phone && query === '(max-width: 39.99rem)', media: query, addEventListener: () => {}, removeEventListener: () => {} }) as unknown as MediaQueryList);
+  vi.spyOn(window, 'matchMedia').mockImplementation((query) => ({ matches: (phone && query === '(max-width: 39.99rem)') || (wide && query === '(min-width: 70rem)'), media: query, addEventListener: () => {}, removeEventListener: () => {} }) as unknown as MediaQueryList);
   let seen: (inWindow: boolean) => void = () => {};
   vi.stubGlobal(
     'IntersectionObserver',
@@ -91,6 +91,27 @@ describe('the player kept in reach', () => {
     const the = page({ phone: true });
     the.scrolledAway();
     expect(the.bar()).toBeNull();
+  });
+
+  it('on a window wide enough for one row, has a place at its start for what else belongs at the foot of the window, and says when the place is there and when it has gone', () => {
+    const onBarLead = vi.fn();
+    const the = page({ wide: true, onBarLead });
+    expect(onBarLead).not.toHaveBeenCalled();
+    the.scrolledAway();
+    const place = onBarLead.mock.lastCall?.[0] as HTMLElement;
+    expect(the.bar()).toContainElement(place);
+    // First on the row: before the button, under the page's left edge.
+    expect(place.compareDocumentPosition(within(the.bar() as HTMLElement).getByRole('button', { name: 'Pause' })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    the.scrolledBack();
+    expect(onBarLead.mock.lastCall?.[0]).toBeNull();
+  });
+
+  it('has no such place on a narrower window, where there is no room on the row', () => {
+    const onBarLead = vi.fn();
+    const the = page({ onBarLead });
+    the.scrolledAway();
+    expect(the.bar()).not.toBeNull();
+    expect(onBarLead).not.toHaveBeenCalled();
   });
 
   it('has no second bar of its own, and leaves what is under the player where it is', () => {

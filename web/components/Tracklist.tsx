@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { idPlace, readComposed, type RunningOrder } from '../lib/track-ids/compose';
 import { canMoveTo, contributors, couldStartAt, isUnposted, playingAt, type Row } from '../lib/track-ids/side';
 import { formatTime } from '../lib/time-utils';
@@ -66,7 +67,7 @@ const chevron = (
  * and out of the comments, where a run of them would bury the talk.
  */
 export function Tracklist() {
-  const { tape, sides, read, name: remembered, unposted, goTo, playhead, say, unsay, post: send, ask, editing, setSlot } = useTapeTrackIds();
+  const { tape, sides, read, name: remembered, unposted, goTo, playhead, say, unsay, post: send, ask, editing, setSlot, barLead } = useTapeTrackIds();
   const several = tape.length > 1;
   const labelled = several || Boolean(tape[0]?.title);
   const place = (side: number) => (several ? tape[side].position : null);
@@ -165,6 +166,62 @@ export function Tracklist() {
   }, [listed]);
   if (sides.every(({ rows }) => rows.length === 0)) return null;
 
+  // The visitor's pending IDs and their Post. A strip of its own at the foot of the screen, in the page's
+  // column, so its words start on the edge everything else does; with a name to ask for, the count has its
+  // first line and the name and Post its second. Where the player's bar is there and has room on its row
+  // (a wide window, the player out of sight), it is the start of that bar instead: one bar, not two, and
+  // still under the tracklist. The count shows for a moment in full colour each time it changes.
+  const atBarLead = barLead !== null;
+  const pending = (
+    <>
+      <p aria-live="polite" className={`${small} min-w-0 ${atBarLead ? 'flex-none' : remembered ? 'flex-1' : 'w-full pt-2'}`}>
+        <span key={unposted.length} className="tracklist-post-count">
+          {count(unposted.length)} pending
+        </span>
+      </p>
+      {!remembered && (
+        <input
+          ref={nameField}
+          value={name}
+          onChange={(e) => {
+            setName(e.target.value);
+            if (status === 'error') {
+              setStatus('idle');
+              setMessage('');
+            }
+          }}
+          placeholder="Your name"
+          aria-label="Your name"
+          aria-describedby={message ? messageId : undefined}
+          autoComplete="name"
+          autoCapitalize="words"
+          autoCorrect="off"
+          spellCheck={false}
+          maxLength={100}
+          enterKeyHint="send"
+          className="track-ids-field tracklist-post-name"
+        />
+      )}
+      <button type="submit" aria-disabled={status === 'sending'} className="poster-btn id-sheet-post">
+        {status === 'sending' ? '…' : 'Post'}
+      </button>
+      <p id={messageId} role="alert" className={`font-mono text-[10px] uppercase leading-[1.6] tracking-[0.22em] text-pretty text-red-500 empty:hidden ${atBarLead ? 'player-dock-alert' : 'w-full'}`}>
+        {message}
+      </p>
+    </>
+  );
+  const pendingBar = atBarLead ? (
+    <form onSubmit={post} noValidate className="player-dock-pending" aria-label="Post your IDs">
+      {pending}
+    </form>
+  ) : (
+    <form onSubmit={post} noValidate className="tracklist-post" aria-label="Post your IDs">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="flex max-w-3xl flex-wrap items-center gap-x-4">{pending}</div>
+      </div>
+    </form>
+  );
+
   return (
     <section id="tracklist" className="scroll-mt-4 border-t-[1.5px] border-[var(--border)] pt-14 mt-16" aria-labelledby={headingId}>
       <div className="max-w-3xl">
@@ -203,48 +260,7 @@ export function Tracklist() {
             ),
           )}
         </div>
-        {some && (
-          <form onSubmit={post} noValidate className="tracklist-post" aria-label="Post your IDs">
-            {/* The page's own column, so the bar's words start on the edge everything else does. With a name
-                to ask for, the count has the bar's first line and the name and Post its second. */}
-            <div className="mx-auto max-w-7xl px-4 sm:px-6">
-              <div className="flex max-w-3xl flex-wrap items-center gap-x-4">
-                <p aria-live="polite" className={`${small} min-w-0 ${remembered ? 'flex-1' : 'w-full pt-2'}`}>
-                  {count(unposted.length)} pending
-                </p>
-                {!remembered && (
-                  <input
-                    ref={nameField}
-                    value={name}
-                    onChange={(e) => {
-                      setName(e.target.value);
-                      if (status === 'error') {
-                        setStatus('idle');
-                        setMessage('');
-                      }
-                    }}
-                    placeholder="Your name"
-                    aria-label="Your name"
-                    aria-describedby={message ? messageId : undefined}
-                    autoComplete="name"
-                    autoCapitalize="words"
-                    autoCorrect="off"
-                    spellCheck={false}
-                    maxLength={100}
-                    enterKeyHint="send"
-                    className="track-ids-field tracklist-post-name"
-                  />
-                )}
-                <button type="submit" aria-disabled={status === 'sending'} className="poster-btn id-sheet-post">
-                  {status === 'sending' ? '…' : 'Post'}
-                </button>
-                <p id={messageId} role="alert" className="w-full font-mono text-[10px] uppercase leading-[1.6] tracking-[0.22em] text-pretty text-red-500 empty:hidden">
-                  {message}
-                </p>
-              </div>
-            </div>
-          </form>
-        )}
+        {some && (barLead ? createPortal(pendingBar, barLead) : pendingBar)}
         <History />
         {/* Always here, so a screen reader hears the thanks arrive. */}
         <p role="status" className="sr-only">

@@ -84,6 +84,12 @@ type TapeTrackIds = {
   setEditing: (row: Asked | null) => void;
   slot: HTMLElement | null;
   setSlot: (place: HTMLElement | null) => void;
+  /**
+   * The start of the player's bar at the foot of a wide window, while it is there (PlayerControls.tsx): where
+   * the visitor's pending IDs and their Post go, so that one bar holds both.
+   */
+  barLead: HTMLElement | null;
+  setBarLead: (place: HTMLElement | null) => void;
 };
 
 const STILL: Playhead = { side: 0, time: 0, started: false };
@@ -109,6 +115,8 @@ const nothing: TapeTrackIds = {
   setEditing: () => {},
   slot: null,
   setSlot: () => {},
+  barLead: null,
+  setBarLead: () => {},
   answered: () => {},
 };
 const Context = createContext<TapeTrackIds>(nothing);
@@ -154,6 +162,7 @@ export function TapeTrackIdsProvider({ tapeId, sides: tape, children }: { tapeId
   const [asked, setAsked] = useState<Asked | null>(null);
   const [editing, setEditing] = useState<Asked | null>(null);
   const [slot, setSlot] = useState<HTMLElement | null>(null);
+  const [barLead, setBarLead] = useState<HTMLElement | null>(null);
   const [name, setName] = useState('');
   useEffect(() => setName(rememberedName()), []);
   // Each reading of the comments has a number. A change posted while reading n is under way is in reading
@@ -309,8 +318,8 @@ export function TapeTrackIdsProvider({ tapeId, sides: tape, children }: { tapeId
   const answered = useCallback(() => setAsked(null), []);
 
   const value = useMemo(
-    () => ({ tape, sides, read, comments, reread, setPlayer, goTo, report, playhead, watch, name, unposted, say, unsay, post, ask, asked, answered, editing, setEditing, slot, setSlot }),
-    [tape, sides, read, comments, reread, setPlayer, goTo, report, playhead, watch, name, unposted, say, unsay, post, ask, asked, answered, editing, slot],
+    () => ({ tape, sides, read, comments, reread, setPlayer, goTo, report, playhead, watch, name, unposted, say, unsay, post, ask, asked, answered, editing, setEditing, slot, setSlot, barLead, setBarLead }),
+    [tape, sides, read, comments, reread, setPlayer, goTo, report, playhead, watch, name, unposted, say, unsay, post, ask, asked, answered, editing, slot, barLead],
   );
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }

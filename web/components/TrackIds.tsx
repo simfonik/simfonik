@@ -2,7 +2,7 @@
 
 import { FormEvent, RefObject, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { PHONE, useOnPhone } from '../hooks/useOnPhone';
+import { PHONE, useOnPhone } from '../hooks/useMedia';
 import { hasLink, idLabel, idPlace } from '../lib/track-ids/compose';
 import { sameRecord } from '../lib/track-ids/moments';
 import { rememberedName } from '../lib/track-ids/post';

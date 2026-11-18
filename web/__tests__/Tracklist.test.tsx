@@ -2,7 +2,7 @@
 // and the history at its foot. What each state of a track does on it, and on the rest of the page, is in
 // TrackIdStates.test.tsx.
 import React from 'react';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { TapeTrackIdsProvider } from '../components/TapeTrackIds';
 import { Tracklist } from '../components/Tracklist';
@@ -207,6 +207,36 @@ describe('the bar that posts a visitor’s times', () => {
     await waitFor(() => expect(page.bar()).toBeNull());
     expect(screen.getAllByRole('status').some((status) => status.textContent === 'Posted 1 ID. Thanks.')).toBe(true);
     expect(window.localStorage.getItem('simfonik:id-name')).toBe('Dana');
+  });
+
+  it('is the start of the player’s bar while that is at the foot of a wide window, and a strip of its own again when it goes; it posts from there all the same', async () => {
+    const page = tapePage({ sides: [{ position: 'A', tracks: OWN }], name: null });
+    await page.read();
+    await page.at(221);
+    await page.user.click(page.plus('Butsch — The Count'));
+    const bar = () => page.bar() as HTMLElement;
+    expect(bar()).toHaveClass('tracklist-post');
+
+    // The player's bar comes, with a place at its start (PlayerControls.tsx).
+    const lead = document.body.appendChild(document.createElement('div'));
+    act(() => page.shared().setBarLead(lead));
+    expect(lead).toContainElement(bar());
+    expect(screen.getAllByRole('form', { name: 'Post your IDs' })).toHaveLength(1);
+    expect(bar()).not.toHaveClass('tracklist-post');
+    expect(bar()).toHaveTextContent('1 ID pending');
+
+    // What was typed in one is in the other: the name is the tracklist's, not the bar's.
+    await page.user.type(within(bar()).getByRole('textbox', { name: 'Your name' }), 'Dan');
+    act(() => page.shared().setBarLead(null));
+    expect(lead).toBeEmptyDOMElement();
+    expect(bar()).toHaveClass('tracklist-post');
+    expect(within(bar()).getByRole('textbox', { name: 'Your name' })).toHaveValue('Dan');
+
+    act(() => page.shared().setBarLead(lead));
+    await page.user.type(within(bar()).getByRole('textbox', { name: 'Your name' }), 'a{Enter}');
+    await waitFor(() => expect(page.posts()).toEqual(['[3:41] Butsch - The Count']));
+    await waitFor(() => expect(page.bar()).toBeNull());
+    expect(lead).toBeEmptyDOMElement();
   });
 });
 

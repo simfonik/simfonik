@@ -1,6 +1,6 @@
 import React, { ReactNode, RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useOnPhone } from '../hooks/useOnPhone';
+import { useMedia, useOnPhone } from '../hooks/useMedia';
 import { formatTime } from '../lib/time-utils';
 import { idLabel } from '../lib/track-ids/compose';
 import { playingAt, saidBy, type Mark } from '../lib/track-ids/side';
@@ -24,6 +24,11 @@ export interface PlayerControlsProps {
   children?: ReactNode;
   /** Set by the player itself on the copy of it kept at the foot of the window (see below). */
   docked?: boolean;
+  /**
+   * Given the start of that copy while it is there, on a window wide enough for something more on its row,
+   * and null when it goes. Whatever else belongs at the foot of the window is put there, in the one bar.
+   */
+  onBarLead?: (place: HTMLElement | null) => void;
   onPlay: () => void;
   onPause: () => void;
   onSeek: (time: number) => void;
@@ -40,6 +45,9 @@ function useOutOfSight(el: RefObject<HTMLElement | null>, watching: boolean) {
   }, [el, watching]);
   return watching && away;
 }
+
+/** A window wide enough for the button, a track's name, a bar worth aiming at and a count with its Post, on one row. */
+const ONE_ROW = '(min-width: 70rem)';
 
 /**
  * The player: play and pause, and the bar the tape is moved along.
@@ -62,6 +70,7 @@ export function PlayerControls(props: PlayerControlsProps) {
     ids,
     children,
     docked = false,
+    onBarLead,
     onPlay,
     onPause,
     onSeek,
@@ -79,6 +88,7 @@ export function PlayerControls(props: PlayerControlsProps) {
   const onPhone = useOnPhone();
   const outOfSight = useOutOfSight(self, !docked);
   const inReach = !docked && !onPhone && outOfSight && (isPlaying || currentTime > 0);
+  const oneRow = useMedia(ONE_ROW);
 
   /** The time at a place across the bar, or null while the side's length isn't known. */
   const timeAt = (x: number, bar: DOMRect) =>
@@ -255,6 +265,9 @@ export function PlayerControls(props: PlayerControlsProps) {
   if (docked) {
     return (
       <div className="mx-auto flex h-full max-w-7xl items-center gap-4 px-4 sm:px-6">
+        {/* First on the row, on the page's left edge: under the tracklist, where the + that made an ID pending
+            was pressed. Across the window from it, the count and its Post could come and go unseen. */}
+        {oneRow && onBarLead && <div ref={onBarLead} className="player-dock-lead" />}
         {button}
         <p className="player-dock-what">
           <span className="player-dock-name">{playing ? idLabel(playing) : 'Nothing ID’d here yet'}</span>

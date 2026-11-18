@@ -546,7 +546,7 @@ html:has(.id-sheet[open]) { overflow: hidden; }
    The player and the track line are tapped twice in a moment all the time (play, pause; open, shut), so
    two taps on them, or anywhere on the sheet, are two presses and never a zoom. */
 .player-play, .player-side, .track-ids-line, .track-ids-post, .track-ids-offer, .track-ids-shut, .tape-picture, .comment-time, .id-sheet,
-.tracklist-time, .tracklist-mark, button.tracklist-n, .tracklist-cue, .tracklist-post { touch-action: manipulation; }
+.tracklist-time, .tracklist-mark, button.tracklist-n, .tracklist-cue, .tracklist-post, .player-dock { touch-action: manipulation; }
 /* What is pressed in the tracklist dims as it is pressed, and needs no grey flash on top of that. */
 .tracklist-time, .tracklist-mark, button.tracklist-n, .tracklist-cue { -webkit-tap-highlight-color: transparent; }
 /* A held finger doesn't select the words of what is pressed in the sheet. */
@@ -803,11 +803,40 @@ button.tracklist-n { min-width: 3rem; text-align: left; }
   .player-dock { animation: none; }
 }
 .player-dock .player-wave { height: 2rem; }
-/* What is playing, over where the tape is: as wide as a track's name usually needs, and never more than a
-   third of the window, so the bar keeps the rest. */
-.player-dock-what { display: flex; flex: 0 1 min(24rem, 34%); min-width: 0; flex-direction: column; gap: 0.125rem; }
+/* What is playing, over where the tape is: as wide as its words, and never more than a third of the window,
+   so the bar the tape is moved along has the rest. */
+.player-dock-what { display: flex; flex: 0 1 auto; min-width: 0; max-width: min(24rem, 34%); flex-direction: column; gap: 0.125rem; }
 .player-dock-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 500; line-height: 1.25rem; color: var(--text); }
 .player-dock-time { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-geist-mono), ui-monospace, monospace; font-size: 12px; font-variant-numeric: tabular-nums; line-height: 1rem; color: var(--muted); }
+/* The start of the row, on a window wide enough for one (PlayerControls.tsx): the visitor's pending IDs and
+   their Post go there while there are any (Tracklist.tsx), on the page's left edge under the tracklist, and
+   parted from the player by a rule. They come in from that edge, and the count shows in full colour for a
+   moment each time it changes, so a time given up in the list is seen to have landed here. A refusal is said
+   just over the bar's edge, above the blank it is about. */
+.player-dock-lead { flex: none; }
+.player-dock-lead:empty { display: none; }
+.player-dock-pending {
+  position: relative;
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 1rem;
+  padding-right: 1.5rem;
+  border-right: 1.5px solid var(--border);
+  animation: player-dock-pending-in 0.22s cubic-bezier(0.23, 1, 0.32, 1);
+}
+@keyframes player-dock-pending-in {
+  from { opacity: 0; transform: translateX(-0.75rem); }
+}
+.player-dock-pending .tracklist-post-name { flex: none; width: 10rem; }
+.player-dock-alert { position: absolute; left: 0; bottom: calc(100% + 1rem); padding: 0.375rem 0.75rem; border: 1.5px solid currentColor; background: var(--bg); white-space: nowrap; }
+.tracklist-post-count { animation: tracklist-post-count-noted 1.4s ease-out; }
+@keyframes tracklist-post-count-noted {
+  from, 40% { color: var(--text); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .player-dock-pending { animation: none; }
+}
 /* Whichever of the two is at the foot of the screen, the page ends that much lower, so its last lines can
    still be read. */
 body:has(.player-tray) { --foot: var(--tray-height); }

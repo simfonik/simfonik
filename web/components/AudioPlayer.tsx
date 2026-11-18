@@ -74,6 +74,7 @@ export function AudioPlayer({ src, title, tapeId, sidePosition, wave, length, si
         onPlay={controls.play}
         onPause={controls.pause}
         onSeek={controls.seek}
+        onBarLead={trackIds.setBarLead}
       >
         {tapeId && (
           <TrackIds
