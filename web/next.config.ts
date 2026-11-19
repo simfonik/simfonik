@@ -18,6 +18,8 @@ const toLive = preview
   : [];
 
 const nextConfig: NextConfig = {
+  // Read by components/SiteLink.tsx, in the browser as well as on the server.
+  env: { NEXT_PUBLIC_LIVE_SITE: preview ? LIVE : '' },
   images: {
     loader: 'custom',
     loaderFile: './lib/imageLoader.ts',

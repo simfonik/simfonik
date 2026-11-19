@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
+import { SiteLink } from './SiteLink';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { NewsletterModal, useNewsletterModal } from './NewsletterSignup';
 import { ThemeToggle } from './ThemeToggle';
@@ -36,25 +36,25 @@ export function Header() {
       <header ref={menuRef}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between gap-4">
-            <Link
+            <SiteLink
               href="/"
               className="wordmark-link inline-flex"
               onClick={() => setMobileMenuOpen(false)}
             >
               <SimfonikLockup />
-            </Link>
+            </SiteLink>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-6">
-              <Link href="/djs" className={NAV_LINK_CLASSES}>
+              <SiteLink href="/djs" className={NAV_LINK_CLASSES}>
                 Browse DJs
-              </Link>
-              <Link href="/about" className={NAV_LINK_CLASSES}>
+              </SiteLink>
+              <SiteLink href="/about" className={NAV_LINK_CLASSES}>
                 About
-              </Link>
-              <Link href="/contribute" className={NAV_LINK_CLASSES}>
+              </SiteLink>
+              <SiteLink href="/contribute" className={NAV_LINK_CLASSES}>
                 Contribute
-              </Link>
+              </SiteLink>
               <ThemeToggle />
               <button onClick={onOpen} className="poster-btn">
                 Subscribe
@@ -82,27 +82,27 @@ export function Header() {
           {/* Mobile Menu Dropdown */}
           {mobileMenuOpen && (
             <nav className="md:hidden mt-4 pt-4 border-t-[1.5px] border-[var(--border)] flex flex-col gap-1">
-              <Link
+              <SiteLink
                 href="/djs"
                 className={`block px-3 py-2 ${NAV_LINK_CLASSES}`}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Browse DJs
-              </Link>
-              <Link
+              </SiteLink>
+              <SiteLink
                 href="/about"
                 className={`block px-3 py-2 ${NAV_LINK_CLASSES}`}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 About
-              </Link>
-              <Link
+              </SiteLink>
+              <SiteLink
                 href="/contribute"
                 className={`block px-3 py-2 ${NAV_LINK_CLASSES}`}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Contribute
-              </Link>
+              </SiteLink>
               <button
                 type="button"
                 onClick={() => {

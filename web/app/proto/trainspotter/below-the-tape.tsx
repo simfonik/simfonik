@@ -4,7 +4,7 @@
 // stay folded until asked for (the names without times, what the comments said, what this visitor changed).
 import { useState } from "react";
 import { announce } from "@ui-sdk/core";
-import Link from "next/link";
+import { SiteLink } from "@/components/SiteLink";
 import type { HistoryEntry } from "@ui-sdk/react/history";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@ui-sdk/react/collapsible";
 import type { Listed, Proposal } from "./parse";
@@ -93,9 +93,9 @@ export function SendItIn({ tapeId, sides, cues }: { tapeId: string; sides: strin
         <button type="button" onClick={copy} disabled={!mine.length} className="ts-btn min-w-[12.5rem]">
           {copied === "yes" ? "Copied ✓" : mine.length ? `Copy my IDs (${mine.length})` : "Copy my IDs"}
         </button>
-        <Link href={`/tapes/${tapeId}`} className="ts-link">
+        <SiteLink href={`/tapes/${tapeId}`} className="ts-link">
           Open the tape page
-        </Link>
+        </SiteLink>
       </div>
       {!mine.length && <p className="mt-2 text-sm text-[var(--muted)]">Nothing to copy yet. ID a track and it will appear here.</p>}
       {copied === "failed" && (

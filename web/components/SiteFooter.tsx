@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { SiteLink } from './SiteLink';
 import { usePathname } from 'next/navigation';
 import { NewsletterFooter } from './NewsletterSignup';
 
@@ -23,9 +23,9 @@ export function SiteFooter() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
           <p>© respective artists &amp; rights holders · non-commercial</p>
           <div className="flex gap-6">
-            <Link href="/about" className="hover:text-[var(--accent-text)] transition-colors">About</Link>
-            <Link href="/contribute" className="hover:text-[var(--accent-text)] transition-colors">Contribute</Link>
-            <Link href="/rights" className="hover:text-[var(--accent-text)] transition-colors">Rights &amp; Takedown</Link>
+            <SiteLink href="/about" className="hover:text-[var(--accent-text)] transition-colors">About</SiteLink>
+            <SiteLink href="/contribute" className="hover:text-[var(--accent-text)] transition-colors">Contribute</SiteLink>
+            <SiteLink href="/rights" className="hover:text-[var(--accent-text)] transition-colors">Rights &amp; Takedown</SiteLink>
           </div>
         </div>
       </div>

@@ -6,7 +6,7 @@
 // SDK's change pipeline, so one history gives undo and redo and knows who made each change. The page is
 // operable by a browser's own assistant through the same bridge that loads the listeners' tracklist.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
+import { SiteLink } from "@/components/SiteLink";
 import { createPointerKind } from "@ui-sdk/core";
 import { solveSpring } from "@ui-sdk/core/gesture";
 import { usePart, usePrimitive } from "@ui-sdk/react/primitive";
@@ -617,9 +617,9 @@ export function Trainspotter({
         {/* Above the title: its tall letters reach up past their own line and would otherwise sit over this link. */}
         <p className="relative z-[1] -mr-[0.14em] font-mono text-xs uppercase tracking-[0.14em] text-[var(--muted)]">
           Released {tape.released} ·{" "}
-          <Link href={`/tapes/${tape.id}`} className="ts-inline-link">
+          <SiteLink href={`/tapes/${tape.id}`} className="ts-inline-link">
             Tape page
-          </Link>
+          </SiteLink>
         </p>
       </div>
       <h1 className="-ml-[0.038em] mt-5 font-display text-4xl leading-[0.95] text-[var(--text)] [text-wrap:balance] sm:text-6xl">
