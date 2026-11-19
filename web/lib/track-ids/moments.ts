@@ -6,12 +6,12 @@
 // reader says once it is a comment. Pure, and all the browser needs of the reader.
 
 /**
- * How close an ID in the site's form must be to where a track starts, in seconds, to be said of that track:
- * it is then that track put right. Further off it is a track of its own. The form places an ID to the
- * second, and a correction made with it lands on the very second of what it corrects, so little room is
- * needed.
+ * Two times that are one moment of a side: the same second of it. An ID in the site's form is placed to the
+ * second, and what is said on the very second a track starts is said of that track: it is that track put
+ * right. A second on, it is a track of its own. A tape cut fast has tracks that start a second or two apart,
+ * and its tracklist is there to say which came first.
  */
-export const ONE_MOMENT = 5;
+export const sameSecond = (a: number, b: number) => Math.floor(a) === Math.floor(b);
 
 /** Two times typed into sentences are rougher: this many seconds apart or closer, they are said of one moment. */
 export const ROUGHLY = 20;
@@ -24,28 +24,10 @@ export const ROUGHLY = 20;
 export const LONGEST = 600;
 
 /** The shortest stretch of a side that is a track, in seconds. Nothing starts closer than this to a side's end. */
-export const SHORTEST = 5;
+export const SHORTEST = 1;
 
-/** Two times that are one moment of a side. */
-export const near = (a: number, b: number) => Math.abs(a - b) <= ONE_MOMENT;
-
-/**
- * Of some starts, the one a time is a moment of: the nearest within ONE_MOMENT, and of two as near, the
- * earlier. Its place among them, or -1. (A null is a line with no time yet.)
- */
-export function momentOf(starts: (number | null)[], time: number): number {
-  let found = -1;
-  let far = Infinity;
-  starts.forEach((start, k) => {
-    if (start === null || !near(start, time)) return;
-    const off = Math.abs(start - time);
-    if (off < far || (off === far && start < (starts[found] as number))) {
-      found = k;
-      far = off;
-    }
-  });
-  return found;
-}
+/** Of some starts, the one a time is a moment of: the one on that second. Its place among them, or -1. (A null is a line with no time yet.) */
+export const momentOf = (starts: (number | null)[], time: number) => starts.findIndex((start) => start !== null && sameSecond(start, time));
 
 /** What the comments say starts at one moment of a side. Times in seconds. */
 export type Moment = {
@@ -67,8 +49,6 @@ export type Moment = {
   until?: number;
   /** A record brought in over the one already playing, which plays on under it. */
   layer?: boolean;
-  /** Nobody gave the start as a time: it is worked out (a track that heads a list is taken to open the side). */
-  guessed?: boolean;
 };
 
 /** One identified stretch of a side: a moment, and where the track that starts at it ends. */

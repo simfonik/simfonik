@@ -12,8 +12,9 @@
 //
 // The rules the rows keep:
 //
-// 1. One moment, one track. Something said within ONE_MOMENT of where a track starts is said of that track:
-//    a name puts it right, and nothing new starts. The page offers a new track only further off than that.
+// 1. One moment, one track, and a moment is one second (`sameSecond` in moments.ts). Something said on the
+//    second a track starts is said of that track: a name puts it right, and nothing new starts. A second on,
+//    the page offers a new track: on a tape cut fast, two can start that close.
 // 2. Down a side, times only rise. A line of the list takes an ID's time only where that keeps the list's
 //    lines in the list's order; an ID that names a line but would break the order is shown by its time,
 //    out of the list's order, and is that line all the same: the line is not shown again without a time.
@@ -119,7 +120,7 @@ const names = (id: Timed, line: ListedTrack) => line.known && id.known && (same(
  * · A change further off is a new track from there.
  * · A mark taken away is gone, with everything said of it before. What is said of it in the same post
  *   stands, as the reader has it: so of changes said together, what they take away is taken away first, and
- *   a track moved by a few seconds isn't taken away with the ID that moved it.
+ *   a mark taken away and named again in the one post is there under its new name.
  */
 export function withChanges(said: Moment[], changes: Change[], length = Infinity): Timed[] {
   const moments: (Moment & { mine?: Change })[] = [...said];
@@ -148,15 +149,16 @@ export function withChanges(said: Moment[], changes: Change[], length = Infinity
       moments.push({ start: line.time, ...word });
       continue;
     }
-    // (Which line of the list a moment is goes with its name: a new name without one is no longer that line.)
-    const { guessed, line: wasLine, ...was } = moments[at];
+    const was = moments[at];
     // The visitor's own unposted name gives way to a name the moment already has, unless that name is one no
     // track on the side shows: the same record said again a little on, which is taken as one play with the
     // one before (`settle`). The page offered the moment as free, and posted, the name will be the moment's.
     const wins = change.sent ? known || !was.known : known && (!was.known || !settle(moments, length).some((track) => track.start === was.start));
-    // What is posted is said of the moment whether or not it is the moment's last word, and a moment starts
-    // at the earliest time anyone gave for it. An unposted change that changes nothing isn't there at all.
-    if (wins || change.sent) moments[at] = { ...was, start: guessed ? line.time : Math.min(was.start, line.time), ...(wins ? word : wasLine ? { line: wasLine } : {}) };
+    if (!wins) continue;
+    const named = { ...was, ...word };
+    // Which line of the list a moment is goes with its name: a new name without one is no longer that line.
+    if (!line.line) delete named.line;
+    moments[at] = named;
   }
   return settle(moments, length);
 }
@@ -333,7 +335,7 @@ export const playingAt = (tracks: { start: number | null; end: number | null }[]
 export const startingAt = (rows: Row[], time: number) => momentOf(rows.map((row) => row.start), time);
 
 /**
- * Whether a track could start at a moment of a side: nothing starts within a moment of it already, and the
+ * Whether a track could start at a moment of a side: nothing starts on that second already, and the
  * side has room left for a track. `length` is the side's, in seconds, where it has been measured.
  */
 export const canStartAt = (rows: Row[], time: number, length = Infinity) => startingAt(rows, time) < 0 && time <= length - SHORTEST;
@@ -349,7 +351,7 @@ export function canMoveTo(rows: Row[], row: Row, time: number, length = Infinity
   return canStartAt(others, time, length) && !others.some((other) => other.start !== null && other.start > from && other.start < to);
 }
 
-// The answer changes only when the moment passes a row's start or comes within a moment of one, and it is
+// The answer changes only when the moment passes a row's start or is the second of one, and it is
 // asked for every time the tape moves on, so it is kept for as long as the rows are the same rows.
 const could = new WeakMap<Row[], Map<string, number[]>>();
 
@@ -358,7 +360,7 @@ const could = new WeakMap<Row[], Map<string, number[]>>();
  * which giving them that moment is what would happen (`sideRows`). It is why a + on a row never does
  * anything but give that row its time.
  *
- * None, if something starts within a moment of it already, or it is in the side's last moments (`length` is
+ * None, if something starts on that second already, or it is the side's last second (`length` is
  * the side's, where it has been measured). Otherwise the lines with no time that the moment
  * falls among, between the last line timed before it and the first timed after (a line whose time is only
  * standing in for it, `filled`, is no such bound: it gives way to a line that is timed in its own right),

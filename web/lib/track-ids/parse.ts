@@ -451,8 +451,8 @@ export function reconcile(read: Sighting[], lengths: number[]): Moment[][] {
       else groups.push([s]);
     }
     // What is made with the site's own form is exact, and is taken in the order it was said. It is said of
-    // the moment that starts within ONE_MOMENT of it, and is otherwise a moment of its own, whoever said
-    // what nearby: twelve seconds into a track, an ID made with the form is the next track, not that one
+    // the moment that starts on that very second, and is otherwise a moment of its own, whoever said
+    // what nearby: two seconds into a track, an ID made with the form is the next track, not that one
     // put right. A mark taken away (see compose.ts) is taken from the moment it is said of, and takes with
     // it everything said of that moment before; what is said after stands, so the track can be ID'd again.
     // (The tape page takes a visitor's changes the same way, after all of these: `withChanges` in side.ts.)
@@ -484,7 +484,6 @@ export function reconcile(read: Sighting[], lengths: number[]): Moment[][] {
         ...(ended.length ? { until: ended.reduce((a, b) => (b.date >= a.date ? b : a)).end } : {}),
         // A record written as brought in over another stays one when its name is put right with the form.
         ...(typed.length && typed.every((s) => s.layer) ? { layer: true } : {}),
-        ...(g.every((s) => s.weak) ? { guessed: true } : {}),
       };
     });
   });

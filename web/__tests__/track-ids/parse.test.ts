@@ -376,14 +376,17 @@ describe('IDs made with the site’s own form, which places them to the second',
   const tracks = (read: Sighting[]) => tracksOf(read, [3600]).map((p) => `${p.start} ${p.known ? `${p.artist} — ${p.title}` : '??'}`);
   const spans = (read: Sighting[]) => tracksOf(read, [3600]).map((p) => `${p.start}-${p.end} ${p.title}`);
 
-  it('are two tracks when more than five seconds apart, where two rough times would be one', () => {
-    expect(tracks([at(0, 'The Prodigy', 'Hyperspeed', '1'), at(12, 'Butsch', 'The Count', '2')])).toEqual(['0 The Prodigy — Hyperspeed', '12 Butsch — The Count']);
+  it('are two tracks a second apart, where two rough times that close would be one', () => {
+    expect(tracks([at(523, 'Globe & The Hardcore Massive', 'Anthem', '1'), at(524, 'Wax Doctor', 'A New Direction', '2')])).toEqual(['523 Globe & The Hardcore Massive — Anthem', '524 Wax Doctor — A New Direction']);
     expect(tracks([at(0, 'The Prodigy', 'Hyperspeed', '1', { exact: false }), at(12, 'Butsch', 'The Count', '2', { exact: false })])).toEqual(['0 Butsch — The Count']);
   });
 
-  it('are one moment when five seconds apart or closer: the later is the earlier put right', () => {
+  it('are one moment on the same second: the later is the earlier put right', () => {
     expect(tracks([at(100, 'Orbital', 'Chime', '1'), at(100, 'Joey Beltram', 'Energy Flash', '2')])).toEqual(['100 Joey Beltram — Energy Flash']);
-    expect(tracks([at(100, 'Orbital', 'Chime', '1'), at(105, 'Joey Beltram', 'Energy Flash', '2')])).toEqual(['100 Joey Beltram — Energy Flash']);
+  });
+
+  it('are each a track on a second of its own, in order of time, in whatever order they were said', () => {
+    expect(tracks([at(102, 'Orbital', 'Chime', '1'), at(101, 'Joey Beltram', 'Energy Flash', '2'), at(100, 'LFO', 'LFO', '3')])).toEqual(['100 LFO — LFO', '101 Joey Beltram — Energy Flash', '102 Orbital — Chime']);
   });
 
   it('carry the line of the list an ID says it is for as long as that ID is the moment’s last word', () => {
@@ -394,31 +397,18 @@ describe('IDs made with the site’s own form, which places them to the second',
     expect(moments([at(100, 'Orbital', 'Chime (JZJ Remix)', '2', { line }), at(100, 'LFO', 'LFO', '3')])).toEqual(['100 LFO']);
   });
 
-  it('are said of a track someone timed in a sentence only within five seconds of where it starts, like any other', () => {
-    // Twelve seconds into a track from an old comment, an ID made with the form is the next track. Two
+  it('are said of a track someone timed in a sentence only on the second it starts, like any other', () => {
+    // Two seconds into a track from an old comment, an ID made with the form is the next track. Two
     // times typed into sentences that close would be one moment, and the later would replace the earlier.
-    expect(tracks([typed(100, 'Orbital', 'Chime', '1'), at(112, 'Joey Beltram', 'Energy Flash', '2')])).toEqual(['100 Orbital — Chime', '112 Joey Beltram — Energy Flash']);
-    expect(tracks([typed(100, 'Orbital', 'Chime', '1'), typed(112, 'Joey Beltram', 'Energy Flash', '2')])).toEqual(['100 Joey Beltram — Energy Flash']);
-    // The same of a spot someone asked about: it is named from where it starts, not from twelve seconds in.
-    expect(tracks([typed(100, '', '', '1'), at(112, 'Orbital', 'Chime', '2')])).toEqual(['100 ??', '112 Orbital — Chime']);
+    expect(tracks([typed(100, 'Orbital', 'Chime', '1'), at(102, 'Joey Beltram', 'Energy Flash', '2')])).toEqual(['100 Orbital — Chime', '102 Joey Beltram — Energy Flash']);
+    expect(tracks([typed(100, 'Orbital', 'Chime', '1'), typed(102, 'Joey Beltram', 'Energy Flash', '2')])).toEqual(['100 Joey Beltram — Energy Flash']);
+    // The same of a spot someone asked about: it is named from where it starts, not from two seconds in.
+    expect(tracks([typed(100, '', '', '1'), at(102, 'Orbital', 'Chime', '2')])).toEqual(['100 ??', '102 Orbital — Chime']);
     expect(tracks([typed(100, '', '', '1'), at(100, 'Orbital', 'Chime', '2')])).toEqual(['100 Orbital — Chime']);
-    // Within five seconds before it, the track starts where the form said: that is the earliest time given.
-    expect(tracks([typed(100, 'Orbital', 'Chime', '1'), at(97, 'Orbital', 'Belfast', '2')])).toEqual(['97 Orbital — Belfast']);
-    // And what is typed into a sentence afterwards, near a form's time, is still said of that moment.
-    expect(tracks([at(100, 'Orbital', 'Chime', '1'), typed(112, 'Joey Beltram', 'Energy Flash', '2'), typed(104, '', '', '3')])).toEqual(['100 Joey Beltram — Energy Flash']);
-  });
-
-  it('are taken in the order they were said, so one more is read on top of what was read before it', () => {
-    // Each within five seconds of the one before: the one moment, which starts at the earliest and has the last word said of it.
-    expect(tracks([at(105, 'Orbital', 'Chime', '1'), at(110, 'Joey Beltram', 'Energy Flash', '2'), at(100, 'LFO', 'LFO', '3')])).toEqual(['100 LFO — LFO']);
-    // Said in order of time, the third is ten seconds from where the first two start, and a track of its own.
-    expect(tracks([at(100, 'LFO', 'LFO', '1'), at(105, 'Orbital', 'Chime', '2'), at(110, 'Joey Beltram', 'Energy Flash', '3')])).toEqual(['100 Orbital — Chime', '110 Joey Beltram — Energy Flash']);
-  });
-
-  it('are said of the nearest moment they are within five seconds of, and of two as near, the earlier', () => {
-    const two = [at(100, '', '', '1'), at(108, '', '', '2')];
-    expect(tracks([...two, at(105, 'Orbital', 'Chime', '3')])).toEqual(['100 ??', '105 Orbital — Chime']);
-    expect(tracks([...two, at(104, 'Orbital', 'Chime', '3')])).toEqual(['100 Orbital — Chime', '108 ??']);
+    // A second before it, the form's ID is the track before.
+    expect(tracks([typed(100, 'Orbital', 'Chime', '1'), at(99, 'Orbital', 'Belfast', '2')])).toEqual(['99 Orbital — Belfast', '100 Orbital — Chime']);
+    // And what is typed into a sentence afterwards, of a form's very second, is still said of that moment.
+    expect(tracks([at(100, 'Orbital', 'Chime', '1'), typed(100, 'Joey Beltram', 'Energy Flash', '2')])).toEqual(['100 Joey Beltram — Energy Flash']);
   });
 
   it('leave the track before them where it is, however rough the times it was made from', () => {
@@ -436,10 +426,10 @@ describe('IDs made with the site’s own form, which places them to the second',
     expect(spans([...layered, at(300, 'Tangerine Dream', 'Love On A Real Train (Edit)', '2')])).toEqual(['0-400 Chime', '300-400 Love On A Real Train (Edit)', '400-1000 LFO']);
   });
 
-  it('give a track its start where nobody had: one that heads a list is only taken to open the side', () => {
-    expect(tracks([typed(0, 'Orbital', 'Chime', '1', { weak: true }), at(4, 'Orbital', 'Chime', '2')])).toEqual(['4 Orbital — Chime']);
-    // A time somebody did give stands, where it is the earlier.
-    expect(tracks([typed(0, 'Orbital', 'Chime', '1'), at(4, 'Orbital', 'Chime', '2')])).toEqual(['0 Orbital — Chime']);
+  it('move a track that is only taken to open the side as they move any other: taken away there, and said where it starts', () => {
+    expect(tracks([typed(0, 'Orbital', 'Chime', '1', { weak: true }), at(0, '', '', '2', { gone: true }), at(4, 'Orbital', 'Chime', '2')])).toEqual(['4 Orbital — Chime']);
+    // Named again a little on and not taken away, it is the one play said twice, and the earlier start stands.
+    expect(tracks([typed(0, 'Orbital', 'Chime', '1', { weak: true }), at(4, 'Orbital', 'Chime', '2')])).toEqual(['0 Orbital — Chime']);
   });
 
   describe('a mark taken away', () => {
@@ -453,18 +443,13 @@ describe('IDs made with the site’s own form, which places them to the second',
       expect(tracks([at(240, 'Wrong', 'Thing Entirely', '1'), gone(240, '2'), at(240, 'Joey Beltram', 'Energy Flash', '3')])).toEqual(['240 Joey Beltram — Energy Flash']);
     });
 
-    it('moves a track marked too early when the same post IDs it at the right moment, even a moment later', () => {
+    it('moves a track marked too early when the same post IDs it at the right moment, even a second later', () => {
       expect(tracks([at(240, 'Orbital', 'Chime', '1'), gone(240, '2'), at(300, 'Orbital', 'Chime', '2')])).toEqual(['300 Orbital — Chime']);
-      expect(tracks([at(240, 'Orbital', 'Chime', '1'), gone(240, '2'), at(243, 'Orbital', 'Chime', '2')])).toEqual(['243 Orbital — Chime']);
+      expect(tracks([at(240, 'Orbital', 'Chime', '1'), gone(240, '2'), at(241, 'Orbital', 'Chime', '2')])).toEqual(['241 Orbital — Chime']);
     });
 
     it('takes nothing from a moment that starts somewhere else', () => {
       expect(tracks([at(240, 'Orbital', 'Chime', '1'), gone(300, '2')])).toEqual(['240 Orbital — Chime']);
-    });
-
-    it('is taken in its turn among the IDs: what it took away is gone by the time the next is said', () => {
-      // A point marked and taken away, then two more near where it was, the second four seconds before the first.
-      expect(tracks([at(100, '', '', '1'), gone(100, '2'), at(107, '', '', '3'), at(103, 'Orbital', 'Chime', '4')])).toEqual(['103 Orbital — Chime']);
     });
 
     it('is undone by deleting it: the reader has only what is still there to read', () => {

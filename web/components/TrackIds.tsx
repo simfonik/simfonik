@@ -88,8 +88,8 @@ type Props = {
  *
  * Beside the line is "New track": a track starts here, whatever is playing. With a mouse it opens the blanks
  * for this moment, to say which track; under them is "Mark unknown", which says only that one starts, so a
- * visitor can set the points and leave the names to whoever knows them. It is not there within a moment of
- * a track's start: one moment, one track. A mark with no name is the visitor's own until they post what they
+ * visitor can set the points and leave the names to whoever knows them. It is not there on the second a
+ * track starts: one moment, one track. A mark with no name is the visitor's own until they post what they
  * have (the tracklist keeps the count and the Post), and until then it is taken back, or ID'd, like any
  * other mark.
  *
@@ -109,10 +109,10 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   const now = Math.floor(time);
   const playing = rows[playingAt(rows, time)] ?? null;
   // A track could start at this moment: the tape has been played, the comments are back (what is said is
-  // said on top of them), nothing starts within a moment of here, and the side has room left for a track.
+  // said on top of them), nothing starts on this second, and the side has room left for a track.
   const free = played && read !== 'reading' && canStartAt(rows, now, end);
-  // With nothing marked here and no room left on the side for a track to start, there is nothing to ID.
-  const nothing = playing === null && startingAt(rows, now) < 0 && !canStartAt(rows, now, end);
+  // With nothing playing and no room left on the side for a track to start, there is nothing to ID.
+  const nothing = playing === null && !canStartAt(rows, now, end);
   // The blanks are for one moment of the tape, fixed when they open, while the tape plays on underneath.
   const [at, setAt] = useState<number | null>(null);
   // The mark the blanks are for, where the side has one at that moment: as the side has it now, which may
@@ -187,11 +187,10 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
   // An ID is for the track playing. Where the side has one marked, it goes to where that track starts: a
   // correction then replaces the older word, and an ID for a track marked unknown fills the whole of it and
   // doesn't split it at the moment the visitor happened to speak up. With nothing playing it goes to this
-  // moment, or to the mark about to start within a moment of it: one moment, one track.
+  // moment.
   const open = () => {
     if (nothing) return;
-    const marked = playing ?? rows[startingAt(rows, now)] ?? null;
-    begin(marked, marked?.start ?? now);
+    begin(playing, playing?.start ?? now);
   };
   /** "New track", with a mouse: a track starts here, whatever is playing, and the blanks open to say which. */
   const openNew = () => begin(null, now);
@@ -569,7 +568,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
             </button>
           )}
           {unposted && <span className="track-ids-state">Pending</span>}
-          {/* Not within a moment of a track's start: what is said there is said of that track. */}
+          {/* Not on the second a track starts: what is said there is said of that track. */}
           {free && (
             <button type="button" onClick={openNew} className="track-ids-post" aria-label="New track: a track starts here" title="A track starts here">
               New track

@@ -114,9 +114,9 @@ describe('the visitor’s changes', () => {
 
   it('are let go, unposted, where the comments turn out to have that moment already', async () => {
     // Kept from an earlier visit: a point at 5:00, which someone has since ID'd, and one at 8:20, still nobody's.
-    const page = tapePage({ kept: JSON.stringify([said(300), said(500)]), posted: [{ by: 'Josh', says: '[5:02] Orbital - Chime' }] });
+    const page = tapePage({ kept: JSON.stringify([said(300), said(500)]), posted: [{ by: 'Josh', says: '[5:00] Orbital - Chime' }] });
     await page.read();
-    await waitFor(() => expect(page.rows()).toEqual(['0:05:02Orbital — Chime', '0:08:20Unknown trackUndo']));
+    await waitFor(() => expect(page.rows()).toEqual(['0:05:00Orbital — Chime', '0:08:20Unknown trackUndo']));
     await waitFor(() => expect(page.shared().unposted).toEqual([said(500)]));
     expect(JSON.parse(window.localStorage.getItem(KEPT) as string)).toEqual([said(500)]);
   });
@@ -125,9 +125,12 @@ describe('the visitor’s changes', () => {
     const page = tapePage();
     await page.read();
     page.shared().say(said(100));
-    page.shared().say(said(103, 'Orbital', 'Chime'));
-    await waitFor(() => expect(page.rows()).toEqual(['0:01:43Orbital — ChimeUndo']));
-    expect(page.shared().unposted).toEqual([said(103, 'Orbital', 'Chime')]);
+    page.shared().say(said(100, 'Orbital', 'Chime'));
+    await waitFor(() => expect(page.rows()).toEqual(['0:01:40Orbital — ChimeUndo']));
+    expect(page.shared().unposted).toEqual([said(100, 'Orbital', 'Chime')]);
+    // A second on is another moment, and a track of its own.
+    page.shared().say(said(101));
+    await waitFor(() => expect(page.rows()).toEqual(['0:01:40Orbital — ChimeUndo', '0:01:41Unknown trackUndo']));
   });
 });
 

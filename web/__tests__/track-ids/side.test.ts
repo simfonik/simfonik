@@ -35,8 +35,7 @@ describe('a side’s tracks with the visitor’s changes among them', () => {
   });
 
   it('have a track moved a few seconds as moved, whichever of the post’s two lines comes first', () => {
-    // The ID at its new time is within a moment of the old one: taken first, it is said of the track being
-    // taken away, and must not go with it.
+    // The ID at its new time is a track of its own, and what was at the old time is gone.
     const moved = (to: number) => [gone(600), said(to, 'Joey Beltram', 'Energy Flash', sent)];
     for (const to of [595, 597, 603, 605]) {
       const tracks = ['0-240 Orbital / Chime', '240-480 ??', `${to}-${to + 600} Joey Beltram / Energy Flash`];
@@ -63,10 +62,15 @@ describe('a side’s tracks with the visitor’s changes among them', () => {
     expect(withChanges([], [said(10, '?', ' ')])[0]).toMatchObject({ artist: '', title: '', known: false });
   });
 
-  it('take a change within a moment of a mark as said of that mark: one moment, one track', () => {
-    // A name for the spot someone marked without one, from where it was marked. Where it ends is still where the comments say.
-    expect(times(withChanges(posted, [said(243, 'LFO', 'LFO')]))[1]).toBe('240-480 LFO / LFO');
-    expect(withChanges(posted, [said(243, 'LFO', 'LFO')])).toHaveLength(3);
+  it('take a change on the second a mark starts as said of that mark: one moment, one track', () => {
+    // A name for the spot someone marked without one. Where it ends is still where the comments say.
+    expect(times(withChanges(posted, [said(240, 'LFO', 'LFO')]))[1]).toBe('240-480 LFO / LFO');
+    expect(withChanges(posted, [said(240, 'LFO', 'LFO')])).toHaveLength(3);
+  });
+
+  it('take a change a second from a mark as a track of its own: on a tape cut fast, two start that close', () => {
+    expect(times(withChanges(posted, [said(601, 'LFO', 'LFO')])).slice(2)).toEqual(['600-601 Joey Beltram / Energy Flash', '601-1201 LFO / LFO']);
+    expect(times(withChanges(posted, [said(599, 'LFO', 'LFO', sent)])).slice(2)).toEqual(['599-600 LFO / LFO', '600-1200 Joey Beltram / Energy Flash']);
   });
 
   it('never let the visitor’s unposted change replace a name, and let a posted one put a name right', () => {
@@ -81,17 +85,6 @@ describe('a side’s tracks with the visitor’s changes among them', () => {
 
   it('never let a mark without a name replace a name', () => {
     expect(times(withChanges(posted, [said(600, '', '', sent)]))[2]).toBe('600-1200 Joey Beltram / Energy Flash');
-  });
-
-  it('start a moment at the earliest time anyone gave for it', () => {
-    // Said three seconds before the mark, a posted change is still said of it, and it starts from there:
-    // named by it, or, where the mark keeps its own name, only moved by it.
-    expect(times(withChanges(posted, [said(237, 'LFO', 'LFO', sent)]))[1]).toBe('237-480 LFO / LFO');
-    const moved = withChanges(posted, [said(597, '', '', sent)])[2];
-    expect([moved.start, moved.artist, moved.mine]).toEqual([597, 'Joey Beltram', undefined]);
-    // A start nobody gave as a time (the track heads a list, and is taken to open the side) gives way to one somebody did.
-    const opener = [{ ...id(0, 'Orbital', 'Chime'), guessed: true }];
-    expect(times(withChanges(opener, [said(4, 'Orbital', 'Chime (Edit)', sent)]))).toEqual(['4-604 Orbital / Chime (Edit)']);
   });
 
   it('drop a mark taken away, and let what played before it play on', () => {
@@ -113,14 +106,9 @@ describe('a side’s tracks with the visitor’s changes among them', () => {
     expect(times(withChanges(twice, [gone(300)]))).toEqual(['700-1300 Altern 8 / Infiltrate 202']);
   });
 
-  it('take a change at the nearer of two marks it is within a moment of', () => {
-    const close = [id(100, '', ''), id(108, '', '')];
-    expect(times(withChanges(close, [said(105, 'LFO', 'LFO')]))).toEqual(['100-105 ??', '105-705 LFO / LFO']);
-  });
-
-  it('have nothing start in a side’s last moments: there is no room left for a track', () => {
-    expect(times(withChanges(posted, [said(895)], 900))[3]).toBe('895-900 ??');
-    expect(withChanges(posted, [said(896)], 900)).toHaveLength(3);
+  it('have nothing start at a side’s end: there is no room left for a track', () => {
+    expect(times(withChanges(posted, [said(899)], 900))[3]).toBe('899-900 ??');
+    expect(withChanges(posted, [said(900)], 900)).toHaveLength(3);
     // And the last track runs to the side's end, where that is sooner than it is taken to play.
     expect(times(withChanges(posted, [], 700))[2]).toBe('600-700 Joey Beltram / Energy Flash');
   });
@@ -334,25 +322,22 @@ describe('what is asked of a side’s rows', () => {
     expect([0, 329, 330, 500].map((time) => marks[playingAt(marks, time)]?.start ?? null)).toEqual([0, 300, 240, null]);
   });
 
-  it('what starts within a moment of a time, either side of it', () => {
+  it('what starts on a second, which is nothing a second either side of it', () => {
     const starting = (time: number) => rows[startingAt(rows, time)]?.start ?? null;
-    expect([starting(5), starting(6), starting(395), starting(394)]).toEqual([0, null, 400, null]);
-    // Within a moment of two starts, the nearer; as near to both, the earlier.
-    const close = sideRows(null, withChanges([id(100, '', ''), id(108, '', '')], []));
-    expect([103, 104, 105].map((time) => close[startingAt(close, time)].start)).toEqual([100, 100, 108]);
+    expect([starting(0), starting(1), starting(399), starting(400), starting(401)]).toEqual([0, null, null, 400, null]);
   });
 
   it('where a row’s time could be moved: to a moment a track could start at without it, with no other start between', () => {
     const plain = sideRows(null, withChanges([id(0, 'Orbital', 'Chime'), id(300, 'LFO', 'LFO'), id(600, 'Altern 8', 'Infiltrate 202')], []));
     const [first, second, third] = plain;
     const to = (row: Row, times: number[]) => times.map((time) => canMoveTo(plain, row, time, 900));
-    // Later or earlier, as far as the tracks either side of it, and no nearer to one of them than a moment.
-    expect(to(second, [6, 100, 299, 301, 303, 594])).toEqual([true, true, true, true, true, true]);
-    expect(to(second, [300, 5, 595, 650])).toEqual([false, false, false, false]);
-    expect(to(first, [3, 294])).toEqual([true, true]);
-    expect(to(first, [295, 400])).toEqual([false, false]);
-    // Not into the side's last moments, where no track has room to start.
-    expect(to(third, [700, 895, 896])).toEqual([true, true, false]);
+    // Later or earlier, as far as the tracks either side of it, to the second after one and the second before the other.
+    expect(to(second, [1, 100, 299, 301, 303, 599])).toEqual([true, true, true, true, true, true]);
+    expect(to(second, [300, 0, 600, 650])).toEqual([false, false, false, false]);
+    expect(to(first, [3, 299])).toEqual([true, true]);
+    expect(to(first, [300, 400])).toEqual([false, false]);
+    // Not to the side's end, where no track has room to start.
+    expect(to(third, [700, 899, 900])).toEqual([true, true, false]);
     // A line still waiting for its time has none to move.
     const listed = sideRows(order, withChanges([id(0, 'The Prodigy', 'Hyperspeed (G-Force Part 2)')], []));
     expect(canMoveTo(listed, listed[1], 100)).toBe(false);
@@ -377,10 +362,12 @@ describe('the lines that could be given a moment as their start', () => {
     expect(at(five, [], 100)).toEqual([1, 2, 3, 4, 5]);
   });
 
-  it('are none within a moment of a track’s start: one moment, one track', () => {
-    expect(at(five, timed, 3)).toEqual([]);
-    expect(at(five, timed, 396)).toEqual([]);
-    expect(at(five, timed, 406)).toEqual([4, 5]);
+  it('are none on the second a track starts: one moment, one track', () => {
+    expect(at(five, timed, 0)).toEqual([]);
+    expect(at(five, timed, 400)).toEqual([]);
+    // A second either side of one, a track could start.
+    expect(at(five, timed, 399)).toEqual([2]);
+    expect(at(five, timed, 401)).toEqual([4, 5]);
   });
 
   it('are never a row that is not a line of the list', () => {
@@ -607,9 +594,9 @@ describe('every side in the archive', () => {
       if (rows.length === 0) continue;
       const starts = startsOf(rows);
       const last = Number.isFinite(end) ? Math.floor(end) : (starts[starts.length - 1] ?? 0) + 600;
-      // Where the rules turn: a moment either side of each start, the reach of a time typed into a sentence
-      // either side of it, and the side's last moments. And every two minutes between.
-      const times = new Set<number>([...starts.flatMap((start) => [-21, -20, -11, -6, -5, -4, -1, 0, 1, 4, 5, 6, 11, 20, 21].map((off) => start + off)), ...[8, 6, 5, 4, 1, 0].map((left) => last - left)]);
+      // Where the rules turn: the seconds either side of each start, the reach of a time typed into a sentence
+      // either side of it, and the side's last seconds. And every two minutes between.
+      const times = new Set<number>([...starts.flatMap((start) => [-21, -20, -11, -2, -1, 0, 1, 2, 11, 20, 21].map((off) => start + off)), ...[3, 2, 1, 0].map((left) => last - left)]);
       for (let time = 0; time <= last; time += 120) times.add(time);
 
       const cases: { what: string; changes: Change[] }[] = [];
@@ -659,7 +646,8 @@ describe('every side in the archive', () => {
       }
     }
     // The check is of something, of every kind.
-    for (const what of ['marked', 'named', 'a line timed', 'by hand', 'moved']) expect(tried[what], what).toBeGreaterThan(2000);
+    for (const what of ['marked', 'named', 'a line timed', 'moved']) expect(tried[what], what).toBeGreaterThan(2000);
+    expect(tried['by hand']).toBeGreaterThan(1500);
     for (const what of ['removed', 'renamed', 'a line timed by hand']) expect(tried[what], what).toBeGreaterThan(400);
     expect(tried['a line renamed']).toBeGreaterThan(50);
   });

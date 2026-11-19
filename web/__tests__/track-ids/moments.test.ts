@@ -44,23 +44,18 @@ describe('the tracks a side’s moments make', () => {
     expect(laid([at(300, 'Altern 8 - Infiltrate 202'), at(360), at(420, 'Altern 8 - Infiltrate 202')])).toEqual(['300-360 Infiltrate 202', '360-420 ??', '420-1020 Infiltrate 202']);
   });
 
-  it('are never shorter than five seconds', () => {
-    expect(laid([at(100), at(104, 'Orbital - Chime')])).toEqual(['104-704 Chime']);
-    expect(laid([at(100), at(105, 'Orbital - Chime')])).toEqual(['100-105 ??', '105-705 Chime']);
-    // Nor in a side's last seconds. What is said there is no track, and the one before it still ends there.
-    expect(laid([at(500, 'Orbital - Chime'), at(897)], 900)).toEqual(['500-897 Chime']);
-    expect(laid([at(500, 'Orbital - Chime'), at(895)], 900)).toEqual(['500-895 Chime', '895-900 ??']);
+  it('can be as short as a second: on a tape cut fast, one starts a second after another', () => {
+    expect(laid([at(100), at(101, 'Orbital - Chime'), at(103, 'LFO - LFO')])).toEqual(['100-101 ??', '101-103 Chime', '103-703 LFO']);
+    // And no shorter. What is said at a side's very end is no track, and the one before it still ends there.
+    expect(laid([at(500, 'Orbital - Chime'), at(900)], 900)).toEqual(['500-900 Chime']);
+    expect(laid([at(500, 'Orbital - Chime'), at(899)], 900)).toEqual(['500-899 Chime', '899-900 ??']);
   });
 });
 
 describe('the start a time is a moment of', () => {
-  it('is the one within five seconds of it, either side', () => {
-    expect([94, 95, 100, 105, 106].map((time) => momentOf([0, 100, 300], time))).toEqual([-1, 1, 1, 1, -1]);
-  });
-
-  it('is the nearer of two, and of two as near the earlier, in whatever order they come', () => {
-    expect([103, 104, 105].map((time) => momentOf([100, 108], time))).toEqual([0, 0, 1]);
-    expect(momentOf([108, 100], 104)).toBe(1);
+  it('is the one on that second, and a second either side of it is another moment', () => {
+    expect([99, 100, 100.9, 101].map((time) => momentOf([0, 100, 300], time))).toEqual([-1, 1, 1, -1]);
+    expect([100, 101].map((time) => momentOf([101, 100], time))).toEqual([1, 0]);
   });
 
   it('is never a line that has no time yet', () => {

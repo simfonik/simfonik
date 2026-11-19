@@ -3,7 +3,7 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { TapeComment } from '../lib/comments';
 import { composeId, composeRemoval, type RunningOrder } from '../lib/track-ids/compose';
-import { near, type Moment } from '../lib/track-ids/moments';
+import { sameSecond, type Moment } from '../lib/track-ids/moments';
 import { LONGEST_COMMENT, postIds, rememberedName } from '../lib/track-ids/post';
 import type { TapeReading } from '../lib/track-ids/read';
 import { sideRows, standing, withChanges, type Change, type Row } from '../lib/track-ids/side';
@@ -137,7 +137,7 @@ const Context = createContext<TapeTrackIds>(nothing);
 const listOf = (side: TapeSide, kept: RunningOrder | null | undefined): RunningOrder | null =>
   side.tracks?.length ? { by: null, tracks: side.tracks.map((t, k) => ({ n: k + 1, artist: t.artist, title: t.title, known: true, link: t.discogs_url, duration: t.duration })) } : (kept ?? null);
 
-const sameMoment = (a: Pick<Change, 'side' | 'time'>, b: Pick<Change, 'side' | 'time'>) => a.side === b.side && near(a.time, b.time);
+const sameMoment = (a: Pick<Change, 'side' | 'time'>, b: Pick<Change, 'side' | 'time'>) => a.side === b.side && sameSecond(a.time, b.time);
 
 /** Something kept on the device that is one of the visitor's unposted changes. */
 const isKept = (x: unknown): x is Change => {

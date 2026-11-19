@@ -156,11 +156,14 @@ describe('the blanks, in the line under the player', () => {
     await page.at(3);
     expect(page.button('Use 0:00:03, the tape’s time')).toHaveAttribute('aria-disabled', 'false');
     expect(page.button('Use 0:00:03, the tape’s time')).toHaveTextContent('Use 0:00:03');
-    // Not where another track starts within a moment: pressed, it does nothing.
-    await page.at(297);
-    expect(page.button('Use 0:04:57, the tape’s time')).toHaveAttribute('aria-disabled', 'true');
-    await page.user.click(page.button('Use 0:04:57, the tape’s time'));
+    // Not on the second another track starts: pressed, it does nothing.
+    await page.at(300.4);
+    expect(page.button('Use 0:05:00, the tape’s time')).toHaveAttribute('aria-disabled', 'true');
+    await page.user.click(page.button('Use 0:05:00, the tape’s time'));
     expect(time).toHaveValue('0:00:00');
+    // A second before it, a track can start: two that close are two tracks.
+    await page.at(299);
+    expect(page.button('Use 0:04:59, the tape’s time')).toHaveAttribute('aria-disabled', 'false');
     await page.at(100);
     await page.user.click(page.button('Use 0:01:40, the tape’s time'));
     expect(time).toHaveValue('0:01:40');
@@ -302,10 +305,10 @@ describe('the tray, on a phone', () => {
     expect(within(tray()).getByRole('button', { name: 'Edit ID' })).toHaveFocus();
   });
 
-  it('keeps New track in its place, marked unavailable within a moment of a track’s start', async () => {
+  it('keeps New track in its place, marked unavailable on the second a track starts', async () => {
     const page = tapePage({ posted: KNOWN, phone: true });
     await page.read();
-    await page.at(3);
+    await page.at(0.6);
     const unknown = () => within(page.tray() as HTMLElement).getByRole('button', { name: /^New track/ });
     expect(unknown()).toHaveAttribute('aria-disabled', 'true');
     await page.user.click(unknown());
