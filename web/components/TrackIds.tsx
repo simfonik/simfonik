@@ -378,8 +378,7 @@ export function TrackIds({ side, position, time, isPlaying, onToggle, length = n
       if (entered === null) return refuse(when ? 'Minutes and seconds only go up to 59.' : 'Enter the time, like 500 for 0:05:00.', 'time');
       const unchanged = lineNo === null && entered === at;
       const others = rows.filter((row) => row !== mark);
-      const taken = others[startingAt(others, entered)];
-      if (!unchanged && taken) return refuse(`Another track starts at ${formatTime(taken.start as number)}.`, 'time');
+      if (!unchanged && startingAt(others, entered) >= 0) return refuse('Tracks must start at least a second apart.', 'time');
       if (!unchanged && !canStartAt(others, entered, end)) return refuse('That is past where a track could start on this side.', 'time');
       to = entered;
     }

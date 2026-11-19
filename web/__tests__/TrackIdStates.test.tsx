@@ -546,7 +546,7 @@ describe('a track the comments have ID’d', () => {
     expect(screen.getByRole('textbox', { name: 'Artist' })).toBeValid();
     expect(screen.getByRole('textbox', { name: 'Artist' })).not.toHaveAccessibleDescription();
     await retime(page, '0:00');
-    expect(screen.getByRole('alert')).toHaveTextContent('Another track starts at 0:00:00.');
+    expect(screen.getByRole('alert')).toHaveTextContent('Tracks must start at least a second apart.');
     await retime(page, '15:00');
     expect(screen.getByRole('alert')).toHaveTextContent('That is past where a track could start on this side.');
     expect(page.posts()).toEqual([]);
@@ -853,7 +853,7 @@ describe('a line of the tape’s tracklist, edited from its row', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Enter the time, like 500 for 0:05:00.');
     await page.user.clear(startsAt());
     await page.user.type(startsAt(), '2:00{Enter}');
-    expect(screen.getByRole('alert')).toHaveTextContent('Another track starts at 0:02:00.');
+    expect(screen.getByRole('alert')).toHaveTextContent('Tracks must start at least a second apart.');
     await page.user.clear(startsAt());
     await page.user.type(startsAt(), '6:30{Enter}');
     expect(screen.queryByRole('form', { name: 'The time track 4 starts' })).not.toBeInTheDocument();
