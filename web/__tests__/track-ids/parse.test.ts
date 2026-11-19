@@ -259,6 +259,60 @@ describe('single comments', () => {
     const lines = shown([say(['Side 1', 'Alpha - One', 'Bravo - Two', '9-10-Boy - Revenge of the Gatorade', 'Charlie - Three', 'Delta - Four'].join('\n'))], AB);
     expect(lines).toContain('order side 0 no.3 9-10-Boy — Revenge of the Gatorade [Keeper]');
   });
+
+  it('leaves a track number written after the time out of the name', () => {
+    expect(one(['Side A', '[0:00] 01 Pizzaman - Trippin on Sunshine', '[5:29] 02 Deee-Lite - Bring Me Your Love', '[12:31] 03 is that it - no name drum-a-pella'].join('\n'))).toEqual([
+      'side 0 0:00:00 Pizzaman — Trippin on Sunshine',
+      'side 0 0:05:29 Deee-Lite — Bring Me Your Love',
+      'side 0 0:12:31 is that it — no name drum-a-pella',
+    ]);
+  });
+
+  it('knows a track number past nine by the one before it, counting a line that has none', () => {
+    expect(one(['Side A', '[24:46] 08 Rebirth - Migration', '[28:02] ???', '[31:49] 10 Da Juice - Come On', '[35:21] 11 DJ Edge - Acid'].join('\n'))).toEqual([
+      'side 0 0:24:46 Rebirth — Migration',
+      'side 0 0:28:02 ??',
+      'side 0 0:31:49 Da Juice — Come On',
+      'side 0 0:35:21 DJ Edge — Acid',
+    ]);
+  });
+
+  it('keeps a number that is the artist’s own', () => {
+    // Second, third and fourth in a list that isn't numbered.
+    expect(one(['Side A', '[0:00] Alpha - One', '[3:00] 2 Bad Mice - Bombscare', '[6:00] 3 Phase - Der Klang Der Familie', '[9:00] 4 Hero - Cookin Up Yah Brain', '[12:00] 808 State - Cubik'].join('\n'))).toEqual([
+      'side 0 0:00:00 Alpha — One',
+      'side 0 0:03:00 2 Bad Mice — Bombscare',
+      'side 0 0:06:00 3 Phase — Der Klang Der Familie',
+      'side 0 0:09:00 4 Hero — Cookin Up Yah Brain',
+      'side 0 0:12:00 808 State — Cubik',
+    ]);
+    // After its track number in one that is, and alone in a sentence.
+    expect(one(['Side A', '[0:00] 01 Alpha - One', '[3:00] 02 2 Bad Mice - Bombscare', '[6:00] 03 Charlie - Three'].join('\n'))).toContain('side 0 0:03:00 2 Bad Mice — Bombscare');
+    expect(one('Side A 16:09 is 1 Giant Leap - My Culture')).toEqual(['side 0 0:16:09 1 Giant Leap — My Culture']);
+  });
+
+  describe('where a track starts and where it ends', () => {
+    const spans = (content: string) => parseComment(content, 'Someone', '2026-01-01', AB).map((s) => `side ${s.side} ${clock(s.start)}–${clock(s.end ?? NaN)} ${s.artist} — ${s.title}`);
+
+    it('are read from a line of their own under the name', () => {
+      expect(spans(['DJ Jesse - Lovecity (Side B)', '', '[0:00] 01 Aphrohead - In The Dark We Live', 'Anaconda - Speedway 69', '1:19 - 4:07', 'DJ Who - Shitty Samples On Acid', '6:20 - 10:12', '3. Convert - Nightbird', '20:17 - 22:24'].join('\n'))).toEqual([
+        'side 1 0:00:00–NaN:NaN:NaN Aphrohead — In The Dark We Live',
+        'side 1 0:01:19–0:04:07 Anaconda — Speedway 69',
+        'side 1 0:06:20–0:10:12 DJ Who — Shitty Samples On Acid',
+        'side 1 0:20:17–0:22:24 Convert — Nightbird',
+      ]);
+    });
+
+    it('are read from in front of the name on its line', () => {
+      expect(spans(['Side A', '28:00 - 30:50 Alpha - One'].join('\n'))).toEqual(['side 0 0:28:00–0:30:50 Alpha — One']);
+    });
+
+    it('leave a time alone under a name for what it was: a spot nobody has named', () => {
+      const lines = shown([say(['Side 1', 'Alpha - One', '7:48', 'Bravo - Two', '10:18', 'Charlie - Three'].join('\n'))], ['']);
+      expect(lines).toContain('side 0 0:07:48 ?? [Keeper]');
+      expect(lines).toContain('side 0 0:10:18 ?? [Keeper]');
+    });
+  });
 });
 
 describe('a list that times a two-sided tape as one recording', () => {

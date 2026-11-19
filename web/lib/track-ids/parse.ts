@@ -121,6 +121,9 @@ const whichSide = (line: string, titles: SideNames = []): number | null => {
 };
 // The shape of a record's name: something, a dash with a space after it, something.
 const NAMED = new RegExp(String.raw`\S\s*${DASH}\s+\S`);
+// A stretch of tape, from one time to another: "1:19 - 4:07", "[10:20] to [16:37]".
+const SPAN = String.raw`\[?(${TIME})\]?\s*(?:${DASH}|to)\s*\[?(${TIME})\]?`;
+const SPAN_ALONE = new RegExp(String.raw`^\W*${SPAN}\W*$`, "i");
 /** A line that is only a side: "Side B", "Side 1 - Technology Has Its Subliminal", "Planet Earth", "the second side". */
 const headingSide = (line: string, titles: SideNames): number | null => {
   if (line.length >= 60 || new RegExp(TIME).test(line)) return null;
@@ -199,6 +202,44 @@ function split(text: string, prose = false): { artist: string; title: string; kn
   return { artist: "", title: t, known: true };
 }
 
+/**
+ * A comment's lines, where a name with its span alone on the line below is one line, span first, the way a
+ * timed list is written:
+ *
+ *     Anaconda - Speedway 69
+ *     1:19 - 4:07                 is    1:19 - 4:07 Anaconda - Speedway 69
+ */
+function linesOf(content: string): string[] {
+  const lines = plain(content).split(/\r?\n/);
+  for (let i = 1; i < lines.length; i++) {
+    const span = lines[i].match(SPAN_ALONE);
+    const name = lines[i - 1].trim();
+    if (!span || new RegExp(TIME).test(name) || !NAMED.test(name)) continue;
+    // "3. Anaconda - Speedway 69" is the same name: the page numbers its own rows.
+    lines[i - 1] = `${span[1]} - ${span[2]} ${name.replace(/^\d{1,2}\s*[.)]\s*/, "")}`;
+    lines[i] = "";
+  }
+  return lines;
+}
+
+/**
+ * "[0:00] 01 Pizzaman - Trippin on Sunshine": a track number written after the time is not part of the name.
+ * It is a track number when it has a leading zero, or when it is one more than the number of the line before
+ * (a line with no number, "[28:02] ???", is counted). So "[35:21] 10 Da Juice" loses its 10 after a "09", and
+ * "[3:00] 2 Bad Mice" and "[9:00] 4 Hero" keep theirs in a list that isn't numbered.
+ */
+function unnumbered(read: Sighting[]): Sighting[] {
+  // The track number of the line before, written or not, once the list has shown that it is numbered.
+  let last: number | undefined;
+  return read.map((s) => {
+    const part = s.artist ? "artist" : "title";
+    const found = s.known ? s[part].match(/^(\d{1,2})\s+(?=\S)/) : null;
+    const numbered = found !== null && (found[1].startsWith("0") || Number(found[1]) === (last ?? NaN) + 1);
+    last = numbered ? Number(found[1]) : last === undefined ? undefined : last + 1;
+    return numbered ? { ...s, [part]: s[part].slice(found[0].length) } : s;
+  });
+}
+
 // Where one sentence ends and the next begins, for a name that is followed by more talk. "Dr. Motte" is one name.
 const SENTENCE = /(?<=[)\w"”'’])(?<!\b(?:Dr|Mr|Mrs|Ms|St|vs|feat|ft|Vol|No|Pt))[.!]\s+(?=[A-Z@])/;
 const firstSentence = (s: string) => s.replace(/https?:\/\/\S+/g, "").split(SENTENCE)[0].replace(/[.!:\s]+$/, "");
@@ -234,18 +275,16 @@ export function parseComment(content: string, author: string, date: string, titl
   // "…the B side at 21:15 is! It's Signs of Chaos - Funky Frequencies. And 15:28 on Side B is Funky Junky -
   // Rushin": two statements on one line. Each sentence that carries a time is read on its own, with the
   // sentences after it that don't.
-  const lines = plain(content)
-    .split(/\r?\n/)
-    .flatMap((l) => {
-      if ((l.match(new RegExp(TIME, "g")) ?? []).length < 2 || new RegExp(String.raw`^\s*(?:\d{1,2}\s*[.)]\s*)?\[?${TIME}`).test(l)) return [{ text: l, of: l }];
-      const parts: string[] = [];
-      for (const piece of l.split(SENTENCE)) {
-        if (parts.length && !new RegExp(TIME).test(piece)) parts[parts.length - 1] += `. ${piece}`;
-        else parts.push(piece.replace(/^\s*(?:and|also|then|plus)\s+/i, ""));
-      }
-      // Each keeps the line it came from: a side named in the first sentence holds for the rest.
-      return parts.map((text) => ({ text, of: l }));
-    });
+  const lines = linesOf(content).flatMap((l) => {
+    if ((l.match(new RegExp(TIME, "g")) ?? []).length < 2 || new RegExp(String.raw`^\s*(?:\d{1,2}\s*[.)]\s*)?\[?${TIME}`).test(l)) return [{ text: l, of: l }];
+    const parts: string[] = [];
+    for (const piece of l.split(SENTENCE)) {
+      if (parts.length && !new RegExp(TIME).test(piece)) parts[parts.length - 1] += `. ${piece}`;
+      else parts.push(piece.replace(/^\s*(?:and|also|then|plus)\s+/i, ""));
+    }
+    // Each keeps the line it came from: a side named in the first sentence holds for the rest.
+    return parts.map((text) => ({ text, of: l }));
+  });
   // Three or more lines that open with a time make a tracklist. Its lines are taken at their word, where a
   // lone line with a time in it has to look like a record before it counts: "Call It What You Want!" is a
   // title in a list and would be a question anywhere else.
@@ -273,8 +312,12 @@ export function parseComment(content: string, author: string, date: string, titl
     // "(B) @21:35" says its side with a letter that `whichSide` doesn't look for.
     let lettered = false;
     // "The track playing from [10:20] - [16:37] is Artist - Title"
-    if ((m = line.match(new RegExp(String.raw`\[?(${TIME})\]?\s*(?:${DASH}|to)\s*\[?(${TIME})\]?\s+is\s+(.+)$`, "i")))) {
+    if ((m = line.match(new RegExp(String.raw`${SPAN}\s+is\s+(.+)$`, "i")))) {
       push(side, seconds(m[1]), m[3], seconds(m[2]));
+    }
+    // "1:19 - 4:07 Artist - Title": where a track starts and ends, then its name.
+    else if ((m = line.match(new RegExp(String.raw`^${SPAN}\s*${DASH}?\s*(.+)$`, "i"))) && seconds(m[2]) > seconds(m[1])) {
+      push(sideHere ?? side, seconds(m[1]), m[3], seconds(m[2]), !list, list);
     }
     // "Side A - 5:30 - 13:20 - Artist - Title"
     else if ((m = line.match(new RegExp(String.raw`^${SIDE.source}\s*${DASH}?\s*(${TIME})\s*${DASH}\s*(${TIME})\s*${DASH}?\s*(.+)$`, "i")))) {
@@ -338,7 +381,7 @@ export function parseComment(content: string, author: string, date: string, titl
     if (layer) for (let i = before; i < out.length; i++) out[i].layer = true;
     if (sideHere === null && !sideGiven && !lettered) for (let i = before; i < out.length; i++) out[i].sideless = true;
   }
-  return out;
+  return unnumbered(out);
 }
 
 /**
@@ -467,7 +510,7 @@ export type Listed = {
 function parseListing(content: string, author: string, date: string, titles: SideNames = []): Listed[] {
   const out: Listed[] = [];
   let side = 0;
-  for (const raw of plain(content).split(/\r?\n/)) {
+  for (const raw of linesOf(content)) {
     const line = raw.trim();
     if (!line) continue;
     const heading = /^\d/.test(line) ? null : headingSide(line, titles);
@@ -598,7 +641,7 @@ function rowOf(raw: string, expect?: number): (Omit<Row, "side" | "n"> & { n?: n
  * are taken in the order the tape runs.
  */
 function parseRunning(content: string, titles: SideNames = []): { rows: Row[]; headed: boolean; prose: string } | null {
-  const lines = plain(content).split(/\r?\n/);
+  const lines = linesOf(content);
   const time = new RegExp(TIME);
   // A line that names a side: one this page can place, or one it can't ("Side X", "Marques's side").
   const sideOf = (line: string): number | "?" | null => {
