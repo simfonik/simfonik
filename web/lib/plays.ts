@@ -15,15 +15,16 @@ const START: Record<string, number> = starts;
 /** A mix with no start says nothing until it has this many plays: a handful would read as nobody listening. */
 const SHOWN_FROM = 100;
 
-// Every mix's counted plays in one query, asked for once a day: the number on a page does not need to be
-// newer than that, and the database is left to sleep in between (see lib/comments.ts).
+// Every mix's counted plays in one query, asked for every six hours: four wakes of the database a day at
+// most, which is left to sleep in between (see lib/comments.ts). The page adds the listener's own plays to
+// the number as they start them (components/TapeStats.tsx), so it never looks as if a play went uncounted.
 const countedPlays = unstable_cache(
   async (): Promise<Record<string, number>> => {
     const { rows } = await sql`SELECT tape_id, COUNT(*)::int AS n FROM plays GROUP BY tape_id`;
     return Object.fromEntries((rows as { tape_id: string; n: number }[]).map((row) => [row.tape_id, row.n]));
   },
   ['play-counts'],
-  { revalidate: 60 * 60 * 24 },
+  { revalidate: 60 * 60 * 6 },
 );
 
 /** The plays to show for a mix, or null where there is nothing to show yet. */

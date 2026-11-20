@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useCountPlay } from '../components/TapeStats';
 
 interface UseAudioPlayerOptions {
   src: string;
@@ -18,6 +19,8 @@ export function useAudioPlayer({ src, tapeId, sidePosition, onEnded }: UseAudioP
 
   // Track the src we've already fired an API tracking event for, to prevent rapid-toggle spam
   const trackedSrcRef = useRef<string | null>(null);
+  // The play that is saved is added to the plays the page shows, there and then.
+  const countPlay = useCountPlay();
 
   // A place asked for before the audio has loaded. There is nowhere to go yet, so it is kept, shown as the
   // current time, and gone to as soon as the audio's length is in.
@@ -97,6 +100,7 @@ export function useAudioPlayer({ src, tapeId, sidePosition, onEnded }: UseAudioP
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ tapeId, sidePosition }),
         }).catch(() => {});
+        countPlay();
       }
     };
 
@@ -136,7 +140,7 @@ export function useAudioPlayer({ src, tapeId, sidePosition, onEnded }: UseAudioP
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('seeking', handleSeeking);
     };
-  }, [src, tapeId, sidePosition, onEnded]);
+  }, [src, tapeId, sidePosition, onEnded, countPlay]);
 
   // Explicit control APIs
   const play = useCallback(() => {

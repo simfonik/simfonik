@@ -14,6 +14,8 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, 
 type TapeStats = {
   /** The plays to show, or null: not read yet, or nothing to show (lib/plays.ts). */
   plays: number | null;
+  /** The listener has started a side: one more play, shown at once (the site's own count is hours behind). */
+  played: () => void;
   /** How many hearts each comment has, by target (lib/hearts.ts). A comment with none is not in it. */
   hearts: Record<string, number>;
   /** The comments this browser has given its heart to. */
@@ -22,7 +24,7 @@ type TapeStats = {
   toggle: (target: string) => void;
 };
 
-const nothing: TapeStats = { plays: null, hearts: {}, mine: new Set(), toggle: () => {} };
+const nothing: TapeStats = { plays: null, played: () => {}, hearts: {}, mine: new Set(), toggle: () => {} };
 const Context = createContext<TapeStats>(nothing);
 
 const VISITOR_KEY = 'simfonik:visitor';
@@ -61,6 +63,10 @@ function remember(tapeId: string, mine: ReadonlySet<string>) {
 
 export function TapeStatsProvider({ tapeId, children }: { tapeId: string; children: ReactNode }) {
   const [plays, setPlays] = useState<number | null>(null);
+  // The plays this listener has started since the page loaded. The site counts the plays again every few
+  // hours (lib/plays.ts), so the number it gave does not have these in it yet.
+  const [own, setOwn] = useState(0);
+  const played = useCallback(() => setOwn((n) => n + 1), []);
   const [hearts, setHearts] = useState<Record<string, number>>({});
   const [mine, setMine] = useState<ReadonlySet<string>>(nothing.mine);
   // The comments with a heart on its way to the site: pressed again meanwhile, nothing happens.
@@ -112,9 +118,14 @@ export function TapeStatsProvider({ tapeId, children }: { tapeId: string; childr
     [tapeId],
   );
 
-  const value = useMemo(() => ({ plays, hearts, mine, toggle }), [plays, hearts, mine, toggle]);
+  // A mix with nothing to show has nothing to add to: its number comes when the site's count reaches it.
+  const shown = plays === null ? null : plays + own;
+  const value = useMemo(() => ({ plays: shown, played, hearts, mine, toggle }), [shown, played, hearts, mine, toggle]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
+
+/** Tells the page that the listener has started a side. Outside a tape page it does nothing. */
+export const useCountPlay = () => useContext(Context).played;
 
 /**
  * The mix's plays, as the last line of the tape's details. The line is there from the start, empty until the

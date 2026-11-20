@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { Comment } from '@/components/Comment';
-import { TapePlays, TapeStatsProvider } from '@/components/TapeStats';
+import { TapePlays, TapeStatsProvider, useCountPlay } from '@/components/TapeStats';
+import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 
 const fetchMock = vi.fn();
 /** What the site answers: the tape's stats, and then each heart sent. */
@@ -82,6 +83,65 @@ describe('the plays among a tape’s details', () => {
     site({ plays: 2407, hearts: {} });
     page();
     expect(await screen.findByText('Plays · 2,407')).toBeTruthy();
+  });
+
+  // What the player does when a side is started (hooks/useAudioPlayer.ts).
+  function StartsASide() {
+    const played = useCountPlay();
+    return <button onClick={played}>start a side</button>;
+  }
+  const listening = () =>
+    render(
+      <TapeStatsProvider tapeId="some-tape">
+        <TapePlays />
+        <StartsASide />
+      </TapeStatsProvider>,
+    );
+
+  it('go up by one as the listener starts a side, and by one more for the next', async () => {
+    site({ plays: 2407, hearts: {} });
+    listening();
+    await screen.findByText('Plays · 2,407');
+    fireEvent.click(screen.getByText('start a side'));
+    expect(screen.getByText('Plays · 2,408')).toBeTruthy();
+    fireEvent.click(screen.getByText('start a side'));
+    expect(screen.getByText('Plays · 2,409')).toBeTruthy();
+  });
+
+  it('count a side the player starts once, however often it is paused and started again', async () => {
+    function Side() {
+      const { ref } = useAudioPlayer({ src: 'a.mp3', tapeId: 'some-tape', sidePosition: 'A' });
+      return <audio ref={ref} data-testid="side" />;
+    }
+    site({ plays: 2407, hearts: {} });
+    render(
+      <TapeStatsProvider tapeId="some-tape">
+        <TapePlays />
+        <Side />
+      </TapeStatsProvider>,
+    );
+    await screen.findByText('Plays · 2,407');
+    const audio = screen.getByTestId('side');
+    for (const event of ['play', 'pause', 'play']) act(() => void audio.dispatchEvent(new Event(event)));
+    expect(screen.getByText('Plays · 2,408')).toBeTruthy();
+    expect(sent()).toEqual([{ tapeId: 'some-tape', sidePosition: 'A' }]);
+  });
+
+  it('have a play in them that was started before the number arrived', async () => {
+    let answer: (response: Response) => void = () => {};
+    fetchMock.mockImplementation(() => new Promise<Response>((resolve) => (answer = resolve)));
+    listening();
+    fireEvent.click(screen.getByText('start a side'));
+    answer(Response.json({ plays: 2407, hearts: {} }));
+    expect(await screen.findByText('Plays · 2,408')).toBeTruthy();
+  });
+
+  it('stay off the page for a mix with none to show, though the listener plays it', async () => {
+    site({ plays: null, hearts: {} });
+    listening();
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    fireEvent.click(screen.getByText('start a side'));
+    expect(screen.queryByText(/Plays/)).toBeNull();
   });
 
   it('are left out where there are none to show', async () => {
