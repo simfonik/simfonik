@@ -16,7 +16,7 @@ import { LiveComments } from "../../../components/LiveComments";
 import { TapeTrackIdsProvider } from "../../../components/TapeTrackIds";
 import { TapePlays, TapeStatsProvider } from "../../../components/TapeStats";
 import { Comment } from "../../../components/Comment";
-import { archivedTarget } from "../../../lib/heart-targets";
+import { archivedTarget } from "../../../lib/archived-target";
 import { RotatingWord } from "../../../components/RotatingWord";
 import { JsonLd } from "../../../components/JsonLd";
 import { Tracklist } from "../../../components/Tracklist";

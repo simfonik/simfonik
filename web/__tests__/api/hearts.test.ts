@@ -19,7 +19,7 @@ vi.mock('@/lib/data', () => ({
 
 import { POST } from '@/app/api/hearts/route';
 import { GET } from '@/app/api/tape-stats/[tapeId]/route';
-import { archivedTarget } from '@/lib/heart-targets';
+import { archivedTarget } from '@/lib/archived-target';
 import { NextRequest } from 'next/server';
 
 const RACHEL = archivedTarget(OLD[1]);

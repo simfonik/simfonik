@@ -16,7 +16,8 @@ import { unstable_cache } from 'next/cache';
 import { getTapeComments } from './comments';
 import { getCommentsForTape } from './data';
 import { sql } from './db';
-import { archivedTarget, postedTarget } from './heart-targets';
+import { archivedTarget } from './archived-target';
+import { postedTarget } from './heart-targets';
 
 /** The comments' cache is one tag for the site; a heart only changes its own tape's counts. */
 export const heartsTag = (tapeId: string) => `hearts:${tapeId}`;
@@ -26,7 +27,7 @@ export const visitorKey = (visitor: string) => createHash('sha256').update(visit
 
 /**
  * Whether `target` is a comment on the tape: one posted through the site, or one kept from the old site
- * (lib/heart-targets.ts has the two forms).
+ * (lib/heart-targets.ts and lib/archived-target.ts have the two forms).
  */
 export async function isComment(tapeId: string, target: string): Promise<boolean> {
   if (/^a[0-9a-f]{10}$/.test(target)) return getCommentsForTape(tapeId).some((comment) => archivedTarget(comment) === target);
