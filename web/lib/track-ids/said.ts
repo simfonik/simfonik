@@ -9,14 +9,15 @@ import { digest, pageSide, reconcile, runningOrders, sideNames, trusted, type Sa
 /**
  * A tape's archived comments as the reader takes them. On a set of several DJs' tapes each tape had a page of its
  * own on the old site, and what was said there never names the set it is about: the page did. So a comment that
- * was on one side's page is read under that side's name, as a comment headed with it is.
+ * was on one side's page is read under that side's name, as a comment headed with it is. What it says of that
+ * side stands until someone lists the side with its times (`digest`).
  */
 export function archivedSaid(tape: Pick<Tape, 'sides'>, comments: ArchivedComment[]): Said[] {
   const names = sideNames(tape.sides);
   return comments.map((comment) => {
     const side = comment.source_title ? pageSide(comment.source_title, names) : null;
     const heading = side === null ? undefined : [names[side]].flat().find(Boolean);
-    return { author: comment.author, date: comment.date, content: heading ? `${heading}\n\n${comment.content}` : comment.content };
+    return heading ? { author: comment.author, date: comment.date, content: `${heading}\n\n${comment.content}`, page: side as number } : { author: comment.author, date: comment.date, content: comment.content };
   });
 }
 

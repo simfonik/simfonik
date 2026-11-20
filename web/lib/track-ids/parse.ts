@@ -13,6 +13,8 @@ export type Sighting = {
   layer?: boolean;
   /** Read out of a sentence that didn't say which side. Only trusted on a tape with one side. */
   unsure?: boolean;
+  /** On its side by the page of the old site its comment was on (`Said.page`). It gives way to a later list of that side (see `digest`). */
+  paged?: boolean;
   /** No side was said on its line or above it, so it sits on the first side for want of anything better.
       Not used on a tape with more than two sides (see `trusted`). */
   sideless?: boolean;
@@ -803,7 +805,13 @@ function carry(older: Row[], newer: Row[]) {
   closeGap();
 }
 
-export type Said = { author: string; date: string; content: string };
+export type Said = {
+  author: string;
+  date: string;
+  content: string;
+  /** The side whose page of the old site the comment was on, where it was one side's (see `archivedSaid` in said.ts). */
+  page?: number;
+};
 // "Josh" and "Josh McClintock" are one keeper.
 const sameAuthor = (a: string, b: string) => {
   const [x, y] = [squash(a), squash(b)];
@@ -861,7 +869,7 @@ export function digest(comments: Said[], titles: SideNames = []): { sightings: S
     const own = list.rows;
     rows.forEach((r, k) => {
       listed.push({ side: r.side, n: r.n, artist: r.artist, title: r.title, known: r.known, author: c.author, date: c.date, running: true, at: r.start, named: r.named });
-      const said = { side: r.side, artist: r.artist, title: r.title, known: r.known, author: c.author, date: c.date };
+      const said = { side: r.side, artist: r.artist, title: r.title, known: r.known, author: c.author, date: c.date, ...(c.page === r.side ? { paged: true } : {}) };
       // Written with its time: read as a timed line always has been (it knows more ways of writing one than
       // a row needs to), and put on the side this list's headings were found to mean.
       const written = own[k].start;
@@ -882,6 +890,9 @@ export function digest(comments: Said[], titles: SideNames = []): { sightings: S
   }
   // What each comment timed, in the order the comments were posted.
   const posts = begins.map((from, i) => sightings.slice(from, begins[i + 1]));
+  posts.forEach((post, p) => {
+    for (const s of post) if (s.side === read[p].c.page) s.paged = true;
+  });
   // "23:38 is The Slippers - Tribal Hen", in reply to a keeper whose list has "23:38 ???" under Side 2: the
   // reply didn't say the side because the list had. A time with no side goes to the side where a keeper's
   // list, in any version, has that very time, if there is one such side.
@@ -934,16 +945,22 @@ export function digest(comments: Said[], titles: SideNames = []): { sightings: S
   const stated = [...sightings];
   for (const { s, once } of inferred)
     if (s.weak || !stated.some((x) => x.side === s.side && x.known && sameRecord(x, s) && (once || Math.abs(x.start - s.start) <= 120))) sightings.push(s);
-  // Someone who lists a side with its times, question marks and all, has given their account of it from the
-  // first time to the last. A question mark they left on that stretch in an earlier comment, and did not write
-  // again, has had its answer: "43:28 ??" in March, and in November "43:04 Invisible Men - Skin Up And Dance"
-  // with the next line at 44:26. A list with no question mark in it says nothing of what its writer doesn't know.
+  // Someone who lists a side with its times has given their account of it from the first time to the last.
   const accounts = posts.flatMap((post, p) =>
     [...new Set(post.map((x) => x.side))].flatMap((side) => {
       const times = post.filter((x) => x.side === side && !x.weak);
-      return times.length >= 5 && times.some((x) => !x.known) ? [{ ...read[p].c, side, from: Math.min(...times.map((x) => x.start)), to: Math.max(...times.map((x) => x.start)) }] : [];
+      if (times.length < 5) return [];
+      return [{ ...read[p].c, side, asks: times.some((x) => !x.known), paged: times.every((x) => x.paged), from: Math.min(...times.map((x) => x.start)), to: Math.max(...times.map((x) => x.start)) }];
     }),
   );
-  const answered = (s: Sighting) => !s.known && accounts.some((a) => a.side === s.side && a.date > s.date && sameAuthor(a.author, s.author) && s.start >= a.from && s.start <= a.to);
-  return { sightings: sightings.filter((s) => !answered(s)), listed };
+  const within = (s: Sighting, list: (typeof accounts)[number]) => list.side === s.side && list.date > s.date && s.start >= list.from && s.start <= list.to;
+  // A question mark they left on that stretch in an earlier comment, and did not write again, has had its
+  // answer: "43:28 ??" in March, and in November "43:04 Invisible Men - Skin Up And Dance" with the next line at
+  // 44:26. A list with no question mark in it says nothing of what its writer doesn't know.
+  const answered = (s: Sighting) => !s.known && accounts.some((list) => list.asks && sameAuthor(list.author, s.author) && within(s, list));
+  // And what is on the side only by the page of the old site it was said on gives way to the list on that
+  // stretch, whoever wrote it. A rough list from 2010 on a DJ's page would else move the times of the list
+  // someone keeps of that side now, and put its old question marks back among them.
+  const overtaken = (s: Sighting) => s.paged && accounts.some((list) => !list.paged && within(s, list));
+  return { sightings: sightings.filter((s) => !answered(s) && !overtaken(s)), listed };
 }
