@@ -153,6 +153,36 @@ describe('side headings', () => {
     const lines = shown([say(['Side 2', '4:00 Acid Junkies Part 1 - Sector 9', '8:00 Bravo - Two', '12:00 Charlie - Three'].join('\n'))], AB);
     expect(lines).toContain('side 1 0:08:00 Bravo — Two [Keeper]');
   });
+
+  // DX2: one side is DJ Dan's "Funky In The Place", the other Ron D Core's "Only For The Hardcore".
+  describe('on a tape whose sides each have a DJ and a title', () => {
+    const DX2 = sideNames([
+      { title: 'Funky In The Place', djs: [{ name: 'DJ Dan' }] },
+      { title: 'Only For The Hardcore', djs: [{ name: 'Ron D Core' }] },
+    ]);
+    const timed = (a: string, b: string) => say([a, '0:01 Alpha - One', '1:18 Bravo - Two', '3:12 Charlie - Three', '', b, '', '0:01 Delta - Four', '0:30 Echo - Five', '4:14 Foxtrot - Six'].join('\n'));
+
+    it.each([
+      ['DJ Dan - Funky In The Place', 'Ron D Core - Only For The Hardcore'],
+      ['Funky In The Place (DJ Dan)', 'Only For The Hardcore (Ron D Core)'],
+      ['Funky In The Place by DJ Dan', 'Tracklist for Ron D Core - Only For The Hardcore'],
+    ])('reads “%s” and “%s”, the DJ and the title together, as the headings of those sides', (a, b) => {
+      expect(shown([timed(a, b)], DX2)).toEqual([
+        'side 0 0:00:01 Alpha — One [Keeper]',
+        'side 0 0:01:18 Bravo — Two [Keeper]',
+        'side 0 0:03:12 Charlie — Three [Keeper]',
+        'side 1 0:00:01 Delta — Four [Keeper]',
+        'side 1 0:00:30 Echo — Five [Keeper]',
+        'side 1 0:04:14 Foxtrot — Six [Keeper]',
+      ]);
+    });
+
+    it('still takes a record credited to one of its DJs for a record', () => {
+      const lines = shown([list('Ron D Core - Only For The Hardcore', 'Ron D Core - Needle Damage')], DX2);
+      expect(sideOf(lines, 'Needle Damage')).toBe('1');
+      expect(sideOf(lines, 'Delta')).toBe('1');
+    });
+  });
 });
 
 // Circa ’92: five tapes, each one DJ’s set and named after them. What follows is how its commenters write.
@@ -225,6 +255,41 @@ describe('a set of several DJs’ tapes, where a side is known by who played it'
       expect(sidesOf(shown([first, twin, tidied], CIRCA)).sort()).toEqual(['1', '2']);
       expect(shown([first, twin, tidied], CIRCA).filter((l) => l.includes('[Josh McClintock]'))).toEqual([]);
     });
+  });
+});
+
+// DX2 again. Softboiled's list of DJ Dan's side has "23:25 ?? (Acapella)" over "23:40 Adam X & Frankie Bones -
+// Getting High", and leaves out the "43:28 ??" of the list they posted in March.
+describe('a list of a side with its times', () => {
+  const march = say(['Alpha - One', 'Bravo - Two', '43:28 ??', 'Charlie - Three', '46:47 ??'].join('\n'), 'Keeper', '2026-03-30');
+  const timed = ['0:01 Alpha - One', '23:25 ?? (Acapella)', '23:40 Bravo - Two', '43:04 Delta - Four', '44:26 Charlie - Three'];
+  const november = (...more: string[]) => say([...timed, ...more].join('\n'), 'Keeper', '2026-11-20');
+  const sideA = (said: Said[]) => shown(said, ['']).filter((l) => l.startsWith('side'));
+
+  it('has two tracks where two of its lines are seconds apart', () => {
+    expect(sideA([november()])).toEqual(['side 0 0:00:01 Alpha — One [Keeper]', 'side 0 0:23:25 ?? Acapella [Keeper]', 'side 0 0:23:40 Bravo — Two [Keeper]', 'side 0 0:43:04 Delta — Four [Keeper]', 'side 0 0:44:26 Charlie — Three [Keeper]']);
+  });
+
+  it('still takes someone else’s time that close for the same track', () => {
+    const lines = sideA([november(), say('23:28 is Echo - Five', 'Other', '2026-11-21')]);
+    expect(lines).toContain('side 0 0:23:25 Echo — Five [Other]');
+    expect(lines).toContain('side 0 0:23:40 Bravo — Two [Keeper]');
+  });
+
+  it('answers a question mark its writer left there before and has not written again', () => {
+    const lines = sideA([march, november('46:47 ??')]);
+    expect(lines).not.toContain('side 0 0:43:28 ?? [Keeper]');
+    expect(lines).toContain('side 0 0:46:47 ?? [Keeper]');
+  });
+
+  it('leaves the question mark where the list is someone else’s, or is past the list’s last time', () => {
+    expect(sideA([march, say([...timed].join('\n'), 'Other', '2026-11-20')])).toContain('side 0 0:43:28 ?? [Keeper]');
+    expect(sideA([march, november()])).toContain('side 0 0:46:47 ?? [Keeper]');
+  });
+
+  it('leaves it where the list has no question mark of its own, and so may only be what its writer knows', () => {
+    const known = say(['0:01 Alpha - One', '23:40 Bravo - Two', '30:00 Echo - Five', '43:04 Delta - Four', '44:26 Charlie - Three'].join('\n'), 'Keeper', '2026-11-20');
+    expect(sideA([march, known])).toContain('side 0 0:43:28 ?? [Keeper]');
   });
 });
 

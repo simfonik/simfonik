@@ -75,15 +75,36 @@ const alike = (a: string, b: string) => {
 const LIST = /\b(?:track ?list(?:ing)?|set ?list|track ids?|ids?|set|mix)\b/g;
 const LIST_FILLER = /\b(?:current|updated|latest|complete|full|partial|preliminary|so far|for|of|the)\b/g;
 /**
+ * Whether a heading is two or more of one side's own names and nothing else: "DJ Dan - Funky In The Place",
+ * "Only For The Hardcore (Ron D Core)", "Tracklist for Ron D Core - Only For The Hardcore". The words of a list
+ * and the small words that join two names are let by. One name alone is `sideNamed`'s to judge.
+ */
+const allNames = (heading: string, names: string[]) => {
+  let rest = ` ${heading} `;
+  let used = 0;
+  for (const name of names.filter((t) => t.length >= 3).sort((a, b) => b.length - a.length)) {
+    if (!rest.includes(` ${name} `)) continue;
+    rest = rest.replace(` ${name} `, "  ");
+    used++;
+  }
+  return used >= 2 && !rest.replace(LIST, " ").replace(LIST_FILLER, " ").replace(/\b(?:by|and|with)\b/g, " ").trim();
+};
+/**
  * Which side a piece of text names by one of the side's own names: "on the Cookie side", "Planet Earth", "Side 1 -
  * Technology Has Its Subliminal", "Tracklist for Barry Weaver". The name wins over a letter or number beside it:
  * commenters number the sides in the order they played them, and "Side 1" is not always the tape's A. A bare name,
  * or a name with the words of a list round it, only counts as a heading (a line that is nothing else); inside a
  * sentence it must be followed or preceded by the word "side", so a DJ's name in a track credit is left alone.
+ * A heading that gives a side's DJ and its title together ("DJ Dan - Funky In The Place") is that side's, though
+ * it has the shape of a record's name.
  */
 function sideNamed(text: string, names: SideNames, heading = false): number | null {
   const n = unowned(text);
   const bare = n.replace(/^(?:side \w+ |on )?(?:the )?/, "").replace(/ side$/, "");
+  if (heading) {
+    const whole = names.flatMap((side, i) => (allNames(bare, [side].flat().map(stem)) ? [i] : []));
+    if (whole.length === 1) return whole[0];
+  }
   const listed = bare.replace(LIST, " ").replace(LIST_FILLER, " ").replace(/ +/g, " ").trim();
   const heads = heading && bare.search(LIST) >= 0;
   const found = new Set<number>();
@@ -432,6 +453,25 @@ export function splitWholeTape(sightings: Sighting[], lengths: number[]): Sighti
 }
 
 /**
+ * Two times in one comment are two tracks, however close: "23:25 ?? (Acapella)" and under it "23:40 Adam X &
+ * Frankie Bones - Getting High", by the word of whoever listed them. So what was said within ROUGHLY of one
+ * moment is taken apart again where one comment has two times in it. That comment's times are the moments (the
+ * comment with the most times, and of those the newest), and what anyone else said goes to the nearest.
+ */
+function apart(group: Sighting[]): Sighting[][] {
+  const posts = new Map<string, Sighting[]>();
+  for (const s of group) posts.set(`${s.author}\n${s.date}`, [...(posts.get(`${s.author}\n${s.date}`) ?? []), s]);
+  const times = (post: Sighting[]) => [...new Set(post.map((s) => s.start))];
+  const lister = [...posts.values()].sort((a, b) => times(b).length - times(a).length || b[0].date.localeCompare(a[0].date))[0];
+  const moments = times(lister);
+  if (moments.length < 2) return [group];
+  const parts = moments.map((): Sighting[] => []);
+  // In order of time, so each part is: the nearest moment, and the earlier of two as near.
+  for (const s of group) parts[moments.reduce((best, at, i) => (Math.abs(s.start - at) < Math.abs(s.start - moments[best]) ? i : best), 0)].push(s);
+  return parts.flatMap(apart);
+}
+
+/**
  * What the comments say of each moment of each side: one list of moments per side. The newest identification
  * wins a moment, and an ID always beats a question mark. `settle` (moments.ts) puts a side's moments in order
  * of time and makes its tracks of them.
@@ -444,12 +484,13 @@ export function reconcile(read: Sighting[], lengths: number[]): Moment[][] {
   return lengths.map((length, side) => {
     const here = sightings.filter((s) => s.side === side && s.start < length);
     // What people type is rough: said within ROUGHLY of each other, it is said of one moment.
-    const groups: Sighting[][] = [];
+    const rough: Sighting[][] = [];
     for (const s of inOrder(here.filter((x) => !x.exact))) {
-      const g = groups[groups.length - 1];
+      const g = rough[rough.length - 1];
       if (g && s.start - g[0].start <= ROUGHLY) g.push(s);
-      else groups.push([s]);
+      else rough.push([s]);
     }
+    const groups = rough.flatMap(apart);
     // What is made with the site's own form is exact, and is taken in the order it was said. It is said of
     // the moment that starts on that very second, and is otherwise a moment of its own, whoever said
     // what nearby: two seconds into a track, an ID made with the form is the next track, not that one
@@ -872,5 +913,16 @@ export function digest(comments: Said[], titles: SideNames = []): { sightings: S
   const stated = [...sightings];
   for (const { s, once } of inferred)
     if (s.weak || !stated.some((x) => x.side === s.side && x.known && sameRecord(x, s) && (once || Math.abs(x.start - s.start) <= 120))) sightings.push(s);
-  return { sightings, listed };
+  // Someone who lists a side with its times, question marks and all, has given their account of it from the
+  // first time to the last. A question mark they left on that stretch in an earlier comment, and did not write
+  // again, has had its answer: "43:28 ??" in March, and in November "43:04 Invisible Men - Skin Up And Dance"
+  // with the next line at 44:26. A list with no question mark in it says nothing of what its writer doesn't know.
+  const accounts = posts.flatMap((post, p) =>
+    [...new Set(post.map((x) => x.side))].flatMap((side) => {
+      const times = post.filter((x) => x.side === side && !x.weak);
+      return times.length >= 5 && times.some((x) => !x.known) ? [{ ...read[p].c, side, from: Math.min(...times.map((x) => x.start)), to: Math.max(...times.map((x) => x.start)) }] : [];
+    }),
+  );
+  const answered = (s: Sighting) => !s.known && accounts.some((a) => a.side === s.side && a.date > s.date && sameAuthor(a.author, s.author) && s.start >= a.from && s.start <= a.to);
+  return { sightings: sightings.filter((s) => !answered(s)), listed };
 }
