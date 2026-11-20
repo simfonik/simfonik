@@ -53,4 +53,10 @@ export type ArchivedComment = {
   content: string;
   source_post?: string; // For consolidated tapes (circa-92, circa-94)
   source_title?: string; // Original WordPress post title
+  /**
+   * The comment was recovered from the Wayback Machine's copy of the old site, from a page that only said how
+   * long ago it was written. Its day is worked out from its number on the old site, between two comments whose
+   * days are known, and is right to within a few days.
+   */
+  date_estimated?: boolean;
 };
