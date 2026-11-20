@@ -1,10 +1,24 @@
 // What a tape's comments say is on it: the whole of the reading, with nothing fetched. `read.ts` gathers the
 // comments and calls this; the tests call it with the comments they make up, or the archive alone. Pure.
 import sideLengths from '../../data/side-lengths.json';
-import type { Tape } from '../../types/tape';
+import type { ArchivedComment, Tape } from '../../types/tape';
 import { readComposed, type RunningOrder } from './compose';
 import type { Moment } from './moments';
-import { digest, reconcile, runningOrders, sideNames, trusted, type Said, type Sighting } from './parse';
+import { digest, pageSide, reconcile, runningOrders, sideNames, trusted, type Said, type Sighting } from './parse';
+
+/**
+ * A tape's archived comments as the reader takes them. On a set of several DJs' tapes each tape had a page of its
+ * own on the old site, and what was said there never names the set it is about: the page did. So a comment that
+ * was on one side's page is read under that side's name, as a comment headed with it is.
+ */
+export function archivedSaid(tape: Pick<Tape, 'sides'>, comments: ArchivedComment[]): Said[] {
+  const names = sideNames(tape.sides);
+  return comments.map((comment) => {
+    const side = comment.source_title ? pageSide(comment.source_title, names) : null;
+    const heading = side === null ? undefined : [names[side]].flat().find(Boolean);
+    return { author: comment.author, date: comment.date, content: heading ? `${heading}\n\n${comment.content}` : comment.content };
+  });
+}
 
 /**
  * What the comments say of each side of a tape, moment by moment (see moments.ts, whose `settle` makes each
@@ -17,9 +31,10 @@ import { digest, reconcile, runningOrders, sideNames, trusted, type Said, type S
  * the tape leaves no doubt (see `trusted`).
  *
  * `orders` is, for each side, its tracks in the order they play where a list gives them with few or no
- * times: the tape's own tracklist, or failing that the fullest list kept in the comments. A list in the
- * comments is only used on a tape with one or two sides. On a set of several DJs' tapes "Side 1" in a comment
- * is the first side of whichever cassette its writer had, and there is no telling which that was.
+ * times: the tape's own tracklist, or failing that the fullest list kept in the comments. On a set of several
+ * DJs' tapes "Side 1" in a comment is the first side of whichever cassette its writer had, and there is no
+ * telling which that was. So on a tape with more than two sides a list in the comments is only used where it
+ * is under one of a side's own names ("Scott Hardkiss"), which leaves no doubt.
  */
 export function readSaid(tape: Pick<Tape, 'id' | 'sides'>, said: Said[]): { sides: Moment[][]; orders: (RunningOrder | null)[] } {
   const positions = tape.sides.map((s) => s.position);
@@ -32,7 +47,7 @@ export function readSaid(tape: Pick<Tape, 'id' | 'sides'>, said: Said[]): { side
   }
   const { sightings, listed } = digest(prose, sideNames(tape.sides));
   const read = trusted(sightings, tape.sides.length);
-  const kept = tape.sides.length <= 2 ? runningOrders(listed, tape.sides.length) : [];
+  const kept = runningOrders(tape.sides.length <= 2 ? listed : listed.filter((line) => line.named), tape.sides.length);
 
   // A side whose length was never measured has no end to hold its IDs to.
   const measured = (sideLengths as Record<string, (number | null)[]>)[tape.id];

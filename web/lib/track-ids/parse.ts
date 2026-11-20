@@ -128,6 +128,17 @@ function sideNamed(text: string, names: SideNames, heading = false): number | nu
   });
   return found.size === 1 ? [...found][0] : null;
 }
+/**
+ * The side a page of the old site was about, from the page's title. Each tape of a set had a page of its own
+ * there: "Scott Hardkiss - Circa 92" is the Scott Hardkiss side of Circa '92. None where what comes before the
+ * dash is not one side's name ("Bleu – Circa 92"). Spaces are let by: "skylab2000" is Skylab 2000.
+ */
+export function pageSide(page: string, names: SideNames): number | null {
+  const run = (name: string) => stem(name).replace(/ /g, "");
+  const who = run(page.split(/\s[-–—]\s/)[0]);
+  const sides = names.flatMap((side, i) => ([side].flat().some((name) => name && run(name) === who) ? [i] : []));
+  return who && sides.length === 1 ? sides[0] : null;
+}
 const TIME = String.raw`\d{1,2}:\d{2}(?::\d{2})?`;
 const DASH = String.raw`[-–—]`;
 // Not "love": it is in half the titles of the era.
@@ -544,18 +555,26 @@ export type Listed = {
   running?: boolean;
   /** When the list itself says this line plays, in seconds: written beside it, or in an earlier version. */
   at?: number;
+  /**
+   * The list is under a heading that names its side by one of the side's own names ("Scott Hardkiss", "Tracklist
+   * for Barry Weaver"), not by a letter or a number. On a set of several DJs' tapes that is the only heading
+   * that says which side is meant (see `readSaid`).
+   */
+  named?: boolean;
 };
 
 /** Numbered lines with a name and no time, e.g. "6. Moby - Go" under a "Side 1" heading. */
 function parseListing(content: string, author: string, date: string, titles: SideNames = []): Listed[] {
   const out: Listed[] = [];
   let side = 0;
+  let named: true | undefined;
   for (const raw of linesOf(content)) {
     const line = raw.trim();
     if (!line) continue;
     const heading = /^\d/.test(line) ? null : headingSide(line, titles);
     if (heading !== null) {
       side = heading;
+      named = sideNamed(line, titles, true) !== null || undefined;
       continue;
     }
     if (new RegExp(TIME).test(line)) continue; // timed lines are sightings, handled above
@@ -563,7 +582,7 @@ function parseListing(content: string, author: string, date: string, titles: Sid
     if (!m) continue;
     const parts = split(m[2]);
     if (!parts || (parts.known && !parts.artist)) continue;
-    out.push({ side, n: Number(m[1]), ...parts, author, date });
+    out.push({ side, n: Number(m[1]), ...parts, author, date, named });
   }
   return out;
 }
@@ -608,7 +627,7 @@ export function runningOrders(listed: Listed[], sides: number): Listed[][] {
 // replaced a timed "??" takes that time, and the list is the side's running order.
 
 /** One line of such a list. `n` is its number: the one it was written with, or its place on the side. */
-type Row = { side: number; n: number; /** The line as written. */ raw?: string; numbered?: boolean; start?: number; end?: number; artist: string; title: string; known: boolean; layer?: boolean; /** Not a track anyone named or timed: "(Voice mail montage)". It still has a place in the order. */ note?: boolean };
+type Row = { side: number; n: number; /** Its side was named by one of the side's own names (see `Listed`). */ named?: boolean; /** The line as written. */ raw?: string; numbered?: boolean; start?: number; end?: number; artist: string; title: string; known: boolean; layer?: boolean; /** Not a track anyone named or timed: "(Voice mail montage)". It still has a place in the order. */ note?: boolean };
 // A time as these lists write it, including ":58" for under a minute.
 const ROW_TIME = String.raw`(?:\d{1,2}:\d{2}(?::\d{2})?|:\d{2})`;
 const ABBREVIATION = /\b(?:Dr|Mr|Mrs|Ms|St|vs|feat|ft|Vol|No|Pt)\.\s/gi;
@@ -706,6 +725,7 @@ function parseRunning(content: string, titles: SideNames = []): { rows: Row[]; h
   const strays: number[] = [];
   const count: number[] = [];
   let side = 0;
+  let named: true | undefined;
   // With headings, what comes before the first is the commenter talking, unless the first heading is for a
   // later side: then the list simply opened on side A without saying so.
   let begun = !headed || (placed[0] ?? 0) > 0;
@@ -714,6 +734,7 @@ function parseRunning(content: string, titles: SideNames = []): { rows: Row[]; h
     if (!line) return;
     if (marks[i] !== null) {
       side = marks[i] === "?" ? labels.indexOf(squash(line)) : (marks[i] as number);
+      named = (marks[i] !== "?" && sideNamed(line, titles, true) !== null) || undefined;
       begun = true;
       if (marks[i] !== "?") prose.push(raw);
       return;
@@ -731,7 +752,7 @@ function parseRunning(content: string, titles: SideNames = []): { rows: Row[]; h
     }
     // Its own number if it was written with one (some lists count straight on through side B), else its place.
     count[side] = row.n ?? (count[side] ?? 0) + 1;
-    rows.push({ side, ...row, raw: line, n: count[side], numbered: row.n !== undefined || undefined });
+    rows.push({ side, named, ...row, raw: line, n: count[side], numbered: row.n !== undefined || undefined });
     if (note) strays.push(i);
     else at.push(i);
   });
@@ -839,7 +860,7 @@ export function digest(comments: Said[], titles: SideNames = []): { sightings: S
     if (!rows || !list) continue;
     const own = list.rows;
     rows.forEach((r, k) => {
-      listed.push({ side: r.side, n: r.n, artist: r.artist, title: r.title, known: r.known, author: c.author, date: c.date, running: true, at: r.start });
+      listed.push({ side: r.side, n: r.n, artist: r.artist, title: r.title, known: r.known, author: c.author, date: c.date, running: true, at: r.start, named: r.named });
       const said = { side: r.side, artist: r.artist, title: r.title, known: r.known, author: c.author, date: c.date };
       // Written with its time: read as a timed line always has been (it knows more ways of writing one than
       // a row needs to), and put on the side this list's headings were found to mean.

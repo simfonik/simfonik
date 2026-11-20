@@ -6,7 +6,7 @@ import { getCommentsForTape, getTapeById } from '../data';
 import type { RunningOrder } from './compose';
 import type { Moment } from './moments';
 import type { Said } from './parse';
-import { readSaid } from './said';
+import { archivedSaid, readSaid } from './said';
 
 /**
  * What the tape page is sent, in one piece so that none of it can be older than the rest: the comments
@@ -17,7 +17,7 @@ import { readSaid } from './said';
  */
 export type TapeReading = { comments: TapeComment[]; sides: Moment[][]; orders: (RunningOrder | null)[]; complete: boolean };
 
-const archived = (tapeId: string): Said[] => getCommentsForTape(tapeId).map((c) => ({ author: c.author, date: c.date, content: c.content }));
+const archived = (tapeId: string): Said[] => archivedSaid(getTapeById(tapeId) as Tape, getCommentsForTape(tapeId));
 
 /** Everything said about a tape, the 2008–2023 archive and then the comments since, and its reading. It throws where the newer comments can't be had. */
 async function readAll(tapeId: string) {

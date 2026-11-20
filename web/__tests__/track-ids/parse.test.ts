@@ -8,7 +8,9 @@ import { describe, expect, it } from 'vitest';
 import comments from '@/data/tape-comments.json';
 import tapes from '@/data/tapes.json';
 import { settle } from '@/lib/track-ids/moments';
-import { digest, parseComment, reconcile, runningOrders, sideNames, splitWholeTape, trusted, type Said, type SideNames, type Sighting } from '@/lib/track-ids/parse';
+import { digest, pageSide, parseComment, reconcile, runningOrders, sideNames, splitWholeTape, trusted, type Said, type SideNames, type Sighting } from '@/lib/track-ids/parse';
+import { archivedSaid } from '@/lib/track-ids/said';
+import type { ArchivedComment, Tape } from '@/types/tape';
 
 const clock = (s: number) => `${Math.floor(s / 3600)}:${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
@@ -21,7 +23,8 @@ function shown(said: Said[], titles: SideNames): string[] {
   const timed = trusted(sightings, titles.length);
   return [
     ...tracksOf(timed, titles.map(() => Infinity)).map((p) => `side ${p.side} ${clock(p.start)} ${p.known ? `${p.artist} — ${p.title}` : `?? ${p.title}`.trim()} [${p.by}]`),
-    ...runningOrders(listed, titles.length).flatMap((order, side) => order.map((l) => `order side ${side} no.${l.n} ${l.known ? `${l.artist} — ${l.title}` : `?? ${l.title}`.trim()} [${l.author}]`)),
+    // As the page takes them (`readSaid`): on a tape with more than two sides, only a list under a side's own name.
+    ...runningOrders(titles.length <= 2 ? listed : listed.filter((l) => l.named), titles.length).flatMap((order, side) => order.map((l) => `order side ${side} no.${l.n} ${l.known ? `${l.artist} — ${l.title}` : `?? ${l.title}`.trim()} [${l.author}]`)),
   ];
 }
 
@@ -30,11 +33,8 @@ const AB = ['', ''];
 
 describe('every archived comment', () => {
   it('reads as it did when this copy was saved', async () => {
-    const all = comments as Record<string, { author: string; date: string; content: string }[]>;
-    const lines = (tapes as { id: string; sides: { title?: string; djs?: { name: string }[] }[] }[]).flatMap((tape) => {
-      const said = (all[tape.id] ?? []).map((c) => ({ author: c.author, date: c.date.slice(0, 10), content: c.content }));
-      return shown(said, sideNames(tape.sides)).map((line) => `${tape.id} | ${line}`);
-    });
+    const all = comments as Record<string, ArchivedComment[]>;
+    const lines = (tapes as unknown as Tape[]).flatMap((tape) => shown(archivedSaid(tape, all[tape.id] ?? []), sideNames(tape.sides)).map((line) => `${tape.id} | ${line}`));
     await expect(`${lines.join('\n')}\n`).toMatchFileSnapshot('./archive.snapshot.txt');
   });
 });
@@ -221,6 +221,56 @@ describe('a set of several DJs’ tapes, where a side is known by who played it'
     expect(shown([recap], CIRCA)).toEqual([]);
     // On a tape with two sides it is taken to open on the first, as it always was.
     expect(sidesOf(shown([recap], AB))).toEqual(['0']);
+  });
+
+  // Rents's list of Scott Hardkiss's set: 28 lines under his name and not a time among them.
+  describe('a list with no times', () => {
+    const set = ['Orbital - Belfast', 'Orbital - Midnight (Sasha mx)', 'Infinite Wheel - Dharma Sunburst', 'Stone Roses - Fools Gold', '?', 'Moby - Mobility'];
+    const orderOf = (lines: string[]) => lines.filter((l) => l.startsWith('order'));
+
+    it('is the side’s order where it is under the DJ’s own name', () => {
+      expect(orderOf(shown([say(['Scott Hardkiss', '', ...set].join('\n'), 'Rents')], CIRCA))).toEqual([
+        'order side 0 no.1 Orbital — Belfast [Rents]',
+        'order side 0 no.2 Orbital — Midnight (Sasha mx) [Rents]',
+        'order side 0 no.3 Infinite Wheel — Dharma Sunburst [Rents]',
+        'order side 0 no.4 Stone Roses — Fools Gold [Rents]',
+        'order side 0 no.5 ?? [Rents]',
+        'order side 0 no.6 Moby — Mobility [Rents]',
+      ]);
+    });
+
+    it('is not used under “Side 1”, which on a set of five tapes could be any of them', () => {
+      expect(orderOf(shown([say(['Side 1', '', ...set].join('\n'), 'Rents')], CIRCA))).toEqual([]);
+      // On a tape with two sides "Side 1" is said of that tape, as it always was.
+      expect(orderOf(shown([say(['Side 1', '', ...set].join('\n'), 'Rents')], AB))).toHaveLength(6);
+    });
+  });
+
+  // Each of the five tapes had a page of its own on the old site, and the archive says which a comment was on.
+  describe('a comment made on one DJ’s page of the old site', () => {
+    const tape = { sides: ['Scott Hardkiss', 'Jon Williams', 'Barry Weaver', 'Doc Martin', 'Mark Lewis'].map((name, i) => ({ position: 'ABCDE'[i], title: name, djs: [{ name, slug: name }], audio_links: [] })) } as unknown as Tape;
+    const on = (page: string | undefined, content: string): ArchivedComment => ({ author: 'Nature Boy', date: '2010-11-16', content, ...(page ? { source_title: page } : {}) });
+
+    it('knows whose page it was by the page’s title', () => {
+      expect(pageSide('Scott Hardkiss - Circa 92', CIRCA)).toBe(0);
+      expect(pageSide('Doc Martin - Circa 92', CIRCA)).toBe(3);
+      expect(pageSide('Bleu – Circa 92', CIRCA)).toBeNull();
+      expect(pageSide('skylab2000 - Circa 94', sideNames([{ title: 'Eli Star' }, { title: 'Skylab 2000' }]))).toBe(1);
+    });
+
+    it('is said of that DJ’s side, though it never says so', () => {
+      const said = archivedSaid(tape, [on('Scott Hardkiss - Circa 92', 'The song at 28:25 is ICP - Free and equal (Leftfield remix).')]);
+      expect(shown(said, CIRCA)).toEqual(['side 0 0:28:25 ICP — Free and equal (Leftfield remix) [Nature Boy]']);
+    });
+
+    it('still goes where it says, when it names another DJ’s set', () => {
+      const said = archivedSaid(tape, [on('Scott Hardkiss - Circa 92', ['Doc Martin’s set', '0:45 Sil - Windows', '3:45 Coco Steel & Lovebomb - Feel It', '7:40 Bobby Konders - Nervous Acid'].join('\n'))]);
+      expect(sidesOf(shown(said, CIRCA))).toEqual(['3']);
+    });
+
+    it('is on no side where the page was not one DJ’s, or the archive does not say what page it was', () => {
+      for (const page of ['Bleu – Circa 92', undefined]) expect(shown(archivedSaid(tape, [on(page, 'The song at 28:25 is ICP - Free and equal (Leftfield remix).')]), CIRCA)).toEqual([]);
+    });
   });
 
   it('keeps a line that says its side with a letter', () => {
