@@ -268,6 +268,22 @@ describe('a set of several DJs’ tapes, where a side is known by who played it'
       expect(sidesOf(shown(said, CIRCA))).toEqual(['3']);
     });
 
+    it('gives way, on the stretch of the side they cover, to a list someone later keeps of that side with its times', () => {
+      const old = archivedSaid(tape, [on('Barry Weaver - Circa 92', ['0:21 ?', '2:16 Messiah - There is No Law', '8:09 ?', '11:47 Dyewitness - Observing The Earth', '70:47 Jambo - Drum Attack'].join('\n'))]);
+      const kept = say(['Tracklist for Barry Weaver', '0:21 S’Xpress - Hey Music Lover', '2:12 Messiah - There Is No Law', '3:54 Friends of Alex - What Is..? Fick Dich', '6:42 XTRO And Q Brik - Dikke Vette Pannekoeke', '12:02 Dyewitness - Observing The Earth'].join('\n'), 'Josh McClintock', '2026-11-01');
+      // On its own the old list is the side's.
+      expect(shown(old, CIRCA)).toContain('side 2 0:11:47 Dyewitness — Observing The Earth [Nature Boy]');
+      // Under the list, nothing of it is left between 0:21 and 12:02: not its earlier times, not its question marks.
+      expect(shown([...old, kept], CIRCA)).toEqual([
+        'side 2 0:00:21 S’Xpress — Hey Music Lover [Josh McClintock]',
+        'side 2 0:02:12 Messiah — There Is No Law [Josh McClintock]',
+        'side 2 0:03:54 Friends of Alex — What Is..? Fick Dich [Josh McClintock]',
+        'side 2 0:06:42 XTRO And Q Brik — Dikke Vette Pannekoeke [Josh McClintock]',
+        'side 2 0:12:02 Dyewitness — Observing The Earth [Josh McClintock]',
+        'side 2 1:10:47 Jambo — Drum Attack [Nature Boy]',
+      ]);
+    });
+
     it('is on no side where the page was not one DJ’s, or the archive does not say what page it was', () => {
       for (const page of ['Bleu – Circa 92', undefined]) expect(shown(archivedSaid(tape, [on(page, 'The song at 28:25 is ICP - Free and equal (Leftfield remix).')]), CIRCA)).toEqual([]);
     });
