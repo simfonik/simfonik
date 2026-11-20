@@ -1,17 +1,8 @@
 'use client';
 
 import { readComposed } from '../lib/track-ids/compose';
-import { CommentBody } from './CommentBody';
+import { Comment } from './Comment';
 import { useTapeTrackIds } from './TapeTrackIds';
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-}
 
 /**
  * What people have said about the tape through the site. A comment that is nothing but track IDs in the
@@ -40,17 +31,7 @@ export function LiveComments() {
   return (
     <div className="space-y-6">
       {talk.map((comment) => (
-        <div key={comment.id} className="comment">
-          <div className="mb-2">
-            <div className="font-display text-xl leading-tight text-[var(--text)]">
-              {comment.author_name}
-            </div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mt-1">
-              {formatDate(comment.created_at)}
-            </div>
-          </div>
-          <CommentBody content={comment.content} />
-        </div>
+        <Comment key={comment.id} author={comment.author_name} date={comment.created_at} content={comment.content} heart={`c${comment.id}`} />
       ))}
     </div>
   );

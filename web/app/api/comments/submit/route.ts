@@ -3,8 +3,8 @@ import { COMMENTS_CACHE_TAG } from '@/lib/comments';
 import { getTapeById } from '@/lib/data';
 import { revalidateTag } from 'next/cache';
 import { sendCommentNotification } from '@/lib/email';
+import { addressOf, overLimit } from '@/lib/rate-limit';
 import { hasLink, readComposed } from '@/lib/track-ids/compose';
-import { createHash } from 'crypto';
 
 // How many comments one address may post in an hour. Track IDs made on the tape page are comments too
 // (lib/track-ids/compose.ts), and someone naming a tape's tracks one at a time posts one for each, so those
@@ -21,39 +21,10 @@ export async function POST(request: Request) {
     const ids = tape && typeof content === 'string' ? readComposed(content, tape.sides.map((side) => side.position)) : null;
     const trackIds = Boolean(ids);
 
-    // Get IP address for rate limiting
-    const forwarded = request.headers.get('x-forwarded-for');
-    const ip = forwarded ? forwarded.split(',')[0].trim() : 'unknown';
-    const ipHash = createHash('sha256').update(trackIds ? `${ip}:track-ids` : ip).digest('hex');
-
-    // 1. Rate limiting check
-    const { rows: rateLimitRows } = await sql`
-      SELECT count, reset_at FROM rate_limits
-      WHERE ip_hash = ${ipHash} AND reset_at > NOW()
-    `;
-
-    if (rateLimitRows.length > 0 && rateLimitRows[0].count >= (trackIds ? HOURLY_LIMIT.trackIds : HOURLY_LIMIT.talk)) {
+    // 1. Rate limiting, by address
+    const ip = addressOf(request);
+    if (await overLimit(trackIds ? `${ip}:track-ids` : ip, trackIds ? HOURLY_LIMIT.trackIds : HOURLY_LIMIT.talk)) {
       return Response.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
-    }
-
-    // Update rate limit
-    const resetAt = new Date(Date.now() + 3600000).toISOString(); // 1 hour from now
-    
-    if (rateLimitRows.length === 0 || new Date(rateLimitRows[0].reset_at) < new Date()) {
-      // Start new window
-      await sql`
-        INSERT INTO rate_limits (ip_hash, count, reset_at)
-        VALUES (${ipHash}, 1, ${resetAt})
-        ON CONFLICT (ip_hash) DO UPDATE
-        SET count = 1, reset_at = ${resetAt}
-      `;
-    } else {
-      // Increment count only
-      await sql`
-        UPDATE rate_limits
-        SET count = count + 1
-        WHERE ip_hash = ${ipHash}
-      `;
     }
 
     // 2. Honeypot check

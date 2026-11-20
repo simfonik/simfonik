@@ -14,7 +14,8 @@ import { PlaylistPlayer } from "../../../components/PlaylistPlayer";
 import { CommentForm } from "../../../components/CommentForm";
 import { LiveComments } from "../../../components/LiveComments";
 import { TapeTrackIdsProvider } from "../../../components/TapeTrackIds";
-import { CommentBody } from "../../../components/CommentBody";
+import { TapePlays, TapeStatsProvider } from "../../../components/TapeStats";
+import { Comment } from "../../../components/Comment";
 import { RotatingWord } from "../../../components/RotatingWord";
 import { JsonLd } from "../../../components/JsonLd";
 import { Tracklist } from "../../../components/Tracklist";
@@ -93,16 +94,6 @@ function isStreamable(url: string): boolean {
   const lower = url.toLowerCase();
   return lower.includes('raw=1') || 
          /\.(mp3|m4a|ogg|wav)(\?|#|$)/.test(lower);
-}
-
-// Format date consistently with live comments
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
 }
 
 export default async function Page({ params }: Props) {
@@ -190,6 +181,7 @@ export default async function Page({ params }: Props) {
           silent: !(audio_links[0] && isStreamable(audio_links[0].url)),
         }))}
       >
+      <TapeStatsProvider tapeId={tape.id}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       
       {/* Mobile-only Header */}
@@ -259,6 +251,8 @@ export default async function Page({ params }: Props) {
               )}
             </p>
           )}
+          {/* Last, and always a line: the plays are read after the page loads, and nothing moves when they come. */}
+          <TapePlays />
         </div>
       </header>
 
@@ -343,6 +337,8 @@ export default async function Page({ params }: Props) {
                     )}
                   </p>
                 )}
+                {/* Last, and always a line: the plays are read after the page loads, and nothing moves when they come. */}
+                <TapePlays />
               </div>
             </header>
 
@@ -467,30 +463,21 @@ export default async function Page({ params }: Props) {
                 return (
                   <div className="space-y-6">
                     {archivedComments.map((comment, idx) => (
-                      <div key={idx} className="comment">
-                        <div className="mb-2">
-                          <div className="font-display text-xl leading-tight text-[var(--text)]">
-                            {comment.author}
-                          </div>
-                          <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mt-1">
-                            {formatDate(comment.date)}
-                          </div>
-                        </div>
-                        <CommentBody content={comment.content} />
-                      </div>
+                      <Comment key={idx} author={comment.author} date={comment.date} content={comment.content} heart={`a${idx}`} />
                     ))}
                   </div>
                 );
               }
               
               // Circa tape: group by source_title
-              const grouped = new Map<string, typeof archivedComments>();
-              archivedComments.forEach(comment => {
+              // Each keeps its place among all of the tape's comments: that is what its heart goes by.
+              const grouped = new Map<string, { comment: (typeof archivedComments)[number]; idx: number }[]>();
+              archivedComments.forEach((comment, idx) => {
                 const key = comment.source_title || 'Unknown';
                 if (!grouped.has(key)) {
                   grouped.set(key, []);
                 }
-                grouped.get(key)!.push(comment);
+                grouped.get(key)!.push({ comment, idx });
               });
               
               return (
@@ -501,18 +488,8 @@ export default async function Page({ params }: Props) {
                         {sourceTitle}
                       </h3>
                       <div className="space-y-6">
-                        {comments.map((comment, idx) => (
-                          <div key={idx} className="comment">
-                            <div className="mb-2">
-                              <div className="font-display text-xl leading-tight text-[var(--text)]">
-                                {comment.author}
-                              </div>
-                              <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mt-1">
-                                {formatDate(comment.date)}
-                              </div>
-                            </div>
-                            <CommentBody content={comment.content} />
-                          </div>
+                        {comments.map(({ comment, idx }) => (
+                          <Comment key={idx} author={comment.author} date={comment.date} content={comment.content} heart={`a${idx}`} />
                         ))}
                       </div>
                     </div>
@@ -524,6 +501,7 @@ export default async function Page({ params }: Props) {
         </section>
       )}
       </div>
+      </TapeStatsProvider>
       </TapeTrackIdsProvider>
     </main>
   );

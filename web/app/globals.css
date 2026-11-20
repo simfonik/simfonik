@@ -545,7 +545,7 @@ html:has(.id-sheet[open]) { overflow: hidden; }
    as wide as the screen already, and a page zoomed by a hair then slides from side to side under a finger.
    The player and the track line are tapped twice in a moment all the time (play, pause; open, shut), so
    two taps on them, or anywhere on the sheet, are two presses and never a zoom. */
-.player-play, .player-side, .track-ids-line, .track-ids-post, .track-ids-offer, .track-ids-shut, .tape-picture, .comment-time, .id-sheet,
+.player-play, .player-side, .track-ids-line, .track-ids-post, .track-ids-offer, .track-ids-shut, .tape-picture, .comment-time, .comment-heart, .id-sheet,
 .tracklist-time, .tracklist-mark, button.tracklist-n, .tracklist-cue, .tracklist-post, .player-dock { touch-action: manipulation; }
 /* What is pressed in the tracklist dims as it is pressed, and needs no grey flash on top of that. */
 .tracklist-time, .tracklist-mark, button.tracklist-n, .tracklist-cue { -webkit-tap-highlight-color: transparent; }
@@ -633,6 +633,26 @@ html:has(.id-sheet[open]) { overflow: hidden; }
 .comment-time::before { content: ""; position: absolute; inset: -12px -6px; }
 .comment-time:active { opacity: 0.6; }
 .comment-time:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+/* The heart on a comment, beside its date: small, with a full-size place to press round it. It is outlined
+   until this browser has given its own, then filled, in the colour of the text. Its count is in the date's type. */
+.comment-heart {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.comment-heart svg { width: 0.875rem; height: 0.875rem; }
+.comment-heart[aria-pressed="true"] { color: var(--text); }
+@media (hover: hover) and (pointer: fine) {
+  .comment-heart:hover { color: var(--text); }
+}
+.comment-heart::before { content: ""; position: absolute; inset: -10px -8px; }
+.comment-heart:active { opacity: 0.6; }
+.comment-heart:focus-visible { outline: 2px solid var(--text); outline-offset: 4px; }
 /* The tracklist. A row is where a track starts, then what it is. The time is pressed to hear the tape from
    there. A track nobody has timed has its number in the list where the time will go, and while its side
    plays a + is there in its place: pressed when the track starts, it gives the row that moment. */
