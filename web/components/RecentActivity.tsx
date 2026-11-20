@@ -35,7 +35,7 @@ export async function RecentActivity() {
   const row = (entry: RecentComment, href: string, said: string) => (
     <li key={entry.id}>
       <Link href={href} className="flex items-baseline gap-3 py-3 hover:bg-[var(--bg-hover)] -mx-2 px-2 transition-colors">
-        <span className="font-display text-base sm:text-lg leading-none text-[var(--text)] truncate">{entry.author_name}</span>
+        <span className="font-display text-base leading-none text-[var(--text)] truncate">{entry.author_name}</span>
         <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--muted)] shrink-0 tabular-nums">{said}</span>
         <span className="text-sm text-[var(--accent)] truncate flex-1">
           <span className={names(entry.tape_title)}>{entry.dj_names} — </span>
