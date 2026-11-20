@@ -3,6 +3,7 @@
 import { HeartIcon as HeartOutline } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolid } from '@heroicons/react/24/solid';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { PLAYS_SHOWN } from '../lib/plays-shown';
 
 // How a tape has gone down: the plays its page shows, and the hearts on its comments. Both are read once the
 // page has loaded (/api/tape-stats), so the page itself stays as it was built.
@@ -130,9 +131,11 @@ export const useCountPlay = () => useContext(Context).played;
 /**
  * The mix's plays, as the last line of the tape's details. The line is there from the start, empty until the
  * plays are read and where there are none to show, so that nothing under it moves when the number comes.
+ * While the plays are not shown at all (lib/plays-shown.ts) there is no line.
  */
 export function TapePlays() {
   const { plays } = useContext(Context);
+  if (!PLAYS_SHOWN) return null;
   return plays === null ? <p aria-hidden="true">&nbsp;</p> : <p>Plays · {plays.toLocaleString('en-US')}</p>;
 }
 

@@ -1,4 +1,5 @@
 // How many times a mix has been played, as the tape page says it. Server only.
+// (Whether the tape page says it at all is lib/plays-shown.ts.)
 import { unstable_cache } from 'next/cache';
 import starts from '../data/play-starts.json';
 import { sql } from './db';

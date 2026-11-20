@@ -252,7 +252,7 @@ export default async function Page({ params }: Props) {
               )}
             </p>
           )}
-          {/* Last, and always a line: the plays are read after the page loads, and nothing moves when they come. */}
+          {/* Last, and always a line: the plays are read after the page loads, and nothing moves when they come. (Hidden for now, and then no line: lib/plays-shown.ts.) */}
           <TapePlays />
         </div>
       </header>
@@ -338,7 +338,7 @@ export default async function Page({ params }: Props) {
                     )}
                   </p>
                 )}
-                {/* Last, and always a line: the plays are read after the page loads, and nothing moves when they come. */}
+                {/* Last, and always a line: the plays are read after the page loads, and nothing moves when they come. (Hidden for now, and then no line: lib/plays-shown.ts.) */}
                 <TapePlays />
               </div>
             </header>

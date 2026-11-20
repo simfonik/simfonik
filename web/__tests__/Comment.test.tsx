@@ -4,6 +4,15 @@ import { Comment } from '@/components/Comment';
 import { TapePlays, TapeStatsProvider, useCountPlay } from '@/components/TapeStats';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 
+// The plays are hidden for now (lib/plays-shown.ts). What they do when shown is still held to, below, and so
+// is their being off the page while they are not.
+const { plays } = vi.hoisted(() => ({ plays: { shown: true } }));
+vi.mock('@/lib/plays-shown', () => ({
+  get PLAYS_SHOWN() {
+    return plays.shown;
+  },
+}));
+
 const fetchMock = vi.fn();
 /** What the site answers: the tape's stats, and then each heart sent. */
 const site = (stats: { plays: number | null; hearts: Record<string, number> }, heart: () => Response = () => Response.json({ count: 1 })) =>
@@ -19,6 +28,7 @@ const heart = () => screen.getByRole('button', { name: /heart this comment/i });
 const sent = () => fetchMock.mock.calls.filter(([, init]) => init?.method === 'POST').map(([, init]) => JSON.parse(init.body as string));
 
 beforeEach(() => {
+  plays.shown = true;
   fetchMock.mockReset();
   vi.stubGlobal('fetch', fetchMock);
   window.localStorage.clear();
@@ -142,6 +152,15 @@ describe('the plays among a tape’s details', () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     fireEvent.click(screen.getByText('start a side'));
     expect(screen.queryByText(/Plays/)).toBeNull();
+  });
+
+  it('are not on the page at all, nor a line kept for them, while they are not shown', async () => {
+    plays.shown = false;
+    site({ plays: 2407, hearts: {} });
+    const { container } = page();
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(screen.queryByText(/Plays/)).toBeNull();
+    expect(container.querySelector('p[aria-hidden]')).toBeNull();
   });
 
   it('are left out where there are none to show', async () => {

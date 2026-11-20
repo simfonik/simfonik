@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const { sqlMock, revalidateTagMock, OLD } = vi.hoisted(() => ({
+const { sqlMock, revalidateTagMock, OLD, plays } = vi.hoisted(() => ({
+  plays: { shown: false },
   sqlMock: vi.fn(),
   revalidateTagMock: vi.fn(),
   OLD: [
@@ -10,6 +11,11 @@ const { sqlMock, revalidateTagMock, OLD } = vi.hoisted(() => ({
 }));
 
 vi.mock('@/lib/db', () => ({ sql: sqlMock }));
+vi.mock('@/lib/plays-shown', () => ({
+  get PLAYS_SHOWN() {
+    return plays.shown;
+  },
+}));
 vi.mock('next/cache', () => ({ revalidateTag: revalidateTagMock, unstable_cache: (fn: unknown) => fn }));
 vi.mock('@/lib/data', () => ({
   getTapeById: (id: string) => (id === 'some-tape' ? { id } : undefined),
@@ -118,6 +124,20 @@ describe('GET /api/tape-stats/[tapeId]', () => {
     const res = await stats('some-tape');
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ plays: null, hearts: {} });
+  });
+
+  it('does not count the plays while they are not shown', async () => {
+    plays.shown = false;
+    const res = await stats('some-tape');
+    expect((await res.json()).plays).toBeNull();
+    expect(ran().some((statement) => statement.includes('FROM plays'))).toBe(false);
+  });
+
+  it('counts them when they are', async () => {
+    plays.shown = true;
+    sqlMock.mockImplementation(async (strings: string[]) => ({ rows: strings.join('').includes('FROM plays') ? [{ tape_id: 'some-tape', n: 150 }] : [] }));
+    expect((await (await stats('some-tape')).json()).plays).toBe(150);
+    plays.shown = false;
   });
 
   it('does not ask the database about a tape that does not exist', async () => {
