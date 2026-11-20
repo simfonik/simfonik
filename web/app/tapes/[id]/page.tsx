@@ -16,6 +16,7 @@ import { LiveComments } from "../../../components/LiveComments";
 import { TapeTrackIdsProvider } from "../../../components/TapeTrackIds";
 import { TapePlays, TapeStatsProvider } from "../../../components/TapeStats";
 import { Comment } from "../../../components/Comment";
+import { archivedTarget } from "../../../lib/heart-targets";
 import { RotatingWord } from "../../../components/RotatingWord";
 import { JsonLd } from "../../../components/JsonLd";
 import { Tracklist } from "../../../components/Tracklist";
@@ -463,21 +464,20 @@ export default async function Page({ params }: Props) {
                 return (
                   <div className="space-y-6">
                     {archivedComments.map((comment, idx) => (
-                      <Comment key={idx} author={comment.author} date={comment.date} content={comment.content} heart={`a${idx}`} />
+                      <Comment key={idx} author={comment.author} date={comment.date} content={comment.content} heart={archivedTarget(comment)} />
                     ))}
                   </div>
                 );
               }
               
               // Circa tape: group by source_title
-              // Each keeps its place among all of the tape's comments: that is what its heart goes by.
-              const grouped = new Map<string, { comment: (typeof archivedComments)[number]; idx: number }[]>();
-              archivedComments.forEach((comment, idx) => {
+              const grouped = new Map<string, typeof archivedComments>();
+              archivedComments.forEach(comment => {
                 const key = comment.source_title || 'Unknown';
                 if (!grouped.has(key)) {
                   grouped.set(key, []);
                 }
-                grouped.get(key)!.push({ comment, idx });
+                grouped.get(key)!.push(comment);
               });
               
               return (
@@ -488,8 +488,8 @@ export default async function Page({ params }: Props) {
                         {sourceTitle}
                       </h3>
                       <div className="space-y-6">
-                        {comments.map(({ comment, idx }) => (
-                          <Comment key={idx} author={comment.author} date={comment.date} content={comment.content} heart={`a${idx}`} />
+                        {comments.map((comment, idx) => (
+                          <Comment key={idx} author={comment.author} date={comment.date} content={comment.content} heart={archivedTarget(comment)} />
                         ))}
                       </div>
                     </div>

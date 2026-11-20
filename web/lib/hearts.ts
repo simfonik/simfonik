@@ -16,6 +16,7 @@ import { unstable_cache } from 'next/cache';
 import { getTapeComments } from './comments';
 import { getCommentsForTape } from './data';
 import { sql } from './db';
+import { archivedTarget, postedTarget } from './heart-targets';
 
 /** The comments' cache is one tag for the site; a heart only changes its own tape's counts. */
 export const heartsTag = (tapeId: string) => `hearts:${tapeId}`;
@@ -24,15 +25,13 @@ export const heartsTag = (tapeId: string) => `hearts:${tapeId}`;
 export const visitorKey = (visitor: string) => createHash('sha256').update(visitor).digest('hex');
 
 /**
- * Whether `target` is a comment on the tape. "c154" is the comment with that id, posted through the site;
- * "a12" is the tape's thirteenth archived comment (lib/data.ts), which has no id but never moves.
+ * Whether `target` is a comment on the tape: one posted through the site, or one kept from the old site
+ * (lib/heart-targets.ts has the two forms).
  */
 export async function isComment(tapeId: string, target: string): Promise<boolean> {
-  const m = /^([ac])(\d{1,9})$/.exec(target);
-  if (!m) return false;
-  const n = Number(m[2]);
-  if (m[1] === 'a') return n < getCommentsForTape(tapeId).length;
-  return (await getTapeComments(tapeId)).some((comment) => comment.id === n);
+  if (/^a[0-9a-f]{10}$/.test(target)) return getCommentsForTape(tapeId).some((comment) => archivedTarget(comment) === target);
+  if (!/^c\d{1,9}$/.test(target)) return false;
+  return (await getTapeComments(tapeId)).some((comment) => postedTarget(comment.id) === target);
 }
 
 /**

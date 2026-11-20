@@ -1,22 +1,32 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const { sqlMock, revalidateTagMock } = vi.hoisted(() => ({ sqlMock: vi.fn(), revalidateTagMock: vi.fn() }));
+const { sqlMock, revalidateTagMock, OLD } = vi.hoisted(() => ({
+  sqlMock: vi.fn(),
+  revalidateTagMock: vi.fn(),
+  OLD: [
+    { author: 'Thomas', date: '2009-02-07', content: 'Wow!' },
+    { author: 'Rachel', date: '2009-05-04', content: 'This makes me remember.' },
+  ],
+}));
 
 vi.mock('@/lib/db', () => ({ sql: sqlMock }));
 vi.mock('next/cache', () => ({ revalidateTag: revalidateTagMock, unstable_cache: (fn: unknown) => fn }));
 vi.mock('@/lib/data', () => ({
   getTapeById: (id: string) => (id === 'some-tape' ? { id } : undefined),
-  // The tape has three comments kept from the old site.
-  getCommentsForTape: (id: string) => (id === 'some-tape' ? [{}, {}, {}] : []),
+  // The tape has two comments kept from the old site.
+  getCommentsForTape: (id: string) => (id === 'some-tape' ? OLD : []),
 }));
 
 import { POST } from '@/app/api/hearts/route';
 import { GET } from '@/app/api/tape-stats/[tapeId]/route';
+import { archivedTarget } from '@/lib/heart-targets';
 import { NextRequest } from 'next/server';
+
+const RACHEL = archivedTarget(OLD[1]);
 
 const VISITOR = '0b6f0e7c-3f1a-4c58-9d3e-2a7b5c9d1e4f';
 const heart = (body: Record<string, unknown>, headers: Record<string, string> = {}) =>
-  POST(new Request('https://simfonik.com/api/hearts', { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify({ tapeId: 'some-tape', target: 'a1', visitor: VISITOR, on: true, ...body }) }));
+  POST(new Request('https://simfonik.com/api/hearts', { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify({ tapeId: 'some-tape', target: RACHEL, visitor: VISITOR, on: true, ...body }) }));
 /** The statements the route ran, each as one line of text. */
 const ran = () => sqlMock.mock.calls.map(([strings]) => (strings as string[]).join('?').replace(/\s+/g, ' ').trim());
 
@@ -28,6 +38,12 @@ beforeEach(() => {
 });
 
 describe('POST /api/hearts', () => {
+  it('knows an archived comment by what it is, not by where it sits in the archive', () => {
+    expect(RACHEL).toMatch(/^a[0-9a-f]{10}$/);
+    expect(archivedTarget({ ...OLD[1] })).toBe(RACHEL);
+    expect(archivedTarget(OLD[0])).not.toBe(RACHEL);
+  });
+
   it('gives a heart to an archived comment, says the count, and has the tape’s counts read again', async () => {
     const res = await heart({});
     expect(res.status).toBe(200);
@@ -72,7 +88,7 @@ describe('POST /api/hearts', () => {
   });
 
   it('refuses an archived comment the tape does not have', async () => {
-    expect((await heart({ target: 'a3' })).status).toBe(400);
+    expect((await heart({ target: archivedTarget({ ...OLD[1], content: 'Something nobody said.' }) })).status).toBe(400);
     expect(ran().some((statement) => statement.includes('hearts'))).toBe(false);
   });
 
@@ -88,10 +104,10 @@ describe('GET /api/tape-stats/[tapeId]', () => {
   const stats = (tapeId: string) => GET(new NextRequest(`https://simfonik.com/api/tape-stats/${tapeId}`), { params: Promise.resolve({ tapeId }) });
 
   it('gives the hearts on the tape’s comments by target', async () => {
-    sqlMock.mockImplementation(async (strings: string[]) => ({ rows: strings.join('').includes('FROM hearts') ? [{ target: 'a1', n: 3 }, { target: 'c154', n: 1 }] : [] }));
+    sqlMock.mockImplementation(async (strings: string[]) => ({ rows: strings.join('').includes('FROM hearts') ? [{ target: RACHEL, n: 3 }, { target: 'c154', n: 1 }] : [] }));
     const res = await stats('some-tape');
     expect(res.status).toBe(200);
-    expect((await res.json()).hearts).toEqual({ a1: 3, c154: 1 });
+    expect((await res.json()).hearts).toEqual({ [RACHEL]: 3, c154: 1 });
   });
 
   it('still answers where the hearts cannot be read', async () => {

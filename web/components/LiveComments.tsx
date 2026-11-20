@@ -1,5 +1,6 @@
 'use client';
 
+import { postedTarget } from '../lib/heart-targets';
 import { readComposed } from '../lib/track-ids/compose';
 import { Comment } from './Comment';
 import { useTapeTrackIds } from './TapeTrackIds';
@@ -31,7 +32,7 @@ export function LiveComments() {
   return (
     <div className="space-y-6">
       {talk.map((comment) => (
-        <Comment key={comment.id} author={comment.author_name} date={comment.created_at} content={comment.content} heart={`c${comment.id}`} />
+        <Comment key={comment.id} author={comment.author_name} date={comment.created_at} content={comment.content} heart={postedTarget(comment.id)} />
       ))}
     </div>
   );
